@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.client;
 
-import com.evolution.dropfilecli.DropFileProperties;
+import com.evolution.dropfilecli.configuration.DropFileConfiguration;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,19 +18,19 @@ public class DaemonHttpClient {
 
     private final HttpClient httpClient;
 
-    private final DropFileProperties dropFileProperties;
+    private final DropFileConfiguration dropFileConfiguration;
 
     @Autowired
-    public DaemonHttpClient(HttpClient httpClient, DropFileProperties dropFileProperties) {
+    public DaemonHttpClient(HttpClient httpClient, DropFileConfiguration dropFileConfiguration) {
         this.httpClient = httpClient;
-        this.dropFileProperties = dropFileProperties;
+        this.dropFileConfiguration = dropFileConfiguration;
     }
 
 
     @SneakyThrows
     public HttpResponse<String> shutdown() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileProperties.getDaemonURI() + "/daemon/shutdown"))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/shutdown"))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -39,7 +39,7 @@ public class DaemonHttpClient {
     @SneakyThrows
     public HttpResponse<String> ping() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileProperties.getDaemonURI() + "/daemon/ping"))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/ping"))
                 .GET()
                 .build();
 
@@ -50,7 +50,7 @@ public class DaemonHttpClient {
     public HttpResponse<String> getFiles(String filePath) {
         String queryFilePath = encode(filePath);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileProperties.getDaemonURI() + "/daemon/file/list?filePath=" + queryFilePath))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/file/list?filePath=" + queryFilePath))
                 .GET()
                 .build();
 
@@ -62,7 +62,7 @@ public class DaemonHttpClient {
         String queryFilePath = encode(filePath);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileProperties.getDaemonURI() + "/daemon/file/download?filePath=" + queryFilePath))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/file/download?filePath=" + queryFilePath))
                 .GET()
                 .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
