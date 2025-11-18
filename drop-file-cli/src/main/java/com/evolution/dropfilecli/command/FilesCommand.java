@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.file;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.client.DaemonHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,8 +6,11 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
-@CommandLine.Command(name = "list", description = "List available files")
-public class FileOperationListCommand implements Runnable {
+@CommandLine.Command(
+        name = "files",
+        description = "Get files"
+)
+public class FilesCommand implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
@@ -15,7 +18,7 @@ public class FileOperationListCommand implements Runnable {
     private String filePath;
 
     @Autowired
-    public FileOperationListCommand(DaemonHttpClient daemonHttpClient) {
+    public FilesCommand(DaemonHttpClient daemonHttpClient) {
         this.daemonHttpClient = daemonHttpClient;
     }
 

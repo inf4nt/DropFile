@@ -26,6 +26,32 @@ public class DaemonHttpClient {
         this.dropFileConfiguration = dropFileConfiguration;
     }
 
+    @SneakyThrows
+    public HttpResponse<Void> connect(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/connect"))
+                .POST(HttpRequest.BodyPublishers.ofString(uri.toString()))
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<Void> disconnect() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/disconnect"))
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<String> status() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/connect/status"))
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
 
     @SneakyThrows
     public HttpResponse<String> shutdown() {
@@ -50,7 +76,7 @@ public class DaemonHttpClient {
     public HttpResponse<String> getFiles(String filePath) {
         String queryFilePath = encode(filePath);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/file/list?filePath=" + queryFilePath))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/files?filePath=" + queryFilePath))
                 .GET()
                 .build();
 
@@ -62,7 +88,7 @@ public class DaemonHttpClient {
         String queryFilePath = encode(filePath);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/file/download?filePath=" + queryFilePath))
+                .uri(URI.create(dropFileConfiguration.getDaemonURI() + "/daemon/download?filePath=" + queryFilePath))
                 .GET()
                 .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());

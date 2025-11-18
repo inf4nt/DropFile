@@ -1,7 +1,7 @@
-package com.evolution.dropfilecli.command.file;
+package com.evolution.dropfilecli.command;
 
-import com.evolution.dropfilecli.configuration.DropFileConfiguration;
 import com.evolution.dropfilecli.client.DaemonHttpClient;
+import com.evolution.dropfilecli.configuration.DropFileConfiguration;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,8 +19,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-@CommandLine.Command(name = "download", description = "List available files")
-public class FileOperationDownloadFile implements Runnable {
+@CommandLine.Command(
+        name = "download",
+        description = "Download file"
+)
+public class DownloadCommand implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
@@ -30,14 +33,13 @@ public class FileOperationDownloadFile implements Runnable {
     private String filePath;
 
     @Autowired
-    public FileOperationDownloadFile(DaemonHttpClient daemonHttpClient, DropFileConfiguration dropFileConfiguration) {
+    public DownloadCommand(DaemonHttpClient daemonHttpClient, DropFileConfiguration dropFileConfiguration) {
         this.daemonHttpClient = daemonHttpClient;
         this.dropFileConfiguration = dropFileConfiguration;
     }
 
-
-    @Override
     @SneakyThrows
+    @Override
     public void run() {
         HttpResponse<InputStream> downloadHttpResponse = daemonHttpClient.download(filePath);
         System.out.println(downloadHttpResponse.statusCode());

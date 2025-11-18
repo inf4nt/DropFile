@@ -1,6 +1,5 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfilecli.command.RootCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;

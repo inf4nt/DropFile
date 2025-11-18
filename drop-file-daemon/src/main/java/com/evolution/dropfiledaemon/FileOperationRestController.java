@@ -1,39 +1,52 @@
 package com.evolution.dropfiledaemon;
 
+import com.evolution.dropfiledaemon.client.NodeHttpClient;
 import lombok.SneakyThrows;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/daemon/file")
+@RequestMapping("/daemon")
 public class FileOperationRestController {
 
-    @GetMapping("/list")
-    public String list(@RequestParam String filePath) {
-        File file = new File(filePath);
-        return Arrays.stream(file.listFiles()).map(it -> it.getPath()).collect(Collectors.joining("\n"));
+    private final NodeHttpClient nodeHttpClient;
+
+    private final ConnectionSession connectionSession;
+
+    @Autowired
+    public FileOperationRestController(NodeHttpClient nodeHttpClient, ConnectionSession connectionSession) {
+        this.nodeHttpClient = nodeHttpClient;
+        this.connectionSession = connectionSession;
+    }
+
+    @GetMapping("/files")
+    public String files(@RequestParam String filePath) {
+        URI connection = connectionSession.getConnection();
+
+        return nodeHttpClient.getFiles(connection, filePath).body();
     }
 
     @SneakyThrows
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String filePath) {
-        File file = new File(filePath);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(file.getName()).build());
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(new InputStreamResource(new FileInputStream(file)));
+        URI connection = connectionSession.getConnection();
+        HttpResponse<InputStream> download = nodeHttpClient.download(connection, filePath);
+
+        ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.ok();
+        Map<String, List<String>> headers = download.headers().map();
+        headers.forEach((key, values) -> values.forEach(value -> bodyBuilder.header(key, value)));
+
+        return bodyBuilder.body(new InputStreamResource(download.body()));
     }
 }

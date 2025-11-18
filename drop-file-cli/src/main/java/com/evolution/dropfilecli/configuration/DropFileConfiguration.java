@@ -19,5 +19,5 @@ public class DropFileConfiguration {
     private URI daemonURI;
 
     @JsonProperty("download_directory")
-    public File downloadDirectory;
+    private File downloadDirectory;
 }

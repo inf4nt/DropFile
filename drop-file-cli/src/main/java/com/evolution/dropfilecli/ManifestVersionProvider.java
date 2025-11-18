@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command;
+package com.evolution.dropfilecli;
 
 import picocli.CommandLine;
 

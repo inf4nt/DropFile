@@ -46,8 +46,6 @@ public class DropFileCliConfiguration {
         if (!dropFileConfiguration.getDownloadDirectory().exists()) {
             dropFileConfiguration.getDownloadDirectory().mkdir();
         }
-        System.out.println("DropFileConfiguration: " + dropFileConfiguration);
-
         return dropFileConfiguration;
     }
 
