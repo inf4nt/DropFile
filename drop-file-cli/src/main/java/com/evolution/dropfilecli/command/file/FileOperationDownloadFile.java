@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.file;
 
-import com.evolution.dropfilecli.CommandSession;
+import com.evolution.dropfilecli.DropFileProperties;
 import com.evolution.dropfilecli.client.DaemonHttpClient;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,6 @@ import java.io.OutputStream;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,16 +24,17 @@ public class FileOperationDownloadFile implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
-    private final CommandSession commandSession;
+    private final DropFileProperties dropFileProperties;
 
     @CommandLine.Parameters(index = "0", description = "File path")
     private String filePath;
 
     @Autowired
-    public FileOperationDownloadFile(DaemonHttpClient daemonHttpClient, CommandSession commandSession) {
+    public FileOperationDownloadFile(DaemonHttpClient daemonHttpClient, DropFileProperties dropFileProperties) {
         this.daemonHttpClient = daemonHttpClient;
-        this.commandSession = commandSession;
+        this.dropFileProperties = dropFileProperties;
     }
+
 
     @Override
     @SneakyThrows
@@ -46,8 +46,10 @@ public class FileOperationDownloadFile implements Runnable {
         System.out.println("Filename = " + filename);
 
         try (InputStream body = downloadHttpResponse.body()) {
-            File file = Paths.get(commandSession.getDownloadDirectory(), filename).toFile();
+            File homeDir = dropFileProperties.getHomeDownloadDirectory();
+            File file = new File(homeDir, filename);
             Files.createFile(file.toPath());
+
             try (OutputStream outStream = new FileOutputStream(file)) {
                 byte[] buffer = new byte[8 * 1024];
                 int bytesRead;
