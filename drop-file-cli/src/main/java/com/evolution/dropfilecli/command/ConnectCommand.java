@@ -27,6 +27,10 @@ public class ConnectCommand implements Runnable {
 
     @Override
     public void run() {
+        if (!ip.startsWith("http://") || !ip.startsWith("https://")) {
+            ip = "http://" + ip;
+        }
+
         System.out.println("Connecting to " + ip);
         URI uri = URI.create(ip);
         HttpResponse<Void> connect = daemonHttpClient.connect(uri);
