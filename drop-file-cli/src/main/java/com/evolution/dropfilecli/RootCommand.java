@@ -1,6 +1,13 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfilecli.command.*;
+import com.evolution.dropfilecli.command.ConfigurationCommand;
+import com.evolution.dropfilecli.command.DownloadCommand;
+import com.evolution.dropfilecli.command.FilesCommand;
+import com.evolution.dropfilecli.command.NodesCommand;
+import com.evolution.dropfilecli.command.connection.ConnectCommand;
+import com.evolution.dropfilecli.command.connection.ConnectionStatusCommand;
+import com.evolution.dropfilecli.command.connection.DisconnectCommand;
+import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -10,12 +17,13 @@ import picocli.CommandLine;
         versionProvider = ManifestVersionProvider.class,
         subcommands = {
                 ConnectCommand.class,
-                StatusCommand.class,
+                ConnectionStatusCommand.class,
                 DisconnectCommand.class,
                 ConfigurationCommand.class,
                 FilesCommand.class,
                 DownloadCommand.class,
-                NodesCommand.class
+                NodesCommand.class,
+                DaemonCommand.class
         }
 )
 public class RootCommand implements Runnable {

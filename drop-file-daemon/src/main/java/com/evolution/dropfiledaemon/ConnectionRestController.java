@@ -43,7 +43,11 @@ public class ConnectionRestController {
     @PostMapping("/disconnect")
     public ResponseEntity<Void> disconnect() {
         URI connection = connectionSession.getConnection();
+        if (connection == null) {
+            return ResponseEntity.ok().build();
+        }
         System.out.println("Disconnecting " + connection);
+        // TODO node can be off
         HttpResponse<Void> disconnect = nodeHttpClient.disconnect(connection);
         if (disconnect.statusCode() == 200) {
             connectionSession.setConnection(null);

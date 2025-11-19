@@ -1,30 +1,29 @@
-package com.evolution.dropfilecli.command;
+package com.evolution.dropfilecli.command.daemon;
 
 import com.evolution.dropfilecli.client.DaemonHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.net.URI;
 import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "disconnect",
-        description = "Disconnect"
+        name = "status",
+        description = "Daemon status"
 )
-public class DisconnectCommand implements Runnable {
+public class DaemonStatusCommand implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
     @Autowired
-    public DisconnectCommand(DaemonHttpClient daemonHttpClient) {
+    public DaemonStatusCommand(DaemonHttpClient daemonHttpClient) {
         this.daemonHttpClient = daemonHttpClient;
     }
 
     @Override
     public void run() {
-        HttpResponse<Void> httpResponse = daemonHttpClient.disconnect();
-        System.out.println("Disconnect status " + httpResponse.statusCode());
+        HttpResponse<String> httpResponse = daemonHttpClient.ping();
+        System.out.println("Daemon status: " + httpResponse.statusCode());
     }
 }

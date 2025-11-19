@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command;
+package com.evolution.dropfilecli.command.connection;
 
 import com.evolution.dropfilecli.client.DaemonHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;

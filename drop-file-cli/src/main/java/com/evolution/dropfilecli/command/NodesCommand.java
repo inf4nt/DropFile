@@ -3,6 +3,7 @@ package com.evolution.dropfilecli.command;
 import com.evolution.dropfilecli.client.DaemonHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -25,6 +26,11 @@ public class NodesCommand implements Runnable {
     public void run() {
         HttpResponse<String> httpResponse = daemonHttpClient.getNodes();
         String body = httpResponse.body();
-        System.out.println(body);
+        if  (ObjectUtils.isEmpty(body)) {
+            System.out.println("No connected nodes found");
+        } else {
+            System.out.println("Connected nodes");
+            System.out.println(body);
+        }
     }
 }
