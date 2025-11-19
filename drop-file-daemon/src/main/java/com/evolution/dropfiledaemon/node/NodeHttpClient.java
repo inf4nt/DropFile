@@ -12,8 +12,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class NodeHttpClient {
@@ -26,6 +24,17 @@ public class NodeHttpClient {
     @Autowired
     public NodeHttpClient(HttpClient httpClient) {
         this.httpClient = httpClient;
+    }
+
+    @SneakyThrows
+    public HttpResponse<Void> disconnect(URI uri) {
+        URI uriNodeConnect = uri.resolve("/daemon/node/disconnect");
+        String serverPort = env.getProperty("server.port", "8080");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uriNodeConnect)
+                .POST(HttpRequest.BodyPublishers.ofString(serverPort))
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
     }
 
     @SneakyThrows

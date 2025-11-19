@@ -19,4 +19,8 @@ public class NodeActiveConnections {
     public void addConnection(URI uri) {
         connections.add(uri);
     }
+
+    public void removeConnection(URI uri) {
+        connections.remove(uri);
+    }
 }

@@ -42,8 +42,15 @@ public class ConnectionRestController {
 
     @PostMapping("/disconnect")
     public ResponseEntity<Void> disconnect() {
-        System.out.println("Disconnecting " + connectionSession.getConnection());
-        connectionSession.setConnection(null);
-        return ResponseEntity.ok().build();
+        URI connection = connectionSession.getConnection();
+        System.out.println("Disconnecting " + connection);
+        HttpResponse<Void> disconnect = nodeHttpClient.disconnect(connection);
+        if (disconnect.statusCode() == 200) {
+            connectionSession.setConnection(null);
+            return ResponseEntity.ok().build();
+        }
+        return  ResponseEntity
+                .status(disconnect.statusCode())
+                .build();
     }
 }

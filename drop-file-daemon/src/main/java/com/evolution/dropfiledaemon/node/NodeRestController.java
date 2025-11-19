@@ -39,6 +39,18 @@ public class NodeRestController {
         return HttpStatus.OK;
     }
 
+    @PostMapping("/disconnect")
+    public HttpStatus disconnect(@RequestBody String port,
+                              HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
+        if (!remoteAddr.startsWith("http://") || !remoteAddr.startsWith("https://")) {
+            remoteAddr = "http://" + remoteAddr;
+        }
+        URI uri = URI.create(remoteAddr + ":" + port);
+        nodeActiveConnections.removeConnection(uri);
+        return HttpStatus.OK;
+    }
+
     @GetMapping
     public String getConnections() {
         return nodeActiveConnections
