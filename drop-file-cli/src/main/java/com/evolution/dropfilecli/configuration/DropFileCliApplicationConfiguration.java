@@ -12,6 +12,7 @@ import org.springframework.util.ObjectUtils;
 import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.nio.file.Files;
 
 @Configuration
 public class DropFileCliApplicationConfiguration {
@@ -41,19 +42,22 @@ public class DropFileCliApplicationConfiguration {
         File systemUserHome = new File(System.getProperty("user.home"));
         File homeDir = new File(systemUserHome, HOME_DIR);
         if (!homeDir.exists()) {
-            homeDir.mkdir();
+            Files.createDirectories(homeDir.toPath());
         }
         File cofigurationFile = new File(homeDir, CONFIGURATION_FILE);
         if (!cofigurationFile.exists()) {
-            cofigurationFile.createNewFile();
+            Files.createFile(cofigurationFile.toPath());
             createDefaultConfiguration(cofigurationFile);
         }
         DropFileCliConfiguration dropFileCliConfiguration = readConfiguration(cofigurationFile);
         if (!dropFileCliConfiguration.getDownloadDirectory().exists()) {
-            dropFileCliConfiguration.getDownloadDirectory().mkdir();
+            Files.createDirectory(dropFileCliConfiguration.getDownloadDirectory().toPath());
         }
 
-//        dropFileCliConfiguration.setDaemonURI(URI.create("http://127.0.0.1:8082"));
+        String environmentDaemonUri = environment.getProperty("daemon_uri");
+        if (environmentDaemonUri != null) {
+            dropFileCliConfiguration.setDaemonURI(URI.create(environmentDaemonUri));
+        }
 
         return dropFileCliConfiguration;
     }

@@ -22,7 +22,9 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        new CommandLine(root, new PicocliSpringFactory(applicationContext)).execute(args);
+        CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
+        commandLine.setUnmatchedArgumentsAllowed(true);
+        commandLine.execute(args);
         System.exit(0);
     }
 }
