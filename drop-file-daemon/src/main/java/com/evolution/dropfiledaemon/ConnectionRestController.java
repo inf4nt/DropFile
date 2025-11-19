@@ -12,11 +12,11 @@ import java.net.http.HttpResponse;
 @RequestMapping("/daemon")
 public class ConnectionRestController {
 
-    @Autowired
     private final ConnectionSession connectionSession;
 
     private final NodeHttpClient nodeHttpClient;
 
+    @Autowired
     public ConnectionRestController(ConnectionSession connectionSession, NodeHttpClient nodeHttpClient) {
         this.connectionSession = connectionSession;
         this.nodeHttpClient = nodeHttpClient;
