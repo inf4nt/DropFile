@@ -27,6 +27,11 @@ public class NodeRestController {
         this.nodeActiveConnections = nodeActiveConnections;
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "pong";
+    }
+
     @PostMapping("/connect")
     public HttpStatus connect(@RequestBody String port,
                               HttpServletRequest request) {

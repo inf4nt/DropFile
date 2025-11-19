@@ -22,6 +22,26 @@ public class ConnectionRestController {
         this.nodeHttpClient = nodeHttpClient;
     }
 
+    @GetMapping("/connect/online")
+    public ResponseEntity<String> online() {
+        URI connection = connectionSession.getConnection();
+        if (connection == null) {
+            return ResponseEntity.ok().build();
+        }
+        try {
+            HttpResponse<String> httpResponsePing = nodeHttpClient.ping(connection);
+            if (httpResponsePing.statusCode() == 200) {
+                return ResponseEntity.ok()
+                        .body("Online " + connection);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.ok()
+                    .body("Offline " + connection);
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/connect")
     public ResponseEntity<Void> connect(@RequestBody String ip) {
         System.out.println("Connecting to " + ip);

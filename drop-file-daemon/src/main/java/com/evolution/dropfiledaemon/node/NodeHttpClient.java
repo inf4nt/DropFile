@@ -38,6 +38,16 @@ public class NodeHttpClient {
     }
 
     @SneakyThrows
+    public HttpResponse<String> ping(URI nodeUri) {
+        URI uriNodeConnect = nodeUri.resolve("/daemon/node/ping");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uriNodeConnect)
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    @SneakyThrows
     public HttpResponse<Void> connect(URI uri) {
         URI uriNodeConnect = uri.resolve("/daemon/node/connect");
         String serverPort = env.getProperty("server.port", "8080");

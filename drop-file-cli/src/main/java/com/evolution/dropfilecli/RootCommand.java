@@ -7,6 +7,7 @@ import com.evolution.dropfilecli.command.NodesCommand;
 import com.evolution.dropfilecli.command.connection.ConnectCommand;
 import com.evolution.dropfilecli.command.connection.ConnectionStatusCommand;
 import com.evolution.dropfilecli.command.connection.DisconnectCommand;
+import com.evolution.dropfilecli.command.connection.OnlineCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -23,7 +24,8 @@ import picocli.CommandLine;
                 FilesCommand.class,
                 DownloadCommand.class,
                 NodesCommand.class,
-                DaemonCommand.class
+                DaemonCommand.class,
+                OnlineCommand.class
         }
 )
 public class RootCommand implements Runnable {

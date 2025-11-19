@@ -36,6 +36,15 @@ public class DaemonHttpClient {
     }
 
     @SneakyThrows
+    public HttpResponse<String> online() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(dropFileCliConfiguration.getDaemonURI() + "/daemon/connect/online"))
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    @SneakyThrows
     public HttpResponse<Void> disconnect() {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(dropFileCliConfiguration.getDaemonURI() + "/daemon/disconnect"))
