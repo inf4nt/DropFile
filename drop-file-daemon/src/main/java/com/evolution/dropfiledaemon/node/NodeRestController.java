@@ -1,6 +1,8 @@
-package com.evolution.dropfiledaemon;
+package com.evolution.dropfiledaemon.node;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -17,10 +20,32 @@ import java.util.stream.Collectors;
 @RequestMapping("/daemon/node")
 public class NodeRestController {
 
-    // TODO give me your IP
+    private final NodeActiveConnections nodeActiveConnections;
+
+    @Autowired
+    public NodeRestController(NodeActiveConnections nodeActiveConnections) {
+        this.nodeActiveConnections = nodeActiveConnections;
+    }
+
     @PostMapping("/connect")
-    public HttpStatus connect() {
+    public HttpStatus connect(@RequestBody String port,
+                              HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
+        if (!remoteAddr.startsWith("http://") || !remoteAddr.startsWith("https://")) {
+            remoteAddr = "http://" + remoteAddr;
+        }
+        URI uri = URI.create(remoteAddr + ":" + port);
+        nodeActiveConnections.addConnection(uri);
         return HttpStatus.OK;
+    }
+
+    @GetMapping
+    public String getConnections() {
+        return nodeActiveConnections
+                .getConnections()
+                .stream()
+                .map(it -> it.toString())
+                .collect(Collectors.joining(","));
     }
 
     @GetMapping("/files")

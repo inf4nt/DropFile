@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.client.DaemonHttpClient;
-import com.evolution.dropfilecli.configuration.DropFileConfiguration;
+import com.evolution.dropfilecli.configuration.DropFileCliConfiguration;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,15 +27,15 @@ public class DownloadCommand implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
-    private final DropFileConfiguration dropFileConfiguration;
+    private final DropFileCliConfiguration dropFileCliConfiguration;
 
     @CommandLine.Parameters(index = "0", description = "File path")
     private String filePath;
 
     @Autowired
-    public DownloadCommand(DaemonHttpClient daemonHttpClient, DropFileConfiguration dropFileConfiguration) {
+    public DownloadCommand(DaemonHttpClient daemonHttpClient, DropFileCliConfiguration dropFileCliConfiguration) {
         this.daemonHttpClient = daemonHttpClient;
-        this.dropFileConfiguration = dropFileConfiguration;
+        this.dropFileCliConfiguration = dropFileCliConfiguration;
     }
 
     @SneakyThrows
@@ -48,7 +48,7 @@ public class DownloadCommand implements Runnable {
         System.out.println("Filename = " + filename);
 
         try (InputStream body = downloadHttpResponse.body()) {
-            File homeDir = dropFileConfiguration.getDownloadDirectory();
+            File homeDir = dropFileCliConfiguration.getDownloadDirectory();
             File file = new File(homeDir, filename);
             Files.createFile(file.toPath());
 

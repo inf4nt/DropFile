@@ -5,26 +5,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.net.URI;
 import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "disconnect",
-        description = "Disconnect"
+        name = "node",
+        description = "List of nodes"
 )
-public class DisconnectCommand implements Runnable {
+public class NodesCommand implements Runnable {
 
     private final DaemonHttpClient daemonHttpClient;
 
     @Autowired
-    public DisconnectCommand(DaemonHttpClient daemonHttpClient) {
+    public NodesCommand(DaemonHttpClient daemonHttpClient) {
         this.daemonHttpClient = daemonHttpClient;
     }
 
     @Override
     public void run() {
-        HttpResponse<Void> httpResponse = daemonHttpClient.disconnect();
-        System.out.println("Disconnect status " + httpResponse.statusCode());
+        HttpResponse<String> httpResponse = daemonHttpClient.getNodes();
+        String body = httpResponse.body();
+        System.out.println(body);
     }
 }

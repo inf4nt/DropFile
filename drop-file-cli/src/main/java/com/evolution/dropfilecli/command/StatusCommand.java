@@ -23,7 +23,7 @@ public class StatusCommand implements Runnable {
 
     @Override
     public void run() {
-        HttpResponse<String> status = daemonHttpClient.status();
-        System.out.println(status.body());
+        HttpResponse<String> httpResponse = daemonHttpClient.status();
+        System.out.println("Connected to " + httpResponse.body());
     }
 }

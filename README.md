@@ -1,17 +1,19 @@
 # Getting Started
 
-app status -> shows current connection
+app connect 127.0.0.1:8081
 
-app connect 127.0.0.1:8080
+app connection status -> shows current connection
+
+app disconnect
 
 app files /home/dir
 
 app download /home/dir/text.txt
 
-app disconnect
+app start
 
-app daemon start
+app status -> is daemon running ?
 
-app daemon shutdown
+app shutdown
 
-app daemon status
+app nodes

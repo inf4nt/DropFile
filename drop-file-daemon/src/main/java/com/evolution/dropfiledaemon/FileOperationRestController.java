@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon;
 
-import com.evolution.dropfiledaemon.client.NodeHttpClient;
+import com.evolution.dropfiledaemon.node.NodeHttpClient;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;

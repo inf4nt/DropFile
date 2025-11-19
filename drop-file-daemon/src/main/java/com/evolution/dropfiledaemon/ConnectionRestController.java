@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon;
 
-import com.evolution.dropfiledaemon.client.NodeHttpClient;
+import com.evolution.dropfiledaemon.node.NodeHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -23,26 +23,27 @@ public class ConnectionRestController {
     }
 
     @PostMapping("/connect")
-    public Integer connect(@RequestBody String ip) {
+    public ResponseEntity<Void> connect(@RequestBody String ip) {
         System.out.println("Connecting to " + ip);
         URI connection = URI.create(ip);
         HttpResponse<Void> httpResponse = nodeHttpClient.connect(connection);
         if (httpResponse.statusCode() == 200) {
             connectionSession.setConnection(connection);
         }
-        return httpResponse.statusCode();
+        return ResponseEntity
+                .status(httpResponse.statusCode())
+                .build();
     }
 
     @GetMapping("/connect/status")
-    public String status() {
-        URI connection = connectionSession.getConnection();
-        return connection.toString();
+    public URI status() {
+        return connectionSession.getConnection();
     }
 
     @PostMapping("/disconnect")
-    public HttpStatus disconnect() {
+    public ResponseEntity<Void> disconnect() {
         System.out.println("Disconnecting " + connectionSession.getConnection());
         connectionSession.setConnection(null);
-        return HttpStatus.OK;
+        return ResponseEntity.ok().build();
     }
 }

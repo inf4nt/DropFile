@@ -33,7 +33,7 @@ public class ConnectCommand implements Runnable {
 
         System.out.println("Connecting to " + ip);
         URI uri = URI.create(ip);
-        HttpResponse<Void> connect = daemonHttpClient.connect(uri);
-        System.out.println("Connect status " + connect.statusCode());
+        HttpResponse<Void> httpResponse = daemonHttpClient.connect(uri);
+        System.out.println("Connection status " + httpResponse.statusCode());
     }
 }

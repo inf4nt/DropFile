@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.net.http.HttpResponse;
+
 @Component
 @CommandLine.Command(
         name = "files",
@@ -24,7 +26,7 @@ public class FilesCommand implements Runnable {
 
     @Override
     public void run() {
-        String body = daemonHttpClient.getFiles(filePath).body();
-        System.out.println(body);
+        HttpResponse<String> httpResponse = daemonHttpClient.getFiles(filePath);
+        System.out.println(httpResponse.body());
     }
 }

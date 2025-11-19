@@ -14,7 +14,8 @@ import picocli.CommandLine;
                 DisconnectCommand.class,
                 ConfigurationCommand.class,
                 FilesCommand.class,
-                DownloadCommand.class
+                DownloadCommand.class,
+                NodesCommand.class
         }
 )
 public class RootCommand implements Runnable {
