@@ -24,7 +24,7 @@ app connections connect --id=test 127.0.0.1:8081 -> Connected id=test address=12
 
 app connections connect 127.0.0.1:8081 -> Connected id=a12wqeq address=127.0.0.1:8081
 
-app connections list -> shows stored connections ['aqwd': '127.0.0.1:8081', 'bghy': '192.0.0.1:9000']
+app connections online -> shows connections and online 
 
 app connections disconnect --all -> disconnect all connections
 
@@ -32,11 +32,15 @@ app connections disconnect 127.0.0.1:8081
 
 app connections disconnect --id=aqwd
 
-app connections list online -> shows online nodes [
-                                                    'online': ['aqwd': '127.0.0.1:8081'],   
-                                                    'online': ['aqwd': '127.0.0.1:8081'],
-                                                    'offline': ['1ghe': '192.168.0.1:8081']
-                                                  ]
+[//]: # (app connections list online -> shows online nodes [)
+
+[//]: # (                                                    'online': ['aqwd': '127.0.0.1:8081'],   )
+
+[//]: # (                                                    'online': ['aqwd': '127.0.0.1:8081'],)
+
+[//]: # (                                                    'offline': ['1ghe': '192.168.0.1:8081'])
+
+[//]: # (                                                  ])
 
 app files --id=qa12e --path /home/dir
 

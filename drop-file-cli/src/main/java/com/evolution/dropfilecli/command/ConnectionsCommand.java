@@ -1,18 +1,18 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.command;
 
-import com.evolution.dropfilecli.command.ConnectionsCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        mixinStandardHelpOptions = true,
-        versionProvider = ManifestVersionProvider.class,
+        name = "connections",
+        description = "Connections commands",
         subcommands = {
-                ConnectionsCommand.class
+                ConnectionsConnectCommand.class,
+                ConnectionsOnlineCommand.class
         }
 )
-public class RootCommand implements Runnable {
+public class ConnectionsCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

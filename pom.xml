@@ -11,6 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>drop-file-common</module>
         <module>drop-file-cli</module>
         <module>drop-file-daemon</module>
     </modules>
