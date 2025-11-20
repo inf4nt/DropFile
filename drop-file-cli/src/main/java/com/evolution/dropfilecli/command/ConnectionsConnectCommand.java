@@ -1,10 +1,11 @@
 package com.evolution.dropfilecli.command;
 
-import com.evolution.dropfile.common.dto.ConnectionsConnectionResultDTO;
 import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
+
+import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
@@ -26,12 +27,13 @@ public class ConnectionsConnectCommand implements Runnable {
     @Override
     public void run() {
         System.out.println("Connecting...");
-        ConnectionsConnectionResultDTO result = daemonClient.connect(address);
-        if (result != null) {
-            System.out.println("Connected id: " + result.getConnectionId());
-            System.out.println("Connect address: " + result.getConnectionAddress());
+        HttpResponse<String> connectHttpResponse = daemonClient.connect(address);
+        if (connectHttpResponse.statusCode() == 200) {
+            System.out.println("Connected: " + connectHttpResponse.body());
         } else {
             System.out.println("Failed to connect to remote address");
+            System.out.println("Status code: " + connectHttpResponse.statusCode());
+            System.out.println("Body: " + connectHttpResponse.body());
         }
     }
 }

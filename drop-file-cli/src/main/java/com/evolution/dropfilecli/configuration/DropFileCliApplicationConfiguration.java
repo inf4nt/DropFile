@@ -3,14 +3,12 @@ package com.evolution.dropfilecli.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.util.ObjectUtils;
 
 import java.io.File;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 
@@ -19,12 +17,14 @@ public class DropFileCliApplicationConfiguration {
 
     private static final String HOME_DIR = ".dropfile";
 
-    private static final String CONFIGURATION_FILE = "config.json";
+    private static final String DOWNLOAD_DIR = ".dropfile";
 
-    private static final URI DAEMON_URI = URI.create("http://127.0.0.1:8080");
+    private static final String CONFIG_FILENAME = "config.json";
 
-    @Autowired
-    private Environment environment;
+    private static final String DAEMON_ADDRESS = "127.0.0.1:8081";
+
+    @Value("${config.path:#{null}}")
+    private String customConfigAbsoluteFilePath;
 
     @Bean
     public HttpClient httpClient() {
@@ -36,45 +36,56 @@ public class DropFileCliApplicationConfiguration {
         return new ObjectMapper();
     }
 
-    @SneakyThrows
     @Bean
-    public DropFileCliConfiguration dropFileConfiguration() {
-        File systemUserHome = new File(System.getProperty("user.home"));
-        File homeDir = new File(systemUserHome, HOME_DIR);
-        if (!homeDir.exists()) {
-            Files.createDirectories(homeDir.toPath());
-        }
-        File cofigurationFile = new File(homeDir, CONFIGURATION_FILE);
-        if (!cofigurationFile.exists()) {
-            Files.createFile(cofigurationFile.toPath());
-            createDefaultConfiguration(cofigurationFile);
-        }
-        DropFileCliConfiguration dropFileCliConfiguration = readConfiguration(cofigurationFile);
-        if (!dropFileCliConfiguration.getDownloadDirectory().exists()) {
-            Files.createDirectory(dropFileCliConfiguration.getDownloadDirectory().toPath());
+    public DropFileCliConfiguration getDropFileCliConfiguration() {
+        if (!ObjectUtils.isEmpty(customConfigAbsoluteFilePath)) {
+            return readConfigFile(customConfigAbsoluteFilePath);
         }
 
-        String environmentDaemonUri = environment.getProperty("daemon_uri");
-        if (environmentDaemonUri != null) {
-            dropFileCliConfiguration.setDaemonURI(URI.create(environmentDaemonUri));
+        File configFile = getOrCreateDropFileCliConfigurationFile();
+        if (FileUtils.sizeOf(configFile) == 0) {
+            populateConfigValuesToFile(configFile);
         }
-
-        return dropFileCliConfiguration;
+        return readConfigFile(configFile.getAbsolutePath());
     }
 
     @SneakyThrows
-    private DropFileCliConfiguration readConfiguration(File configFile) {
-        byte[] bytes = FileUtils.readFileToByteArray(configFile);
-        return objectMapper().readValue(bytes, DropFileCliConfiguration.class);
+    private DropFileCliConfiguration readConfigFile(String configFilePath) {
+        File file = new File(configFilePath);
+        return objectMapper().readValue(file, DropFileCliConfiguration.class);
     }
 
     @SneakyThrows
-    private void createDefaultConfiguration(File cofigurationFile) {
-        DropFileCliConfiguration dropFileCliConfiguration = new DropFileCliConfiguration(
-                DAEMON_URI,
-                new File(System.getProperty("user.home"), HOME_DIR)
+    private File getOrCreateDropFileCliConfigurationFile() {
+        File systemHomeDirFile = new File(System.getProperty("user.home"));
+
+        File homeDirFile = new File(systemHomeDirFile, HOME_DIR);
+        if (!homeDirFile.exists()) {
+            Files.createDirectories(homeDirFile.toPath());
+        }
+
+        File cliConfigFile = new File(homeDirFile, CONFIG_FILENAME);
+        if (!cliConfigFile.exists()) {
+            Files.createFile(cliConfigFile.toPath());
+        }
+
+        return cliConfigFile;
+    }
+
+    @SneakyThrows
+    private void populateConfigValuesToFile(File cliConfigFile) {
+        File systemHomeDirFile = new File(System.getProperty("user.home"));
+        File defaultDownloadDirectory = new File(systemHomeDirFile, DOWNLOAD_DIR);
+        if (!defaultDownloadDirectory.exists()) {
+            Files.createDirectories(defaultDownloadDirectory.toPath());
+        }
+
+        DropFileCliConfiguration configFile = new DropFileCliConfiguration(
+                DAEMON_ADDRESS,
+                defaultDownloadDirectory
         );
-        byte[] bytes = objectMapper().writeValueAsBytes(dropFileCliConfiguration);
-        FileUtils.writeByteArrayToFile(cofigurationFile, bytes);
+
+        byte[] bytes = objectMapper().writeValueAsBytes(configFile);
+        FileUtils.writeByteArrayToFile(cliConfigFile, bytes);
     }
 }
