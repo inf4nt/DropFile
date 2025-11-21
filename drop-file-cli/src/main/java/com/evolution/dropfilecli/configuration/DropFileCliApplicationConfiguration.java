@@ -23,8 +23,11 @@ public class DropFileCliApplicationConfiguration {
 
     private static final String DAEMON_ADDRESS = "127.0.0.1:8081";
 
-    @Value("${config.path:#{null}}")
-    private String customConfigAbsoluteFilePath;
+    private final String customConfigAbsoluteFilePath;
+
+    public DropFileCliApplicationConfiguration(@Value("${config.path:#{null}}") String customConfigAbsoluteFilePath) {
+        this.customConfigAbsoluteFilePath = customConfigAbsoluteFilePath;
+    }
 
     @Bean
     public HttpClient httpClient() {
