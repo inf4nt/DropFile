@@ -9,10 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.ObjectUtils;
 
 import java.io.File;
-import java.net.Authenticator;
-import java.net.InetAddress;
-import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 
@@ -32,14 +28,6 @@ public class DropFileCliApplicationConfiguration {
 
     @Bean
     public HttpClient httpClient() {
-        HttpClient.newBuilder().authenticator(new Authenticator() {
-            @Override
-            public PasswordAuthentication requestPasswordAuthenticationInstance(String host, InetAddress addr, int port, String protocol, String prompt, String scheme, URL url, RequestorType reqType) {
-                return null;
-            }
-
-
-        }).build();
         return HttpClient.newBuilder().build();
     }
 
