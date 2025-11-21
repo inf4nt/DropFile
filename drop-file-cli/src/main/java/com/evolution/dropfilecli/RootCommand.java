@@ -21,8 +21,12 @@ public class RootCommand implements Runnable {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
+    private final CliConfig cliConfig;
+
     @Autowired
-    private CliConfig cliConfig;
+    public RootCommand(CliConfig cliConfig) {
+        this.cliConfig = cliConfig;
+    }
 
     @Override
     public void run() {

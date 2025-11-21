@@ -1,7 +1,9 @@
 package com.evolution.dropfilecli;
 
+import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+@Component
 public class ManifestVersionProvider implements CommandLine.IVersionProvider {
 
     @Override

@@ -1,9 +1,9 @@
 package com.evolution.dropfilecli.command;
 
+import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
         name = "connect",
         description = "Connect to remote address"
 )
-public class ConnectionsConnectCommand implements Runnable {
+public class ConnectionsConnectCommand implements CommandHttpHandler<String> {
 
     @CommandLine.Parameters(index = "0", description = "Address")
     private String address;
@@ -26,18 +26,12 @@ public class ConnectionsConnectCommand implements Runnable {
     }
 
     @Override
-    public void run() {
-        System.out.println("Connecting...");
-        HttpResponse<String> connectHttpResponse = daemonClient.connect(address);
-        if (connectHttpResponse.statusCode() == 200) {
-            System.out.println("Connected: " + connectHttpResponse.body());
-        } else {
-            System.out.println("Failed to connect to remote address");
-            System.out.println("HTTP response code: " + connectHttpResponse.statusCode());
-            String connectHttpResponseBody = connectHttpResponse.body();
-            if (!ObjectUtils.isEmpty(connectHttpResponseBody)) {
-                System.out.println("Body: " + connectHttpResponseBody);
-            }
-        }
+    public HttpResponse<String> execute() {
+        return daemonClient.connect(address);
+    }
+
+    @Override
+    public void handleSuccessful(HttpResponse<String> response) {
+        System.out.println("Connected: " + response.body());
     }
 }

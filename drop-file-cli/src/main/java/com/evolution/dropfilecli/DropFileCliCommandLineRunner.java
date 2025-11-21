@@ -15,7 +15,8 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
     private final RootCommand root;
 
     @Autowired
-    public DropFileCliCommandLineRunner(ApplicationContext applicationContext, RootCommand root) {
+    public DropFileCliCommandLineRunner(ApplicationContext applicationContext,
+                                        RootCommand root) {
         this.applicationContext = applicationContext;
         this.root = root;
     }

@@ -3,6 +3,8 @@ package com.evolution.dropfilecli.command.daemon;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.evolution.dropfilecli.command.ConnectionsConnectCommand;
 import com.evolution.dropfilecli.command.ConnectionsOnlineCommand;
+import com.evolution.dropfilecli.CommandHttpHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,22 +19,22 @@ import java.net.http.HttpResponse;
                 ConnectionsOnlineCommand.class
         }
 )
-public class DaemonStatusCommand implements Runnable {
+public class DaemonStatusCommand implements CommandHttpHandler<Void> {
 
     private final DaemonClient daemonClient;
 
+    @Autowired
     public DaemonStatusCommand(DaemonClient daemonClient) {
         this.daemonClient = daemonClient;
     }
 
     @Override
-    public void run() {
-        HttpResponse<Void> httpResponse = daemonClient.pingDaemon();
-        if (httpResponse.statusCode() == 200) {
-            System.out.println("ONLINE");
-        } else {
-            System.out.println("ERROR");
-        }
-        System.out.println("Daemon http status: " + httpResponse.statusCode());
+    public HttpResponse<Void> execute() {
+        return daemonClient.pingDaemon();
+    }
+
+    @Override
+    public void handleSuccessful(HttpResponse<Void> response) {
+        System.out.println("ONLINE");
     }
 }
