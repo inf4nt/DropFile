@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.dto.ConnectionsOnline;
 import com.evolution.dropfiledaemon.ConnectionStore;
 import com.evolution.dropfiledaemon.exception.ConnectionFacadeException;
 import com.evolution.dropfiledaemon.node.NodeClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ public class ConnectionsFacade {
 
     private final ConnectionStore connectionStore;
 
+    @Autowired
     public ConnectionsFacade(NodeClient nodeClient, ConnectionStore connectionStore) {
         this.nodeClient = nodeClient;
         this.connectionStore = connectionStore;

@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon;
+package com.evolution.dropfiledaemon.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

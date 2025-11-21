@@ -10,7 +10,7 @@ import java.io.File;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class DropFileCliConfiguration {
+public class CliConfig {
 
     @JsonProperty("daemon_address")
     private String daemonAddress;

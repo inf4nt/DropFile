@@ -18,6 +18,11 @@ public class DaemonRestController {
         this.connectionsFacade = connectionsFacade;
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "pong";
+    }
+
     @GetMapping("/connections/online")
     public ConnectionsOnline online() {
         return connectionsFacade.getOnlineConnections();

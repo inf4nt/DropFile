@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.ObjectUtils;
 
 import java.io.File;
+import java.net.Authenticator;
+import java.net.InetAddress;
+import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 
@@ -28,6 +32,14 @@ public class DropFileCliApplicationConfiguration {
 
     @Bean
     public HttpClient httpClient() {
+        HttpClient.newBuilder().authenticator(new Authenticator() {
+            @Override
+            public PasswordAuthentication requestPasswordAuthenticationInstance(String host, InetAddress addr, int port, String protocol, String prompt, String scheme, URL url, RequestorType reqType) {
+                return null;
+            }
+
+
+        }).build();
         return HttpClient.newBuilder().build();
     }
 
@@ -37,7 +49,7 @@ public class DropFileCliApplicationConfiguration {
     }
 
     @Bean
-    public DropFileCliConfiguration getDropFileCliConfiguration() {
+    public CliConfig getDropFileCliConfiguration() {
         if (!ObjectUtils.isEmpty(customConfigAbsoluteFilePath)) {
             return readConfigFile(customConfigAbsoluteFilePath);
         }
@@ -49,10 +61,15 @@ public class DropFileCliApplicationConfiguration {
         return readConfigFile(configFile.getAbsolutePath());
     }
 
+    @Bean
+    public DaemonConfig getDropFileDaemonConfiguration() {
+        return new DaemonConfig("dropfile_test_token");
+    }
+
     @SneakyThrows
-    private DropFileCliConfiguration readConfigFile(String configFilePath) {
+    private CliConfig readConfigFile(String configFilePath) {
         File file = new File(configFilePath);
-        return objectMapper().readValue(file, DropFileCliConfiguration.class);
+        return objectMapper().readValue(file, CliConfig.class);
     }
 
     @SneakyThrows
@@ -80,7 +97,7 @@ public class DropFileCliApplicationConfiguration {
             Files.createDirectories(defaultDownloadDirectory.toPath());
         }
 
-        DropFileCliConfiguration configFile = new DropFileCliConfiguration(
+        CliConfig configFile = new CliConfig(
                 DAEMON_ADDRESS,
                 defaultDownloadDirectory
         );

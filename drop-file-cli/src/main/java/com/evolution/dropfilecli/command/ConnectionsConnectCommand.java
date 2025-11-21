@@ -3,6 +3,7 @@ package com.evolution.dropfilecli.command;
 import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -32,8 +33,11 @@ public class ConnectionsConnectCommand implements Runnable {
             System.out.println("Connected: " + connectHttpResponse.body());
         } else {
             System.out.println("Failed to connect to remote address");
-            System.out.println("Status code: " + connectHttpResponse.statusCode());
-            System.out.println("Body: " + connectHttpResponse.body());
+            System.out.println("HTTP response code: " + connectHttpResponse.statusCode());
+            String connectHttpResponseBody = connectHttpResponse.body();
+            if (!ObjectUtils.isEmpty(connectHttpResponseBody)) {
+                System.out.println("Body: " + connectHttpResponseBody);
+            }
         }
     }
 }

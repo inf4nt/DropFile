@@ -2,8 +2,8 @@ package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ConnectionsConnectionDTO;
-import com.evolution.dropfile.common.dto.ConnectionsOnline;
-import com.evolution.dropfilecli.configuration.DropFileCliConfiguration;
+import com.evolution.dropfilecli.configuration.CliConfig;
+import com.evolution.dropfilecli.configuration.DaemonConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,31 +21,52 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    private final DropFileCliConfiguration dropFileCliConfiguration;
+    private final CliConfig cliConfig;
+
+    private final DaemonConfig daemonConfig;
 
     @Autowired
     public DaemonClient(HttpClient httpClient,
-                        DropFileCliConfiguration dropFileCliConfiguration,
-                        ObjectMapper objectMapper) {
+                        CliConfig cliConfig,
+                        ObjectMapper objectMapper, DaemonConfig daemonConfig) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
-        this.dropFileCliConfiguration = dropFileCliConfiguration;
+        this.cliConfig = cliConfig;
+        this.daemonConfig = daemonConfig;
     }
 
     @SneakyThrows
-    public ConnectionsOnline getOnlineConnections() {
-        URI daemonURI = CommonUtils.toURI(dropFileCliConfiguration.getDaemonAddress());
+    public HttpResponse<Void> pingDaemon() {
+        URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
+        URI daemonPingUri = daemonURI.resolve("/daemon/ping");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonPingUri)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<String> getOnlineConnections() {
+        URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
         URI daemonConnectionUri = daemonURI.resolve("/daemon/connections/online");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(daemonConnectionUri)
+                .header("Authorization", daemonAuthorizationToken)
                 .GET()
                 .build();
 
-        HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        String body = httpResponse.body();
-        return objectMapper.readValue(body, ConnectionsOnline.class);
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     @SneakyThrows
@@ -54,16 +75,24 @@ public class DaemonClient {
                 address
         );
         String bodyJson = objectMapper.writeValueAsString(connectionsConnectionDTO);
-        URI daemonURI = CommonUtils.toURI(dropFileCliConfiguration.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
         URI daemonConnectionUri = daemonURI.resolve("/daemon/connections/connect");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(daemonConnectionUri)
+                .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofString(bodyJson))
                 .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private String getDaemonAuthorizationToken() {
+        return "Bearer " + daemonConfig.getToken();
+//        return "fake";
     }
 }
