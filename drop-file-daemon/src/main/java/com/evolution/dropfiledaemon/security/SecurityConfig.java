@@ -11,14 +11,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http,
-                                        TokenAuthFilter filter) throws Exception {
+                                        ApplicationAuthFilter filter) throws Exception {
         return http
                 .csrf(it -> it.disable())
                 .sessionManagement(it -> it.disable())
                 .httpBasic(it -> it.disable())
                 .formLogin(it -> it.disable())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(it -> it.anyRequest().permitAll())
+                .authorizeHttpRequests(it -> {
+                    // TODO DROP IT
+                    it.requestMatchers("/node/**").permitAll();
+                    // TODO ^^^
+
+                    it.anyRequest().permitAll();
+                })
                 .build();
     }
 }

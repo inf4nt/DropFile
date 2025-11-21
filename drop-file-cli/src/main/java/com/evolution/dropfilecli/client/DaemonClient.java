@@ -38,7 +38,7 @@ public class DaemonClient {
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
         URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
-        URI daemonPingUri = daemonURI.resolve("/daemon/ping");
+        URI daemonPingUri = daemonURI.resolve("/api/ping");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -55,7 +55,7 @@ public class DaemonClient {
     @SneakyThrows
     public HttpResponse<String> getOnlineConnections() {
         URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
-        URI daemonConnectionUri = daemonURI.resolve("/daemon/connections/online");
+        URI daemonConnectionUri = daemonURI.resolve("/api/connections/online");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -76,7 +76,7 @@ public class DaemonClient {
         );
         String bodyJson = objectMapper.writeValueAsString(connectionsConnectionDTO);
         URI daemonURI = CommonUtils.toURI(cliConfig.getDaemonAddress());
-        URI daemonConnectionUri = daemonURI.resolve("/daemon/connections/connect");
+        URI daemonConnectionUri = daemonURI.resolve("/api/connections/connect");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

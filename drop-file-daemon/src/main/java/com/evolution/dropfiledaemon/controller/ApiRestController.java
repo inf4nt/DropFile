@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/daemon")
-public class DaemonRestController {
+@RequestMapping("/api")
+public class ApiRestController {
 
     private final ConnectionsFacade connectionsFacade;
 
     @Autowired
-    public DaemonRestController(ConnectionsFacade connectionsFacade) {
+    public ApiRestController(ConnectionsFacade connectionsFacade) {
         this.connectionsFacade = connectionsFacade;
     }
 

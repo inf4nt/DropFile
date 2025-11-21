@@ -11,27 +11,34 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class TokenAuthFilter extends OncePerRequestFilter {
+public class ApplicationAuthFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
 
     @Autowired
-    public TokenAuthFilter(TokenService tokenService) {
+    public ApplicationAuthFilter(TokenService tokenService) {
         this.tokenService = tokenService;
+    }
+
+    private boolean isNodeRequest(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+        return servletPath.startsWith("/node");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        if (isNodeRequest(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String token = extractToken(request);
-
         if (!tokenService.isValid(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
         filterChain.doFilter(request, response);
     }
 

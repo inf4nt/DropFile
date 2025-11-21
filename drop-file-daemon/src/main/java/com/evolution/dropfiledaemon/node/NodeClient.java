@@ -26,7 +26,7 @@ public class NodeClient {
     }
 
     public HttpResponse<String> ping(URI nodeURI) throws IOException, InterruptedException {
-        URI nodeConnectionURI = nodeURI.resolve("/daemon/node/ping");
+        URI nodeConnectionURI = nodeURI.resolve("/node/ping");
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(nodeConnectionURI)
@@ -37,7 +37,7 @@ public class NodeClient {
     }
 
     public HttpResponse<Void> connect(Integer port, URI nodeURI) throws IOException, InterruptedException {
-        URI nodeConnectionURI = nodeURI.resolve("/daemon/node/connections/connect");
+        URI nodeConnectionURI = nodeURI.resolve("/node/connections/connect");
 
         NodeConnectionsConnectionDTO nodeConnectionsConnectionDTO = new NodeConnectionsConnectionDTO(port);
         String jsonBody = objectMapper.writeValueAsString(nodeConnectionsConnectionDTO);

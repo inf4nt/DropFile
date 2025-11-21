@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/daemon/node")
+@RequestMapping("/node")
 public class NodeRestController {
 
     @PostMapping("/connections/connect")
