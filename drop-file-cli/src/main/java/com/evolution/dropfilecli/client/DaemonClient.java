@@ -92,7 +92,7 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-//        return "Bearer " + daemonConfig.getToken();
-        return "fake";
+        return "Bearer " + daemonConfig.getToken();
+//        return "fake";
     }
 }
