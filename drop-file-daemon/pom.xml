@@ -16,6 +16,7 @@
     <properties>
         <java.version>21</java.version>
         <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
+        <dropfile.starter.version>0.0.1-SNAPSHOT</dropfile.starter.version>
     </properties>
 
     <dependencies>
@@ -24,6 +25,11 @@
             <artifactId>drop-file-common</artifactId>
             <version>${dropfile.common.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.evolution</groupId>
+            <artifactId>drop-file-starter</artifactId>
+            <version>${dropfile.starter.version}</version>
         </dependency>
 
         <dependency>
