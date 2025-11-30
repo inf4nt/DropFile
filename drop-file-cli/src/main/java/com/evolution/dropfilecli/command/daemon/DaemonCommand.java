@@ -8,7 +8,9 @@ import picocli.CommandLine;
         name = "daemon",
         description = "Daemon commands",
         subcommands = {
-                DaemonStatusCommand.class
+                DaemonStatusCommand.class,
+                DaemonStartCommand.class,
+                DaemonShutdownCommand.class
         }
 )
 public class DaemonCommand implements Runnable {

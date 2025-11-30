@@ -10,25 +10,25 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "status",
-        description = "Get daemon status command"
+        name = "shutdown",
+        description = "Shutdown daemon"
 )
-public class DaemonStatusCommand implements CommandHttpHandler<Void> {
+public class DaemonShutdownCommand implements CommandHttpHandler<Void> {
 
     private final DaemonClient daemonClient;
 
     @Autowired
-    public DaemonStatusCommand(DaemonClient daemonClient) {
+    public DaemonShutdownCommand(DaemonClient daemonClient) {
         this.daemonClient = daemonClient;
     }
 
     @Override
     public HttpResponse<Void> execute() {
-        return daemonClient.pingDaemon();
+        return daemonClient.shutdown();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<Void> response) {
-        System.out.println("ONLINE");
+        System.out.println("Daemon shutdown complete.");
     }
 }

@@ -7,6 +7,8 @@ import com.evolution.dropfiledaemon.facade.ConnectionsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.Executors;
+
 @RestController
 @RequestMapping("/api")
 public class ApiRestController {
@@ -16,6 +18,14 @@ public class ApiRestController {
     @Autowired
     public ApiRestController(ConnectionsFacade connectionsFacade) {
         this.connectionsFacade = connectionsFacade;
+    }
+
+    @PostMapping("/shutdown")
+    public void shutdown() {
+        Executors.newSingleThreadExecutor()
+                .submit(() -> {
+                    System.exit(0);
+                });
     }
 
     @GetMapping("/ping")

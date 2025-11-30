@@ -92,6 +92,24 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    @SneakyThrows
+    public HttpResponse<Void> shutdown() {
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonShutdownUri)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
     private String getDaemonAuthorizationToken() {
         return "Bearer " + secretsConfig.getDaemonToken();
 //        return "fake";
