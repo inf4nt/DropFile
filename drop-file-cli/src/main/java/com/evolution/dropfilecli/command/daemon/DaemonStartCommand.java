@@ -32,6 +32,6 @@ public class DaemonStartCommand implements Runnable {
 //                .inheritIO()
                 .start();
 
-        System.out.println("Completed");
+        System.out.println("Executed");
     }
 }
