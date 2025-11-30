@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.configuration.CommonUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.node;
 
-import com.evolution.dropfile.common.dto.NodeConnectionsConnectionDTO;
+import com.evolution.dropfile.configuration.dto.NodeConnectionsConnectionDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

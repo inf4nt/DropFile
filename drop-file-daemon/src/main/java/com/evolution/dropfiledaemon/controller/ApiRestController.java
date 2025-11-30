@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.ConnectionsConnectionDTO;
-import com.evolution.dropfile.common.dto.ConnectionsConnectionResultDTO;
-import com.evolution.dropfile.common.dto.ConnectionsOnline;
+import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
+import com.evolution.dropfile.configuration.dto.ConnectionsConnectionResultDTO;
+import com.evolution.dropfile.configuration.dto.ConnectionsOnline;
 import com.evolution.dropfiledaemon.facade.ConnectionsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

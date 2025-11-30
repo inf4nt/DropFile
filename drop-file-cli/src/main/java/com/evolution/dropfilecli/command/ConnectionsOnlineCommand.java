@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command;
 
-import com.evolution.dropfile.common.dto.ConnectionsOnline;
+import com.evolution.dropfile.configuration.dto.ConnectionsOnline;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;

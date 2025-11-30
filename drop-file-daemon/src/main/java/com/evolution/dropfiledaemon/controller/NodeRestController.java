@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.NodeConnectionsConnectionDTO;
+import com.evolution.dropfile.configuration.dto.NodeConnectionsConnectionDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

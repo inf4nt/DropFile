@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.client;
 
-import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.ConnectionsConnectionDTO;
+import com.evolution.dropfile.configuration.CommonUtils;
+import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
 import com.evolution.dropfilecli.configuration.CliConfig;
 import com.evolution.dropfilecli.configuration.DaemonConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
