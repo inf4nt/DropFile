@@ -2,8 +2,6 @@ package com.evolution.dropfile.configuration.secret;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.SystemProperties;
-import org.apache.commons.lang3.SystemUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,17 +85,33 @@ public class DropFileSecretsConfigFacade {
     private Path resolveHomePath() {
         String basePath;
         String dirName;
-        if (SystemUtils.IS_OS_WINDOWS) {
+        if (isWindows()) {
             basePath = System.getenv("LOCALAPPDATA");
             dirName = SECRETS_WINDOWS_HOME_DIR;
-        } else if (SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC) {
+        } else if (isLinux() || isMacOs()) {
             basePath = System.getProperty("user.home");
             dirName = SECRETS_UNIX_HOME_DIR;
         } else {
             throw new UnsupportedOperationException(
-                    "Unsupported operating system " + SystemProperties.getOsName()
+                    "Unsupported operating system " + getOs()
             );
         }
         return Path.of(basePath, dirName);
+    }
+
+    private boolean isMacOs() {
+        return getOs().toLowerCase().startsWith("mac");
+    }
+
+    private boolean isLinux() {
+        return getOs().toLowerCase().startsWith("linux");
+    }
+
+    private boolean isWindows() {
+        return getOs().toLowerCase().startsWith("windows");
+    }
+
+    private String getOs() {
+        return System.getProperty("os.name");
     }
 }

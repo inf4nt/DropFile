@@ -2,10 +2,10 @@ package com.evolution.dropfile.configuration.app;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.SystemUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class DropFileAppConfigFacade {
 
@@ -66,7 +66,8 @@ public class DropFileAppConfigFacade {
     }
 
     private Path getAppConfigHomeDirPath() {
-        return SystemUtils.getUserHome().toPath().resolve(APP_CONFIG_HOME_DIR);
+        String userHomeBase = System.getProperty("user.home");
+        return Paths.get(userHomeBase, APP_CONFIG_HOME_DIR);
     }
 
     private Path getAppConfigPath() {
