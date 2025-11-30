@@ -26,7 +26,7 @@ public class DropFileSecretsConfigFacade {
     public DropFileSecretsConfig get() {
         DropFileSecretsConfig config = read();
         if (config == null) {
-            initiateConfigFiles();
+            initConfigFiles();
             initDefaultConfig();
         }
         return read();
@@ -51,7 +51,7 @@ public class DropFileSecretsConfigFacade {
     }
 
     @SneakyThrows
-    private void initiateConfigFiles() {
+    private void initConfigFiles() {
         Path homePath = resolveHomePath();
         if (Files.notExists(homePath)) {
             Files.createDirectory(homePath);
