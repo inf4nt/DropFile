@@ -17,6 +17,8 @@ public class DropFileSecretsConfigFacade {
 
     private static final String SECRETS_CONFIG_FILENAME = "secrets.config.json";
 
+    private static final DropFileSecretsConfig EMPTY = new DropFileSecretsConfig();
+
     private final ObjectMapper objectMapper;
 
     public DropFileSecretsConfigFacade(ObjectMapper objectMapper) {
@@ -24,9 +26,9 @@ public class DropFileSecretsConfigFacade {
     }
 
     public DropFileSecretsConfig get() {
-        initDefaultConfig();
         DropFileSecretsConfig config = read();
         if (config == null) {
+            initiateConfigFiles();
             initDefaultConfig();
         } else {
             refreshDaemonToken();
@@ -34,10 +36,14 @@ public class DropFileSecretsConfigFacade {
         return read();
     }
 
+    public DropFileSecretsConfig empty() {
+        return EMPTY;
+    }
+
     @SneakyThrows
     public DropFileSecretsConfig read() {
         Path configPath = resolveConfigPath();
-        if (Files.notExists(configPath)) {
+        if (Files.notExists(configPath) || Files.size(configPath) == 0) {
             return null;
         }
         return objectMapper.readValue(configPath.toFile(), DropFileSecretsConfig.class);

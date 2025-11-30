@@ -1,9 +1,9 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.evolution.dropfilecli.command.ConnectionsConnectCommand;
 import com.evolution.dropfilecli.command.ConnectionsOnlineCommand;
-import com.evolution.dropfilecli.CommandHttpHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;

@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.security;
 
-import lombok.SneakyThrows;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -8,10 +9,9 @@ public class TokenService {
 
     private final String token;
 
-    @SneakyThrows
-    public TokenService() {
-        this.token = "dropfile_test_token";
-        System.out.println("Token " + this.token);
+    @Autowired
+    public TokenService(DropFileSecretsConfig secretsConfig) {
+        this.token = secretsConfig.getDaemonToken();
     }
 
     public boolean isValid(String tokenIncoming) {

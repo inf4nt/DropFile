@@ -24,9 +24,9 @@ public class DropFileAppConfigFacade {
     }
 
     public DropFileAppConfig get() {
-        initAppConfigFiles();
         DropFileAppConfig config = read();
         if (config == null) {
+            initAppConfigFiles();
             initDefaultConfig();
         }
         config = read();
@@ -35,11 +35,11 @@ public class DropFileAppConfigFacade {
 
     @SneakyThrows
     private DropFileAppConfig read() {
-        Path appConfigPath = getAppConfigPath();
-        if (Files.notExists(appConfigPath)) {
+        Path configPath = getAppConfigPath();
+        if (Files.notExists(configPath) || Files.size(configPath) == 0) {
             return null;
         }
-        return objectMapper.readValue(appConfigPath.toFile(), DropFileAppConfig.class);
+        return objectMapper.readValue(configPath.toFile(), DropFileAppConfig.class);
     }
 
     @SneakyThrows

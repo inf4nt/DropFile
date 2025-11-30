@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.configuration;
+package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.app.DropFileAppConfigFacade;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.net.http.HttpClient;
 
 @Configuration
-public class DropFileDaemonConfiguration {
+public class DropFileCliConfiguration {
 
     @Bean
     public HttpClient httpClient() {
@@ -40,6 +40,10 @@ public class DropFileDaemonConfiguration {
 
     @Bean
     public DropFileSecretsConfig secretsConfig(DropFileSecretsConfigFacade dropFileSecretsConfigFacade) {
-        return dropFileSecretsConfigFacade.get();
+        DropFileSecretsConfig config = dropFileSecretsConfigFacade.read();
+        if (config == null) {
+            return dropFileSecretsConfigFacade.empty();
+        }
+        return config;
     }
 }
