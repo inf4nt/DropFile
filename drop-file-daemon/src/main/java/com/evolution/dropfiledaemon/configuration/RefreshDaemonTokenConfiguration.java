@@ -7,12 +7,12 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class DaemonTokenRefreshConfiguration implements ApplicationListener<ApplicationReadyEvent> {
+public class RefreshDaemonTokenConfiguration implements ApplicationListener<ApplicationReadyEvent> {
 
     private final DropFileSecretsConfigFacade secretsConfigFacade;
 
     @Autowired
-    public DaemonTokenRefreshConfiguration(DropFileSecretsConfigFacade secretsConfigFacade) {
+    public RefreshDaemonTokenConfiguration(DropFileSecretsConfigFacade secretsConfigFacade) {
         this.secretsConfigFacade = secretsConfigFacade;
     }
 
