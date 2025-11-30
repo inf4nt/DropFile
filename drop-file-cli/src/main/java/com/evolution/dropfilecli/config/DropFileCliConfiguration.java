@@ -40,10 +40,6 @@ public class DropFileCliConfiguration {
 
     @Bean
     public DropFileSecretsConfig secretsConfig(DropFileSecretsConfigFacade dropFileSecretsConfigFacade) {
-        DropFileSecretsConfig config = dropFileSecretsConfigFacade.read();
-        if (config == null) {
-            return dropFileSecretsConfigFacade.empty();
-        }
-        return config;
+        return dropFileSecretsConfigFacade.get();
     }
 }

@@ -29,6 +29,6 @@ public class DaemonShutdownCommand implements CommandHttpHandler<Void> {
 
     @Override
     public void handleSuccessful(HttpResponse<Void> response) {
-        System.out.println("Daemon shutdown complete.");
+        System.out.println("Daemon shutdown completed");
     }
 }

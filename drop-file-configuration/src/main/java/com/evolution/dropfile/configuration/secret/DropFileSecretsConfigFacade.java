@@ -28,18 +28,21 @@ public class DropFileSecretsConfigFacade {
         if (config == null) {
             initiateConfigFiles();
             initDefaultConfig();
-        } else {
-            refreshDaemonToken();
         }
         return read();
     }
 
-    public DropFileSecretsConfig empty() {
-        return EMPTY;
+    @SneakyThrows
+    public void refreshDaemonToken() {
+        String daemonToken = UUID.randomUUID().toString();
+        DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
+        Path configPath = resolveConfigPath();
+        String jsonConfig = objectMapper.writeValueAsString(config);
+        Files.writeString(configPath, jsonConfig);
     }
 
     @SneakyThrows
-    public DropFileSecretsConfig read() {
+    private DropFileSecretsConfig read() {
         Path configPath = resolveConfigPath();
         if (Files.notExists(configPath) || Files.size(configPath) == 0) {
             return null;
@@ -66,15 +69,6 @@ public class DropFileSecretsConfigFacade {
         DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
         String configJson = objectMapper.writeValueAsString(config);
         Files.writeString(configPath, configJson);
-    }
-
-    @SneakyThrows
-    private void refreshDaemonToken() {
-        String daemonToken = UUID.randomUUID().toString();
-        DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
-        Path configPath = resolveConfigPath();
-        String jsonConfig = objectMapper.writeValueAsString(config);
-        Files.writeString(configPath, jsonConfig);
     }
 
     private Path resolveConfigPath() {

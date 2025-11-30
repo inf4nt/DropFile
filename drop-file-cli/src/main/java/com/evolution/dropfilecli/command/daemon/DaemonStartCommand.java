@@ -16,9 +16,9 @@ public class DaemonStartCommand implements Runnable {
     @SneakyThrows
     @Override
     public void run() {
-        String daemonHome = System.getenv("DAEMON_HOME");
+        String daemonHome = System.getenv("DROPFILE_DAEMON_HOME");
         if (daemonHome == null) {
-            System.err.println("No found DAEMON_HOME");
+            System.err.println("No found DROPFILE_DAEMON_HOME");
             return;
         }
 
@@ -29,7 +29,7 @@ public class DaemonStartCommand implements Runnable {
         }
 
         new ProcessBuilder(exeFile.getAbsolutePath())
-                .inheritIO()
+//                .inheritIO()
                 .start();
 
         System.out.println("Completed");
