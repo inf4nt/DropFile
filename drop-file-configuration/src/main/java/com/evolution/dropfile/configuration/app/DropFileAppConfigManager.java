@@ -3,6 +3,7 @@ package com.evolution.dropfile.configuration.app;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,12 +35,17 @@ public class DropFileAppConfigManager {
     }
 
     @SneakyThrows
-    private DropFileAppConfig read() {
-        Path configPath = getAppConfigPath();
-        if (Files.notExists(configPath) || Files.size(configPath) == 0) {
+    public DropFileAppConfig read(File file) {
+        if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
             return null;
         }
-        return objectMapper.readValue(configPath.toFile(), DropFileAppConfig.class);
+        return objectMapper.readValue(file, DropFileAppConfig.class);
+    }
+
+    @SneakyThrows
+    private DropFileAppConfig read() {
+        Path configPath = getAppConfigPath();
+        return read(configPath.toFile());
     }
 
     @SneakyThrows

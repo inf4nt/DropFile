@@ -1,46 +1,32 @@
 package com.evolution.dropfiledaemon.security;
 
 import com.evolution.dropfile.configuration.Preconditions;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
+import com.evolution.dropfiledaemon.configuration.DaemonTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TokenService implements ApplicationListener<ApplicationReadyEvent> {
+public class TokenService {
 
-    private final DropFileSecretsConfigManager secretsConfig;
-
-    private String daemonToken;
+    private final DaemonTokenProvider daemonTokenProvider;
 
     @Autowired
-    public TokenService(DropFileSecretsConfigManager secretsConfig) {
-        this.secretsConfig = secretsConfig;
+    public TokenService(DaemonTokenProvider daemonTokenProvider) {
+        this.daemonTokenProvider = daemonTokenProvider;
     }
 
     public boolean isValid(String tokenIncoming) {
         Preconditions.checkState(
                 () -> !tokenIncoming.isEmpty(),
-                "Token is empty"
+                "Given token is empty"
         );
+        String daemonToken = daemonTokenProvider.getToken();
         Preconditions.checkState(
                 () -> !daemonToken.isEmpty(),
-                "Daemon token has not initialized yet"
+                "Daemon token is empty"
         );
 
         return daemonToken.equals(tokenIncoming);
-    }
-
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        secretsConfig.refreshDaemonToken();
-        String daemonToken = secretsConfig.get().getDaemonToken();
-        Preconditions.checkState(
-                () -> !daemonToken.isEmpty(),
-                "Configuration Daemon token is empty"
-        );
-        this.daemonToken = daemonToken;
     }
 }
 

@@ -3,6 +3,7 @@ package com.evolution.dropfile.configuration.secret;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -41,12 +42,17 @@ public class DropFileSecretsConfigManager {
     }
 
     @SneakyThrows
-    private DropFileSecretsConfig read() {
-        Path configPath = resolveConfigPath();
-        if (Files.notExists(configPath) || Files.size(configPath) == 0) {
+    public DropFileSecretsConfig read(File file) {
+        if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
             return null;
         }
-        return objectMapper.readValue(configPath.toFile(), DropFileSecretsConfig.class);
+        return objectMapper.readValue(file, DropFileSecretsConfig.class);
+    }
+
+    @SneakyThrows
+    private DropFileSecretsConfig read() {
+        Path configPath = resolveConfigPath();
+        return read(configPath.toFile());
     }
 
     @SneakyThrows

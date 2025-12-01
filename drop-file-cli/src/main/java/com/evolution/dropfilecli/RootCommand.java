@@ -22,18 +22,17 @@ public class RootCommand implements Runnable {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    private final DropFileAppConfigManager appConfig;
+    private final DropFileAppConfig appConfig;
 
     @Autowired
-    public RootCommand(DropFileAppConfigManager appConfig) {
+    public RootCommand(DropFileAppConfig appConfig) {
         this.appConfig = appConfig;
     }
 
     @Override
     public void run() {
-        DropFileAppConfig config = appConfig.get();
-        System.out.println("Daemon address: " + config.getDaemonAddress());
-        System.out.println("Download directory: " + config.getDownloadDirectory());
+        System.out.println("Daemon address: " + appConfig.getDaemonAddress());
+        System.out.println("Download directory: " + appConfig.getDownloadDirectory());
         spec.commandLine().usage(System.out);
     }
 }
