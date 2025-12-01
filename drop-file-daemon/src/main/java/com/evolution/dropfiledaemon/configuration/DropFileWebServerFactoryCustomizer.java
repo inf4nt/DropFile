@@ -12,16 +12,16 @@ import org.springframework.context.annotation.Configuration;
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private final DropFileAppConfigManager configFacade;
+    private final DropFileAppConfigManager appConfig;
 
     @Autowired
-    public DropFileWebServerFactoryCustomizer(DropFileAppConfigManager configFacade) {
-        this.configFacade = configFacade;
+    public DropFileWebServerFactoryCustomizer(DropFileAppConfigManager appConfig) {
+        this.appConfig = appConfig;
     }
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        DropFileAppConfig config = configFacade.get();
+        DropFileAppConfig config = appConfig.get();
         int port = CommonUtils.toURI(config.getDaemonAddress()).getPort();
         factory.setPort(port);
     }
