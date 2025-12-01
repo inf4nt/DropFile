@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class DropFileAppConfigFacade {
+public class DropFileAppConfigManager {
 
     private static final String APP_CONFIG_HOME_DIR = ".dropfile";
 
@@ -19,18 +19,18 @@ public class DropFileAppConfigFacade {
 
     private final ObjectMapper objectMapper;
 
-    public DropFileAppConfigFacade(ObjectMapper objectMapper) {
+    public DropFileAppConfigManager(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     public DropFileAppConfig get() {
         DropFileAppConfig config = read();
-        if (config == null) {
-            initAppConfigFiles();
-            initDefaultConfig();
+        if (config != null) {
+            return config;
         }
-        config = read();
-        return config;
+        initAppConfigFiles();
+        initDefaultConfig();
+        return read();
     }
 
     @SneakyThrows

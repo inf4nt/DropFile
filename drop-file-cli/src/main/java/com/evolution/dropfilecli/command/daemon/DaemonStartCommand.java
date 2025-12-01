@@ -18,7 +18,7 @@ public class DaemonStartCommand implements Runnable {
     public void run() {
         String daemonHome = System.getenv("DROPFILE_DAEMON_HOME");
         if (daemonHome == null) {
-            System.err.println("No found DROPFILE_DAEMON_HOME");
+            System.err.println("DROPFILE_DAEMON_HOME has not set");
             return;
         }
 

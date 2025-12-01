@@ -1,12 +1,12 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.configuration.CommonUtils;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import com.evolution.dropfile.configuration.Preconditions;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
 import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -21,15 +21,14 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    private final DropFileAppConfig appConfig;
+    private final DropFileAppConfigManager appConfig;
 
-    private final DropFileSecretsConfig secretsConfig;
+    private final DropFileSecretsConfigManager secretsConfig;
 
-    @Autowired
     public DaemonClient(HttpClient httpClient,
                         ObjectMapper objectMapper,
-                        DropFileAppConfig appConfig,
-                        DropFileSecretsConfig secretsConfig) {
+                        DropFileAppConfigManager appConfig,
+                        DropFileSecretsConfigManager secretsConfig) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.appConfig = appConfig;
@@ -38,7 +37,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.get().getDaemonAddress());
         URI daemonPingUri = daemonURI.resolve("/api/ping");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -55,7 +54,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> getOnlineConnections() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.get().getDaemonAddress());
         URI daemonConnectionUri = daemonURI.resolve("/api/connections/online");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -76,7 +75,7 @@ public class DaemonClient {
                 address
         );
         String bodyJson = objectMapper.writeValueAsString(connectionsConnectionDTO);
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.get().getDaemonAddress());
         URI daemonConnectionUri = daemonURI.resolve("/api/connections/connect");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -94,7 +93,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> shutdown() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.get().getDaemonAddress());
         URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -111,7 +110,9 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        return "Bearer " + secretsConfig.getDaemonToken();
+        String daemonToken = secretsConfig.get().getDaemonToken();
+        Preconditions.checkState(() -> !daemonToken.isEmpty(), "Configuration daemon token is empty");
+        return "Bearer " + daemonToken;
 //        return "fake";
     }
 }

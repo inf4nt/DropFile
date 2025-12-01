@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class DropFileSecretsConfigFacade {
+public class DropFileSecretsConfigManager {
 
     private static final String SECRETS_WINDOWS_HOME_DIR = "DropFile";
 
@@ -15,20 +15,19 @@ public class DropFileSecretsConfigFacade {
 
     private static final String SECRETS_CONFIG_FILENAME = "secrets.config.json";
 
-    private static final DropFileSecretsConfig EMPTY = new DropFileSecretsConfig();
-
     private final ObjectMapper objectMapper;
 
-    public DropFileSecretsConfigFacade(ObjectMapper objectMapper) {
+    public DropFileSecretsConfigManager(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     public DropFileSecretsConfig get() {
         DropFileSecretsConfig config = read();
-        if (config == null) {
-            initConfigFiles();
-            initDefaultConfig();
+        if (config != null) {
+            return config;
         }
+        initConfigFiles();
+        initDefaultConfig();
         return read();
     }
 
