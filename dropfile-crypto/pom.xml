@@ -1,14 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evolution</groupId>
-    <artifactId>drop-file-configuration</artifactId>
+    <artifactId>dropfile-crypto</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>drop-file-configuration</name>
-    <description>drop-file-configuration</description>
+    <name>dropfile-crypto</name>
+    <description>dropfile-crypto</description>
 
     <properties>
         <java.version>21</java.version>
@@ -16,23 +14,13 @@
         <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot.dependencies.version>3.5.7</spring.boot.dependencies.version>
-        <drop.file.common.version>0.0.1-SNAPSHOT</drop.file.common.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.evolution</groupId>
-            <artifactId>drop-file-common</artifactId>
-            <version>${drop.file.common.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
 

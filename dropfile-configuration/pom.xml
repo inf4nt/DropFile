@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evolution</groupId>
-    <artifactId>drop-file-common</artifactId>
+    <artifactId>dropfile-configuration</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>drop-file-common</name>
-    <description>drop-file-common</description>
+    <name>dropfile-configuration</name>
+    <description>dropfile-configuration</description>
 
     <properties>
         <java.version>21</java.version>
@@ -16,13 +16,23 @@
         <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot.dependencies.version>3.5.7</spring.boot.dependencies.version>
+        <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
     </properties>
 
     <dependencies>
         <dependency>
+            <groupId>com.evolution</groupId>
+            <artifactId>dropfile-common</artifactId>
+            <version>${dropfile.common.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
 

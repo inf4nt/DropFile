@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.evolution</groupId>
-    <artifactId>drop-file-daemon</artifactId>
+    <artifactId>dropfile-daemon</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>drop-file-daemon</name>
-    <description>drop-file-daemon</description>
+    <name>dropfile-daemon</name>
+    <description>dropfile-daemon</description>
     <properties>
         <java.version>21</java.version>
         <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
@@ -22,13 +22,13 @@
     <dependencies>
         <dependency>
             <groupId>com.evolution</groupId>
-            <artifactId>drop-file-common</artifactId>
+            <artifactId>dropfile-common</artifactId>
             <version>${dropfile.common.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.evolution</groupId>
-            <artifactId>drop-file-configuration</artifactId>
+            <artifactId>dropfile-configuration</artifactId>
             <version>${dropfile.configuration.version}</version>
             <scope>compile</scope>
         </dependency>
