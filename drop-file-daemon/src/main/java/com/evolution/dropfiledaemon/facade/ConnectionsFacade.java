@@ -4,7 +4,7 @@ import com.evolution.dropfile.configuration.CommonUtils;
 import com.evolution.dropfile.configuration.dto.ConnectionsOnline;
 import com.evolution.dropfiledaemon.ConnectionStore;
 import com.evolution.dropfiledaemon.exception.ConnectionFacadeException;
-import com.evolution.dropfiledaemon.node.NodeClient;
+import com.evolution.dropfiledaemon.client.NodeClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

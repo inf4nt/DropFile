@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.node;
+package com.evolution.dropfiledaemon.client;
 
 import com.evolution.dropfile.configuration.dto.NodeConnectionsConnectionDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;

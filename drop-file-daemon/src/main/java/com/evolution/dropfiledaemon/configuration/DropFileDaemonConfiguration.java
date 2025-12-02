@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigManager;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,5 +45,10 @@ public class DropFileDaemonConfiguration {
             return appConfig.read(new File(customAppConfig));
         }
         return appConfig.get();
+    }
+
+    @Bean
+    public DropFileKeysConfigManager keysConfigManager() {
+        return new DropFileKeysConfigManager();
     }
 }

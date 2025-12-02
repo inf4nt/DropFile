@@ -1,5 +1,6 @@
 package com.evolution.dropfile.configuration.secret;
 
+import com.evolution.dropfile.configuration.AbstractProtectedConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
@@ -8,11 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class DropFileSecretsConfigManager {
-
-    private static final String SECRETS_WINDOWS_HOME_DIR = "DropFile";
-
-    private static final String SECRETS_UNIX_HOME_DIR = ".dropfile";
+public class DropFileSecretsConfigManager extends AbstractProtectedConfigManager {
 
     private static final String SECRETS_CONFIG_FILENAME = "secrets.config.json";
 
@@ -34,6 +31,11 @@ public class DropFileSecretsConfigManager {
 
     @SneakyThrows
     public void refreshDaemonToken() {
+        DropFileSecretsConfig current = read();
+        if (current == null) {
+            return;
+        }
+
         String daemonToken = UUID.randomUUID().toString();
         DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
         Path configPath = resolveConfigPath();
@@ -79,38 +81,5 @@ public class DropFileSecretsConfigManager {
     private Path resolveConfigPath() {
         Path homePath = resolveHomePath();
         return homePath.resolve(SECRETS_CONFIG_FILENAME);
-    }
-
-    private Path resolveHomePath() {
-        String basePath;
-        String dirName;
-        if (isWindows()) {
-            basePath = System.getenv("LOCALAPPDATA");
-            dirName = SECRETS_WINDOWS_HOME_DIR;
-        } else if (isLinux() || isMacOs()) {
-            basePath = System.getProperty("user.home");
-            dirName = SECRETS_UNIX_HOME_DIR;
-        } else {
-            throw new UnsupportedOperationException(
-                    "Unsupported operating system " + getOs()
-            );
-        }
-        return Path.of(basePath, dirName);
-    }
-
-    private boolean isMacOs() {
-        return getOs().toLowerCase().startsWith("mac");
-    }
-
-    private boolean isLinux() {
-        return getOs().toLowerCase().startsWith("linux");
-    }
-
-    private boolean isWindows() {
-        return getOs().toLowerCase().startsWith("windows");
-    }
-
-    private String getOs() {
-        return System.getProperty("os.name");
     }
 }

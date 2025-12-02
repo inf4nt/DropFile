@@ -20,16 +20,22 @@ public class ApplicationAuthFilter extends OncePerRequestFilter {
         this.tokenService = tokenService;
     }
 
-    private boolean isNodeRequest(HttpServletRequest request) {
+    private boolean isHandshake(HttpServletRequest request) {
         String servletPath = request.getServletPath();
-        return servletPath.startsWith("/node");
+        return servletPath.startsWith("/handshake");
+    }
+
+    // TODO drop it
+    private boolean isApiHandshake(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+        return servletPath.startsWith("/api/handshake/request");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if (isNodeRequest(request)) {
+        if (isHandshake(request) || isApiHandshake(request)) {
             filterChain.doFilter(request, response);
             return;
         }

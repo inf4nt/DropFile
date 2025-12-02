@@ -4,6 +4,7 @@ import com.evolution.dropfile.configuration.Preconditions;
 import com.evolution.dropfiledaemon.configuration.DaemonTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 @Service
 public class TokenService {
@@ -16,10 +17,9 @@ public class TokenService {
     }
 
     public boolean isValid(String tokenIncoming) {
-        Preconditions.checkState(
-                () -> !tokenIncoming.isEmpty(),
-                "Given token is empty"
-        );
+        if (ObjectUtils.isEmpty(tokenIncoming)) {
+            return false;
+        }
         String daemonToken = daemonTokenProvider.getToken();
         Preconditions.checkState(
                 () -> !daemonToken.isEmpty(),
