@@ -15,6 +15,5 @@
         <module>dropfile-configuration</module>
         <module>dropfile-cli</module>
         <module>dropfile-daemon</module>
-        <module>dropfile-crypto</module>
     </modules>
 </project>
