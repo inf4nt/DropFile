@@ -18,4 +18,8 @@ public class CommonUtils {
         }
         return URI.create(address);
     }
+
+    public static URI toURI(String address, int port) {
+        return toURI(address + ":" + port);
+    }
 }

@@ -55,10 +55,8 @@ public class ApiRestController {
     }
 
     @PostMapping("/handshake/request")
-    public ResponseEntity<Void> handshakeRequest(
-            @RequestBody HandshakeApiRequestDTO handShakeApiRequestDTO) {
-        handshakeFacade
-                .handshakeRequest(handShakeApiRequestDTO);
+    public ResponseEntity<Void> handshakeRequest(@RequestBody HandshakeApiRequestDTO requestBody) {
+        handshakeFacade.initializeRequest(requestBody);
         return ResponseEntity.ok().build();
     }
 }
