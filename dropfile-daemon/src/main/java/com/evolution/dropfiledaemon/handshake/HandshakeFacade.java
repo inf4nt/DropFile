@@ -2,10 +2,7 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.configuration.CommonUtils;
 import com.evolution.dropfile.configuration.crypto.CryptoUtils;
-import com.evolution.dropfile.configuration.dto.HandshakeApiRequestDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeRequestDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeStatusInfoDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeTrustDTO;
+import com.evolution.dropfile.configuration.dto.*;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.configuration.DropFileKeyPairProvider;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
@@ -66,7 +63,7 @@ public class HandshakeFacade {
     }
 
     @SneakyThrows
-    public void initializeRequest(HandshakeApiRequestDTO requestBody) {
+    public HandshakeApiRequestStatus initializeRequest(HandshakeApiRequestDTO requestBody) {
         URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
         PublicKey currentPublicKey = keyPairProvider.getKeyPair().getPublic();
         String currentFingerPrint = CryptoUtils.getFingerPrint(currentPublicKey);
@@ -80,17 +77,22 @@ public class HandshakeFacade {
             String publicKeyBase64 = handshakeTrustDTO.publicKey();
             byte[] publicKey = Base64.getDecoder().decode(publicKeyBase64);
             String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
-            handshakeManager.putTrust(
-                    fingerPrint,
-                    publicKey,
-                    decryptMessage
-            );
+            if (handshakeManager.getTrust(fingerPrint).isEmpty()) {
+                handshakeManager.putTrust(
+                        fingerPrint,
+                        publicKey,
+                        decryptMessage
+                );
+            }
+            return HandshakeApiRequestStatus.SUCCESS;
         } else if (handshakeResponse.statusCode() == 404) {
             handshakeClient.handshakeRequest(
                     nodeAddressURI,
                     currentPublicKey.getEncoded()
             );
+            return HandshakeApiRequestStatus.PENDING;
         }
+        throw new RuntimeException();
     }
 
     public void request(HandshakeRequestDTO requestDTO) {

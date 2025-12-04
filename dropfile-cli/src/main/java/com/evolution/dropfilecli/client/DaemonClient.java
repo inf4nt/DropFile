@@ -4,6 +4,7 @@ import com.evolution.dropfile.configuration.CommonUtils;
 import com.evolution.dropfile.configuration.Preconditions;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
+import com.evolution.dropfile.configuration.dto.HandshakeApiRequestDTO;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -109,6 +110,25 @@ public class DaemonClient {
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> handshakeRequest(String nodeAddress) {
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress())
+                .resolve("/api/handshake/request");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeApiRequestDTO(nodeAddress));
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .header("Content-Type", "application/json")
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     private String getDaemonAuthorizationToken() {

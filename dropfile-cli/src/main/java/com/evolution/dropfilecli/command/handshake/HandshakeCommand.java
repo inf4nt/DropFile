@@ -1,19 +1,17 @@
-package com.evolution.dropfilecli.command.daemon;
+package com.evolution.dropfilecli.command.handshake;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "daemon",
-        description = "Daemon commands",
+        name = "handshake",
+        description = "Handshake commands",
         subcommands = {
-                DaemonStatusCommand.class,
-                DaemonStartCommand.class,
-                DaemonShutdownCommand.class
+                HandshakeRequestCommand.class
         }
 )
-public class DaemonCommand implements Runnable {
+public class HandshakeCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

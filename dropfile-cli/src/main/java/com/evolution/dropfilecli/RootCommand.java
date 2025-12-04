@@ -4,6 +4,7 @@ import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
 import com.evolution.dropfilecli.command.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
+import com.evolution.dropfilecli.command.handshake.HandshakeCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -14,7 +15,8 @@ import picocli.CommandLine;
         versionProvider = ManifestVersionProvider.class,
         subcommands = {
                 ConnectionsCommand.class,
-                DaemonCommand.class
+                DaemonCommand.class,
+                HandshakeCommand.class
         }
 )
 public class RootCommand implements Runnable {
