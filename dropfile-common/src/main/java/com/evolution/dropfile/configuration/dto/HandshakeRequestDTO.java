@@ -1,5 +1,5 @@
 package com.evolution.dropfile.configuration.dto;
 
-public record HandshakeRequestDTO(byte[] publicKey) {
+public record HandshakeRequestDTO(String publicKey) {
 
 }

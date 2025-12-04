@@ -10,47 +10,21 @@ public class InMemoryHandshakeStoreManager implements HandshakeStoreManager {
     private final Map<String, ValueContainer> store = new ConcurrentHashMap<>();
 
     @Override
-    public HandshakeRequestValue request(String fingerprint, byte[] publicKey) {
-        ValueContainer valueContainer = store
-                .putIfAbsent(
-                        fingerprint,
-                        new ValueContainer(new HandshakeRequestValue(fingerprint, publicKey), null)
-                );
-        if (valueContainer == null) {
-            return null;
-        }
-        return valueContainer.request();
+    public HandshakeRequestValue putRequest(String fingerprint, byte[] publicKey) {
+        store.put(
+                fingerprint,
+                new ValueContainer(new HandshakeRequestValue(fingerprint, publicKey), null)
+        );
+        return store.get(fingerprint).request();
     }
 
     @Override
-    public HandshakeTrustValue requestToTrust(String fingerprint, byte[] secret) {
-        ValueContainer valueContainer = store.computeIfPresent(
+    public HandshakeTrustValue putTrust(String fingerprint, byte[] publicKey, byte[] secret) {
+        store.put(
                 fingerprint,
-                (fp, value) -> {
-                    if (value.trust() != null) {
-                        throw new AlreadyTrustException(fingerprint);
-                    }
-                    HandshakeRequestValue requestValue = value.request();
-                    HandshakeTrustValue trustValue = new HandshakeTrustValue(fingerprint, requestValue.publicKey(), secret);
-                    return new ValueContainer(null, trustValue);
-                }
+                new ValueContainer(null, new HandshakeTrustValue(fingerprint, publicKey, secret))
         );
-        if (valueContainer == null) {
-            throw new NoRequestException(fingerprint);
-        }
-        return valueContainer.trust();
-    }
-
-    @Override
-    public HandshakeTrustValue trust(String fingerprint, byte[] publicKey, byte[] secret) {
-        ValueContainer valueContainer = store.computeIfAbsent(
-                fingerprint,
-                fp -> {
-                    HandshakeTrustValue trustValue = new HandshakeTrustValue(fingerprint, publicKey, secret);
-                    return new ValueContainer(null, trustValue);
-                }
-        );
-        return valueContainer.trust();
+        return store.get(fingerprint).trust();
     }
 
     @Override

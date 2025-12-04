@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.PublicKey;
+import java.util.Base64;
 
 @Component
 public class HandshakeClient {
@@ -41,14 +42,11 @@ public class HandshakeClient {
 
     @SneakyThrows
     public HttpResponse<Void> handshakeRequest(URI handshakeNodeAddressURI,
-                                               PublicKey currentNodePublicKey) {
+                                               byte[] currentNodePublicKey) {
         URI handshakeURI = handshakeNodeAddressURI.resolve("/handshake/request");
 
-        byte[] payload = objectMapper.writeValueAsBytes(
-                new HandshakeRequestDTO(
-                        currentNodePublicKey.getEncoded()
-                )
-        );
+        String currentPublicKeyBase64 = Base64.getEncoder().encodeToString(currentNodePublicKey);
+        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeRequestDTO(currentPublicKeyBase64));
 
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()

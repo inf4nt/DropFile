@@ -3,13 +3,13 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.configuration.dto.HandshakeRequestDTO;
 import com.evolution.dropfile.configuration.dto.HandshakeStatusInfoDTO;
 import com.evolution.dropfile.configuration.dto.HandshakeTrustDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/handshake")
@@ -47,16 +47,15 @@ public class HandshakeRestController {
     }
 
     @PostMapping("/trust/{fingerprint}")
-    public ResponseEntity<HandshakeTrustDTO> approve(@PathVariable String fingerprint) {
-        HandshakeTrustDTO responseDTO = handshakeFacade.trust(fingerprint);
-        return ResponseEntity.ok(responseDTO);
+    public ResponseEntity<Void> approve(@PathVariable String fingerprint) {
+        handshakeFacade.trust(fingerprint);
+        return ResponseEntity.ok().build();
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = {
-            HandshakeStoreManager.NoRequestException.class,
-            HandshakeStoreManager.AlreadyTrustException.class
+            NoSuchElementException.class
     })
-    public void handleExceptions() {
+    public void noSuchElementExceptionToBadRequest() {
     }
 }

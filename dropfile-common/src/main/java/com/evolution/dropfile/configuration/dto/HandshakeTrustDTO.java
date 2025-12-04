@@ -1,5 +1,5 @@
 package com.evolution.dropfile.configuration.dto;
 
-public record HandshakeTrustDTO(byte[] publicKey,
-                                byte[] encryptMessage) {
+public record HandshakeTrustDTO(String publicKey,
+                                String encryptMessage) {
 }

@@ -1,13 +1,5 @@
 package com.evolution.dropfile.configuration.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record HandshakeApiRequestDTO(String nodeAddress) {
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
-public class HandshakeApiRequestDTO {
-
-    private String nodeAddress;
 }
