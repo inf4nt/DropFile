@@ -42,7 +42,7 @@ public class HandshakeFacade {
         this.objectMapper = objectMapper;
     }
 
-    public Map<String, List<HandshakeInfoDTO>> getValues() {
+    public Map<String, List<HandshakeInfoDTO>> getStatus() {
         return new LinkedHashMap<>() {{
             List<HandshakeInfoDTO> requests = handshakeManager.getRequests().stream()
                     .map(it -> new HandshakeInfoDTO(it.fingerprint(), it.publicKey())).toList();

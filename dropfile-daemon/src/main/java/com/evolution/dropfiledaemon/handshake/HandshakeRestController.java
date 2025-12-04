@@ -25,8 +25,8 @@ public class HandshakeRestController {
     }
 
     @GetMapping("/status")
-    public Map<String, List<HandshakeInfoDTO>> get() {
-        return handshakeFacade.getValues();
+    public Map<String, List<HandshakeInfoDTO>> getStatus() {
+        return handshakeFacade.getStatus();
     }
 
     @PostMapping("/request")
