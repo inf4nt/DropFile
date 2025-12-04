@@ -28,7 +28,7 @@ public class ApplicationAuthFilter extends OncePerRequestFilter {
     // TODO drop it
     private boolean isApiHandshake(HttpServletRequest request) {
         String servletPath = request.getServletPath();
-        return servletPath.startsWith("/api/handshake/request");
+        return servletPath.startsWith("/api/handshake/");
     }
 
     @Override

@@ -4,6 +4,8 @@ import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfigManager;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
+import com.evolution.dropfiledaemon.handshake.store.InMemoryHandshakeStoreManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -50,5 +52,10 @@ public class DropFileDaemonConfiguration {
     @Bean
     public DropFileKeysConfigManager keysConfigManager() {
         return new DropFileKeysConfigManager();
+    }
+
+    @Bean
+    public HandshakeStoreManager handshakeStore() {
+        return new InMemoryHandshakeStoreManager();
     }
 }

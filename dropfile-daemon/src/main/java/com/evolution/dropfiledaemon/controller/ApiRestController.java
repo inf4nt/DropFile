@@ -5,7 +5,7 @@ import com.evolution.dropfile.configuration.dto.ConnectionsConnectionResultDTO;
 import com.evolution.dropfile.configuration.dto.ConnectionsOnline;
 import com.evolution.dropfile.configuration.dto.HandshakeApiRequestDTO;
 import com.evolution.dropfiledaemon.facade.ConnectionsFacade;
-import com.evolution.dropfiledaemon.facade.HandshakeFacade;
+import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,8 +54,8 @@ public class ApiRestController {
         return new ConnectionsConnectionResultDTO(resultConnectionId, connectionAddress);
     }
 
-    @PostMapping("/handshake/request")
-    public ResponseEntity<Void> handshakeRequest(@RequestBody HandshakeApiRequestDTO requestBody) {
+    @PostMapping("/handshake/initialize")
+    public ResponseEntity<Void> handshakeInitialize(@RequestBody HandshakeApiRequestDTO requestBody) {
         handshakeFacade.initializeRequest(requestBody);
         return ResponseEntity.ok().build();
     }

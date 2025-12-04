@@ -1,15 +1,5 @@
 package com.evolution.dropfile.configuration.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record HandshakeRequestDTO(byte[] publicKey) {
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
-public class HandshakeRequestDTO {
-
-    private byte[] publicKey;
-
-    private int port;
 }
