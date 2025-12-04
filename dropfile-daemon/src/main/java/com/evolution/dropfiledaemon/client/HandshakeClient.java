@@ -29,7 +29,7 @@ public class HandshakeClient {
     @SneakyThrows
     public HttpResponse<byte[]> getHandshake(URI handshakeNodeAddressURI, String fingerprint) {
         URI handshakeURI = handshakeNodeAddressURI
-                .resolve("/handshake/" + fingerprint);
+                .resolve("/handshake/trust/" + fingerprint);
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
                 .uri(handshakeURI)

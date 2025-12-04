@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.configuration.dto.HandshakeApproveDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeInfoDTO;
 import com.evolution.dropfile.configuration.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.configuration.dto.HandshakeStatusInfoDTO;
+import com.evolution.dropfile.configuration.dto.HandshakeTrustDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/handshake")
@@ -24,9 +22,9 @@ public class HandshakeRestController {
         this.handshakeFacade = handshakeFacade;
     }
 
-    @GetMapping("/status")
-    public Map<String, List<HandshakeInfoDTO>> getStatus() {
-        return handshakeFacade.getStatus();
+    @GetMapping("/request")
+    public List<HandshakeStatusInfoDTO> getRequests() {
+        return handshakeFacade.getRequests();
     }
 
     @PostMapping("/request")
@@ -35,17 +33,22 @@ public class HandshakeRestController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{fingerprint}")
-    public ResponseEntity<HandshakeApproveDTO> status(@PathVariable String fingerprint) {
-        Optional<HandshakeApproveDTO> handshakeStatus = handshakeFacade.getHandshakeApprove(fingerprint);
-        return handshakeStatus
+    @GetMapping("/trust")
+    public List<HandshakeStatusInfoDTO> getTrust() {
+        return handshakeFacade.getTrusts();
+    }
+
+    @GetMapping("/trust/{fingerprint}")
+    public ResponseEntity<HandshakeTrustDTO> trustStatus(@PathVariable String fingerprint) {
+        return handshakeFacade
+                .getHandshakeApprove(fingerprint)
                 .map(it -> new ResponseEntity<>(it, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/approve/{fingerprint}")
-    public ResponseEntity<HandshakeApproveDTO> approve(@PathVariable String fingerprint) {
-        HandshakeApproveDTO responseDTO = handshakeFacade.approve(fingerprint);
+    @PostMapping("/trust/{fingerprint}")
+    public ResponseEntity<HandshakeTrustDTO> approve(@PathVariable String fingerprint) {
+        HandshakeTrustDTO responseDTO = handshakeFacade.trust(fingerprint);
         return ResponseEntity.ok(responseDTO);
     }
 
