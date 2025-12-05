@@ -1,8 +1,6 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.configuration.dto.HandshakeRequestDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeStatusInfoDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeTrustDTO;
+import com.evolution.dropfile.configuration.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +48,12 @@ public class HandshakeRestController {
     public ResponseEntity<Void> approve(@PathVariable String fingerprint) {
         handshakeFacade.trust(fingerprint);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/challenge")
+    public ResponseEntity<HandshakeChallengeResponseDTO> challenge(
+            @RequestBody HandshakeChallengeRequestDTO requestDTO) {
+        return ResponseEntity.ok(handshakeFacade.challenge(requestDTO));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

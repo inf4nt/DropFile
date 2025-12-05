@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
@@ -71,26 +72,41 @@ public class HandshakeFacade {
         if (handshakeResponse.statusCode() == 200) {
             HandshakeTrustDTO handshakeTrustDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeTrustDTO.class);
             PrivateKey currentPrivateKey = keyPairProvider.getKeyPair().getPrivate();
-            String encryptMessageBase64 = handshakeTrustDTO.encryptMessage();
-            byte[] encryptMessage = Base64.getDecoder().decode(encryptMessageBase64);
-            byte[] decryptMessage = CryptoUtils.decrypt(currentPrivateKey, encryptMessage);
             String publicKeyBase64 = handshakeTrustDTO.publicKey();
             byte[] publicKey = Base64.getDecoder().decode(publicKeyBase64);
             String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
-            if (handshakeManager.getTrust(fingerPrint).isEmpty()) {
-                handshakeManager.putTrust(
-                        fingerPrint,
-                        publicKey,
-                        decryptMessage
-                );
+
+            if (handshakeManager.getTrust(fingerPrint).isPresent()) {
+                return HandshakeApiRequestStatus.SUCCESS;
             }
+
+            String challenge = UUID.randomUUID().toString();
+            HttpResponse<byte[]> challengeResponse = handshakeClient
+                    .getChallenge(nodeAddressURI, challenge);
+            HandshakeChallengeResponseDTO challengeResponseDTO = objectMapper
+                    .readValue(challengeResponse.body(), HandshakeChallengeResponseDTO.class);
+
+            boolean verify = CryptoUtils.verify(challenge, challengeResponseDTO.signature(), publicKey);
+            if (!verify) {
+                return HandshakeApiRequestStatus.CHALLENGE_FAILED;
+            }
+            String encryptMessageBase64 = handshakeTrustDTO.encryptMessage();
+            byte[] encryptMessage = Base64.getDecoder().decode(encryptMessageBase64);
+            byte[] decryptMessage = CryptoUtils.decrypt(currentPrivateKey, encryptMessage);
+            handshakeManager.putTrust(
+                    fingerPrint,
+                    publicKey,
+                    decryptMessage
+            );
             return HandshakeApiRequestStatus.SUCCESS;
         } else if (handshakeResponse.statusCode() == 404) {
-            handshakeClient.handshakeRequest(
+            HttpResponse<Void> httpResponse = handshakeClient.handshakeRequest(
                     nodeAddressURI,
                     currentPublicKey.getEncoded()
             );
-            return HandshakeApiRequestStatus.PENDING;
+            if (httpResponse.statusCode() == 200) {
+                return HandshakeApiRequestStatus.PENDING;
+            }
         }
         throw new RuntimeException();
     }
@@ -133,5 +149,12 @@ public class HandshakeFacade {
                 .getRequest(fingerprint)
                 .orElseThrow();
         handshakeManager.putTrust(fingerprint, requestValue.publicKey(), secret);
+    }
+
+    public HandshakeChallengeResponseDTO challenge(HandshakeChallengeRequestDTO requestDTO) {
+        KeyPair keyPair = keyPairProvider.getKeyPair();
+        PrivateKey privateKey = keyPair.getPrivate();
+        String signature = CryptoUtils.sign(requestDTO.challenge(), privateKey);
+        return new HandshakeChallengeResponseDTO(signature);
     }
 }

@@ -1,5 +1,7 @@
 package com.evolution.dropfiledaemon.client;
 
+import com.evolution.dropfile.configuration.dto.HandshakeChallengeRequestDTO;
+import com.evolution.dropfile.configuration.dto.HandshakeChallengeResponseDTO;
 import com.evolution.dropfile.configuration.dto.HandshakeRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -25,6 +27,21 @@ public class HandshakeClient {
                            ObjectMapper objectMapper) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> getChallenge(URI handshakeNodeAddressURI, String challenge) {
+        URI handshakeURI = handshakeNodeAddressURI
+                .resolve("/handshake/challenge");
+        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeChallengeRequestDTO(challenge));
+        HttpRequest httpRequest = HttpRequest
+                .newBuilder()
+                .uri(handshakeURI)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
