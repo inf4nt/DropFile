@@ -1,25 +1,15 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigManager;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
-import com.evolution.dropfiledaemon.handshake.store.InMemoryHandshakeStoreManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.ObjectUtils;
 
-import java.io.File;
 import java.net.http.HttpClient;
 
 @Configuration
 public class DropFileDaemonConfiguration {
-
-    @Value("${config.app:#{null}}")
-    private String customAppConfig;
 
     @Bean
     public HttpClient httpClient() {
@@ -41,21 +31,4 @@ public class DropFileDaemonConfiguration {
         return new DropFileSecretsConfigManager(objectMapper);
     }
 
-    @Bean
-    public DropFileAppConfig appConfig(DropFileAppConfigManager appConfig) {
-        if (!ObjectUtils.isEmpty(customAppConfig)) {
-            return appConfig.read(new File(customAppConfig));
-        }
-        return appConfig.get();
-    }
-
-    @Bean
-    public DropFileKeysConfigManager keysConfigManager() {
-        return new DropFileKeysConfigManager();
-    }
-
-    @Bean
-    public HandshakeStoreManager handshakeStore() {
-        return new InMemoryHandshakeStoreManager();
-    }
 }
