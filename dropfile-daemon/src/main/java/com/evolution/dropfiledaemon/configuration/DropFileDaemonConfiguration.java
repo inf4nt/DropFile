@@ -1,7 +1,5 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,15 +18,4 @@ public class DropFileDaemonConfiguration {
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
-
-    @Bean
-    public DropFileAppConfigManager appConfigManager(ObjectMapper objectMapper) {
-        return new DropFileAppConfigManager(objectMapper);
-    }
-
-    @Bean
-    public DropFileSecretsConfigManager secretsConfigManager(ObjectMapper objectMapper) {
-        return new DropFileSecretsConfigManager(objectMapper);
-    }
-
 }
