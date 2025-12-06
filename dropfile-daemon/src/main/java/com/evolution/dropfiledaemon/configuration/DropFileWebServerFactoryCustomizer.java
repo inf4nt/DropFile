@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -10,16 +11,16 @@ import org.springframework.context.annotation.Configuration;
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private final DropFileAppConfig.DropFileDaemonAppConfig appConfig;
+    private final ObjectProvider<DropFileAppConfig.DropFileDaemonAppConfig> appConfig;
 
     @Autowired
-    public DropFileWebServerFactoryCustomizer(DropFileAppConfig.DropFileDaemonAppConfig appConfig) {
+    public DropFileWebServerFactoryCustomizer(ObjectProvider<DropFileAppConfig.DropFileDaemonAppConfig> appConfig) {
         this.appConfig = appConfig;
     }
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        Integer daemonPort = appConfig.getDaemonPort();
+        Integer daemonPort = appConfig.getObject().getDaemonPort();
         factory.setPort(daemonPort);
     }
 }

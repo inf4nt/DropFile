@@ -37,6 +37,15 @@ public class DropFileAppConfigManager {
     }
 
     @SneakyThrows
+    public DropFileAppConfig save(DropFileAppConfig config) {
+        initAppConfigFiles();
+        Path appConfigPath = getAppConfigPath();
+        String jsonConfig = objectMapper.writeValueAsString(config);
+        Files.writeString(appConfigPath, jsonConfig);
+        return config;
+    }
+
+    @SneakyThrows
     public DropFileAppConfig read(File file) {
         if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
             return null;
@@ -64,7 +73,6 @@ public class DropFileAppConfigManager {
 
     @SneakyThrows
     private void initDefaultConfig() {
-        Path appConfigPath = getAppConfigPath();
         DropFileAppConfig config = new DropFileAppConfig(
                 new DropFileAppConfig.DropFileCliAppConfig(
                         APP_CONFIG_DAEMON_HOST,
@@ -72,11 +80,11 @@ public class DropFileAppConfigManager {
                 ),
                 new DropFileAppConfig.DropFileDaemonAppConfig(
                         APP_CONFIG_DOWNLOAD_DIR,
-                        APP_CONFIG_DAEMON_PORT
+                        APP_CONFIG_DAEMON_PORT,
+                        null
                 )
         );
-        String jsonConfig = objectMapper.writeValueAsString(config);
-        Files.writeString(appConfigPath, jsonConfig);
+        save(config);
     }
 
     private Path getAppConfigHomeDirPath() {

@@ -9,9 +9,11 @@ import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigManager;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
 import com.evolution.dropfiledaemon.handshake.store.InMemoryHandshakeStoreManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 
 import java.security.KeyPair;
 
@@ -29,9 +31,10 @@ public class DropFileDaemonConfigurationProd {
         return new DropFileSecretsConfigManager(objectMapper);
     }
 
+    @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     @Bean
     public DropFileAppConfig.DropFileDaemonAppConfig appConfig(DropFileAppConfigManager appConfig) {
-        return appConfig.get().getDropFileDaemonAppConfig();
+        return appConfig.get().getDaemonAppConfig();
     }
 
     @Bean

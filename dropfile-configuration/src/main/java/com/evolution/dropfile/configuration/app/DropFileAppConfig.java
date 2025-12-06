@@ -4,14 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.net.URI;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 public class DropFileAppConfig {
 
-    private DropFileCliAppConfig dropFileCliAppConfig;
+    private DropFileCliAppConfig cliAppConfig;
 
-    private DropFileDaemonAppConfig dropFileDaemonAppConfig;
+    private DropFileDaemonAppConfig daemonAppConfig;
 
     @NoArgsConstructor
     @AllArgsConstructor
@@ -29,5 +31,7 @@ public class DropFileAppConfig {
         private String downloadDirectory;
 
         private Integer daemonPort;
+
+        private URI publicDaemonAddressURI;
     }
 }
