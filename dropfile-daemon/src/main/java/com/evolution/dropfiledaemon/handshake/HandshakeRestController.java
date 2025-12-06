@@ -39,7 +39,6 @@ public class HandshakeRestController {
 
     @PostMapping("/request")
     public ResponseEntity<HandshakeRequestResponseDTO> request(@RequestBody HandshakeRequestDTO requestDTO) {
-        ;
         return ResponseEntity.ok(handshakeFacade.request(requestDTO));
     }
 
