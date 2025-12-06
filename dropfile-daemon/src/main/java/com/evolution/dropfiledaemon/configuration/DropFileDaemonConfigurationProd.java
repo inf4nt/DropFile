@@ -47,7 +47,7 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public DropFileKeysConfig keysConfig(DropFileKeysConfigManager configManager) {
-        KeyPair keyPair = configManager.getKeyPair();
+        KeyPair keyPair = configManager.get();
         return new DropFileKeysConfig(keyPair);
     }
 

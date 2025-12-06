@@ -19,7 +19,7 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
 
     private static final String PRIVATE_KEY_FILENAME = "private.key";
 
-    public KeyPair getKeyPair() {
+    public KeyPair get() {
         KeyPair keyPair = readKeyPair();
         if (keyPair == null) {
             initConfigFiles();
