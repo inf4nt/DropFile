@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private final DropFileAppConfig appConfig;
+    private final DropFileAppConfig.DropFileDaemonAppConfig appConfig;
 
     @Autowired
-    public DropFileWebServerFactoryCustomizer(DropFileAppConfig appConfig) {
+    public DropFileWebServerFactoryCustomizer(DropFileAppConfig.DropFileDaemonAppConfig appConfig) {
         this.appConfig = appConfig;
     }
 

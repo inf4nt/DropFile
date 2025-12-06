@@ -30,8 +30,8 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DropFileAppConfig appConfig(DropFileAppConfigManager appConfig) {
-        return appConfig.get();
+    public DropFileAppConfig.DropFileDaemonAppConfig appConfig(DropFileAppConfigManager appConfig) {
+        return appConfig.get().getDropFileDaemonAppConfig();
     }
 
     @Bean

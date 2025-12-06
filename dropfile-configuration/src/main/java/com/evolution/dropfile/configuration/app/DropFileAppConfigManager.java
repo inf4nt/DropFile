@@ -18,7 +18,7 @@ public class DropFileAppConfigManager {
 
     private static final String APP_CONFIG_DAEMON_HOST = "127.0.0.1";
 
-    private static final Integer APP_CONFIG_DAEMON_IP = 18181;
+    private static final Integer APP_CONFIG_DAEMON_PORT = 18181;
 
     private final ObjectMapper objectMapper;
 
@@ -66,9 +66,14 @@ public class DropFileAppConfigManager {
     private void initDefaultConfig() {
         Path appConfigPath = getAppConfigPath();
         DropFileAppConfig config = new DropFileAppConfig(
-                APP_CONFIG_DOWNLOAD_DIR,
-                APP_CONFIG_DAEMON_HOST,
-                APP_CONFIG_DAEMON_IP
+                new DropFileAppConfig.DropFileCliAppConfig(
+                        APP_CONFIG_DAEMON_HOST,
+                        APP_CONFIG_DAEMON_PORT
+                ),
+                new DropFileAppConfig.DropFileDaemonAppConfig(
+                        APP_CONFIG_DOWNLOAD_DIR,
+                        APP_CONFIG_DAEMON_PORT
+                )
         );
         String jsonConfig = objectMapper.writeValueAsString(config);
         Files.writeString(appConfigPath, jsonConfig);

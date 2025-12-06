@@ -24,8 +24,8 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public DropFileAppConfig appConfig(DropFileAppConfigManager appConfig) {
-        return appConfig.get();
+    public DropFileAppConfig.DropFileCliAppConfig appConfig(DropFileAppConfigManager appConfig) {
+        return appConfig.get().getDropFileCliAppConfig();
     }
 
     @Bean

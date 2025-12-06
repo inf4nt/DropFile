@@ -14,13 +14,11 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationDev {
 
     @Bean
-    public DropFileAppConfig appConfig(@Value("${dropfile.download.directory}") String downloadDirectory,
-                                       @Value("${dropfile.daemon.host}") String daemonHost,
-                                       @Value("${dropfile.daemon.port}") Integer daemonPort) {
-        log.info("Provided download directory: {}", downloadDirectory);
+    public DropFileAppConfig.DropFileCliAppConfig appConfig(@Value("${dropfile.daemon.host}") String daemonHost,
+                                                            @Value("${dropfile.daemon.port}") Integer daemonPort) {
         log.info("Provided daemon host: {}", daemonHost);
         log.info("Provided daemon port: {}", daemonPort);
-        return new DropFileAppConfig(downloadDirectory, daemonHost, daemonPort);
+        return new DropFileAppConfig.DropFileCliAppConfig(daemonHost, daemonPort);
     }
 
     @Bean

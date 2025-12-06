@@ -9,9 +9,25 @@ import lombok.NoArgsConstructor;
 @Getter
 public class DropFileAppConfig {
 
-    private String downloadDirectory;
+    private DropFileCliAppConfig dropFileCliAppConfig;
 
-    private String daemonHost;
+    private DropFileDaemonAppConfig dropFileDaemonAppConfig;
 
-    private Integer daemonPort;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class DropFileCliAppConfig {
+        private String daemonHost;
+
+        private Integer daemonPort;
+    }
+
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class DropFileDaemonAppConfig {
+        private String downloadDirectory;
+
+        private Integer daemonPort;
+    }
 }
