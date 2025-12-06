@@ -1,7 +1,7 @@
 package com.evolution.dropfile.configuration.keys;
 
 import com.evolution.dropfile.configuration.AbstractProtectedConfigManager;
-import com.evolution.dropfile.configuration.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.CryptoUtils;
 import lombok.SneakyThrows;
 
 import java.nio.file.Files;

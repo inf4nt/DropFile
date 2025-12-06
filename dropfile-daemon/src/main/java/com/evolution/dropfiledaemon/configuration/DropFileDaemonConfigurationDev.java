@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;

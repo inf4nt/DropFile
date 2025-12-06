@@ -1,4 +1,4 @@
-package com.evolution.dropfile.configuration.crypto;
+package com.evolution.dropfile.common.crypto;
 
 import lombok.SneakyThrows;
 

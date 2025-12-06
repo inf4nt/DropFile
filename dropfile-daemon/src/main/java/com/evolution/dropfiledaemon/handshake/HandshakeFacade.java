@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.configuration.CommonUtils;
-import com.evolution.dropfile.configuration.crypto.CryptoUtils;
-import com.evolution.dropfile.configuration.dto.*;
+import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.exception.HandshakeRequestAlreadyTrustedException;

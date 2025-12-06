@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.handshake;
 
-import com.evolution.dropfile.configuration.dto.HandshakeApiRequestStatus;
+import com.evolution.dropfile.common.dto.HandshakeApiRequestStatus;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;

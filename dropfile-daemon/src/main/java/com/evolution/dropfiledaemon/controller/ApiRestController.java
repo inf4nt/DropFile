@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.configuration.dto.*;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.facade.ConnectionsFacade;
 import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import org.springframework.beans.factory.annotation.Autowired;

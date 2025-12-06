@@ -1,4 +1,4 @@
-package com.evolution.dropfile.configuration;
+package com.evolution.dropfile.common;
 
 
 import java.net.URI;

@@ -1,4 +1,4 @@
-package com.evolution.dropfile.configuration.dto;
+package com.evolution.dropfile.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

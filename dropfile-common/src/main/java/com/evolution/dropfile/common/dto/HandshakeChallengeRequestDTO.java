@@ -1,4 +1,4 @@
-package com.evolution.dropfile.configuration.dto;
+package com.evolution.dropfile.common.dto;
 
 public record HandshakeChallengeRequestDTO(String challenge) {
 }

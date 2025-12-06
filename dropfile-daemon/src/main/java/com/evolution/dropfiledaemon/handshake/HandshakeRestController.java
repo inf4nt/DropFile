@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.configuration.dto.*;
+import com.evolution.dropfile.common.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

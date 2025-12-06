@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.configuration.CommonUtils;
-import com.evolution.dropfile.configuration.dto.ConnectionsOnline;
+import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.ConnectionsOnline;
 import com.evolution.dropfiledaemon.ConnectionStore;
 import com.evolution.dropfiledaemon.exception.ConnectionFacadeException;
 import com.evolution.dropfiledaemon.client.NodeClient;

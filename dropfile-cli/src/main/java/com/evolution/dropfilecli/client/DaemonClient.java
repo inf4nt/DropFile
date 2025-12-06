@@ -1,9 +1,9 @@
 package com.evolution.dropfilecli.client;
 
-import com.evolution.dropfile.configuration.CommonUtils;
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
-import com.evolution.dropfile.configuration.dto.HandshakeApiRequestDTO;
+import com.evolution.dropfile.common.dto.ConnectionsConnectionDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiRequestDTO;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
