@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import java.net.URI;
 import java.security.KeyPair;
 import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Profile("dev")
@@ -33,7 +34,9 @@ public class DropFileDaemonConfigurationDev {
         log.info("Provided download directory: {}", downloadDirectory);
         log.info("Provided daemon port: {}", daemonPort);
         log.info("Provided public address: {}", publicAddress);
-        URI publicAddressURI = CommonUtils.toURI(publicAddress);
+        URI publicAddressURI = Optional.ofNullable(publicAddress)
+                .map(it -> CommonUtils.toURI(publicAddress))
+                .orElse(null);
         return new DropFileAppConfig.DropFileDaemonAppConfig(downloadDirectory, daemonPort, publicAddressURI);
     }
 
