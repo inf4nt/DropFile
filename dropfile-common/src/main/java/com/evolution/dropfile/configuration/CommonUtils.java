@@ -12,14 +12,17 @@ public class CommonUtils {
                 .substring(0, 8);
     }
 
-    public static URI toURI(String address) {
-        if (!address.startsWith("http://") || !address.startsWith("https://")) {
-            return URI.create("http://" + address);
+    public static URI toURI(String host) {
+        if (!host.startsWith("http://") || !host.startsWith("https://")) {
+            return URI.create("http://" + host);
         }
-        return URI.create(address);
+        return URI.create(host);
     }
 
-    public static URI toURI(String address, int port) {
-        return toURI(address + ":" + port);
+    public static URI toURI(String host, Integer port) {
+        if (port == null) {
+            return toURI(host);
+        }
+        return toURI(host + ":" + port);
     }
 }

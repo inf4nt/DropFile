@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.CommonUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
@@ -20,7 +19,7 @@ public class DropFileWebServerFactoryCustomizer
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        int port = CommonUtils.toURI(appConfig.getDaemonAddress()).getPort();
-        factory.setPort(port);
+        Integer daemonPort = appConfig.getDaemonPort();
+        factory.setPort(daemonPort);
     }
 }

@@ -11,5 +11,7 @@ public class DropFileAppConfig {
 
     private String downloadDirectory;
 
-    private String daemonAddress;
+    private String daemonHost;
+
+    private Integer daemonPort;
 }

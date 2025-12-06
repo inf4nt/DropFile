@@ -33,7 +33,8 @@ public class RootCommand implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Daemon address: " + appConfig.getDaemonAddress());
+        System.out.println("Daemon host: " + appConfig.getDaemonHost());
+        System.out.println("Daemon port: " + appConfig.getDaemonPort());
         System.out.println("Download directory: " + appConfig.getDownloadDirectory());
         spec.commandLine().usage(System.out);
     }

@@ -1,7 +1,6 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.configuration.CommonUtils;
-import com.evolution.dropfile.configuration.Preconditions;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.dto.ConnectionsConnectionDTO;
 import com.evolution.dropfile.configuration.dto.HandshakeApiRequestDTO;
@@ -15,6 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 
 @Component
 public class DaemonClient {
@@ -40,7 +40,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonHost(), appConfig.getDaemonPort());
         URI daemonPingUri = daemonURI.resolve("/api/ping");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -57,7 +57,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> getOnlineConnections() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonHost(), appConfig.getDaemonPort());
         URI daemonConnectionUri = daemonURI.resolve("/api/connections/online");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -78,7 +78,7 @@ public class DaemonClient {
                 address
         );
         String bodyJson = objectMapper.writeValueAsString(connectionsConnectionDTO);
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonHost(), appConfig.getDaemonPort());
         URI daemonConnectionUri = daemonURI.resolve("/api/connections/connect");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -96,7 +96,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> shutdown() {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress());
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonHost(), appConfig.getDaemonPort());
         URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -114,7 +114,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeRequest(String nodeAddress) {
-        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonAddress())
+        URI daemonURI = CommonUtils.toURI(appConfig.getDaemonHost(), appConfig.getDaemonPort())
                 .resolve("/api/handshake/request");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -132,8 +132,7 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        String daemonToken = secretsConfig.getDaemonToken();
-        Preconditions.checkState(() -> !daemonToken.isEmpty(), "Configuration daemon token is empty");
+        String daemonToken = Objects.requireNonNull(secretsConfig.getDaemonToken());
         return "Bearer " + daemonToken;
 //        return "fake";
     }

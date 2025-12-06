@@ -22,10 +22,12 @@ public class DropFileDaemonConfigurationDev {
 
     @Bean
     public DropFileAppConfig appConfig(@Value("${dropfile.download.directory}") String downloadDirectory,
-                                       @Value("${dropfile.daemon.address}") String daemonAddress) {
+                                       @Value("${dropfile.daemon.host}") String daemonHost,
+                                       @Value("${dropfile.daemon.port}") Integer daemonPort) {
         log.info("Provided download directory: {}", downloadDirectory);
-        log.info("Provided daemon address: {}", daemonAddress);
-        return new DropFileAppConfig(downloadDirectory, daemonAddress);
+        log.info("Provided daemon host: {}", daemonHost);
+        log.info("Provided daemon port: {}", daemonPort);
+        return new DropFileAppConfig(downloadDirectory, daemonHost, daemonPort);
     }
 
     @Bean
