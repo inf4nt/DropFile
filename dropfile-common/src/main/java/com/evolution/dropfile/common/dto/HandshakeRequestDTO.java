@@ -1,5 +1,7 @@
 package com.evolution.dropfile.common.dto;
 
-public record HandshakeRequestDTO(String publicKey) {
+import java.net.URI;
+
+public record HandshakeRequestDTO(URI addressURI, String publicKey) {
 
 }

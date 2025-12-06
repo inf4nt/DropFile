@@ -51,18 +51,20 @@ public class HandshakeClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> handshakeRequest(URI handshakeNodeAddressURI,
-                                               byte[] publicKey) {
+    public HttpResponse<byte[]> handshakeRequest(URI currentAddressURI,
+                                                 URI handshakeNodeAddressURI,
+                                                 byte[] publicKey) {
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
                 .uri(handshakeNodeAddressURI.resolve("/handshake/request"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(new HandshakeRequestDTO(
+                                currentAddressURI,
                                 Base64.getEncoder().encodeToString(publicKey)
                         ))
                 ))
                 .header("Content-Type", "application/json")
                 .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 }

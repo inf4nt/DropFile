@@ -1,5 +1,10 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeAllowedInKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeAllowedOutKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeIncomingRequestKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeOutgoingRequestKeyValueStore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
@@ -20,5 +25,15 @@ public class DropFileDaemonConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         return objectMapper;
+    }
+
+    @Bean
+    public HandshakeStore handshakeStore() {
+        return new HandshakeStore(
+                new RuntimeIncomingRequestKeyValueStore(),
+                new RuntimeOutgoingRequestKeyValueStore(),
+                new RuntimeAllowedInKeyValueStore(),
+                new RuntimeAllowedOutKeyValueStore()
+        );
     }
 }

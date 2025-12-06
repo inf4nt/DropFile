@@ -5,8 +5,6 @@ import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStoreManager;
-import com.evolution.dropfiledaemon.handshake.store.InMemoryHandshakeStoreManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -65,10 +63,5 @@ public class DropFileDaemonConfigurationDev {
                         CryptoUtils.getPrivateKey(Base64.getDecoder().decode(privateKey))
                 )
         );
-    }
-
-    @Bean
-    public HandshakeStoreManager handshakeStore() {
-        return new InMemoryHandshakeStoreManager();
     }
 }
