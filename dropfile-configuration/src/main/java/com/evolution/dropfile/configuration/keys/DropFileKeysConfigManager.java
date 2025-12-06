@@ -1,9 +1,9 @@
 package com.evolution.dropfile.configuration.keys;
 
 import com.evolution.dropfile.configuration.AbstractProtectedConfigManager;
+import com.evolution.dropfile.configuration.crypto.CryptoUtils;
 import lombok.SneakyThrows;
 
-import javax.crypto.Cipher;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
@@ -19,32 +19,16 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
 
     private static final String PRIVATE_KEY_FILENAME = "private.key";
 
-    private KeyPair keyPair;
-
-    @SneakyThrows
     public KeyPair getKeyPair() {
-        if (keyPair != null) {
-            return keyPair;
+        KeyPair keyPair = readKeyPair();
+        if (keyPair == null) {
+            initConfigFiles();
+            initDefaultConfigValues();
         }
-
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(2048);
-        KeyPair pair = generator.generateKeyPair();
-        this.keyPair = pair;
-
-        return pair;
+        keyPair = readKeyPair();
+        Objects.requireNonNull(keyPair);
+        return keyPair;
     }
-
-//    public KeyPair getKeyPair() {
-//        KeyPair keyPair = readKeyPair();
-//        if (keyPair == null) {
-//            initConfigFiles();
-//            initDefaultConfigValues();
-//        }
-//        keyPair = readKeyPair();
-//        Objects.requireNonNull(keyPair);
-//        return keyPair;
-//    }
 
     @SneakyThrows
     private KeyPair readKeyPair() {
@@ -84,12 +68,9 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
 
     @SneakyThrows
     public void initDefaultConfigValues() {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(2048);
-        KeyPair pair = generator.generateKeyPair();
-
-        Files.write(resolvePublicKeyFilePath(), pair.getPublic().getEncoded());
-        Files.write(resolvePrivateKeyFilePath(), pair.getPrivate().getEncoded());
+        KeyPair keyPair = CryptoUtils.generateKeyPair();
+        Files.write(resolvePublicKeyFilePath(), keyPair.getPublic().getEncoded());
+        Files.write(resolvePrivateKeyFilePath(), keyPair.getPrivate().getEncoded());
     }
 
     @SneakyThrows

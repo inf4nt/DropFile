@@ -40,8 +40,8 @@ public class HandshakeRestController {
     public ResponseEntity<HandshakeTrustDTO> trustStatus(@PathVariable String fingerprint) {
         return handshakeFacade
                 .getHandshakeApprove(fingerprint)
-                .map(it -> new ResponseEntity<>(it, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .map(it -> ResponseEntity.ok().body(it))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/trust/{fingerprint}")

@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
@@ -16,10 +17,15 @@ public class CryptoUtils {
     private static final String SHA256_ALGORITHM = "SHA256";
 
     @SneakyThrows
-    public static PublicKey getPublicKey(byte[] publicKeyByteArray) {
-        return KeyFactory
-                .getInstance(RSA_ALGORITHM)
-                .generatePublic(new X509EncodedKeySpec(publicKeyByteArray));
+    public static PublicKey getPublicKey(byte[] publicKey) {
+        return KeyFactory.getInstance(RSA_ALGORITHM)
+                .generatePublic(new X509EncodedKeySpec(publicKey));
+    }
+
+    @SneakyThrows
+    public static PrivateKey getPrivateKey(byte[] privateKey) {
+        return KeyFactory.getInstance(RSA_ALGORITHM)
+                .generatePrivate(new PKCS8EncodedKeySpec(privateKey));
     }
 
     @SneakyThrows
@@ -34,8 +40,11 @@ public class CryptoUtils {
         return hexString(hash);
     }
 
-    public static byte[] encrypt(PublicKey publicKey, byte[] payload) {
-        return encrypt(publicKey.getEncoded(), payload);
+    @SneakyThrows
+    public static KeyPair generateKeyPair() {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
+        generator.initialize(2048);
+        return generator.generateKeyPair();
     }
 
     @SneakyThrows
