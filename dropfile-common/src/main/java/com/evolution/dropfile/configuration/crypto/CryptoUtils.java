@@ -73,20 +73,27 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
-    public static boolean verify(String data, String signature, byte[] publicKeyByteArray) {
+    public static boolean verify(byte[] data, byte[] signature, byte[] publicKeyByteArray) {
         Signature sig = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         PublicKey publicKey = getPublicKey(publicKeyByteArray);
         sig.initVerify(publicKey);
-        sig.update(data.getBytes());
-        byte[] signatureBytes = Base64.getDecoder().decode(signature);
-        return sig.verify(signatureBytes);
+        sig.update(data);
+        return sig.verify(signature);
     }
 
     @SneakyThrows
-    public static String sign(String data, PrivateKey privateKey) {
+    public static byte[] sign(String data, PrivateKey privateKey) {
         Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         signature.initSign(privateKey);
         signature.update(data.getBytes());
-        return Base64.getEncoder().encodeToString(signature.sign());
+        return signature.sign();
+    }
+
+    public static byte[] decodeBase64(String base64String) {
+        return Base64.getDecoder().decode(base64String);
+    }
+
+    public static String encodeBase64(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
     }
 }

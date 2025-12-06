@@ -2,12 +2,10 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.configuration.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/handshake")
@@ -54,12 +52,5 @@ public class HandshakeRestController {
     public ResponseEntity<HandshakeChallengeResponseDTO> challenge(
             @RequestBody HandshakeChallengeRequestDTO requestDTO) {
         return ResponseEntity.ok(handshakeFacade.challenge(requestDTO));
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = {
-            NoSuchElementException.class
-    })
-    public void noSuchElementExceptionToBadRequest() {
     }
 }
