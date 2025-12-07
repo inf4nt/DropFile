@@ -4,6 +4,7 @@ import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfilecli.command.ApproveIncomingRequestConnectionCommand;
 import com.evolution.dropfilecli.command.ConnectCommand;
 import com.evolution.dropfilecli.command.RetrieveInfoCommand;
+import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.peer.PeersConnectionCommand;
 import com.evolution.dropfilecli.command.request.RequestConnectionCommand;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,8 @@ import picocli.CommandLine;
                 RequestConnectionCommand.class,
                 PeersConnectionCommand.class,
                 ApproveIncomingRequestConnectionCommand.class,
-                RetrieveInfoCommand.class
+                RetrieveInfoCommand.class,
+                DaemonCommand.class
         }
 )
 public class RootCommand implements Runnable {
