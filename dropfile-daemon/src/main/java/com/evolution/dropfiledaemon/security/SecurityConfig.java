@@ -19,10 +19,6 @@ public class SecurityConfig {
                 .formLogin(it -> it.disable())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(it -> {
-                    // TODO drop it
-                    it.requestMatchers("/api/handshake/request").permitAll();
-                    // TODO drop it
-
                     it.requestMatchers("/handshake/**").permitAll();
                     it.anyRequest().permitAll();
                 })

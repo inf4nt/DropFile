@@ -1,27 +1,20 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfiledaemon.facade.ConnectionsFacade;
-import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.Executors;
+import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
+import com.evolution.dropfiledaemon.facade.ApiFacade;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
 public class ApiRestController {
 
-    private final ConnectionsFacade connectionsFacade;
+    private final ApiFacade apiFacade;
 
-    private final HandshakeFacade handshakeFacade;
-
-    @Autowired
-    public ApiRestController(ConnectionsFacade connectionsFacade,
-                             HandshakeFacade handshakeFacade) {
-        this.connectionsFacade = connectionsFacade;
-        this.handshakeFacade = handshakeFacade;
+    public ApiRestController(ApiFacade apiFacade) {
+        this.apiFacade = apiFacade;
     }
 
     @GetMapping("/ping")
@@ -31,29 +24,11 @@ public class ApiRestController {
 
     @PostMapping("/shutdown")
     public void shutdown() {
-        Executors.newSingleThreadExecutor()
-                .submit(() -> {
-                    System.exit(0);
-                });
+        apiFacade.shutdown();
     }
 
-    @GetMapping("/connections/online")
-    public ConnectionsOnline online() {
-        return connectionsFacade.getOnlineConnections();
-    }
-
-    @PostMapping("/connections/connect")
-    public ConnectionsConnectionResultDTO connect(
-            @RequestBody ConnectionsConnectionDTO connectionsConnectionDTO) {
-        String connectionAddress = connectionsConnectionDTO.getConnectionAddress();
-        String resultConnectionId = connectionsFacade
-                .connect(connectionAddress);
-        return new ConnectionsConnectionResultDTO(resultConnectionId, connectionAddress);
-    }
-
-    @PostMapping("/handshake/request")
-    public ResponseEntity<HandshakeApiRequestStatus> handshakeRequest(@RequestBody HandshakeApiRequestDTO requestBody) {
-        HandshakeApiRequestStatus status = handshakeFacade.initializeRequest(requestBody);
-        return ResponseEntity.ok(status);
+    @GetMapping("/info")
+    public DaemonInfoResponseDTO getInfo() {
+        return apiFacade.getDaemonInfo();
     }
 }

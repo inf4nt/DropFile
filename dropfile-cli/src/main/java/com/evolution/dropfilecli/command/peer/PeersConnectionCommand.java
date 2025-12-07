@@ -1,19 +1,18 @@
-package com.evolution.dropfilecli.command.daemon;
+package com.evolution.dropfilecli.command.peer;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "daemon",
-        description = "Daemon commands",
+        name = "peers",
+        description = "Peers commands",
         subcommands = {
-                DaemonStatusCommand.class,
-                DaemonStartCommand.class,
-                DaemonShutdownCommand.class
+                PeersConnectionTrustedInCommand.class,
+                PeersConnectionTrustedOutCommand.class
         }
 )
-public class DaemonCommand implements Runnable {
+public class PeersConnectionCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

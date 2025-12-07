@@ -13,7 +13,7 @@ public class CommonUtils {
     }
 
     public static URI toURI(String host) {
-        if (!host.startsWith("http://") || !host.startsWith("https://")) {
+        if (!host.startsWith("http://") && !host.startsWith("https://")) {
             return URI.create("http://" + host);
         }
         return URI.create(host);

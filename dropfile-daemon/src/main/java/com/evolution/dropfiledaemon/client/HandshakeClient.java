@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.client;
 
-import com.evolution.dropfile.common.dto.HandshakeChallengeRequestDTO;
-import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeChallengeRequestBodyDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestBodyDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class HandshakeClient {
                 .newBuilder()
                 .uri(handshakeNodeAddressURI.resolve("/handshake/challenge"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new HandshakeChallengeRequestDTO(challenge))
+                        objectMapper.writeValueAsBytes(new HandshakeChallengeRequestBodyDTO(challenge))
                 ))
                 .header("Content-Type", "application/json")
                 .build();
@@ -58,7 +58,7 @@ public class HandshakeClient {
                 .newBuilder()
                 .uri(handshakeNodeAddressURI.resolve("/handshake/request"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new HandshakeRequestDTO(
+                        objectMapper.writeValueAsBytes(new HandshakeRequestBodyDTO(
                                 currentAddressURI,
                                 Base64.getEncoder().encodeToString(publicKey)
                         ))

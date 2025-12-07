@@ -1,6 +1,6 @@
 package com.evolution.dropfile.common.dto;
 
-public enum HandshakeApiRequestStatus {
+public enum HandshakeApiRequestResponseStatus {
     PENDING,
     SUCCESS,
     CHALLENGE_FAILED

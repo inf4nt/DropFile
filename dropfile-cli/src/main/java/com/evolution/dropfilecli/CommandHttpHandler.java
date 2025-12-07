@@ -6,11 +6,11 @@ import java.net.http.HttpResponse;
 
 public interface CommandHttpHandler<T> extends Runnable {
 
-    HttpResponse<T> execute();
+    HttpResponse<T> execute() throws Exception;
 
-    void handleSuccessful(HttpResponse<T> response);
+    void handleSuccessful(HttpResponse<T> response) throws Exception;
 
-    default void handleUnsuccessful(HttpResponse<T> response) {
+    default void handleUnsuccessful(HttpResponse<T> response) throws Exception {
         System.out.println("Unaccepted. HTTP response code: " + response.statusCode());
         T body = response.body();
         if (!ObjectUtils.isEmpty(body)) {
