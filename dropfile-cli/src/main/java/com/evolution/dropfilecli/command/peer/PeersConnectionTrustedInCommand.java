@@ -42,10 +42,17 @@ public class PeersConnectionTrustedInCommand implements CommandHttpHandler<byte[
                         }
                 );
         if (!values.isEmpty()) {
-            for (HandshakeApiTrustInResponseDTO value : values) {
+            for (int i = 0; i < values.size(); i++) {
+                if (i ==0) {
+                    System.out.println("---------------------------");
+                }
+                HandshakeApiTrustInResponseDTO value = values.get(i);
                 System.out.println("Fingerprint: " + value.fingerPrint());
                 System.out.println("PublicKey: " + value.publicKey());
                 System.out.println("AddressURI: " + value.addressURI());
+                if (i <= values.size() - 1) {
+                    System.out.println("---------------------------");
+                }
             }
         } else {
             System.out.println("No trusted-in connections found");

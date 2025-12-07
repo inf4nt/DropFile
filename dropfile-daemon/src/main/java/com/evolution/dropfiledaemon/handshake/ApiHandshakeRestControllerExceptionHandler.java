@@ -1,7 +1,8 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfiledaemon.handshake.exception.HandshakeAlreadyTrustedException;
+import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoDaemonPublicAddressException;
 import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoIncomingRequestFoundException;
+import com.evolution.dropfiledaemon.handshake.exception.HandshakeAlreadyTrustedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,12 +11,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ApiHandshakeRestControllerExceptionHandler {
 
     @ExceptionHandler({HandshakeAlreadyTrustedException.class})
-    public ResponseEntity<?> alreadyTrusted(Exception e) {
+    public ResponseEntity<String> alreadyTrusted(Exception e) {
         return ResponseEntity.status(409).body(e.getMessage());
     }
 
     @ExceptionHandler(ApiHandshakeNoIncomingRequestFoundException.class)
-    public ResponseEntity<?> noIncomingRequest(Exception e) {
+    public ResponseEntity<String> noIncomingRequest(Exception e) {
         return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(ApiHandshakeNoDaemonPublicAddressException.class)
+    public ResponseEntity<String> noDaemonPublicAddress(Exception e) {
+        return ResponseEntity.internalServerError().body(e.getMessage());
     }
 }

@@ -34,7 +34,9 @@ public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         DaemonInfoResponseDTO daemonInfoResponseDTO = objectMapper.readValue(response.body(), DaemonInfoResponseDTO.class);
+        System.out.println("---------------------------");
         System.out.println("Fingerprint: " + daemonInfoResponseDTO.fingerprint());
         System.out.println("PublicKey: " + daemonInfoResponseDTO.publicKey());
+        System.out.println("---------------------------");
     }
 }

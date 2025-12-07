@@ -6,6 +6,7 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
+import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoDaemonPublicAddressException;
 import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoIncomingRequestFoundException;
 import com.evolution.dropfiledaemon.handshake.store.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -148,6 +149,10 @@ public class ApiHandshakeFacade {
     @SneakyThrows
     private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI, Integer timeout) {
         URI publicDaemonAddressURI = daemonAppConfig.getObject().getPublicDaemonAddressURI();
+        if (publicDaemonAddressURI == null) {
+            throw new ApiHandshakeNoDaemonPublicAddressException();
+        }
+
         HttpResponse<byte[]> httpResponse = handshakeClient.handshakeRequest(
                 publicDaemonAddressURI,
                 nodeAddressURI,

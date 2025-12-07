@@ -42,11 +42,17 @@ public class IncomingRequestConnectionCommand implements CommandHttpHandler<byte
                         }
                 );
         if (!values.isEmpty()) {
-            for (HandshakeApiIncomingResponseDTO value : values) {
+            for (int i = 0; i < values.size(); i++) {
+                if (i ==0) {
+                    System.out.println("---------------------------");
+                }
+                HandshakeApiIncomingResponseDTO value = values.get(i);
                 System.out.println("Fingerprint: " + value.fingerPrint());
                 System.out.println("PublicKey: " + value.publicKey());
                 System.out.println("AddressURI: " + value.addressURI());
-                System.out.println();
+                if (i <= values.size() - 1) {
+                    System.out.println("---------------------------");
+                }
             }
         } else {
             System.out.println("No incoming requests found");

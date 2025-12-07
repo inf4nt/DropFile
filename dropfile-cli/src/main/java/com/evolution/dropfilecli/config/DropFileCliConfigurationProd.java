@@ -29,6 +29,11 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
+    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(DropFileAppConfigManager configManager) {
+        return configManager.get().getDaemonAppConfig();
+    }
+
+    @Bean
     public DropFileSecretsConfig secretsConfig(DropFileSecretsConfigManager secretsConfig) {
         return secretsConfig.get();
     }
