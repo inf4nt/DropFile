@@ -9,8 +9,7 @@ import picocli.CommandLine;
         description = "Retrieve requests",
         subcommands = {
                 IncomingRequestConnectionCommand.class,
-                OutgoingRequestConnectionCommand.class,
-                ApproveIncomingRequestConnectionCommand.class
+                OutgoingRequestConnectionCommand.class
         }
 )
 public class RequestConnectionCommand implements Runnable {

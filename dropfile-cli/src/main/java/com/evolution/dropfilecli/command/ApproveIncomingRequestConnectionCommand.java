@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.request;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
@@ -26,7 +26,7 @@ public class ApproveIncomingRequestConnectionCommand implements CommandHttpHandl
     }
 
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<byte[]> execute() {
         return daemonClient.trust(fingerprint);
     }
 
@@ -36,7 +36,7 @@ public class ApproveIncomingRequestConnectionCommand implements CommandHttpHandl
     }
 
     @Override
-    public void handleUnsuccessful(HttpResponse<byte[]> response) throws Exception {
+    public void handleUnsuccessful(HttpResponse<byte[]> response) {
         System.out.println("Failed to approve fingerprint: " + fingerprint);
         System.out.println("Message: " + new String(response.body()));
     }

@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import com.evolution.dropfilecli.command.ApproveIncomingRequestConnectionCommand;
 import com.evolution.dropfilecli.command.ConnectCommand;
 import com.evolution.dropfilecli.command.RetrieveInfoCommand;
 import com.evolution.dropfilecli.command.peer.PeersConnectionCommand;
@@ -17,6 +18,7 @@ import picocli.CommandLine;
                 ConnectCommand.class,
                 RequestConnectionCommand.class,
                 PeersConnectionCommand.class,
+                ApproveIncomingRequestConnectionCommand.class,
                 RetrieveInfoCommand.class
         }
 )
