@@ -2,9 +2,9 @@ app connect <host:port> - connect to the given node
 
 app connect <host:port> 30 -> connect with 30sec timeout
 
-app requests incoming — incoming connect requests
+app requests incoming — incoming connection requests
 
-app requests outgoing — outgoing connect requests
+app requests outgoing — outgoing connection requests
 
 app peers trusted-in
 
@@ -16,6 +16,6 @@ app info
 
 app daemon-public-address - set daemon public address
 
-app daemon status - Check the daemon
+app daemon status
 
 app daemon shutdown
