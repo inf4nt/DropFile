@@ -5,17 +5,23 @@ import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Component
 public class HandshakeSecretTokenService {
 
     private final HandshakeStore handshakeStore;
 
     private final DropFileKeysConfig keysConfig;
+
+    @Autowired
+    public HandshakeSecretTokenService(HandshakeStore handshakeStore, DropFileKeysConfig keysConfig) {
+        this.handshakeStore = handshakeStore;
+        this.keysConfig = keysConfig;
+    }
 
     public boolean isValid(String tokenBase64) {
         if (tokenBase64 == null) {

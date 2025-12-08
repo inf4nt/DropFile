@@ -12,7 +12,7 @@ import java.net.URI;
 @Component
 @CommandLine.Command(
         name = "daemon-public-address",
-        description = "Approve incoming connection request"
+        description = "Set public daemon address"
 )
 public class DaemonConfigSetPublicAddressCommand implements Runnable {
 

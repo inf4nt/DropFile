@@ -31,28 +31,4 @@ public class SecurityConfig {
                 })
                 .build();
     }
-
-//    @Bean
-//    public SecurityFilterChain security(HttpSecurity http,
-//                                        ApplicationAuthFilter filter,
-//                                        RequireHandshakeAuthFilter requireHandshakeAuthFilter) throws Exception {
-//        return http
-//                .csrf(it -> it.disable())
-//                .sessionManagement(it -> it.disable())
-//                .httpBasic(it -> it.disable())
-//                .formLogin(it -> it.disable())
-//                .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
-//                .authorizeHttpRequests(it -> {
-//                    it.requestMatchers("/api/**").permitAll();
-//                    it.requestMatchers("/handshake/**").permitAll();
-//                })
-//                .addFilterAfter(requireHandshakeAuthFilter, ApplicationAuthFilter.class)
-//                .authorizeHttpRequests(it -> {
-//                    it.requestMatchers("/node/**").permitAll();
-//                })
-//                .authorizeHttpRequests(it -> {
-//                    it.anyRequest().permitAll();
-//                })
-//                .build();
-//    }
 }
