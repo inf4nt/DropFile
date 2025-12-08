@@ -1,9 +1,10 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
+import com.evolution.dropfiledaemon.client.NodeClient;
+import com.evolution.dropfiledaemon.exception.ApiFacadePingNodeException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import lombok.SneakyThrows;
@@ -11,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.Executors;
 
@@ -21,16 +20,16 @@ public class ApiFacade {
 
     private final DropFileKeysConfig keysConfig;
 
-    private final HttpClient httpClient;
+    private final NodeClient nodeClient;
 
     private final HandshakeStore handshakeStore;
 
     @Autowired
     public ApiFacade(DropFileKeysConfig keysConfig,
-                     HttpClient httpClient,
+                     NodeClient nodeClient,
                      HandshakeStore handshakeStore) {
         this.keysConfig = keysConfig;
-        this.httpClient = httpClient;
+        this.nodeClient = nodeClient;
         this.handshakeStore = handshakeStore;
     }
 
@@ -58,15 +57,12 @@ public class ApiFacade {
         byte[] encrypt = CryptoUtils.encrypt(trustedOutValue.publicKey(), trustedOutValue.secret().getBytes());
         String tokenBase64 = CryptoUtils.encodeBase64(encrypt);
 
-        URI nodeAddressURI = trustedOutValue.addressURI()
-                .resolve("/node/ping");
+        URI nodeAddressURI = trustedOutValue.addressURI();
 
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(nodeAddressURI)
-                .header("X-Encrypted-Token", tokenBase64)
-                .GET()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+        HttpResponse<String> httpResponse = nodeClient.nodePing(nodeAddressURI, tokenBase64);
+        if (httpResponse.statusCode() == 200) {
+            return httpResponse.body();
+        }
+        throw new ApiFacadePingNodeException(fingerprint);
     }
 }
