@@ -11,18 +11,48 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http,
-                                        ApplicationAuthFilter filter) throws Exception {
+                                        ApiAuthFilter apiAuthFilter,
+                                        RequireHandshakeAuthFilter requireHandshakeAuthFilter) throws Exception {
         return http
                 .csrf(it -> it.disable())
                 .sessionManagement(it -> it.disable())
                 .httpBasic(it -> it.disable())
                 .formLogin(it -> it.disable())
-                .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(it -> {
-                    it.requestMatchers("/handshake/**").permitAll();
-                    it.requestMatchers("/node/**").permitAll();
+                    it.requestMatchers(apiAuthFilter.getPathPattern()).permitAll();
+                })
+                .addFilterAfter(requireHandshakeAuthFilter, ApiAuthFilter.class)
+                .authorizeHttpRequests(it -> {
+                    it.requestMatchers(requireHandshakeAuthFilter.getPathPattern()).permitAll();
+                })
+                .authorizeHttpRequests(it -> {
                     it.anyRequest().permitAll();
                 })
                 .build();
     }
+
+//    @Bean
+//    public SecurityFilterChain security(HttpSecurity http,
+//                                        ApplicationAuthFilter filter,
+//                                        RequireHandshakeAuthFilter requireHandshakeAuthFilter) throws Exception {
+//        return http
+//                .csrf(it -> it.disable())
+//                .sessionManagement(it -> it.disable())
+//                .httpBasic(it -> it.disable())
+//                .formLogin(it -> it.disable())
+//                .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
+//                .authorizeHttpRequests(it -> {
+//                    it.requestMatchers("/api/**").permitAll();
+//                    it.requestMatchers("/handshake/**").permitAll();
+//                })
+//                .addFilterAfter(requireHandshakeAuthFilter, ApplicationAuthFilter.class)
+//                .authorizeHttpRequests(it -> {
+//                    it.requestMatchers("/node/**").permitAll();
+//                })
+//                .authorizeHttpRequests(it -> {
+//                    it.anyRequest().permitAll();
+//                })
+//                .build();
+//    }
 }

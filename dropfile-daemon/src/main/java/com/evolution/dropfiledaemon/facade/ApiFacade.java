@@ -64,7 +64,7 @@ public class ApiFacade {
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(nodeAddressURI)
-                .header("Authorization", "Bearer "  + tokenBase64)
+                .header("X-Encrypted-Token", tokenBase64)
                 .GET()
                 .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();

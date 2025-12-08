@@ -1,21 +1,17 @@
 package com.evolution.dropfiledaemon.security;
 
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.Objects;
 
+@RequiredArgsConstructor
 @Service
 public class TokenService {
 
     private final DropFileSecretsConfig secretsConfig;
-
-    @Autowired
-    public TokenService(DropFileSecretsConfig secretsConfig) {
-        this.secretsConfig = secretsConfig;
-    }
 
     public boolean isValid(String tokenIncoming) {
         if (ObjectUtils.isEmpty(tokenIncoming)) {
