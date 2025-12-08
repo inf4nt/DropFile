@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "ping",
-        description = "Ping node command"
+        description = "Check ready-to-use trusted-out connection"
 )
 public class PingNodeCommand implements CommandHttpHandler<String> {
 
@@ -33,6 +33,6 @@ public class PingNodeCommand implements CommandHttpHandler<String> {
 
     @Override
     public void handleSuccessful(HttpResponse<String> response) throws Exception {
-        System.out.println("PingNodeCommand: " + response.body());
+        System.out.println("Ready-to-use: " + fingerprint);
     }
 }
