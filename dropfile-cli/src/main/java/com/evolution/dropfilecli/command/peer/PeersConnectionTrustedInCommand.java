@@ -14,6 +14,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "trusted-in",
+        aliases = {"--in", "-in"},
         description = "Retrieve trusted-in connections"
 )
 public class PeersConnectionTrustedInCommand implements CommandHttpHandler<byte[]> {

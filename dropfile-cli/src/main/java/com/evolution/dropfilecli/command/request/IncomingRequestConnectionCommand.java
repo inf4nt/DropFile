@@ -14,6 +14,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "incoming",
+        aliases = {"--in", "-in"},
         description = "Retrieve incoming connection requests"
 )
 public class IncomingRequestConnectionCommand implements CommandHttpHandler<byte[]> {

@@ -15,6 +15,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "trusted-out",
+        aliases = {"--out", "-out"},
         description = "Retrieve trusted-out connections"
 )
 public class PeersConnectionTrustedOutCommand implements CommandHttpHandler<byte[]> {

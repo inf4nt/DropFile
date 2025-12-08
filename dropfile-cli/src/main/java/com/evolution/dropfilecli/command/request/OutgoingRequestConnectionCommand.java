@@ -1,6 +1,5 @@
 package com.evolution.dropfilecli.command.request;
 
-import com.evolution.dropfile.common.dto.HandshakeApiIncomingResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiOutgoingResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
@@ -16,6 +15,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "outgoing",
+        aliases = {"--out", "-out"},
         description = "Retrieve outgoing connection requests"
 )
 public class OutgoingRequestConnectionCommand implements CommandHttpHandler<byte[]> {
@@ -46,7 +46,7 @@ public class OutgoingRequestConnectionCommand implements CommandHttpHandler<byte
                 );
         if (!values.isEmpty()) {
             for (int i = 0; i < values.size(); i++) {
-                if (i ==0) {
+                if (i == 0) {
                     System.out.println("---------------------------");
                 }
                 HandshakeApiOutgoingResponseDTO value = values.get(i);
