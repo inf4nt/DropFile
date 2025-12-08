@@ -3,6 +3,7 @@ package com.evolution.dropfilecli;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfilecli.command.ApproveIncomingRequestConnectionCommand;
 import com.evolution.dropfilecli.command.ConnectCommand;
+import com.evolution.dropfilecli.command.PingNodeCommand;
 import com.evolution.dropfilecli.command.RetrieveInfoCommand;
 import com.evolution.dropfilecli.command.config.DaemonConfigSetPublicAddressCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
@@ -23,7 +24,8 @@ import picocli.CommandLine;
                 ApproveIncomingRequestConnectionCommand.class,
                 RetrieveInfoCommand.class,
                 DaemonCommand.class,
-                DaemonConfigSetPublicAddressCommand.class
+                DaemonConfigSetPublicAddressCommand.class,
+                PingNodeCommand.class
         }
 )
 public class RootCommand implements Runnable {

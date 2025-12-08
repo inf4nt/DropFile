@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(it -> {
                     it.requestMatchers("/handshake/**").permitAll();
+                    it.requestMatchers("/node/**").permitAll();
                     it.anyRequest().permitAll();
                 })
                 .build();

@@ -7,6 +7,6 @@ import java.net.URI;
 public interface TrustedInKeyValueStore
         extends KeyValueStore<String, TrustedInKeyValueStore.TrustedInValue> {
 
-    record TrustedInValue(URI addressURI, byte[] publicKey, byte[] secret) {
+    record TrustedInValue(URI addressURI, byte[] publicKey, String secret) {
     }
 }

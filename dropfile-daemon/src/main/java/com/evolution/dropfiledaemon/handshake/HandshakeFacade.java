@@ -22,23 +22,14 @@ public class HandshakeFacade {
 
     private final HandshakeStore handshakeStore;
 
-    private final HandshakeClient handshakeClient;
-
     private final DropFileKeysConfig keysConfig;
-
-    private final ObjectMapper objectMapper;
 
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
-                           HandshakeClient handshakeClient,
-                           DropFileKeysConfig keysConfig,
-                           ObjectMapper objectMapper) {
+                           DropFileKeysConfig keysConfig) {
         this.handshakeStore = handshakeStore;
-        this.handshakeClient = handshakeClient;
         this.keysConfig = keysConfig;
-        this.objectMapper = objectMapper;
     }
-
 
     public HandshakeRequestResponseDTO request(HandshakeRequestBodyDTO requestDTO) {
         byte[] publicKey = CryptoUtils.decodeBase64(requestDTO.publicKey());
@@ -67,7 +58,7 @@ public class HandshakeFacade {
         }
         byte[] encryptSecret = CryptoUtils.encrypt(
                 trustedInValue.publicKey(),
-                trustedInValue.secret()
+                trustedInValue.secret().getBytes()
         );
         String publicKeyBase64 = CryptoUtils.encodeBase64(keysConfig.getKeyPair().getPublic().getEncoded());
         String encryptSecretBase64 = CryptoUtils.encodeBase64(encryptSecret);

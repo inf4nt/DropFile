@@ -15,9 +15,13 @@ public class ApplicationAuthFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
 
+    private final HandshakeSecretTokenService handshakeSecretTokenService;
+
     @Autowired
-    public ApplicationAuthFilter(TokenService tokenService) {
+    public ApplicationAuthFilter(TokenService tokenService,
+                                 HandshakeSecretTokenService handshakeSecretTokenService) {
         this.tokenService = tokenService;
+        this.handshakeSecretTokenService = handshakeSecretTokenService;
     }
 
     private boolean isApi(HttpServletRequest request) {
@@ -27,6 +31,10 @@ public class ApplicationAuthFilter extends OncePerRequestFilter {
     private boolean isHandshake(HttpServletRequest request) {
         String servletPath = request.getServletPath();
         return servletPath.startsWith("/handshake");
+    }
+
+    private boolean isNode(HttpServletRequest request) {
+        return request.getServletPath().startsWith("/node");
     }
 
     @Override
@@ -45,6 +53,15 @@ public class ApplicationAuthFilter extends OncePerRequestFilter {
                 return;
             }
         }
+
+        if (isNode(request)) {
+            String tokenBase64 = extractToken(request);
+            if (handshakeSecretTokenService.isValid(tokenBase64)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+        }
+
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }

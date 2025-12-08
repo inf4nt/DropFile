@@ -2,10 +2,7 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiFacade;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -30,5 +27,10 @@ public class ApiRestController {
     @GetMapping("/info")
     public DaemonInfoResponseDTO getInfo() {
         return apiFacade.getDaemonInfo();
+    }
+
+    @GetMapping("/node/ping/{fingerprint}")
+    public String nodePing(@PathVariable String fingerprint) {
+        return apiFacade.nodePing(fingerprint);
     }
 }

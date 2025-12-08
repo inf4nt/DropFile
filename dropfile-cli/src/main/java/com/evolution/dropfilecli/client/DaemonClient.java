@@ -184,6 +184,22 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @SneakyThrows
+    public HttpResponse<String> nodePing(String fingerprint) {
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+                .resolve("/api/node/ping/")
+                .resolve(fingerprint);
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     private String getDaemonAuthorizationToken() {
         String daemonToken = Objects.requireNonNull(secretsConfig.getDaemonToken());
         return "Bearer " + daemonToken;

@@ -134,7 +134,8 @@ public class ApiHandshakeFacade {
                 .get(fingerprint)
                 .orElseThrow(() -> new ApiHandshakeNoIncomingRequestFoundException(fingerprint));
         handshakeStore.incomingRequestStore().remove(fingerprint);
-        byte[] secret = UUID.randomUUID().toString().getBytes();
+        String secret = UUID.randomUUID().toString();
+        System.out.println("GENERATED SECRET KEY: " + secret);
         handshakeStore.trustedInStore()
                 .save(
                         fingerprint,
@@ -222,7 +223,11 @@ public class ApiHandshakeFacade {
         handshakeStore.trustedOutStore()
                 .save(
                         fingerPrint,
-                        new TrustedOutKeyValueStore.TrustedOutValue(nodeAddressURI, publicKey, decryptMessage)
+                        new TrustedOutKeyValueStore.TrustedOutValue(
+                                nodeAddressURI,
+                                publicKey,
+                                new String(decryptMessage)
+                        )
                 );
         return HandshakeApiRequestResponseStatus.SUCCESS;
     }
