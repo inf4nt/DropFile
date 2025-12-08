@@ -41,8 +41,8 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping("/request")
-    public HandshakeApiRequestResponseStatus handshakeRequest(
+    public String handshakeRequest(
             @RequestBody HandshakeApiRequestBodyDTO requestBody) {
-        return apiHandshakeFacade.initializeRequest(requestBody);
+        return apiHandshakeFacade.initializeRequest(requestBody).name();
     }
 }

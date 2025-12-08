@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command;
 
+import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,19 @@ public class ConnectCommand implements CommandHttpHandler<String> {
     }
 
     @Override
-    public HttpResponse<String> execute() {
-        return daemonClient.handshakeRequest(address, timeout);
+    public HttpResponse<String> execute() throws Exception {
+        int count = 1;
+        HttpResponse<String> retry = null;
+        while (count <= timeout) {
+            System.out.println(String.format("Attempt %s to connect %s", count, address));
+            retry = daemonClient.handshakeRequest(address);
+            if (HandshakeApiRequestResponseStatus.SUCCESS.name().equals(retry.body())) {
+                break;
+            }
+            count++;
+            Thread.sleep(1000);
+        }
+        return retry;
     }
 
     @Override

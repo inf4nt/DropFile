@@ -119,9 +119,9 @@ public class ApiHandshakeFacade {
         String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.getKeyPair().getPublic());
         HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
         if (handshakeResponse.statusCode() == 200) {
-            return handleHandshakeTrust(nodeAddressURI, handshakeResponse);
+            return handleHandshakeChallenge(nodeAddressURI, handshakeResponse);
         } else if (handshakeResponse.statusCode() == 404) {
-            return handshakeRequest(nodeAddressURI, requestBody.timeout());
+            return handshakeRequest(nodeAddressURI);
         }
         throw new RuntimeException(
                 "Unexpected handshake trust request response code  " + handshakeResponse.statusCode()
@@ -135,7 +135,6 @@ public class ApiHandshakeFacade {
                 .orElseThrow(() -> new ApiHandshakeNoIncomingRequestFoundException(fingerprint));
         handshakeStore.incomingRequestStore().remove(fingerprint);
         String secret = UUID.randomUUID().toString();
-        System.out.println("GENERATED SECRET KEY: " + secret);
         handshakeStore.trustedInStore()
                 .save(
                         fingerprint,
@@ -148,7 +147,7 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI, Integer timeout) {
+    private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI) {
         URI publicDaemonAddressURI = daemonAppConfig.getObject().getPublicDaemonAddressURI();
         if (publicDaemonAddressURI == null) {
             throw new ApiHandshakeNoDaemonPublicAddressException();
@@ -171,27 +170,13 @@ public class ApiHandshakeFacade {
                             publicKeyBytes
                     )
             );
-            int count = 0;
-            log.info("Waiting for handshake approval. Attempt timeout: {} ", timeout);
-            while (count != timeout) {
-                log.info("Waiting for handshake approval. Attempt: {}", count);
-                String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.getKeyPair().getPublic());
-                HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
-                if (handshakeResponse.statusCode() == 200) {
-                    handleHandshakeTrust(nodeAddressURI, handshakeResponse);
-                    log.info("Handshake approval completed");
-                    return HandshakeApiRequestResponseStatus.SUCCESS;
-                }
-                Thread.sleep(1000);
-                count++;
-            }
             return HandshakeApiRequestResponseStatus.PENDING;
         }
         throw new RuntimeException("Unexpected handshake request response code " + httpResponse.statusCode());
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus handleHandshakeTrust(URI nodeAddressURI, HttpResponse<byte[]> handshakeResponse) {
+    private HandshakeApiRequestResponseStatus handleHandshakeChallenge(URI nodeAddressURI, HttpResponse<byte[]> handshakeResponse) {
         HandshakeTrustResponseDTO handshakeTrustResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeTrustResponseDTO.class);
         byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);

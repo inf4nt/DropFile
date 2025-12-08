@@ -90,13 +90,13 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<String> handshakeRequest(String nodeAddress, Integer timeout) {
+    public HttpResponse<String> handshakeRequest(String nodeAddress) {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
                 .resolve("/api/handshake/request");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
-        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeApiRequestBodyDTO(nodeAddress, timeout));
+        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeApiRequestBodyDTO(nodeAddress));
 
         HttpRequest request = HttpRequest
                 .newBuilder()
@@ -105,6 +105,7 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
                 .header("Content-Type", "application/json")
                 .build();
+
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
