@@ -114,19 +114,18 @@ public class ApiHandshakeFacade {
                 .toList();
     }
 
-    @SneakyThrows
-    public HandshakeApiRequestResponseStatus initializeRequest(HandshakeApiRequestBodyDTO requestBody) {
-        URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
-        String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.keyPair().getPublic());
-        HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
-        if (handshakeResponse.statusCode() == 200) {
-            return handleHandshakeChallenge(nodeAddressURI, handshakeResponse);
-        } else if (handshakeResponse.statusCode() == 404) {
-            return handshakeRequest(nodeAddressURI);
-        }
-        throw new RuntimeException(
-                "Unexpected handshake trust request response code  " + handshakeResponse.statusCode()
-        );
+    public Optional<HandshakeApiTrustOutResponseDTO> getLatestTrustOut() {
+        return handshakeStore.trustedOutStore()
+                .getAll()
+                .entrySet()
+                .stream()
+                .sorted((o1, o2) -> o2.getValue().updated().compareTo(o1.getValue().updated()))
+                .findFirst()
+                .map(it -> new HandshakeApiTrustOutResponseDTO(
+                        it.getKey(),
+                        CryptoUtils.encodeBase64(it.getValue().publicKey()),
+                        it.getValue().addressURI().toString())
+                );
     }
 
     public void trust(String fingerprint) {
@@ -148,7 +147,22 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI) {
+    public HandshakeApiRequestResponseStatus initializeRequest(HandshakeApiRequestBodyDTO requestBody) {
+        URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
+        String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.keyPair().getPublic());
+        HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
+        if (handshakeResponse.statusCode() == 200) {
+            return doHandshakeChallenge(nodeAddressURI, handshakeResponse);
+        } else if (handshakeResponse.statusCode() == 404) {
+            return doHandshakeRequest(nodeAddressURI);
+        }
+        throw new RuntimeException(
+                "Unexpected handshake trust request response code  " + handshakeResponse.statusCode()
+        );
+    }
+
+    @SneakyThrows
+    private HandshakeApiRequestResponseStatus doHandshakeRequest(URI nodeAddressURI) {
         URI publicDaemonAddressURI = daemonAppConfig.getObject().publicDaemonAddressURI();
         if (publicDaemonAddressURI == null) {
             throw new NoDaemonPublicAddressException();
@@ -177,7 +191,7 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus handleHandshakeChallenge(URI nodeAddressURI, HttpResponse<byte[]> handshakeResponse) {
+    private HandshakeApiRequestResponseStatus doHandshakeChallenge(URI nodeAddressURI, HttpResponse<byte[]> handshakeResponse) {
         HandshakeTrustResponseDTO handshakeTrustResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeTrustResponseDTO.class);
         byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
@@ -222,19 +236,5 @@ public class ApiHandshakeFacade {
                         )
                 );
         return HandshakeApiRequestResponseStatus.SUCCESS;
-    }
-
-    public Optional<HandshakeApiTrustOutResponseDTO> getLatestTrustOut() {
-        return handshakeStore.trustedOutStore()
-                .getAll()
-                .entrySet()
-                .stream()
-                .sorted((o1, o2) -> o2.getValue().updated().compareTo(o1.getValue().updated()))
-                .findFirst()
-                .map(it -> new HandshakeApiTrustOutResponseDTO(
-                        it.getKey(),
-                        CryptoUtils.encodeBase64(it.getValue().publicKey()),
-                        it.getValue().addressURI().toString())
-                );
     }
 }
