@@ -170,6 +170,21 @@ public class DaemonClient {
     }
 
     @SneakyThrows
+    public HttpResponse<byte[]> getTrustLatest() {
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/handshake/trust/out/latest");
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
     public HttpResponse<byte[]> trust(String fingerprint) {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/")

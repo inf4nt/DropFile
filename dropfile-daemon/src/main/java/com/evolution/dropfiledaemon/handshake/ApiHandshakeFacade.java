@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -181,9 +182,14 @@ public class ApiHandshakeFacade {
         byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
 
-        Optional<TrustedOutKeyValueStore.TrustedOutValue> allowedOutValue = handshakeStore.trustedOutStore()
-                .get(fingerPrint);
-        if (allowedOutValue.isPresent()) {
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                .get(fingerPrint)
+                .orElse(null);
+        if (trustedOutValue != null) {
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValueUpdated = new TrustedOutKeyValueStore.TrustedOutValue(
+                    trustedOutValue.addressURI(), trustedOutValue.publicKey(), trustedOutValue.secret(), Instant.now());
+            handshakeStore.trustedOutStore()
+                    .save(fingerPrint, trustedOutValueUpdated);
             return HandshakeApiRequestResponseStatus.SUCCESS;
         }
 
@@ -211,9 +217,24 @@ public class ApiHandshakeFacade {
                         new TrustedOutKeyValueStore.TrustedOutValue(
                                 nodeAddressURI,
                                 publicKey,
-                                new String(decryptMessage)
+                                new String(decryptMessage),
+                                Instant.now()
                         )
                 );
         return HandshakeApiRequestResponseStatus.SUCCESS;
+    }
+
+    public Optional<HandshakeApiTrustOutResponseDTO> getLatestTrustOut() {
+        return handshakeStore.trustedOutStore()
+                .getAll()
+                .entrySet()
+                .stream()
+                .sorted((o1, o2) -> o2.getValue().updated().compareTo(o1.getValue().updated()))
+                .findFirst()
+                .map(it -> new HandshakeApiTrustOutResponseDTO(
+                        it.getKey(),
+                        CryptoUtils.encodeBase64(it.getValue().publicKey()),
+                        it.getValue().addressURI().toString())
+                );
     }
 }

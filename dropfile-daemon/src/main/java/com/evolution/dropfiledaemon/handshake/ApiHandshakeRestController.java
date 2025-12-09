@@ -1,9 +1,11 @@
 package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.dto.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/handshake")
@@ -33,6 +35,13 @@ public class ApiHandshakeRestController {
     @GetMapping("/trust/out")
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
         return apiHandshakeFacade.getTrustOut();
+    }
+
+    @GetMapping("/trust/out/latest")
+    public ResponseEntity<HandshakeApiTrustOutResponseDTO> getLatestTrustOut() {
+        Optional<HandshakeApiTrustOutResponseDTO> latest = apiHandshakeFacade.getLatestTrustOut();
+        return latest.map(it -> ResponseEntity.ok().body(it))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/trust/{fingerprint}")

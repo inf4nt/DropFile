@@ -44,7 +44,9 @@ public class HandshakeClient {
     public HttpResponse<byte[]> getHandshake(URI handshakeNodeAddressURI, String fingerprint) {
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
-                .uri(handshakeNodeAddressURI.resolve("/handshake/trust/").resolve(fingerprint))
+                .uri(handshakeNodeAddressURI.resolve("/handshake/trust/")
+                        .resolve(fingerprint)
+                )
                 .GET()
                 .build();
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
