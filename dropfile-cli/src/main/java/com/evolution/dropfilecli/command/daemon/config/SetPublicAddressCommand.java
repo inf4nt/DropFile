@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.config;
+package com.evolution.dropfilecli.command.daemon.config;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
@@ -12,9 +12,10 @@ import java.net.URI;
 @Component
 @CommandLine.Command(
         name = "daemon-public-address",
+        aliases = {"--spa", "-spa"},
         description = "Set public daemon address"
 )
-public class DaemonConfigSetPublicAddressCommand implements Runnable {
+public class SetPublicAddressCommand implements Runnable {
 
     private final DropFileAppConfigManager appConfigManager;
 
@@ -22,7 +23,7 @@ public class DaemonConfigSetPublicAddressCommand implements Runnable {
     private String address;
 
     @Autowired
-    public DaemonConfigSetPublicAddressCommand(DropFileAppConfigManager appConfigManager) {
+    public SetPublicAddressCommand(DropFileAppConfigManager appConfigManager) {
         this.appConfigManager = appConfigManager;
     }
 

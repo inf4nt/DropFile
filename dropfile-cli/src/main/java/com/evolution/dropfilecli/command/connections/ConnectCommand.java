@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command;
+package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
 import com.evolution.dropfilecli.CommandHttpHandler;
@@ -12,14 +12,14 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "connect",
-        description = "Connect to a given node"
+        description = "Connect"
 )
 public class ConnectCommand implements CommandHttpHandler<String> {
 
-    @CommandLine.Parameters(index = "0", description = "Address")
+    @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
 
-    @CommandLine.Parameters(index = "1", description = "Timeout in seconds", defaultValue = "60")
+    @CommandLine.Parameters(index = "1", description = "Timeout in seconds. Default value 60sec", defaultValue = "60")
     private Integer timeout;
 
     private final DaemonClient daemonClient;
@@ -31,6 +31,10 @@ public class ConnectCommand implements CommandHttpHandler<String> {
 
     @Override
     public HttpResponse<String> execute() throws Exception {
+        if (timeout <= 1) {
+            return daemonClient.handshakeRequest(address);
+        }
+
         int count = 1;
         HttpResponse<String> retry = null;
         while (count <= timeout) {

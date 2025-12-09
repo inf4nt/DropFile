@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfilecli.command.daemon.config.DaemonConfigCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -8,8 +9,10 @@ import picocli.CommandLine;
         name = "daemon",
         description = "Daemon commands",
         subcommands = {
-                DaemonShutdownCommand.class,
-                DaemonStatusCommand.class
+                DaemonConfigCommand.class,
+                ShutdownCommand.class,
+                StatusCommand.class,
+                RetrieveInfoCommand.class
         }
 )
 public class DaemonCommand implements Runnable {

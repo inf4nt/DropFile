@@ -1,10 +1,11 @@
-package com.evolution.dropfilecli.command.peer;
+package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -13,33 +14,34 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "trusted-in",
-        aliases = {"--in", "-in"},
-        description = "Retrieve trusted-in connections"
+        name = "trusted-out",
+        aliases = {"--out", "-out", "--o", "-o"},
+        description = "Retrieve trusted-out connections"
 )
-public class PeersConnectionTrustedInCommand implements CommandHttpHandler<byte[]> {
+public class TrustedOutCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
     private final ObjectMapper objectMapper;
 
-    public PeersConnectionTrustedInCommand(DaemonClient daemonClient,
-                                           ObjectMapper objectMapper) {
+    @Autowired
+    public TrustedOutCommand(DaemonClient daemonClient,
+                             ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getTrustIn();
+        return daemonClient.getTrustOut();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<HandshakeApiTrustInResponseDTO> values = objectMapper
+        List<HandshakeApiTrustOutResponseDTO> values = objectMapper
                 .readValue(
                         response.body(),
-                        new TypeReference<List<HandshakeApiTrustInResponseDTO>>() {
+                        new TypeReference<List<HandshakeApiTrustOutResponseDTO>>() {
                         }
                 );
         if (!values.isEmpty()) {
@@ -47,7 +49,7 @@ public class PeersConnectionTrustedInCommand implements CommandHttpHandler<byte[
                 if (i ==0) {
                     System.out.println("---------------------------");
                 }
-                HandshakeApiTrustInResponseDTO value = values.get(i);
+                HandshakeApiTrustOutResponseDTO value = values.get(i);
                 System.out.println("Fingerprint: " + value.fingerPrint());
                 System.out.println("PublicKey: " + value.publicKey());
                 System.out.println("AddressURI: " + value.addressURI());
@@ -56,7 +58,7 @@ public class PeersConnectionTrustedInCommand implements CommandHttpHandler<byte[
                 }
             }
         } else {
-            System.out.println("No trusted-in connections found");
+            System.out.println("No trusted-out connections found");
         }
     }
 }

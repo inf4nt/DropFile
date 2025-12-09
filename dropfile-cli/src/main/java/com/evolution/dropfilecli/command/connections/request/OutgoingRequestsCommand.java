@@ -1,10 +1,11 @@
-package com.evolution.dropfilecli.command.request;
+package com.evolution.dropfilecli.command.connections.request;
 
-import com.evolution.dropfile.common.dto.HandshakeApiIncomingResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiOutgoingResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -13,41 +14,42 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "incoming",
-        aliases = {"--in", "-in"},
-        description = "Retrieve incoming connection requests"
+        name = "outgoing",
+        aliases = {"--out", "-out", "--o", "-o"},
+        description = "Retrieve outgoing connection requests"
 )
-public class IncomingRequestConnectionCommand implements CommandHttpHandler<byte[]> {
+public class OutgoingRequestsCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
     private final ObjectMapper objectMapper;
 
-    public IncomingRequestConnectionCommand(DaemonClient daemonClient,
-                                            ObjectMapper objectMapper) {
+    @Autowired
+    public OutgoingRequestsCommand(DaemonClient daemonClient,
+                                   ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getIncomingRequests();
+        return daemonClient.getOutgoingRequests();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<HandshakeApiIncomingResponseDTO> values = objectMapper
+        List<HandshakeApiOutgoingResponseDTO> values = objectMapper
                 .readValue(
                         response.body(),
-                        new TypeReference<List<HandshakeApiIncomingResponseDTO>>() {
+                        new TypeReference<List<HandshakeApiOutgoingResponseDTO>>() {
                         }
                 );
         if (!values.isEmpty()) {
             for (int i = 0; i < values.size(); i++) {
-                if (i ==0) {
+                if (i == 0) {
                     System.out.println("---------------------------");
                 }
-                HandshakeApiIncomingResponseDTO value = values.get(i);
+                HandshakeApiOutgoingResponseDTO value = values.get(i);
                 System.out.println("Fingerprint: " + value.fingerPrint());
                 System.out.println("PublicKey: " + value.publicKey());
                 System.out.println("AddressURI: " + value.addressURI());
@@ -56,7 +58,7 @@ public class IncomingRequestConnectionCommand implements CommandHttpHandler<byte
                 }
             }
         } else {
-            System.out.println("No incoming requests found");
+            System.out.println("No Outgoing requests found");
         }
     }
 }

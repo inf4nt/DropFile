@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command;
+package com.evolution.dropfilecli.command.daemon;
 
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;

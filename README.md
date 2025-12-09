@@ -1,21 +1,22 @@
-app connect <host:port> - connect to the given node
+app connections connect <host>:<port>
+                current
+                ping
+                trusted-out -out -o
+                trusted-in  -in  -i
+                requests -r
+                        incoming -in  -i
+                        outgoing -out -o
+                approve <fingerprint>
+                disconnect <fingerprint>
+                revoke     <fingerprint>
 
-app connect <host:port> 30 -> connect with 30sec timeout
+app daemon
+                info
+                status
+                shutdown
+                config
+                      set-public address -spa
 
-app requests incoming — incoming connection requests
-
-app requests outgoing — outgoing connection requests
-
-app peers trusted-in
-
-app peers trusted-out
-
-app approve <fingerprint> - approve incoming connection
-
-app info
-
-app daemon-public-address - set daemon public address
-
-app daemon status
-
-app daemon shutdown
+app files       ls
+                download
+                

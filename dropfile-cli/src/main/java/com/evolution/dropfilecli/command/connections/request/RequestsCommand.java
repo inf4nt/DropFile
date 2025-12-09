@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.request;
+package com.evolution.dropfilecli.command.connections.request;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -6,13 +6,14 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "requests",
-        description = "Retrieve requests",
+        description = "Retrieve connections requests",
+        aliases = {"--r", "-r"},
         subcommands = {
-                IncomingRequestConnectionCommand.class,
-                OutgoingRequestConnectionCommand.class
+                IncomingRequestsCommand.class,
+                OutgoingRequestsCommand.class
         }
 )
-public class RequestConnectionCommand implements Runnable {
+public class RequestsCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

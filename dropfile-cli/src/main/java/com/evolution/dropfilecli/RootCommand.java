@@ -1,14 +1,9 @@
 package com.evolution.dropfilecli;
 
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfilecli.command.ApproveIncomingRequestConnectionCommand;
-import com.evolution.dropfilecli.command.ConnectCommand;
-import com.evolution.dropfilecli.command.PingNodeCommand;
-import com.evolution.dropfilecli.command.RetrieveInfoCommand;
-import com.evolution.dropfilecli.command.config.DaemonConfigSetPublicAddressCommand;
+import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
-import com.evolution.dropfilecli.command.peer.PeersConnectionCommand;
-import com.evolution.dropfilecli.command.request.RequestConnectionCommand;
+import com.evolution.dropfilecli.command.files.FilesCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -18,14 +13,9 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class,
         subcommands = {
-                ConnectCommand.class,
-                RequestConnectionCommand.class,
-                PeersConnectionCommand.class,
-                ApproveIncomingRequestConnectionCommand.class,
-                RetrieveInfoCommand.class,
+                ConnectionsCommand.class,
                 DaemonCommand.class,
-                DaemonConfigSetPublicAddressCommand.class,
-                PingNodeCommand.class
+                FilesCommand.class
         }
 )
 public class RootCommand implements Runnable {
