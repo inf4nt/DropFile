@@ -6,8 +6,8 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
-import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoDaemonPublicAddressException;
-import com.evolution.dropfiledaemon.handshake.exception.ApiHandshakeNoIncomingRequestFoundException;
+import com.evolution.dropfiledaemon.handshake.exception.NoDaemonPublicAddressException;
+import com.evolution.dropfiledaemon.handshake.exception.NoIncomingRequestFoundException;
 import com.evolution.dropfiledaemon.handshake.store.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -133,7 +133,7 @@ public class ApiHandshakeFacade {
         IncomingRequestKeyValueStore.IncomingRequestValue incomingRequestValue = handshakeStore
                 .incomingRequestStore()
                 .get(fingerprint)
-                .orElseThrow(() -> new ApiHandshakeNoIncomingRequestFoundException(fingerprint));
+                .orElseThrow(() -> new NoIncomingRequestFoundException(fingerprint));
         handshakeStore.incomingRequestStore().remove(fingerprint);
         String secret = UUID.randomUUID().toString();
         handshakeStore.trustedInStore()
@@ -151,7 +151,7 @@ public class ApiHandshakeFacade {
     private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI) {
         URI publicDaemonAddressURI = daemonAppConfig.getObject().publicDaemonAddressURI();
         if (publicDaemonAddressURI == null) {
-            throw new ApiHandshakeNoDaemonPublicAddressException();
+            throw new NoDaemonPublicAddressException();
         }
 
         HttpResponse<byte[]> httpResponse = handshakeClient.handshakeRequest(
