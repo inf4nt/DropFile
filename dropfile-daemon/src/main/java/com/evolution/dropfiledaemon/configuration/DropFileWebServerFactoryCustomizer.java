@@ -20,7 +20,7 @@ public class DropFileWebServerFactoryCustomizer
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        Integer daemonPort = appConfig.getObject().getDaemonPort();
+        Integer daemonPort = appConfig.getObject().daemonPort();
         factory.setPort(daemonPort);
     }
 }

@@ -39,7 +39,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getDaemonInfo() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/info");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -56,7 +56,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/ping");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -73,7 +73,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> shutdown() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort());
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort());
         URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -91,7 +91,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> handshakeRequest(String nodeAddress) {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -111,7 +111,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getIncomingRequests() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/incoming");
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -126,7 +126,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getOutgoingRequests() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/outgoing");
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -141,7 +141,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustIn() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/in");
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -156,7 +156,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustOut() {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out");
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -171,7 +171,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> trust(String fingerprint) {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/")
                 .resolve(fingerprint);
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -187,7 +187,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> nodePing(String fingerprint) {
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.getDaemonHost(), cliAppConfig.getDaemonPort())
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/node/ping/")
                 .resolve(fingerprint);
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -202,7 +202,7 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        String daemonToken = Objects.requireNonNull(secretsConfig.getDaemonToken());
+        String daemonToken = Objects.requireNonNull(secretsConfig.daemonToken());
         return "Bearer " + daemonToken;
 //        return "fake";
     }

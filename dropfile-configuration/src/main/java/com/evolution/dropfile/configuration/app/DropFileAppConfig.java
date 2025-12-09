@@ -1,37 +1,17 @@
 package com.evolution.dropfile.configuration.app;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.net.URI;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-public class DropFileAppConfig {
+public record DropFileAppConfig(
+        DropFileCliAppConfig cliAppConfig,
+        DropFileDaemonAppConfig daemonAppConfig) {
 
-    private DropFileCliAppConfig cliAppConfig;
-
-    private DropFileDaemonAppConfig daemonAppConfig;
-
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    public static class DropFileCliAppConfig {
-        private String daemonHost;
-
-        private Integer daemonPort;
+    public record DropFileCliAppConfig(String daemonHost,
+                                       Integer daemonPort) {
     }
 
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    public static class DropFileDaemonAppConfig {
-        private String downloadDirectory;
-
-        private Integer daemonPort;
-
-        private URI publicDaemonAddressURI;
+    public record DropFileDaemonAppConfig(String downloadDirectory,
+                                          Integer daemonPort,
+                                          URI publicDaemonAddressURI) {
     }
 }

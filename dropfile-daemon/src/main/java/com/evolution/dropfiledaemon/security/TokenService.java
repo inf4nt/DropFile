@@ -21,7 +21,7 @@ public class TokenService {
         if (ObjectUtils.isEmpty(tokenIncoming)) {
             return false;
         }
-        String daemonToken = secretsConfig.getDaemonToken();
+        String daemonToken = secretsConfig.daemonToken();
         Objects.requireNonNull(daemonToken);
         return daemonToken.equals(tokenIncoming);
     }

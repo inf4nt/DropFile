@@ -32,7 +32,7 @@ public class DropFileCliConfigurationDev {
         log.info("Provided daemon public address: {}", daemonPublicAddress);
         return new DropFileAppConfig.DropFileDaemonAppConfig(
                 "NO-SET",
-                cliAppConfig.getDaemonPort(),
+                cliAppConfig.daemonPort(),
                 CommonUtils.toURI(daemonPublicAddress)
         );
     }

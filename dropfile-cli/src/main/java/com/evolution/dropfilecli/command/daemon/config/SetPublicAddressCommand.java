@@ -32,15 +32,15 @@ public class SetPublicAddressCommand implements Runnable {
         URI addressURI = CommonUtils.toURI(address);
         System.out.println("Setting publicDaemonAddressURI: " + addressURI);
         DropFileAppConfig originalConfig = appConfigManager.get();
-        DropFileAppConfig.DropFileDaemonAppConfig originalDaemonAppConfig = originalConfig.getDaemonAppConfig();
+        DropFileAppConfig.DropFileDaemonAppConfig originalDaemonAppConfig = originalConfig.daemonAppConfig();
 
         DropFileAppConfig.DropFileDaemonAppConfig newDaemonAppConfig = new DropFileAppConfig.DropFileDaemonAppConfig(
-                originalDaemonAppConfig.getDownloadDirectory(),
-                originalDaemonAppConfig.getDaemonPort(),
+                originalDaemonAppConfig.downloadDirectory(),
+                originalDaemonAppConfig.daemonPort(),
                 addressURI
         );
         DropFileAppConfig newConfig = new DropFileAppConfig(
-                originalConfig.getCliAppConfig(),
+                originalConfig.cliAppConfig(),
                 newDaemonAppConfig
         );
         appConfigManager.save(newConfig);

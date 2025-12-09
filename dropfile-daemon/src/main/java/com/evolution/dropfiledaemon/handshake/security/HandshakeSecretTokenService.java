@@ -35,7 +35,7 @@ public class HandshakeSecretTokenService {
         }
 
         byte[] token = CryptoUtils.decodeBase64(tokenBase64);
-        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfig.getKeyPair().getPrivate(), token);
+        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfig.keyPair().getPrivate(), token);
         String tokenSecret = new String(decryptTokenSecret);
 
         System.out.println("Given token secret: " + tokenSecret);

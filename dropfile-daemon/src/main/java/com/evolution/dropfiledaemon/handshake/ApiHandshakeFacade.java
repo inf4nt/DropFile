@@ -116,7 +116,7 @@ public class ApiHandshakeFacade {
     @SneakyThrows
     public HandshakeApiRequestResponseStatus initializeRequest(HandshakeApiRequestBodyDTO requestBody) {
         URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
-        String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.getKeyPair().getPublic());
+        String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfig.keyPair().getPublic());
         HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
         if (handshakeResponse.statusCode() == 200) {
             return handleHandshakeChallenge(nodeAddressURI, handshakeResponse);
@@ -148,7 +148,7 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     private HandshakeApiRequestResponseStatus handshakeRequest(URI nodeAddressURI) {
-        URI publicDaemonAddressURI = daemonAppConfig.getObject().getPublicDaemonAddressURI();
+        URI publicDaemonAddressURI = daemonAppConfig.getObject().publicDaemonAddressURI();
         if (publicDaemonAddressURI == null) {
             throw new ApiHandshakeNoDaemonPublicAddressException();
         }
@@ -156,7 +156,7 @@ public class ApiHandshakeFacade {
         HttpResponse<byte[]> httpResponse = handshakeClient.handshakeRequest(
                 publicDaemonAddressURI,
                 nodeAddressURI,
-                keysConfig.getKeyPair().getPublic().getEncoded()
+                keysConfig.keyPair().getPublic().getEncoded()
         );
         if (httpResponse.statusCode() == 200) {
             HandshakeRequestResponseDTO responseDTO = objectMapper
@@ -203,7 +203,7 @@ public class ApiHandshakeFacade {
             return HandshakeApiRequestResponseStatus.CHALLENGE_FAILED;
         }
         byte[] encryptMessage = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.encryptMessage());
-        byte[] decryptMessage = CryptoUtils.decrypt(keysConfig.getKeyPair().getPrivate(), encryptMessage);
+        byte[] decryptMessage = CryptoUtils.decrypt(keysConfig.keyPair().getPrivate(), encryptMessage);
         handshakeStore.outgoingRequestStore().remove(fingerPrint);
         handshakeStore.trustedOutStore()
                 .save(

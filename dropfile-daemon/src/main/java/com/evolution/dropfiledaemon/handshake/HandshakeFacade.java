@@ -45,7 +45,7 @@ public class HandshakeFacade {
                 new IncomingRequestKeyValueStore.IncomingRequestValue(requestDTO.addressURI(), publicKey)
         );
         return new HandshakeRequestResponseDTO(
-                CryptoUtils.encodeBase64(keysConfig.getKeyPair().getPublic().getEncoded())
+                CryptoUtils.encodeBase64(keysConfig.keyPair().getPublic().getEncoded())
         );
     }
 
@@ -60,13 +60,13 @@ public class HandshakeFacade {
                 trustedInValue.publicKey(),
                 trustedInValue.secret().getBytes()
         );
-        String publicKeyBase64 = CryptoUtils.encodeBase64(keysConfig.getKeyPair().getPublic().getEncoded());
+        String publicKeyBase64 = CryptoUtils.encodeBase64(keysConfig.keyPair().getPublic().getEncoded());
         String encryptSecretBase64 = CryptoUtils.encodeBase64(encryptSecret);
         return Optional.of(new HandshakeTrustResponseDTO(publicKeyBase64, encryptSecretBase64));
     }
 
     public HandshakeChallengeResponseDTO challenge(HandshakeChallengeRequestBodyDTO requestDTO) {
-        PrivateKey privateKey = keysConfig.getKeyPair().getPrivate();
+        PrivateKey privateKey = keysConfig.keyPair().getPrivate();
         byte[] signature = CryptoUtils.sign(requestDTO.challenge(), privateKey);
         String signatureBase64 = CryptoUtils.encodeBase64(signature);
         return new HandshakeChallengeResponseDTO(signatureBase64);

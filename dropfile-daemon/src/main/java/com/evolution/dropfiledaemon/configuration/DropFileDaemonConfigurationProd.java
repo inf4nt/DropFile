@@ -32,7 +32,7 @@ public class DropFileDaemonConfigurationProd {
     @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     @Bean
     public DropFileAppConfig.DropFileDaemonAppConfig appConfig(DropFileAppConfigManager appConfig) {
-        return appConfig.get().getDaemonAppConfig();
+        return appConfig.get().daemonAppConfig();
     }
 
     @Bean
