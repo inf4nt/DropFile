@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.security;
+package com.evolution.dropfiledaemon.handshake.security;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
