@@ -9,17 +9,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class ApiAuthFilter extends OncePerRequestFilter {
 
-    private static final String API_PATH_PATTERN = "/api/**";
+    private static final List<String> PATH_PATTERNS = List.of("/api/**");
 
     private final TokenService tokenService;
 
     @Autowired
     public ApiAuthFilter(TokenService tokenService) {
         this.tokenService = tokenService;
+    }
+
+    public List<String> getPathPatterns() {
+        return PATH_PATTERNS;
     }
 
     @Override
@@ -36,10 +41,6 @@ public class ApiAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    public String getPathPattern() {
-        return API_PATH_PATTERN;
     }
 
     private boolean isApiRequest(HttpServletRequest request) {

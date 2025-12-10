@@ -9,17 +9,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class RequireHandshakeAuthFilter extends OncePerRequestFilter {
 
-    private static final String PATH_PATTERN = "/node/**";
+    private static final List<String> PATH_PATTERNS = List.of("/node/**");
 
     private final HandshakeSecretTokenService handshakeSecretTokenService;
 
     @Autowired
     public RequireHandshakeAuthFilter(HandshakeSecretTokenService handshakeSecretTokenService) {
         this.handshakeSecretTokenService = handshakeSecretTokenService;
+    }
+
+    public List<String> getPathPatterns() {
+        return PATH_PATTERNS;
     }
 
     @Override
@@ -48,9 +53,5 @@ public class RequireHandshakeAuthFilter extends OncePerRequestFilter {
             return null;
         }
         return header;
-    }
-
-    public String getPathPattern() {
-        return PATH_PATTERN;
     }
 }

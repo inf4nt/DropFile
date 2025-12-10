@@ -4,6 +4,7 @@ import com.evolution.dropfiledaemon.handshake.security.RequireHandshakeAuthFilte
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -15,17 +16,27 @@ public class SecurityConfig {
                                         ApiAuthFilter apiAuthFilter,
                                         RequireHandshakeAuthFilter requireHandshakeAuthFilter) throws Exception {
         return http
-                .csrf(it -> it.disable())
-                .sessionManagement(it -> it.disable())
-                .httpBasic(it -> it.disable())
-                .formLogin(it -> it.disable())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
                 .addFilterBefore(apiAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(it -> {
-                    it.requestMatchers(apiAuthFilter.getPathPattern()).permitAll();
+                .authorizeHttpRequests(authorizeHttpRequestsCustomizer -> {
+                    apiAuthFilter
+                            .getPathPatterns()
+                            .forEach(pattern -> authorizeHttpRequestsCustomizer
+                                    .requestMatchers(pattern)
+                                    .permitAll()
+                            );
                 })
                 .addFilterAfter(requireHandshakeAuthFilter, ApiAuthFilter.class)
-                .authorizeHttpRequests(it -> {
-                    it.requestMatchers(requireHandshakeAuthFilter.getPathPattern()).permitAll();
+                .authorizeHttpRequests(authorizeHttpRequestsCustomizer -> {
+                    requireHandshakeAuthFilter
+                            .getPathPatterns()
+                            .forEach(pattern -> authorizeHttpRequestsCustomizer
+                                    .requestMatchers(pattern)
+                                    .permitAll()
+                            );
                 })
                 .authorizeHttpRequests(it -> {
                     it.anyRequest().permitAll();
