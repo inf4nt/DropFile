@@ -196,17 +196,6 @@ public class ApiHandshakeFacade {
         byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
 
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-                .get(fingerPrint)
-                .orElse(null);
-        if (trustedOutValue != null) {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValueUpdated = new TrustedOutKeyValueStore.TrustedOutValue(
-                    trustedOutValue.addressURI(), trustedOutValue.publicKey(), trustedOutValue.secret(), Instant.now());
-            handshakeStore.trustedOutStore()
-                    .save(fingerPrint, trustedOutValueUpdated);
-            return HandshakeApiRequestResponseStatus.SUCCESS;
-        }
-
         String challenge = UUID.randomUUID().toString();
         HttpResponse<byte[]> challengeResponse = handshakeClient
                 .getChallenge(nodeAddressURI, challenge);
@@ -220,6 +209,8 @@ public class ApiHandshakeFacade {
         byte[] signature = CryptoUtils.decodeBase64(signatureBase64);
         boolean verify = CryptoUtils.verify(challenge.getBytes(), signature, publicKey);
         if (!verify) {
+            handshakeStore.outgoingRequestStore().remove(fingerPrint);
+            handshakeStore.trustedOutStore().remove(fingerPrint);
             return HandshakeApiRequestResponseStatus.CHALLENGE_FAILED;
         }
         byte[] encryptMessage = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.encryptMessage());
