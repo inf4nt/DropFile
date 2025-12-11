@@ -1,17 +1,21 @@
 package com.evolution.dropfile.configuration.keys;
 
-import com.evolution.dropfile.configuration.AbstractProtectedConfigManager;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.configuration.AbstractConfigManager;
 import lombok.SneakyThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.*;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Objects;
 
-public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
+public class DropFileKeysConfigManager extends AbstractConfigManager {
+
+    private static final String ALGORITHM = "RSA";
 
     private static final String KEYS_DIR_NAME = "keys";
 
@@ -25,9 +29,7 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
             initConfigFiles();
             initDefaultConfigValues();
         }
-        keyPair = readKeyPair();
-        Objects.requireNonNull(keyPair);
-        return keyPair;
+        return readKeyPair();
     }
 
     @SneakyThrows
@@ -49,8 +51,8 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
         if (Files.notExists(publicKeyFilePath) || Files.size(publicKeyFilePath) == 0) {
             return null;
         }
-        byte[] keyByteArray = Files.readAllBytes(publicKeyFilePath);
-        return KeyFactory.getInstance("RSA")
+        byte[] keyByteArray = readPath(publicKeyFilePath);
+        return KeyFactory.getInstance(ALGORITHM)
                 .generatePublic(new X509EncodedKeySpec(keyByteArray));
     }
 
@@ -60,33 +62,25 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
         if (Files.notExists(privateKeyFilePath) || Files.size(privateKeyFilePath) == 0) {
             return null;
         }
-        byte[] keyByteArray = Files.readAllBytes(privateKeyFilePath);
+        byte[] keyByteArray = readPath(privateKeyFilePath);
 
-        return KeyFactory.getInstance("RSA")
+        return KeyFactory.getInstance(ALGORITHM)
                 .generatePrivate(new PKCS8EncodedKeySpec(keyByteArray));
     }
 
     @SneakyThrows
-    public void initDefaultConfigValues() {
+    private void initDefaultConfigValues() {
         KeyPair keyPair = CryptoUtils.generateKeyPair();
-        Files.write(resolvePublicKeyFilePath(), keyPair.getPublic().getEncoded());
-        Files.write(resolvePrivateKeyFilePath(), keyPair.getPrivate().getEncoded());
+        writePath(resolvePublicKeyFilePath(), keyPair.getPublic().getEncoded());
+        writePath(resolvePrivateKeyFilePath(), keyPair.getPrivate().getEncoded());
     }
 
     @SneakyThrows
-    public void initConfigFiles() {
-        Path keysDirPath = resolveKeysDirPath();
-        if (Files.notExists(keysDirPath)) {
-            Files.createDirectory(keysDirPath);
-        }
+    private void initConfigFiles() {
         Path publicKeyFilePath = resolvePublicKeyFilePath();
-        if (Files.notExists(publicKeyFilePath)) {
-            Files.createFile(publicKeyFilePath);
-        }
         Path privateKeyFilePath = resolvePrivateKeyFilePath();
-        if (Files.notExists(privateKeyFilePath)) {
-            Files.createFile(privateKeyFilePath);
-        }
+        createFiles(publicKeyFilePath.toFile());
+        createFiles(privateKeyFilePath.toFile());
     }
 
     private Path resolvePublicKeyFilePath() {
@@ -98,6 +92,6 @@ public class DropFileKeysConfigManager extends AbstractProtectedConfigManager {
     }
 
     private Path resolveKeysDirPath() {
-        return resolveHomePath().resolve(KEYS_DIR_NAME);
+        return resolveProtectedHomeDirectory().resolve(KEYS_DIR_NAME);
     }
 }

@@ -1,6 +1,6 @@
 package com.evolution.dropfile.configuration.secret;
 
-import com.evolution.dropfile.configuration.AbstractProtectedConfigManager;
+import com.evolution.dropfile.configuration.AbstractConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class DropFileSecretsConfigManager extends AbstractProtectedConfigManager {
+public class DropFileSecretsConfigManager extends AbstractConfigManager {
 
     private static final String SECRETS_CONFIG_FILENAME = "secrets.config.json";
 
@@ -39,16 +39,8 @@ public class DropFileSecretsConfigManager extends AbstractProtectedConfigManager
         String daemonToken = UUID.randomUUID().toString();
         DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
         Path configPath = resolveConfigPath();
-        String jsonConfig = objectMapper.writeValueAsString(config);
-        Files.writeString(configPath, jsonConfig);
-    }
-
-    @SneakyThrows
-    public DropFileSecretsConfig read(File file) {
-        if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
-            return null;
-        }
-        return objectMapper.readValue(file, DropFileSecretsConfig.class);
+        byte[] data = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(config);
+        writePath(configPath, data);
     }
 
     @SneakyThrows
@@ -58,15 +50,18 @@ public class DropFileSecretsConfigManager extends AbstractProtectedConfigManager
     }
 
     @SneakyThrows
+    private DropFileSecretsConfig read(File file) {
+        if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
+            return null;
+        }
+        byte[] bytes = readPath(file.toPath());
+        return objectMapper.readValue(bytes, DropFileSecretsConfig.class);
+    }
+
+    @SneakyThrows
     private void initConfigFiles() {
-        Path homePath = resolveHomePath();
-        if (Files.notExists(homePath)) {
-            Files.createDirectory(homePath);
-        }
         Path configPath = resolveConfigPath();
-        if (Files.notExists(configPath)) {
-            Files.createFile(configPath);
-        }
+        createFiles(configPath.toFile());
     }
 
     @SneakyThrows
@@ -74,12 +69,12 @@ public class DropFileSecretsConfigManager extends AbstractProtectedConfigManager
         Path configPath = resolveConfigPath();
         String daemonToken = UUID.randomUUID().toString();
         DropFileSecretsConfig config = new DropFileSecretsConfig(daemonToken);
-        String configJson = objectMapper.writeValueAsString(config);
-        Files.writeString(configPath, configJson);
+        byte[] data = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(config);
+        writePath(configPath, data);
     }
 
     private Path resolveConfigPath() {
-        Path homePath = resolveHomePath();
-        return homePath.resolve(SECRETS_CONFIG_FILENAME);
+        return resolveProtectedHomeDirectory()
+                .resolve(SECRETS_CONFIG_FILENAME);
     }
 }

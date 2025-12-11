@@ -1,16 +1,15 @@
 package com.evolution.dropfile.configuration.app;
 
+import com.evolution.dropfile.configuration.AbstractConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public class DropFileAppConfigManager {
-
-    private static final String APP_CONFIG_HOME_DIR = ".dropfile";
+public class DropFileAppConfigManager
+        extends AbstractConfigManager {
 
     private static final String APP_CONFIG_FILENAME = "app.config.json";
 
@@ -39,9 +38,10 @@ public class DropFileAppConfigManager {
     @SneakyThrows
     public DropFileAppConfig save(DropFileAppConfig config) {
         initAppConfigFiles();
-        Path appConfigPath = getAppConfigPath();
-        String jsonConfig = objectMapper.writeValueAsString(config);
-        Files.writeString(appConfigPath, jsonConfig);
+        Path appConfigPath = resolveAppConfigPath();
+        byte[] data = objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsBytes(config);
+        writePath(appConfigPath, data);
         return config;
     }
 
@@ -50,25 +50,20 @@ public class DropFileAppConfigManager {
         if (Files.notExists(file.toPath()) || Files.size(file.toPath()) == 0) {
             return null;
         }
-        return objectMapper.readValue(file, DropFileAppConfig.class);
+        byte[] data = readPath(file.toPath());
+        return objectMapper.readValue(data, DropFileAppConfig.class);
     }
 
     @SneakyThrows
     private DropFileAppConfig read() {
-        Path configPath = getAppConfigPath();
+        Path configPath = resolveAppConfigPath();
         return read(configPath.toFile());
     }
 
     @SneakyThrows
     private void initAppConfigFiles() {
-        Path appConfigHomeDirPath = getAppConfigHomeDirPath();
-        if (Files.notExists(appConfigHomeDirPath)) {
-            Files.createDirectory(appConfigHomeDirPath);
-        }
-        Path appConfigPath = getAppConfigPath();
-        if (Files.notExists(appConfigPath)) {
-            Files.createFile(appConfigPath);
-        }
+        Path appConfigPath = resolveAppConfigPath();
+        createFiles(appConfigPath.toFile());
     }
 
     @SneakyThrows
@@ -87,12 +82,8 @@ public class DropFileAppConfigManager {
         save(config);
     }
 
-    private Path getAppConfigHomeDirPath() {
-        String userHomeBase = System.getProperty("user.home");
-        return Paths.get(userHomeBase, APP_CONFIG_HOME_DIR);
-    }
-
-    private Path getAppConfigPath() {
-        return getAppConfigHomeDirPath().resolve(APP_CONFIG_FILENAME);
+    private Path resolveAppConfigPath() {
+        return resolveHomeDirectory()
+                .resolve(APP_CONFIG_FILENAME);
     }
 }
