@@ -3,8 +3,10 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -49,8 +51,8 @@ public class DropFileDaemonConfigurationDev {
                                          @Value("${dropfile.private.key:#{null}}") String privateKey) {
         if (publicKey == null || privateKey == null) {
             KeyPair keyPair = CryptoUtils.generateKeyPair();
-            log.info("Generated public key: {}", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
-            log.info("Generated private key: {}", Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()));
+            log.info("Generated public key: {}", CryptoUtils.encodeBase64(keyPair.getPublic().getEncoded()));
+            log.info("Generated private key: {}", CryptoUtils.encodeBase64(keyPair.getPrivate().getEncoded()));
             return new DropFileKeysConfig(keyPair);
         }
 
@@ -63,5 +65,15 @@ public class DropFileDaemonConfigurationDev {
                         CryptoUtils.getPrivateKey(Base64.getDecoder().decode(privateKey))
                 )
         );
+    }
+
+    @Bean
+    public DropFileAppConfigManager appConfigManager(ObjectMapper objectMapper) {
+        return new DropFileAppConfigManager(objectMapper) {
+            @Override
+            public DropFileAppConfig save(DropFileAppConfig config) {
+                throw new UnsupportedOperationException("Dev profile does not support it");
+            }
+        };
     }
 }

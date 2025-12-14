@@ -1,13 +1,12 @@
 package com.evolution.dropfilecli.command.daemon.config;
 
-import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
+import com.evolution.dropfilecli.CommandHttpHandler;
+import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.net.URI;
+import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
@@ -15,35 +14,25 @@ import java.net.URI;
         aliases = {"--spa", "-spa"},
         description = "Set public daemon address"
 )
-public class SetPublicAddressCommand implements Runnable {
+public class SetPublicAddressCommand implements CommandHttpHandler<Void> {
 
-    private final DropFileAppConfigManager appConfigManager;
+    private final DaemonClient daemonClient;
 
-    @CommandLine.Parameters(index = "0", description = "Address")
+    @CommandLine.Parameters(index = "0", description = "Public address")
     private String address;
 
     @Autowired
-    public SetPublicAddressCommand(DropFileAppConfigManager appConfigManager) {
-        this.appConfigManager = appConfigManager;
+    public SetPublicAddressCommand(DaemonClient daemonClient) {
+        this.daemonClient = daemonClient;
     }
 
     @Override
-    public void run() {
-        URI addressURI = CommonUtils.toURI(address);
-        System.out.println("Setting publicDaemonAddressURI: " + addressURI);
-        DropFileAppConfig originalConfig = appConfigManager.get();
-        DropFileAppConfig.DropFileDaemonAppConfig originalDaemonAppConfig = originalConfig.daemonAppConfig();
+    public HttpResponse<Void> execute() throws Exception {
+        return daemonClient.setPublicAddress(address);
+    }
 
-        DropFileAppConfig.DropFileDaemonAppConfig newDaemonAppConfig = new DropFileAppConfig.DropFileDaemonAppConfig(
-                originalDaemonAppConfig.downloadDirectory(),
-                originalDaemonAppConfig.daemonPort(),
-                addressURI
-        );
-        DropFileAppConfig newConfig = new DropFileAppConfig(
-                originalConfig.cliAppConfig(),
-                newDaemonAppConfig
-        );
-        appConfigManager.save(newConfig);
+    @Override
+    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
         System.out.println("OK");
     }
 }

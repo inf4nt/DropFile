@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
@@ -35,6 +36,28 @@ public class DaemonClient {
         this.objectMapper = objectMapper;
         this.cliAppConfig = cliAppConfig;
         this.secretsConfig = secretsConfig;
+    }
+
+    @SneakyThrows
+    public HttpResponse<Void> setPublicAddress(String publicAddress) {
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/config/public_address");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        byte[] payload = objectMapper.writeValueAsBytes(
+                new DaemonSetPublicAddressRequestBodyDTO(publicAddress)
+        );
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
     }
 
     @SneakyThrows

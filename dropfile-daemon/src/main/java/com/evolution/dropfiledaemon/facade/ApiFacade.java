@@ -1,7 +1,11 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
+import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
+import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
 import com.evolution.dropfiledaemon.client.NodeClient;
 import com.evolution.dropfiledaemon.exception.ApiFacadePingNodeException;
@@ -23,14 +27,32 @@ public class ApiFacade {
     private final NodeClient nodeClient;
 
     private final HandshakeStore handshakeStore;
+    
+    private final DropFileAppConfigManager appConfigManager;
 
     @Autowired
     public ApiFacade(DropFileKeysConfig keysConfig,
                      NodeClient nodeClient,
-                     HandshakeStore handshakeStore) {
+                     HandshakeStore handshakeStore,
+                     DropFileAppConfigManager appConfigManager) {
         this.keysConfig = keysConfig;
         this.nodeClient = nodeClient;
         this.handshakeStore = handshakeStore;
+        this.appConfigManager = appConfigManager;
+    }
+    
+    public void setPublicAddress(DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
+        DropFileAppConfig existingAppConfig = appConfigManager.get();
+
+        DropFileAppConfig newOne = new DropFileAppConfig(
+                existingAppConfig.cliAppConfig(),
+                new DropFileAppConfig.DropFileDaemonAppConfig(
+                        existingAppConfig.daemonAppConfig().downloadDirectory(),
+                        existingAppConfig.daemonAppConfig().daemonPort(),
+                        CommonUtils.toURI(requestBodyDTO.address())
+                )
+        );
+        appConfigManager.save(newOne);
     }
 
     public void shutdown() {
