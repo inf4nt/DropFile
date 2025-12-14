@@ -14,27 +14,32 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationProd {
 
     @Bean
-    public DropFileAppConfigManager appConfigManager(ObjectMapper objectMapper) {
+    public DropFileAppConfigManager appConfigManager(
+            ObjectMapper objectMapper) {
         return new DropFileAppConfigManager(objectMapper);
     }
 
     @Bean
-    public DropFileSecretsConfigManager secretsConfigManager(ObjectMapper objectMapper) {
+    public DropFileSecretsConfigManager secretsConfigManager(
+            ObjectMapper objectMapper) {
         return new DropFileSecretsConfigManager(objectMapper);
     }
 
     @Bean
-    public DropFileAppConfig.DropFileCliAppConfig appConfig(DropFileAppConfigManager appConfig) {
+    public DropFileAppConfig.DropFileCliAppConfig appConfig(
+            DropFileAppConfigManager appConfig) {
         return appConfig.get().cliAppConfig();
     }
 
     @Bean
-    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(DropFileAppConfigManager configManager) {
+    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(
+            DropFileAppConfigManager configManager) {
         return configManager.get().daemonAppConfig();
     }
 
     @Bean
-    public DropFileSecretsConfig secretsConfig(DropFileSecretsConfigManager secretsConfig) {
+    public DropFileSecretsConfig secretsConfig(
+            DropFileSecretsConfigManager secretsConfig) {
         return secretsConfig.get();
     }
 }

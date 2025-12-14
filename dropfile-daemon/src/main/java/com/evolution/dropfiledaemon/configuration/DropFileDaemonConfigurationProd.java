@@ -20,23 +20,27 @@ import java.security.KeyPair;
 public class DropFileDaemonConfigurationProd {
 
     @Bean
-    public DropFileAppConfigManager appConfigManager(ObjectMapper objectMapper) {
+    public DropFileAppConfigManager appConfigManager(
+            ObjectMapper objectMapper) {
         return new DropFileAppConfigManager(objectMapper);
     }
 
     @Bean
-    public DropFileSecretsConfigManager secretsConfigManager(ObjectMapper objectMapper) {
+    public DropFileSecretsConfigManager secretsConfigManager(
+            ObjectMapper objectMapper) {
         return new DropFileSecretsConfigManager(objectMapper);
     }
 
     @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     @Bean
-    public DropFileAppConfig.DropFileDaemonAppConfig appConfig(DropFileAppConfigManager appConfig) {
+    public DropFileAppConfig.DropFileDaemonAppConfig appConfig(
+            DropFileAppConfigManager appConfig) {
         return appConfig.get().daemonAppConfig();
     }
 
     @Bean
-    public DropFileSecretsConfig secretsConfig(DropFileSecretsConfigManager configManager) {
+    public DropFileSecretsConfig secretsConfig(
+            DropFileSecretsConfigManager configManager) {
         configManager.refreshDaemonToken();
         return configManager.get();
     }
@@ -47,7 +51,8 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DropFileKeysConfig keysConfig(DropFileKeysConfigManager configManager) {
+    public DropFileKeysConfig keysConfig(
+            DropFileKeysConfigManager configManager) {
         KeyPair keyPair = configManager.get();
         return new DropFileKeysConfig(keyPair);
     }

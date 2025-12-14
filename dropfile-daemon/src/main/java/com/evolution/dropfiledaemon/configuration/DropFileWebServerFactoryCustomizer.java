@@ -14,7 +14,8 @@ public class DropFileWebServerFactoryCustomizer
     private final ObjectProvider<DropFileAppConfig.DropFileDaemonAppConfig> appConfig;
 
     @Autowired
-    public DropFileWebServerFactoryCustomizer(ObjectProvider<DropFileAppConfig.DropFileDaemonAppConfig> appConfig) {
+    public DropFileWebServerFactoryCustomizer(
+            ObjectProvider<DropFileAppConfig.DropFileDaemonAppConfig> appConfig) {
         this.appConfig = appConfig;
     }
 

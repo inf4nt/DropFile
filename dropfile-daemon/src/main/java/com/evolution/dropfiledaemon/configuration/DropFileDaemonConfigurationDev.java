@@ -47,8 +47,9 @@ public class DropFileDaemonConfigurationDev {
     }
 
     @Bean
-    public DropFileKeysConfig keysConfig(@Value("${dropfile.public.key:#{null}}") String publicKey,
-                                         @Value("${dropfile.private.key:#{null}}") String privateKey) {
+    public DropFileKeysConfig keysConfig(
+            @Value("${dropfile.public.key:#{null}}") String publicKey,
+            @Value("${dropfile.private.key:#{null}}") String privateKey) {
         if (publicKey == null || privateKey == null) {
             KeyPair keyPair = CryptoUtils.generateKeyPair();
             log.info("Generated public key: {}", CryptoUtils.encodeBase64(keyPair.getPublic().getEncoded()));

@@ -15,16 +15,18 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationDev {
 
     @Bean
-    public DropFileAppConfig.DropFileCliAppConfig appCliConfig(@Value("${dropfile.daemon.host}") String daemonHost,
-                                                               @Value("${dropfile.daemon.port}") Integer daemonPort) {
+    public DropFileAppConfig.DropFileCliAppConfig appCliConfig(
+            @Value("${dropfile.daemon.host}") String daemonHost,
+            @Value("${dropfile.daemon.port}") Integer daemonPort) {
         log.info("Provided daemon host: {}", daemonHost);
         log.info("Provided daemon port: {}", daemonPort);
         return new DropFileAppConfig.DropFileCliAppConfig(daemonHost, daemonPort);
     }
 
     @Bean
-    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(@Value("${dropfile.daemon.public.address}") String daemonPublicAddress,
-                                                                     DropFileAppConfig.DropFileCliAppConfig cliAppConfig) {
+    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(
+            @Value("${dropfile.daemon.public.address}") String daemonPublicAddress,
+            DropFileAppConfig.DropFileCliAppConfig cliAppConfig) {
         log.info("Provided daemon public address: {}", daemonPublicAddress);
         return new DropFileAppConfig.DropFileDaemonAppConfig(
                 "NO-SET",
@@ -34,7 +36,8 @@ public class DropFileCliConfigurationDev {
     }
 
     @Bean
-    public DropFileSecretsConfig secretsConfig(@Value("${dropfile.daemon.token}") String daemonSecret) {
+    public DropFileSecretsConfig secretsConfig(
+            @Value("${dropfile.daemon.token}") String daemonSecret) {
         log.info("Provided daemon secret: {}", daemonSecret);
         return new DropFileSecretsConfig(daemonSecret);
     }
