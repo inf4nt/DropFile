@@ -14,7 +14,7 @@ import java.nio.file.StandardOpenOption;
 
 public abstract class AbstractConfigManager {
 
-    private static Integer READ_BUFFER_SIZE = 8024;
+    private static final Integer READ_BUFFER_SIZE = 8024;
 
     private static final String WINDOWS_HOME_DIR = "DropFile";
 
