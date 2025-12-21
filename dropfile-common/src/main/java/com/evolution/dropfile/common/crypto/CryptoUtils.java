@@ -16,6 +16,13 @@ public class CryptoUtils {
 
     private static final String SHA256_ALGORITHM = "SHA256";
 
+    public static KeyPair toKeyPair(byte[] publicKey, byte[] privateKey) {
+        return new KeyPair(
+                getPublicKey(publicKey),
+                getPrivateKey(privateKey)
+        );
+    }
+
     @SneakyThrows
     public static PublicKey getPublicKey(byte[] publicKey) {
         return KeyFactory.getInstance(RSA_ALGORITHM)
@@ -58,6 +65,14 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
+    public static byte[] decrypt(byte[] privateKeyByteArray, byte[] encryptedMessageBytes) {
+        Cipher decryptCipher = Cipher.getInstance(RSA_ALGORITHM);
+        PrivateKey privateKey = CryptoUtils.getPrivateKey(privateKeyByteArray);
+        decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return decryptCipher.doFinal(encryptedMessageBytes);
+    }
+
+    @SneakyThrows
     public static byte[] decrypt(PrivateKey privateKey, byte[] encryptedMessageBytes) {
         Cipher decryptCipher = Cipher.getInstance(RSA_ALGORITHM);
         decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
@@ -84,6 +99,15 @@ public class CryptoUtils {
     @SneakyThrows
     public static byte[] sign(String data, PrivateKey privateKey) {
         Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
+        signature.initSign(privateKey);
+        signature.update(data.getBytes());
+        return signature.sign();
+    }
+
+    @SneakyThrows
+    public static byte[] sign(String data, byte[] privateKeyByteArray) {
+        Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
+        PrivateKey privateKey = getPrivateKey(privateKeyByteArray);
         signature.initSign(privateKey);
         signature.update(data.getBytes());
         return signature.sign();

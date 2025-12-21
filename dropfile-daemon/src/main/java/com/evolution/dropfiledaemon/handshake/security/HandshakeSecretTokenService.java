@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.security;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +14,13 @@ public class HandshakeSecretTokenService {
 
     private final HandshakeStore handshakeStore;
 
-    private final DropFileKeysConfig keysConfig;
+    private final DropFileKeysConfigStore keysConfigStore;
 
     @Autowired
-    public HandshakeSecretTokenService(HandshakeStore handshakeStore, DropFileKeysConfig keysConfig) {
+    public HandshakeSecretTokenService(HandshakeStore handshakeStore,
+                                       DropFileKeysConfigStore keysConfigStore) {
         this.handshakeStore = handshakeStore;
-        this.keysConfig = keysConfig;
+        this.keysConfigStore = keysConfigStore;
     }
 
     public boolean isValid(String tokenBase64) {
@@ -35,7 +36,7 @@ public class HandshakeSecretTokenService {
         }
 
         byte[] token = CryptoUtils.decodeBase64(tokenBase64);
-        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfig.keyPair().getPrivate(), token);
+        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfigStore.getRequired().privateKey(), token);
         String tokenSecret = new String(decryptTokenSecret);
 
         System.out.println("Given token secret: " + tokenSecret);

@@ -5,8 +5,8 @@ import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigManager;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
 import com.evolution.dropfiledaemon.client.NodeClient;
 import com.evolution.dropfiledaemon.exception.ApiFacadePingNodeException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -22,27 +22,28 @@ import java.util.concurrent.Executors;
 @Component
 public class ApiFacade {
 
-    private final DropFileKeysConfig keysConfig;
-
     private final NodeClient nodeClient;
 
     private final HandshakeStore handshakeStore;
-    
-    private final DropFileAppConfigManager appConfigManager;
+
+    private final DropFileAppConfigStore appConfigStore;
+
+    private final DropFileKeysConfigStore keysConfigStore;
 
     @Autowired
-    public ApiFacade(DropFileKeysConfig keysConfig,
-                     NodeClient nodeClient,
+    public ApiFacade(NodeClient nodeClient,
                      HandshakeStore handshakeStore,
-                     DropFileAppConfigManager appConfigManager) {
-        this.keysConfig = keysConfig;
+                     DropFileAppConfigStore appConfigStore,
+                     DropFileKeysConfigStore keysConfigStore) {
         this.nodeClient = nodeClient;
         this.handshakeStore = handshakeStore;
-        this.appConfigManager = appConfigManager;
+        this.appConfigStore = appConfigStore;
+        this.keysConfigStore = keysConfigStore;
     }
-    
+
+
     public void setPublicAddress(DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
-        DropFileAppConfig existingAppConfig = appConfigManager.get();
+        DropFileAppConfig existingAppConfig = appConfigStore.getRequired();
 
         DropFileAppConfig newOne = new DropFileAppConfig(
                 existingAppConfig.cliAppConfig(),
@@ -52,7 +53,7 @@ public class ApiFacade {
                         CommonUtils.toURI(requestBodyDTO.address())
                 )
         );
-        appConfigManager.save(newOne);
+        appConfigStore.save(newOne);
     }
 
     public void shutdown() {
@@ -63,7 +64,7 @@ public class ApiFacade {
     }
 
     public DaemonInfoResponseDTO getDaemonInfo() {
-        byte[] publicKey = keysConfig.keyPair().getPublic().getEncoded();
+        byte[] publicKey = keysConfigStore.getRequired().publicKey();
         String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
 

@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.exception.HandshakeAlreadyTrustedException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -22,13 +23,13 @@ public class HandshakeFacade {
 
     private final HandshakeStore handshakeStore;
 
-    private final DropFileKeysConfig keysConfig;
+    private final DropFileKeysConfigStore keysConfigStore;
 
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
-                           DropFileKeysConfig keysConfig) {
+                           DropFileKeysConfigStore keysConfigStore) {
         this.handshakeStore = handshakeStore;
-        this.keysConfig = keysConfig;
+        this.keysConfigStore = keysConfigStore;
     }
 
     public HandshakeRequestResponseDTO request(HandshakeRequestBodyDTO requestDTO) {
@@ -45,7 +46,7 @@ public class HandshakeFacade {
                 new IncomingRequestKeyValueStore.IncomingRequestValue(requestDTO.addressURI(), publicKey)
         );
         return new HandshakeRequestResponseDTO(
-                CryptoUtils.encodeBase64(keysConfig.keyPair().getPublic().getEncoded())
+                CryptoUtils.encodeBase64(keysConfigStore.getRequired().publicKey())
         );
     }
 
@@ -60,14 +61,16 @@ public class HandshakeFacade {
                 trustedInValue.publicKey(),
                 trustedInValue.secret().getBytes()
         );
-        String publicKeyBase64 = CryptoUtils.encodeBase64(keysConfig.keyPair().getPublic().getEncoded());
+        String publicKeyBase64 = CryptoUtils.encodeBase64(keysConfigStore.getRequired().publicKey());
         String encryptSecretBase64 = CryptoUtils.encodeBase64(encryptSecret);
         return Optional.of(new HandshakeTrustResponseDTO(publicKeyBase64, encryptSecretBase64));
     }
 
     public HandshakeChallengeResponseDTO challenge(HandshakeChallengeRequestBodyDTO requestDTO) {
-        PrivateKey privateKey = keysConfig.keyPair().getPrivate();
-        byte[] signature = CryptoUtils.sign(requestDTO.challenge(), privateKey);
+        byte[] signature = CryptoUtils.sign(
+                requestDTO.challenge(),
+                keysConfigStore.getRequired().privateKey()
+        );
         String signatureBase64 = CryptoUtils.encodeBase64(signature);
         return new HandshakeChallengeResponseDTO(signatureBase64);
     }

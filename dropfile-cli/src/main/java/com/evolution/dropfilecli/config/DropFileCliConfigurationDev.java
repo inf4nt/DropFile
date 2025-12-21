@@ -2,12 +2,18 @@ package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.configuration.app.DropFileAppConfig;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.app.ImmutableDropFileAppConfigStore;
 import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.ImmutableDropFileSecretsConfigStore;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+
+import java.util.Optional;
 
 @Slf4j
 @Profile("dev")
@@ -15,30 +21,33 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationDev {
 
     @Bean
-    public DropFileAppConfig.DropFileCliAppConfig appCliConfig(
-            @Value("${dropfile.daemon.host}") String daemonHost,
-            @Value("${dropfile.daemon.port}") Integer daemonPort) {
-        log.info("Provided daemon host: {}", daemonHost);
-        log.info("Provided daemon port: {}", daemonPort);
-        return new DropFileAppConfig.DropFileCliAppConfig(daemonHost, daemonPort);
+    public DropFileAppConfigStore appConfigStore(Environment environment) {
+        return new ImmutableDropFileAppConfigStore(() -> {
+            String daemonHost = environment.getRequiredProperty("dropfile.daemon.host");
+            Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
+
+            String daemonPublicAddress = environment.getProperty("dropfile.daemon.public.address");
+
+            return new DropFileAppConfig(
+                    new DropFileAppConfig.DropFileCliAppConfig(
+                            daemonHost,
+                            daemonPort
+                    ),
+                    new DropFileAppConfig.DropFileDaemonAppConfig(
+                            "NO-SET",
+                            daemonPort,
+                            Optional.ofNullable(daemonPublicAddress).map(it -> CommonUtils.toURI(it)).orElse(null)
+                    )
+            );
+        });
     }
 
     @Bean
-    public DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig(
-            @Value("${dropfile.daemon.public.address}") String daemonPublicAddress,
-            DropFileAppConfig.DropFileCliAppConfig cliAppConfig) {
-        log.info("Provided daemon public address: {}", daemonPublicAddress);
-        return new DropFileAppConfig.DropFileDaemonAppConfig(
-                "NO-SET",
-                cliAppConfig.daemonPort(),
-                CommonUtils.toURI(daemonPublicAddress)
-        );
-    }
+    public DropFileSecretsConfigStore secretsConfigStore(Environment environment) {
+        return new ImmutableDropFileSecretsConfigStore(() -> {
+            String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
 
-    @Bean
-    public DropFileSecretsConfig secretsConfig(
-            @Value("${dropfile.daemon.token}") String daemonSecret) {
-        log.info("Provided daemon secret: {}", daemonSecret);
-        return new DropFileSecretsConfig(daemonSecret);
+            return new DropFileSecretsConfig(daemonToken);
+        });
     }
 }
