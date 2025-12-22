@@ -27,12 +27,8 @@ public interface FileProvider {
         return configFilePath.toFile();
     }
 
-    default String getHomeDirectoryName() {
-        return ".dropfile";
-    }
-
     default Path resolveHomePath() {
-        String homeDirectoryName = getHomeDirectoryName();
+        String homeDirectoryName = ".dropfile";
         Path userhomePath = Paths.get(System.getProperty("user.home"));
         return userhomePath
                 .resolve(homeDirectoryName);
