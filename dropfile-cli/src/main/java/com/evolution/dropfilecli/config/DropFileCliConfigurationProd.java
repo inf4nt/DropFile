@@ -1,8 +1,11 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.configuration.app.*;
-import com.evolution.dropfile.configuration.secret.*;
-import com.evolution.dropfile.configuration.store.json.JsonFileKeyValueStore;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.app.JsonFileDropFileAppConfigStore;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.secret.JsonFileDropFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,23 +17,18 @@ public class DropFileCliConfigurationProd {
 
     @Bean
     public DropFileAppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
-        return new DefaultDropFileAppConfigStoreInitializationProcedure();
+        return new DropFileAppConfigStoreInitializationProcedure();
     }
 
     @Bean
     public DropFileSecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure() {
-        return new DefaultDropFileSecretsConfigStoreInitializationProcedure();
+        return new DropFileSecretsConfigStoreInitializationProcedure();
     }
 
     @Bean
     public DropFileAppConfigStore appConfigStore(ObjectMapper objectMapper,
                                                  DropFileAppConfigStoreInitializationProcedure initializationProcedure) {
-        DefaultDropFileAppConfigStore store = new DefaultDropFileAppConfigStore(
-                new JsonFileKeyValueStore<>(
-                        new DefaultDropFileAppConfigStoreFileProvider(),
-                        new DropFileAppConfigJsonSerde(objectMapper)
-                )
-        );
+        DropFileAppConfigStore store = new JsonFileDropFileAppConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
@@ -38,12 +36,7 @@ public class DropFileCliConfigurationProd {
     @Bean
     public DropFileSecretsConfigStore secretsConfigStore(ObjectMapper objectMapper,
                                                          DropFileSecretsConfigStoreInitializationProcedure initializationProcedure) {
-        DefaultDropFileSecretsConfigStore store = new DefaultDropFileSecretsConfigStore(
-                new JsonFileKeyValueStore<>(
-                        new DefaultDropFileSecretsConfigFileProvider(),
-                        new DropFileSecretsConfigJsonSerde(objectMapper)
-                )
-        );
+        DropFileSecretsConfigStore store = new JsonFileDropFileSecretsConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }

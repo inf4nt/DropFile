@@ -1,9 +1,14 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.app.*;
-import com.evolution.dropfile.configuration.keys.*;
-import com.evolution.dropfile.configuration.secret.*;
-import com.evolution.dropfile.configuration.store.json.JsonFileKeyValueStore;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.app.DropFileAppConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.app.JsonFileDropFileAppConfigStore;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
+import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.keys.JsonFileDropFileKeysConfigStore;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.secret.JsonFileDropFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,28 +20,23 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public DropFileAppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
-        return new DefaultDropFileAppConfigStoreInitializationProcedure();
+        return new DropFileAppConfigStoreInitializationProcedure();
     }
 
     @Bean
     public DropFileSecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure() {
-        return new DefaultDropFileSecretsConfigStoreInitializationProcedure();
+        return new DropFileSecretsConfigStoreInitializationProcedure();
     }
 
     @Bean
     public DropFileKeysConfigStoreInitializationProcedure keysConfigStoreInitializationProcedure() {
-        return new DefaultDropFileKeysConfigStoreInitializationProcedure();
+        return new DropFileKeysConfigStoreInitializationProcedure();
     }
 
     @Bean
     public DropFileAppConfigStore appConfigStore(ObjectMapper objectMapper,
                                                  DropFileAppConfigStoreInitializationProcedure initializationProcedure) {
-        DropFileAppConfigStore store = new DefaultDropFileAppConfigStore(
-                new JsonFileKeyValueStore<>(
-                        new DefaultDropFileAppConfigStoreFileProvider(),
-                        new DropFileAppConfigJsonSerde(objectMapper)
-                )
-        );
+        DropFileAppConfigStore store = new JsonFileDropFileAppConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
@@ -44,12 +44,7 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public DropFileSecretsConfigStore secretsConfigStore(ObjectMapper objectMapper,
                                                          DropFileSecretsConfigStoreInitializationProcedure initializationProcedure) {
-        DropFileSecretsConfigStore store = new DefaultDropFileSecretsConfigStore(
-                new JsonFileKeyValueStore<>(
-                        new DefaultDropFileSecretsConfigFileProvider(),
-                        new DropFileSecretsConfigJsonSerde(objectMapper)
-                )
-        );
+        DropFileSecretsConfigStore store = new JsonFileDropFileSecretsConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
@@ -57,12 +52,7 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public DropFileKeysConfigStore keysConfigStore(ObjectMapper objectMapper,
                                                    DropFileKeysConfigStoreInitializationProcedure initializationProcedure) {
-        DropFileKeysConfigStore store = new DefaultDropFileKeysConfigStore(
-                new JsonFileKeyValueStore<>(
-                        new DefaultDropFileKeysConfigFileProvider(),
-                        new DropFileKeysConfigJsonSerde(objectMapper)
-                )
-        );
+        DropFileKeysConfigStore store = new JsonFileDropFileKeysConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
