@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private final DropFileAppConfigStore appConfigStore;
+    private final AppConfigStore appConfigStore;
 
     @Autowired
-    public DropFileWebServerFactoryCustomizer(DropFileAppConfigStore appConfigStore) {
+    public DropFileWebServerFactoryCustomizer(AppConfigStore appConfigStore) {
         this.appConfigStore = appConfigStore;
     }
 

@@ -4,9 +4,9 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfig;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.client.NodeClient;
 import com.evolution.dropfiledaemon.exception.ApiFacadePingNodeException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -26,15 +26,15 @@ public class ApiFacade {
 
     private final HandshakeStore handshakeStore;
 
-    private final DropFileAppConfigStore appConfigStore;
+    private final AppConfigStore appConfigStore;
 
-    private final DropFileKeysConfigStore keysConfigStore;
+    private final KeysConfigStore keysConfigStore;
 
     @Autowired
     public ApiFacade(NodeClient nodeClient,
                      HandshakeStore handshakeStore,
-                     DropFileAppConfigStore appConfigStore,
-                     DropFileKeysConfigStore keysConfigStore) {
+                     AppConfigStore appConfigStore,
+                     KeysConfigStore keysConfigStore) {
         this.nodeClient = nodeClient;
         this.handshakeStore = handshakeStore;
         this.appConfigStore = appConfigStore;
@@ -43,11 +43,11 @@ public class ApiFacade {
 
 
     public void setPublicAddress(DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
-        DropFileAppConfig existingAppConfig = appConfigStore.getRequired();
+        AppConfig existingAppConfig = appConfigStore.getRequired();
 
-        DropFileAppConfig newOne = new DropFileAppConfig(
+        AppConfig newOne = new AppConfig(
                 existingAppConfig.cliAppConfig(),
-                new DropFileAppConfig.DropFileDaemonAppConfig(
+                new AppConfig.DaemonAppConfig(
                         existingAppConfig.daemonAppConfig().downloadDirectory(),
                         existingAppConfig.daemonAppConfig().daemonPort(),
                         CommonUtils.toURI(requestBodyDTO.address())

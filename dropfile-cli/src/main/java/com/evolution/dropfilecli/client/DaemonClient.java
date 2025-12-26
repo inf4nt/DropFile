@@ -3,10 +3,10 @@ package com.evolution.dropfilecli.client;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfig;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.secret.SecretsConfig;
+import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +25,15 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    private final DropFileAppConfigStore appConfigStore;
+    private final AppConfigStore appConfigStore;
 
-    private final DropFileSecretsConfigStore secretsConfigStore;
+    private final SecretsConfigStore secretsConfigStore;
 
     @Autowired
     public DaemonClient(HttpClient httpClient,
                         ObjectMapper objectMapper,
-                        DropFileAppConfigStore appConfigStore,
-                        DropFileSecretsConfigStore secretsConfigStore) {
+                        AppConfigStore appConfigStore,
+                        SecretsConfigStore secretsConfigStore) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.appConfigStore = appConfigStore;
@@ -42,7 +42,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> setPublicAddress(String publicAddress) {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/config/public_address");
@@ -66,7 +66,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getDaemonInfo() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/info");
@@ -85,7 +85,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/ping");
@@ -104,7 +104,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<Void> shutdown() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort());
         URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
@@ -124,7 +124,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> handshakeRequest(String nodeAddress) {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request");
@@ -146,7 +146,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getIncomingRequests() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/incoming");
@@ -163,7 +163,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getOutgoingRequests() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/outgoing");
@@ -180,7 +180,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustIn() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/in");
@@ -197,7 +197,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustOut() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out");
@@ -214,7 +214,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustLatest() {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out/latest");
@@ -231,7 +231,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> trust(String fingerprint) {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/")
@@ -249,7 +249,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<String> nodePing(String fingerprint) {
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/node/ping/")
@@ -266,7 +266,7 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        DropFileSecretsConfig secretsConfig = secretsConfigStore.getRequired();
+        SecretsConfig secretsConfig = secretsConfigStore.getRequired();
 
         String daemonToken = Objects.requireNonNull(secretsConfig.daemonToken());
         return "Bearer " + daemonToken;

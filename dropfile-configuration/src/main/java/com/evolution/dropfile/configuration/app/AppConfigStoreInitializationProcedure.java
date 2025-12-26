@@ -4,21 +4,21 @@ import com.evolution.dropfile.configuration.store.single.StoreInitializationProc
 
 import java.util.Optional;
 
-public class DropFileAppConfigStoreInitializationProcedure
-        implements StoreInitializationProcedure<DropFileAppConfigStore> {
+public class AppConfigStoreInitializationProcedure
+        implements StoreInitializationProcedure<AppConfigStore> {
     @Override
-    public void init(DropFileAppConfigStore store) {
-        Optional<DropFileAppConfig> configOptional = store.get();
+    public void init(AppConfigStore store) {
+        Optional<AppConfig> configOptional = store.get();
         if (configOptional.isPresent()) {
             return;
         }
         Integer daemonPort = 18181;
-        DropFileAppConfig config = new DropFileAppConfig(
-                new DropFileAppConfig.DropFileCliAppConfig(
+        AppConfig config = new AppConfig(
+                new AppConfig.CliAppConfig(
                         "127.0.0.1",
                         daemonPort
                 ),
-                new DropFileAppConfig.DropFileDaemonAppConfig(
+                new AppConfig.DaemonAppConfig(
                         ".dropfile",
                         daemonPort,
                         null

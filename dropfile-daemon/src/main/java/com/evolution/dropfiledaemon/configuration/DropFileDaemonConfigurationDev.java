@@ -2,15 +2,15 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
-import com.evolution.dropfile.configuration.app.ImmutableDropFileAppConfigStore;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
-import com.evolution.dropfile.configuration.keys.ImmutableDropFileKeysConfigStore;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfig;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
-import com.evolution.dropfile.configuration.secret.ImmutableDropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfig;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.app.ImmutableAppConfigStore;
+import com.evolution.dropfile.configuration.keys.KeysConfig;
+import com.evolution.dropfile.configuration.keys.KeysConfigStore;
+import com.evolution.dropfile.configuration.keys.ImmutableKeysConfigStore;
+import com.evolution.dropfile.configuration.secret.SecretsConfig;
+import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.ImmutableSecretsConfigStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +27,8 @@ import java.util.Optional;
 public class DropFileDaemonConfigurationDev {
 
     @Bean
-    public DropFileAppConfigStore appConfigStore(Environment environment) {
-        return new ImmutableDropFileAppConfigStore(() -> {
+    public AppConfigStore appConfigStore(Environment environment) {
+        return new ImmutableAppConfigStore(() -> {
 
             Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
             String daemonPublicAddress = environment.getProperty("dropfile.daemon.public.address");
@@ -38,9 +38,9 @@ public class DropFileDaemonConfigurationDev {
             log.info("Provided daemon port: {}", daemonPort);
             log.info("Provided public address: {}", daemonPublicAddress);
 
-            return new DropFileAppConfig(
+            return new AppConfig(
                     null,
-                    new DropFileAppConfig.DropFileDaemonAppConfig(
+                    new AppConfig.DaemonAppConfig(
                             daemonDownloadDirectory,
                             daemonPort,
                             Optional.ofNullable(daemonPublicAddress).map(it -> CommonUtils.toURI(it)).orElse(null)
@@ -50,17 +50,17 @@ public class DropFileDaemonConfigurationDev {
     }
 
     @Bean
-    public DropFileSecretsConfigStore secretsConfigStore(Environment environment) {
-        return new ImmutableDropFileSecretsConfigStore(() -> {
+    public SecretsConfigStore secretsConfigStore(Environment environment) {
+        return new ImmutableSecretsConfigStore(() -> {
             String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
             log.info("Provided daemon token: {}", daemonToken);
-            return new DropFileSecretsConfig(daemonToken);
+            return new SecretsConfig(daemonToken);
         });
     }
 
     @Bean
-    public DropFileKeysConfigStore keysConfigStore(Environment environment) {
-        return new ImmutableDropFileKeysConfigStore(() -> {
+    public KeysConfigStore keysConfigStore(Environment environment) {
+        return new ImmutableKeysConfigStore(() -> {
             String publicKey = environment.getProperty("dropfile.public.key");
             String privateKey = environment.getProperty("dropfile.private.key");
 
@@ -68,13 +68,13 @@ public class DropFileDaemonConfigurationDev {
                 KeyPair keyPair = CryptoUtils.generateKeyPair();
                 log.info("Generated public key: {}", CryptoUtils.encodeBase64(keyPair.getPublic().getEncoded()));
                 log.info("Generated private key: {}", CryptoUtils.encodeBase64(keyPair.getPrivate().getEncoded()));
-                return new DropFileKeysConfig(keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+                return new KeysConfig(keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
             }
 
             log.info("Provided public key: {}", publicKey);
             log.info("Provided private key: {}", privateKey);
 
-            return new DropFileKeysConfig(
+            return new KeysConfig(
                     CryptoUtils.getPublicKey(Base64.getDecoder().decode(publicKey)).getEncoded(),
                     CryptoUtils.getPrivateKey(Base64.getDecoder().decode(privateKey)).getEncoded()
             );

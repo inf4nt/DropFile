@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.security;
 
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -10,10 +10,10 @@ import java.util.Objects;
 @Service
 public class TokenService {
 
-    private final DropFileSecretsConfigStore secretsConfigStore;
+    private final SecretsConfigStore secretsConfigStore;
 
     @Autowired
-    public TokenService(DropFileSecretsConfigStore secretsConfigStore) {
+    public TokenService(SecretsConfigStore secretsConfigStore) {
         this.secretsConfigStore = secretsConfigStore;
     }
 

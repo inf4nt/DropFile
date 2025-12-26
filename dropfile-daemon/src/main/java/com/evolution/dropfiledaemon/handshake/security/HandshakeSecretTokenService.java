@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.security;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
+import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +14,11 @@ public class HandshakeSecretTokenService {
 
     private final HandshakeStore handshakeStore;
 
-    private final DropFileKeysConfigStore keysConfigStore;
+    private final KeysConfigStore keysConfigStore;
 
     @Autowired
     public HandshakeSecretTokenService(HandshakeStore handshakeStore,
-                                       DropFileKeysConfigStore keysConfigStore) {
+                                       KeysConfigStore keysConfigStore) {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
     }

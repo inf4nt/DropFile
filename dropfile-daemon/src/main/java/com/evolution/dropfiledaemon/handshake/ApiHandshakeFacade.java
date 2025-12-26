@@ -3,10 +3,9 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfig;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.exception.NoDaemonPublicAddressException;
 import com.evolution.dropfiledaemon.handshake.exception.NoIncomingRequestFoundException;
@@ -14,8 +13,6 @@ import com.evolution.dropfiledaemon.handshake.store.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -35,15 +32,15 @@ public class ApiHandshakeFacade {
 
     private final ObjectMapper objectMapper;
 
-    private final DropFileKeysConfigStore keysConfigStore;
+    private final KeysConfigStore keysConfigStore;
 
-    private final DropFileAppConfigStore appConfigStore;
+    private final AppConfigStore appConfigStore;
 
     public ApiHandshakeFacade(HandshakeStore handshakeStore,
                               HandshakeClient handshakeClient,
                               ObjectMapper objectMapper,
-                              DropFileKeysConfigStore keysConfigStore,
-                              DropFileAppConfigStore appConfigStore) {
+                              KeysConfigStore keysConfigStore,
+                              AppConfigStore appConfigStore) {
         this.handshakeStore = handshakeStore;
         this.handshakeClient = handshakeClient;
         this.objectMapper = objectMapper;
@@ -165,7 +162,7 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     private HandshakeApiRequestResponseStatus doHandshakeRequest(URI nodeAddressURI) {
-        DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig = appConfigStore.getRequired().daemonAppConfig();
+        AppConfig.DaemonAppConfig daemonAppConfig = appConfigStore.getRequired().daemonAppConfig();
 
         URI publicDaemonAddressURI = daemonAppConfig.publicDaemonAddressURI();
         if (publicDaemonAddressURI == null) {

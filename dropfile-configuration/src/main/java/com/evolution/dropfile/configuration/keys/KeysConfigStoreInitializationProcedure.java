@@ -6,17 +6,17 @@ import com.evolution.dropfile.configuration.store.single.StoreInitializationProc
 import java.security.KeyPair;
 import java.util.Optional;
 
-public class DropFileKeysConfigStoreInitializationProcedure
-        implements StoreInitializationProcedure<DropFileKeysConfigStore> {
+public class KeysConfigStoreInitializationProcedure
+        implements StoreInitializationProcedure<KeysConfigStore> {
     @Override
-    public void init(DropFileKeysConfigStore store) {
-        Optional<DropFileKeysConfig> configOptional = store.get();
+    public void init(KeysConfigStore store) {
+        Optional<KeysConfig> configOptional = store.get();
         if (configOptional.isPresent()) {
             return;
         }
 
         KeyPair keyPair = CryptoUtils.generateKeyPair();
-        DropFileKeysConfig config = new DropFileKeysConfig(
+        KeysConfig config = new KeysConfig(
                 keyPair.getPublic().getEncoded(),
                 keyPair.getPrivate().getEncoded()
         );

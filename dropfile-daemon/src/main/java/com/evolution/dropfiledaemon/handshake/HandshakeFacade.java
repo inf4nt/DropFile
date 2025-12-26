@@ -2,19 +2,15 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfig;
-import com.evolution.dropfile.configuration.keys.DropFileKeysConfigStore;
-import com.evolution.dropfiledaemon.client.HandshakeClient;
+import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.exception.HandshakeAlreadyTrustedException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.IncomingRequestKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.security.PrivateKey;
 import java.util.Optional;
 
 @Slf4j
@@ -23,11 +19,11 @@ public class HandshakeFacade {
 
     private final HandshakeStore handshakeStore;
 
-    private final DropFileKeysConfigStore keysConfigStore;
+    private final KeysConfigStore keysConfigStore;
 
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
-                           DropFileKeysConfigStore keysConfigStore) {
+                           KeysConfigStore keysConfigStore) {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
     }

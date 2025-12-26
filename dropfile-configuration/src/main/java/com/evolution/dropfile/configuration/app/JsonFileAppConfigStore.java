@@ -9,13 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class JsonFileDropFileAppConfigStore
-        extends DefaultSingleValueStore<DropFileAppConfig>
-        implements DropFileAppConfigStore {
+public class JsonFileAppConfigStore
+        extends DefaultSingleValueStore<AppConfig>
+        implements AppConfigStore {
 
     private static final String STORE_NAME = "app_config";
 
-    public JsonFileDropFileAppConfigStore(ObjectMapper objectMapper) {
+    public JsonFileAppConfigStore(ObjectMapper objectMapper) {
         super(
                 STORE_NAME,
                 new JsonFileKeyValueStore<>(
@@ -26,7 +26,7 @@ public class JsonFileDropFileAppConfigStore
                             }
                         },
                         new DefaultJsonSerde<>(
-                                DropFileAppConfig.class,
+                                AppConfig.class,
                                 objectMapper
                         )
                 )

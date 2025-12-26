@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfile.configuration.app.DropFileAppConfig;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfig;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.files.FilesCommand;
@@ -24,18 +24,18 @@ public class RootCommand implements Runnable {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    private final DropFileAppConfigStore appConfigStore;
+    private final AppConfigStore appConfigStore;
 
     @Autowired
-    public RootCommand(DropFileAppConfigStore appConfigStore) {
+    public RootCommand(AppConfigStore appConfigStore) {
         this.appConfigStore = appConfigStore;
     }
 
     @Override
     public void run() {
-        DropFileAppConfig appConfig = appConfigStore.getRequired();
-        DropFileAppConfig.DropFileCliAppConfig cliAppConfig = appConfig.cliAppConfig();
-        DropFileAppConfig.DropFileDaemonAppConfig daemonAppConfig = appConfig.daemonAppConfig();
+        AppConfig appConfig = appConfigStore.getRequired();
+        AppConfig.CliAppConfig cliAppConfig = appConfig.cliAppConfig();
+        AppConfig.DaemonAppConfig daemonAppConfig = appConfig.daemonAppConfig();
 
         System.out.println("Daemon host: " + cliAppConfig.daemonHost());
         System.out.println("Daemon port: " + cliAppConfig.daemonPort());

@@ -1,11 +1,11 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStore;
-import com.evolution.dropfile.configuration.app.DropFileAppConfigStoreInitializationProcedure;
-import com.evolution.dropfile.configuration.app.JsonFileDropFileAppConfigStore;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStore;
-import com.evolution.dropfile.configuration.secret.DropFileSecretsConfigStoreInitializationProcedure;
-import com.evolution.dropfile.configuration.secret.JsonFileDropFileSecretsConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.app.AppConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
+import com.evolution.dropfile.configuration.secret.SecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.configuration.secret.JsonFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,27 +16,27 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationProd {
 
     @Bean
-    public DropFileAppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
-        return new DropFileAppConfigStoreInitializationProcedure();
+    public AppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
+        return new AppConfigStoreInitializationProcedure();
     }
 
     @Bean
-    public DropFileSecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure() {
-        return new DropFileSecretsConfigStoreInitializationProcedure();
+    public SecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure() {
+        return new SecretsConfigStoreInitializationProcedure();
     }
 
     @Bean
-    public DropFileAppConfigStore appConfigStore(ObjectMapper objectMapper,
-                                                 DropFileAppConfigStoreInitializationProcedure initializationProcedure) {
-        DropFileAppConfigStore store = new JsonFileDropFileAppConfigStore(objectMapper);
+    public AppConfigStore appConfigStore(ObjectMapper objectMapper,
+                                         AppConfigStoreInitializationProcedure initializationProcedure) {
+        AppConfigStore store = new JsonFileAppConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
 
     @Bean
-    public DropFileSecretsConfigStore secretsConfigStore(ObjectMapper objectMapper,
-                                                         DropFileSecretsConfigStoreInitializationProcedure initializationProcedure) {
-        DropFileSecretsConfigStore store = new JsonFileDropFileSecretsConfigStore(objectMapper);
+    public SecretsConfigStore secretsConfigStore(ObjectMapper objectMapper,
+                                                 SecretsConfigStoreInitializationProcedure initializationProcedure) {
+        SecretsConfigStore store = new JsonFileSecretsConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
