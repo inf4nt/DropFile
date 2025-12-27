@@ -38,6 +38,7 @@ public class ApiAuthFilter extends OncePerRequestFilter {
                 return;
             }
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
         filterChain.doFilter(request, response);

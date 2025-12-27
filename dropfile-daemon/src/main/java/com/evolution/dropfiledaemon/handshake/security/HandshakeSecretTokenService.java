@@ -39,7 +39,6 @@ public class HandshakeSecretTokenService {
         byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfigStore.getRequired().privateKey(), token);
         String tokenSecret = new String(decryptTokenSecret);
 
-        System.out.println("Given token secret: " + tokenSecret);
         return trusted.values()
                 .stream()
                 .anyMatch(it -> it.secret().equals(tokenSecret));
