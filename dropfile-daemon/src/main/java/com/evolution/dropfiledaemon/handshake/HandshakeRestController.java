@@ -16,6 +16,11 @@ public class HandshakeRestController {
         this.handshakeFacade = handshakeFacade;
     }
 
+    @GetMapping("/identity")
+    public HandshakeIdentityResponseDTO getIdentity() {
+        return handshakeFacade.getHandshakeIdentity();
+    }
+
     @PostMapping("/request")
     public ResponseEntity<HandshakeRequestResponseDTO> request(@RequestBody HandshakeRequestBodyDTO requestDTO) {
         return ResponseEntity.ok(handshakeFacade.request(requestDTO));

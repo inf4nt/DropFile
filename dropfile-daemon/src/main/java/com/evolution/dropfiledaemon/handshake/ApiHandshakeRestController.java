@@ -68,4 +68,9 @@ public class ApiHandshakeRestController {
             @RequestBody HandshakeApiRequestBodyDTO requestBody) {
         return apiHandshakeFacade.initializeRequest(requestBody).name();
     }
+
+    @PostMapping("/identity")
+    public HandshakeIdentityResponseDTO identity(@RequestBody HandshakeIdentityRequestDTO requestDTO) {
+        return apiHandshakeFacade.identity(requestDTO.address());
+    }
 }

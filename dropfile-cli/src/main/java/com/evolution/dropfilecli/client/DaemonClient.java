@@ -3,6 +3,7 @@ package com.evolution.dropfilecli.client;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
+import com.evolution.dropfile.common.dto.HandshakeIdentityRequestDTO;
 import com.evolution.dropfile.configuration.app.AppConfig;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.secret.SecretsConfig;
@@ -302,15 +303,23 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<String> getIdentity(String nodeAddress) {
-        URI daemonURI = CommonUtils.toURI(nodeAddress)
-                .resolve("/identity");
+    public HttpResponse<byte[]> getIdentity(String nodeAddress) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/handshake/identity");
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(daemonURI)
-                .GET()
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(new HandshakeIdentityRequestDTO(nodeAddress))
+                ))
+                .header("Content-Type", "application/json")
                 .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     private String getDaemonAuthorizationToken() {

@@ -2,7 +2,9 @@ package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
+import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,20 +27,25 @@ public class ConnectCommand implements Runnable {
 
     private final DaemonClient daemonClient;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
-    public ConnectCommand(DaemonClient daemonClient) {
+    public ConnectCommand(DaemonClient daemonClient,
+                          ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
+        this.objectMapper = objectMapper;
     }
 
     @SneakyThrows
     @Override
     public void run() {
-        HttpResponse<String> identityResponse = daemonClient.getIdentity(address);
+        HttpResponse<byte[]> identityResponse = daemonClient.getIdentity(address);
         if (identityResponse.statusCode() != 200) {
             throw new RuntimeException("Identity request failed : HTTP error code : " + identityResponse.statusCode());
         }
 
-        String publicKeyBase64 = identityResponse.body();
+        HandshakeIdentityResponseDTO handshakeIdentityResponseDTO = objectMapper.readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
+        String publicKeyBase64 = handshakeIdentityResponseDTO.publicKey();
         String fingerPrint = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyBase64));
 
         System.out.println("RSA fingerprint is: " + fingerPrint);

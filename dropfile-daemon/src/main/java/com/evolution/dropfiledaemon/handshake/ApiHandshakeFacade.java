@@ -48,6 +48,15 @@ public class ApiHandshakeFacade {
         this.appConfigStore = appConfigStore;
     }
 
+    @SneakyThrows
+    public HandshakeIdentityResponseDTO identity(String address) {
+        HttpResponse<byte[]> identity = handshakeClient.getIdentity(address);
+        if (identity.statusCode() != 200) {
+            throw new RuntimeException("Unexpected response code " + identity.statusCode());
+        }
+        return objectMapper.readValue(identity.body(), HandshakeIdentityResponseDTO.class);
+    }
+
     public List<HandshakeApiIncomingResponseDTO> getIncomingRequests() {
         return handshakeStore
                 .incomingRequestStore()

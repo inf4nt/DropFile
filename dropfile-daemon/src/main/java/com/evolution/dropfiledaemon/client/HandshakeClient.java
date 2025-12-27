@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.client;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.HandshakeChallengeRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeRequestBodyDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,18 @@ public class HandshakeClient {
                            ObjectMapper objectMapper) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> getIdentity(String address) {
+        URI addressURI = CommonUtils.toURI(address).resolve("/handshake/identity");
+
+        HttpRequest httpRequest = HttpRequest
+                .newBuilder()
+                .uri(addressURI)
+                .GET()
+                .build();
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows

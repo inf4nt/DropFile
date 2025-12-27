@@ -28,6 +28,14 @@ public class HandshakeFacade {
         this.keysConfigStore = keysConfigStore;
     }
 
+    public HandshakeIdentityResponseDTO getHandshakeIdentity() {
+        byte[] publicKey = keysConfigStore.getRequired().publicKey();
+        return new HandshakeIdentityResponseDTO(
+                CryptoUtils.encodeBase64(publicKey),
+                CryptoUtils.getFingerPrint(publicKey)
+        );
+    }
+
     public HandshakeRequestResponseDTO request(HandshakeRequestBodyDTO requestDTO) {
         byte[] publicKey = CryptoUtils.decodeBase64(requestDTO.publicKey());
         String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
