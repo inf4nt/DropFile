@@ -23,4 +23,10 @@ public class IdentityRestController {
         byte[] publicKey = keysConfigStore.getRequired().publicKey();
         return CryptoUtils.encodeBase64(publicKey);
     }
+
+    @GetMapping("/fingerprint")
+    public String fingerprint() {
+        byte[] publicKey = keysConfigStore.getRequired().publicKey();
+        return CryptoUtils.getFingerPrint(publicKey);
+    }
 }

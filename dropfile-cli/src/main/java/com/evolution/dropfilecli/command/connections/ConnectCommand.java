@@ -1,8 +1,9 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
-import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -14,7 +15,7 @@ import java.net.http.HttpResponse;
         name = "connect",
         description = "Connect"
 )
-public class ConnectCommand implements CommandHttpHandler<String> {
+public class ConnectCommand implements Runnable {
 
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
@@ -29,28 +30,53 @@ public class ConnectCommand implements CommandHttpHandler<String> {
         this.daemonClient = daemonClient;
     }
 
+    @SneakyThrows
     @Override
-    public HttpResponse<String> execute() throws Exception {
-        if (timeout <= 1) {
-            return daemonClient.handshakeRequest(address);
+    public void run() {
+        HttpResponse<String> identityResponse = daemonClient.getIdentity(address);
+        if (identityResponse.statusCode() != 200) {
+            throw new RuntimeException("Identity request failed : HTTP error code : " + identityResponse.statusCode());
+        }
+
+        String publicKeyBase64 = identityResponse.body();
+        String fingerPrint = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyBase64));
+
+        System.out.println("RSA fingerprint is: " + fingerPrint);
+
+        HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerPrint);
+        if (trustOut.statusCode() == 200) {
+            HttpResponse<String> httpResponse = daemonClient.handshakeRequest(publicKeyBase64, address);
+            System.out.println("Handshake status: " + httpResponse.body());
+            return;
+        }
+
+        HttpResponse<byte[]> outgoingRequestResponse = daemonClient.getOutgoingRequest(fingerPrint);
+        if (outgoingRequestResponse.statusCode() != 200) {
+            System.out.println(String.format("The authenticity of host %s cannot be established.", address));
+            while (true) {
+                String answer = System.console().readLine("Are you sure you want continue connecting (yes/no): ");
+                if (answer.equalsIgnoreCase("yes")) {
+                    break;
+                }
+                if (answer.equalsIgnoreCase("no")) {
+                    return;
+                }
+            }
         }
 
         int count = 1;
         HttpResponse<String> retry = null;
         while (count <= timeout) {
             System.out.println(String.format("Attempt %s to connect %s", count, address));
-            retry = daemonClient.handshakeRequest(address);
+            retry = daemonClient.handshakeRequest(publicKeyBase64, address);
             if (HandshakeApiRequestResponseStatus.SUCCESS.name().equals(retry.body())) {
                 break;
             }
             count++;
             Thread.sleep(1000);
         }
-        return retry;
-    }
-
-    @Override
-    public void handleSuccessful(HttpResponse<String> response) throws Exception {
-        System.out.println("Status: " + response.body());
+        if (retry != null) {
+            System.out.println("Handshake status: " + retry.body());
+        }
     }
 }

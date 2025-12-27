@@ -151,9 +151,9 @@ public class ApiHandshakeFacade {
         String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfigStore.getRequired().publicKey());
         HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
         if (handshakeResponse.statusCode() == 200) {
-            return doHandshakeChallenge(nodeAddressURI, handshakeResponse);
+            return doHandshakeChallenge(requestBody.publicKey(), nodeAddressURI, handshakeResponse);
         } else if (handshakeResponse.statusCode() == 404) {
-            return doHandshakeRequest(nodeAddressURI);
+            return doHandshakeRequest(requestBody.publicKey(), nodeAddressURI);
         }
         throw new RuntimeException(
                 "Unexpected handshake trust request response code  " + handshakeResponse.statusCode()
@@ -161,7 +161,8 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus doHandshakeRequest(URI nodeAddressURI) {
+    private HandshakeApiRequestResponseStatus doHandshakeRequest(String expectedPublicKeyBase64,
+                                                                 URI nodeAddressURI) {
         AppConfig.DaemonAppConfig daemonAppConfig = appConfigStore.getRequired().daemonAppConfig();
 
         URI publicDaemonAddressURI = daemonAppConfig.publicDaemonAddressURI();
@@ -174,51 +175,69 @@ public class ApiHandshakeFacade {
                 nodeAddressURI,
                 keysConfigStore.getRequired().publicKey()
         );
-        if (httpResponse.statusCode() == 200) {
-            HandshakeRequestResponseDTO responseDTO = objectMapper
-                    .readValue(httpResponse.body(), HandshakeRequestResponseDTO.class);
-            byte[] publicKeyBytes = CryptoUtils.decodeBase64(responseDTO.publicKey());
-            String fingerPrint = CryptoUtils.getFingerPrint(publicKeyBytes);
-            handshakeStore.outgoingRequestStore().save(
-                    fingerPrint,
-                    new OutgoingRequestKeyValueStore.OutgoingRequestValue(
-                            nodeAddressURI,
-                            publicKeyBytes
-                    )
-            );
-            return HandshakeApiRequestResponseStatus.PENDING;
+
+        if (httpResponse.statusCode() != 200) {
+            throw new RuntimeException("Unexpected handshake request response code: " + httpResponse.statusCode());
         }
-        throw new RuntimeException("Unexpected handshake request response code " + httpResponse.statusCode());
+
+        HandshakeRequestResponseDTO responseDTO = objectMapper
+                .readValue(httpResponse.body(), HandshakeRequestResponseDTO.class);
+        byte[] publicKeyBytes = CryptoUtils.decodeBase64(responseDTO.publicKey());
+        String fingerPrint = CryptoUtils.getFingerPrint(publicKeyBytes);
+        String fingerprintExpected = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(expectedPublicKeyBase64));
+
+        if (!fingerprintExpected.equals(fingerPrint)) {
+            return HandshakeApiRequestResponseStatus.FINGERPRINT_MISMATCH;
+        }
+
+        handshakeStore.outgoingRequestStore().save(
+                fingerPrint,
+                new OutgoingRequestKeyValueStore.OutgoingRequestValue(
+                        nodeAddressURI,
+                        publicKeyBytes
+                )
+        );
+        return HandshakeApiRequestResponseStatus.PENDING;
     }
 
     @SneakyThrows
-    private HandshakeApiRequestResponseStatus doHandshakeChallenge(URI nodeAddressURI, HttpResponse<byte[]> handshakeResponse) {
+    private HandshakeApiRequestResponseStatus doHandshakeChallenge(String publicKeyExpectedBase64,
+                                                                   URI nodeAddressURI,
+                                                                   HttpResponse<byte[]> handshakeResponse) {
+        HandshakeTrustResponseDTO handshakeTrustResponseDTO = objectMapper
+                .readValue(handshakeResponse.body(), HandshakeTrustResponseDTO.class);
+        byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
+        String fingerprint = CryptoUtils.getFingerPrint(publicKey);
+
+        String fingerprintExpected = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyExpectedBase64));
+        if (!fingerprint.equals(fingerprintExpected)) {
+            return HandshakeApiRequestResponseStatus.FINGERPRINT_MISMATCH;
+        }
+
         String challenge = UUID.randomUUID().toString();
         HttpResponse<byte[]> challengeResponse = handshakeClient
                 .getChallenge(nodeAddressURI, challenge);
         if (challengeResponse.statusCode() != 200) {
             throw new RuntimeException("Unexpected challenge response code " + challengeResponse.statusCode());
         }
+
         HandshakeChallengeResponseDTO challengeResponseDTO = objectMapper
                 .readValue(challengeResponse.body(), HandshakeChallengeResponseDTO.class);
-
         String signatureBase64 = challengeResponseDTO.signature();
         byte[] signature = CryptoUtils.decodeBase64(signatureBase64);
-        HandshakeTrustResponseDTO handshakeTrustResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeTrustResponseDTO.class);
-        byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
-        String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
         boolean verify = CryptoUtils.verify(challenge.getBytes(), signature, publicKey);
+
         if (!verify) {
-            handshakeStore.outgoingRequestStore().remove(fingerPrint);
-            handshakeStore.trustedOutStore().remove(fingerPrint);
+            handshakeStore.outgoingRequestStore().remove(fingerprint);
+            handshakeStore.trustedOutStore().remove(fingerprint);
             return HandshakeApiRequestResponseStatus.CHALLENGE_FAILED;
         }
         byte[] encryptMessage = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.encryptMessage());
         byte[] decryptMessage = CryptoUtils.decrypt(keysConfigStore.getRequired().privateKey(), encryptMessage);
-        handshakeStore.outgoingRequestStore().remove(fingerPrint);
+        handshakeStore.outgoingRequestStore().remove(fingerprint);
         handshakeStore.trustedOutStore()
                 .save(
-                        fingerPrint,
+                        fingerprint,
                         new TrustedOutKeyValueStore.TrustedOutValue(
                                 nodeAddressURI,
                                 publicKey,
@@ -227,5 +246,47 @@ public class ApiHandshakeFacade {
                         )
                 );
         return HandshakeApiRequestResponseStatus.SUCCESS;
+    }
+
+    public Optional<HandshakeApiOutgoingResponseDTO> getOutgoingRequest(String fingerprint) {
+        handshakeStore.outgoingRequestStore().get(fingerprint)
+                .map(it -> getOutgoingRequest(fingerprint, it));
+
+        OutgoingRequestKeyValueStore.OutgoingRequestValue value = handshakeStore
+                .outgoingRequestStore()
+                .get(fingerprint)
+                .orElse(null);
+        if (value != null) {
+            URI addressURI = value.addressURI();
+            byte[] publicKey = value.publicKey();
+            String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
+            return Optional.of(new HandshakeApiOutgoingResponseDTO(fingerprint, publicKeyBase64, addressURI.toString()));
+        }
+        return Optional.empty();
+    }
+
+    public Optional<HandshakeApiTrustOutResponseDTO> getTrustOut(String fingerprint) {
+        TrustedOutKeyValueStore.TrustedOutValue value = handshakeStore.trustedOutStore()
+                .get(fingerprint)
+                .orElse(null);
+        if (value != null) {
+            URI addressURI = value.addressURI();
+            byte[] publicKey = value.publicKey();
+            String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
+            return Optional.of(new HandshakeApiTrustOutResponseDTO(fingerprint, publicKeyBase64, addressURI.toString()));
+        }
+        return Optional.empty();
+    }
+
+    private HandshakeApiTrustOutResponseDTO getTrustOut(String fingerprint, TrustedOutKeyValueStore.TrustedOutValue value) {
+        String publicKeyBase64 = CryptoUtils.encodeBase64(value.publicKey());
+        String addressURI = value.addressURI().toString();
+        return new HandshakeApiTrustOutResponseDTO(fingerprint, publicKeyBase64, addressURI);
+    }
+
+    private HandshakeApiOutgoingResponseDTO getOutgoingRequest(String fingerprint, OutgoingRequestKeyValueStore.OutgoingRequestValue value) {
+        String publicKeyBase64 = CryptoUtils.encodeBase64(value.publicKey());
+        String addressURI = value.addressURI().toString();
+        return new HandshakeApiOutgoingResponseDTO(fingerprint, publicKeyBase64, addressURI);
     }
 }

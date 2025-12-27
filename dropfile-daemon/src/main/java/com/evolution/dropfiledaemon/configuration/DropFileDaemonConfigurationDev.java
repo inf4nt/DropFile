@@ -68,6 +68,7 @@ public class DropFileDaemonConfigurationDev {
                 KeyPair keyPair = CryptoUtils.generateKeyPair();
                 log.info("Generated public key: {}", CryptoUtils.encodeBase64(keyPair.getPublic().getEncoded()));
                 log.info("Generated private key: {}", CryptoUtils.encodeBase64(keyPair.getPrivate().getEncoded()));
+
                 return new KeysConfig(keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
             }
 

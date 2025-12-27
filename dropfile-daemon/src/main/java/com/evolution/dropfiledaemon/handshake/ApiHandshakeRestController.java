@@ -27,6 +27,13 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.getOutgoingRequests();
     }
 
+    @GetMapping("/request/outgoing/{fingerprint}")
+    public ResponseEntity<HandshakeApiOutgoingResponseDTO> getOutgoingRequests(@PathVariable String fingerprint) {
+        return apiHandshakeFacade.getOutgoingRequest(fingerprint)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/trust/in")
     public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
         return apiHandshakeFacade.getTrustIt();
@@ -35,6 +42,13 @@ public class ApiHandshakeRestController {
     @GetMapping("/trust/out")
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
         return apiHandshakeFacade.getTrustOut();
+    }
+
+    @GetMapping("/trust/out/{fingerprint}")
+    public ResponseEntity<HandshakeApiTrustOutResponseDTO> getTrustOut(@PathVariable String fingerprint) {
+        return apiHandshakeFacade.getTrustOut(fingerprint)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/trust/out/latest")
