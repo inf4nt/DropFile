@@ -50,15 +50,15 @@ public class DaemonClient {
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
-        byte[] payload = objectMapper.writeValueAsBytes(
-                new DaemonSetPublicAddressRequestBodyDTO(publicAddress)
-        );
-
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(
+                                new DaemonSetPublicAddressRequestBodyDTO(publicAddress)
+                        )
+                ))
                 .header("Content-Type", "application/json")
                 .build();
 
@@ -107,14 +107,14 @@ public class DaemonClient {
     public HttpResponse<Void> shutdown() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort());
-        URI daemonShutdownUri = daemonURI.resolve("/api/shutdown");
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
                 .newBuilder()
-                .uri(daemonShutdownUri)
+                .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .header("Content-Type", "application/json")
@@ -132,13 +132,13 @@ public class DaemonClient {
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
-        byte[] payload = objectMapper.writeValueAsBytes(new HandshakeApiRequestBodyDTO(publicKey, nodeAddress));
-
         HttpRequest request = HttpRequest
                 .newBuilder()
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(new HandshakeApiRequestBodyDTO(publicKey, nodeAddress))
+                ))
                 .header("Content-Type", "application/json")
                 .build();
 
@@ -168,6 +168,7 @@ public class DaemonClient {
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/outgoing");
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -186,6 +187,7 @@ public class DaemonClient {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/request/outgoing/")
                 .resolve(fingerprint);
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -203,6 +205,7 @@ public class DaemonClient {
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/in");
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -220,6 +223,7 @@ public class DaemonClient {
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out");
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -238,6 +242,7 @@ public class DaemonClient {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out/")
                 .resolve(fingerprint);
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -255,6 +260,7 @@ public class DaemonClient {
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out/latest");
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -273,6 +279,7 @@ public class DaemonClient {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/")
                 .resolve(fingerprint);
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -291,6 +298,7 @@ public class DaemonClient {
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/node/ping/")
                 .resolve(fingerprint);
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
@@ -308,6 +316,7 @@ public class DaemonClient {
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/identity");
+
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
         HttpRequest request = HttpRequest
