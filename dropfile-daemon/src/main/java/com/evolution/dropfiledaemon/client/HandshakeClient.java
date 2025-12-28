@@ -73,10 +73,12 @@ public class HandshakeClient {
                 .newBuilder()
                 .uri(handshakeNodeAddressURI.resolve("/handshake/request"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new HandshakeRequestBodyDTO(
-                                currentAddressURI,
-                                Base64.getEncoder().encodeToString(publicKey)
-                        ))
+                        objectMapper.writeValueAsBytes(
+                                new HandshakeRequestBodyDTO(
+                                        currentAddressURI,
+                                        Base64.getEncoder().encodeToString(publicKey)
+                                )
+                        )
                 ))
                 .header("Content-Type", "application/json")
                 .build();
