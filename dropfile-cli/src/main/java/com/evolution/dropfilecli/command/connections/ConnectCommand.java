@@ -62,6 +62,9 @@ public class ConnectCommand implements Runnable {
     private void reconnect(String publicKeyBase64) {
         System.out.println("Reconnecting...");
         HttpResponse<String> httpResponse = daemonClient.handshakeRequest(publicKeyBase64, address);
+        if (httpResponse.statusCode() != 200) {
+            throw new RuntimeException("Failed to reconnect: " + httpResponse.statusCode());
+        }
         System.out.println("Handshake status: " + httpResponse.body());
     }
 
@@ -69,8 +72,7 @@ public class ConnectCommand implements Runnable {
     private HandshakeIdentityResponseDTO getIdentity(String address) {
         HttpResponse<byte[]> identityResponse = daemonClient.getIdentity(address);
         if (identityResponse.statusCode() != 200) {
-            System.out.println("Identity request failed: " + new String(identityResponse.body()));
-            System.exit(0);
+            throw new RuntimeException("Identity request failed: " + identityResponse.statusCode());
         }
         return objectMapper.readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
     }
