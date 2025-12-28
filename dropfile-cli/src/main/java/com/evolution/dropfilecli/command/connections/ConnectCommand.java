@@ -39,38 +39,44 @@ public class ConnectCommand implements Runnable {
     @SneakyThrows
     @Override
     public void run() {
-        HttpResponse<byte[]> identityResponse = daemonClient.getIdentity(address);
-        if (identityResponse.statusCode() != 200) {
-            throw new RuntimeException("Identity request failed : HTTP error code : " + identityResponse.statusCode());
-        }
-
-        HandshakeIdentityResponseDTO handshakeIdentityResponseDTO = objectMapper.readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
-        String publicKeyBase64 = handshakeIdentityResponseDTO.publicKey();
+        HandshakeIdentityResponseDTO identity = getIdentity(address);
+        String publicKeyBase64 = identity.publicKey();
         String fingerPrint = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyBase64));
 
         System.out.println("RSA fingerprint is: " + fingerPrint);
 
         HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerPrint);
         if (trustOut.statusCode() == 200) {
-            HttpResponse<String> httpResponse = daemonClient.handshakeRequest(publicKeyBase64, address);
-            System.out.println("Handshake status: " + httpResponse.body());
+            reconnect(publicKeyBase64);
             return;
         }
 
         HttpResponse<byte[]> outgoingRequestResponse = daemonClient.getOutgoingRequest(fingerPrint);
-        if (outgoingRequestResponse.statusCode() != 200) {
-            System.out.println(String.format("The authenticity of host %s cannot be established.", address));
-            while (true) {
-                String answer = System.console().readLine("Are you sure you want continue connecting (yes/no): ");
-                if (answer.equalsIgnoreCase("yes")) {
-                    break;
-                }
-                if (answer.equalsIgnoreCase("no")) {
-                    return;
-                }
-            }
+        if (outgoingRequestResponse.statusCode() != 200 && !confirmationEstablishConnection()) {
+            return;
         }
 
+        handshakeRequest(publicKeyBase64);
+    }
+
+    private void reconnect(String publicKeyBase64) {
+        System.out.println("Reconnecting...");
+        HttpResponse<String> httpResponse = daemonClient.handshakeRequest(publicKeyBase64, address);
+        System.out.println("Handshake status: " + httpResponse.body());
+    }
+
+    @SneakyThrows
+    private HandshakeIdentityResponseDTO getIdentity(String address) {
+        HttpResponse<byte[]> identityResponse = daemonClient.getIdentity(address);
+        if (identityResponse.statusCode() != 200) {
+            System.out.println("Identity request failed: " + new String(identityResponse.body()));
+            System.exit(0);
+        }
+        return objectMapper.readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
+    }
+
+    @SneakyThrows
+    private void handshakeRequest(String publicKeyBase64) {
         int count = 1;
         HttpResponse<String> retry = null;
         while (count <= timeout) {
@@ -84,6 +90,19 @@ public class ConnectCommand implements Runnable {
         }
         if (retry != null) {
             System.out.println("Handshake status: " + retry.body());
+        }
+    }
+
+    private boolean confirmationEstablishConnection() {
+        System.out.println(String.format("The authenticity of host %s cannot be established.", address));
+        while (true) {
+            String answer = System.console().readLine("Are you sure you want continue connecting (yes/no): ");
+            if (answer.equalsIgnoreCase("yes")) {
+                return true;
+            }
+            if (answer.equalsIgnoreCase("no")) {
+                return false;
+            }
         }
     }
 }

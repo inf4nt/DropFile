@@ -25,6 +25,13 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
     public void run(String... args) {
         CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
         commandLine.setUnmatchedArgumentsAllowed(true);
+//        commandLine.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
+//            @Override
+//            public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult fullParseResult) throws Exception {
+//                System.out.println("HANDLER " + ex.getMessage());
+//                return 0;
+//            }
+//        });
         commandLine.execute(args);
         System.exit(0);
     }

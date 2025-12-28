@@ -52,7 +52,7 @@ public class ApiHandshakeFacade {
     public HandshakeIdentityResponseDTO identity(String address) {
         HttpResponse<byte[]> identity = handshakeClient.getIdentity(address);
         if (identity.statusCode() != 200) {
-            throw new RuntimeException("Unexpected response code " + identity.statusCode());
+            throw new RuntimeException("Unexpected identity response: " + new String(identity.body()));
         }
         return objectMapper.readValue(identity.body(), HandshakeIdentityResponseDTO.class);
     }
