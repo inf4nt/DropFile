@@ -47,7 +47,8 @@ public class ConnectCommand implements Runnable {
 
         HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerPrint);
         if (trustOut.statusCode() == 200) {
-            reconnect(publicKeyBase64);
+            System.out.println("Reconnecting...");
+            handshakeRequest(publicKeyBase64);
             return;
         }
 
@@ -57,15 +58,6 @@ public class ConnectCommand implements Runnable {
         }
 
         handshakeRequest(publicKeyBase64);
-    }
-
-    private void reconnect(String publicKeyBase64) {
-        System.out.println("Reconnecting...");
-        HttpResponse<String> httpResponse = daemonClient.handshakeRequest(publicKeyBase64, address);
-        if (httpResponse.statusCode() != 200) {
-            throw new RuntimeException("Failed to reconnect: " + httpResponse.statusCode());
-        }
-        System.out.println("Handshake status: " + httpResponse.body());
     }
 
     @SneakyThrows
