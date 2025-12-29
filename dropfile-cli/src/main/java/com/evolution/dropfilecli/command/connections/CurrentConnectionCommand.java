@@ -36,7 +36,7 @@ public class CurrentConnectionCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         HandshakeApiTrustOutResponseDTO responseDTO = objectMapper.readValue(response.body(), HandshakeApiTrustOutResponseDTO.class);
-        System.out.println("Current connection fingerprint: " + responseDTO.fingerPrint());
+        System.out.println("Current connection fingerprint: " + responseDTO.fingerprint());
         System.out.println("Current connection public key: " + responseDTO.publicKey());
         System.out.println("Current address URI: " + responseDTO.addressURI());
     }

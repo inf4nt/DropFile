@@ -66,9 +66,9 @@ public class ApiFacade {
     public DaemonInfoResponseDTO getDaemonInfo() {
         byte[] publicKey = keysConfigStore.getRequired().publicKey();
         String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
-        String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
+        String fingerprint = CryptoUtils.getFingerprint(publicKey);
 
-        return new DaemonInfoResponseDTO(fingerPrint, publicKeyBase64);
+        return new DaemonInfoResponseDTO(fingerprint, publicKeyBase64);
     }
 
     @SneakyThrows

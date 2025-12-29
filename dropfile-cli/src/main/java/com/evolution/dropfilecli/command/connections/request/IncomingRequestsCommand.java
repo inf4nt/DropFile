@@ -48,7 +48,7 @@ public class IncomingRequestsCommand implements CommandHttpHandler<byte[]> {
                     System.out.println("---------------------------");
                 }
                 HandshakeApiIncomingResponseDTO value = values.get(i);
-                System.out.println("Fingerprint: " + value.fingerPrint());
+                System.out.println("Fingerprint: " + value.fingerprint());
                 System.out.println("PublicKey: " + value.publicKey());
                 System.out.println("AddressURI: " + value.addressURI());
                 if (i <= values.size() - 1) {

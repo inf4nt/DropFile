@@ -41,18 +41,18 @@ public class ConnectCommand implements Runnable {
     public void run() {
         HandshakeIdentityResponseDTO identity = getIdentity(address);
         String publicKeyBase64 = identity.publicKey();
-        String fingerPrint = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyBase64));
+        String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(publicKeyBase64));
 
-        System.out.println("RSA fingerprint is: " + fingerPrint);
+        System.out.println("RSA fingerprint is: " + fingerprint);
 
-        HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerPrint);
+        HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerprint);
         if (trustOut.statusCode() == 200) {
             System.out.println("Reconnecting...");
             handshakeRequest(publicKeyBase64);
             return;
         }
 
-        HttpResponse<byte[]> outgoingRequestResponse = daemonClient.getOutgoingRequest(fingerPrint);
+        HttpResponse<byte[]> outgoingRequestResponse = daemonClient.getOutgoingRequest(fingerprint);
         if (outgoingRequestResponse.statusCode() != 200 && !confirmationEstablishConnection()) {
             return;
         }

@@ -32,21 +32,21 @@ public class HandshakeFacade {
         byte[] publicKey = keysConfigStore.getRequired().publicKey();
         return new HandshakeIdentityResponseDTO(
                 CryptoUtils.encodeBase64(publicKey),
-                CryptoUtils.getFingerPrint(publicKey)
+                CryptoUtils.getFingerprint(publicKey)
         );
     }
 
     public HandshakeRequestResponseDTO request(HandshakeRequestBodyDTO requestDTO) {
         byte[] publicKey = CryptoUtils.decodeBase64(requestDTO.publicKey());
-        String fingerPrint = CryptoUtils.getFingerPrint(publicKey);
+        String fingerprint = CryptoUtils.getFingerprint(publicKey);
         Optional<TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore
                 .trustedInStore()
-                .get(fingerPrint);
+                .get(fingerprint);
         if (trustedInValue.isPresent()) {
-            throw new HandshakeAlreadyTrustedException(fingerPrint);
+            throw new HandshakeAlreadyTrustedException(fingerprint);
         }
         handshakeStore.incomingRequestStore().save(
-                fingerPrint,
+                fingerprint,
                 new IncomingRequestKeyValueStore.IncomingRequestValue(requestDTO.addressURI(), publicKey)
         );
         return new HandshakeRequestResponseDTO(

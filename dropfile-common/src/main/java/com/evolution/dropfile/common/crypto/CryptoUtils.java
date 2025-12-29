@@ -36,12 +36,12 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
-    public static String getFingerPrint(PublicKey publicKey) {
-        return getFingerPrint(publicKey.getEncoded());
+    public static String getFingerprint(PublicKey publicKey) {
+        return getFingerprint(publicKey.getEncoded());
     }
 
     @SneakyThrows
-    public static String getFingerPrint(byte[] publicKeyBytes) {
+    public static String getFingerprint(byte[] publicKeyBytes) {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         byte[] hash = md.digest(publicKeyBytes);
         return hexString(hash);

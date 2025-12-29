@@ -157,8 +157,8 @@ public class ApiHandshakeFacade {
     @SneakyThrows
     public HandshakeApiRequestResponseStatus initializeRequest(HandshakeApiRequestBodyDTO requestBody) {
         URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
-        String currentFingerPrint = CryptoUtils.getFingerPrint(keysConfigStore.getRequired().publicKey());
-        HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerPrint);
+        String currentFingerprint = CryptoUtils.getFingerprint(keysConfigStore.getRequired().publicKey());
+        HttpResponse<byte[]> handshakeResponse = handshakeClient.getHandshake(nodeAddressURI, currentFingerprint);
         if (handshakeResponse.statusCode() == 200) {
             return doHandshakeChallenge(requestBody.publicKey(), nodeAddressURI, handshakeResponse);
         } else if (handshakeResponse.statusCode() == 404) {
@@ -192,15 +192,15 @@ public class ApiHandshakeFacade {
         HandshakeRequestResponseDTO responseDTO = objectMapper
                 .readValue(httpResponse.body(), HandshakeRequestResponseDTO.class);
         byte[] publicKeyBytes = CryptoUtils.decodeBase64(responseDTO.publicKey());
-        String fingerPrint = CryptoUtils.getFingerPrint(publicKeyBytes);
-        String fingerprintExpected = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(expectedPublicKeyBase64));
+        String fingerprint = CryptoUtils.getFingerprint(publicKeyBytes);
+        String fingerprintExpected = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(expectedPublicKeyBase64));
 
-        if (!fingerprintExpected.equals(fingerPrint)) {
+        if (!fingerprintExpected.equals(fingerprint)) {
             return HandshakeApiRequestResponseStatus.FINGERPRINT_MISMATCH;
         }
 
         handshakeStore.outgoingRequestStore().save(
-                fingerPrint,
+                fingerprint,
                 new OutgoingRequestKeyValueStore.OutgoingRequestValue(
                         nodeAddressURI,
                         publicKeyBytes
@@ -216,9 +216,9 @@ public class ApiHandshakeFacade {
         HandshakeTrustResponseDTO handshakeTrustResponseDTO = objectMapper
                 .readValue(handshakeResponse.body(), HandshakeTrustResponseDTO.class);
         byte[] publicKey = CryptoUtils.decodeBase64(handshakeTrustResponseDTO.publicKey());
-        String fingerprint = CryptoUtils.getFingerPrint(publicKey);
+        String fingerprint = CryptoUtils.getFingerprint(publicKey);
 
-        String fingerprintExpected = CryptoUtils.getFingerPrint(CryptoUtils.decodeBase64(publicKeyExpectedBase64));
+        String fingerprintExpected = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(publicKeyExpectedBase64));
         if (!fingerprint.equals(fingerprintExpected)) {
             return HandshakeApiRequestResponseStatus.FINGERPRINT_MISMATCH;
         }
