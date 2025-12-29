@@ -40,7 +40,7 @@ public class ConnectCommand implements Runnable {
     @Override
     public void run() {
         HandshakeIdentityResponseDTO identity = getIdentity(address);
-        String publicKeyBase64 = identity.publicKey();
+        String publicKeyBase64 = identity.payload().publicKey();
         String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(publicKeyBase64));
 
         System.out.println("RSA fingerprint is: " + fingerprint);
@@ -62,17 +62,18 @@ public class ConnectCommand implements Runnable {
 
     @SneakyThrows
     private HandshakeIdentityResponseDTO getIdentity(String address) {
-        HttpResponse<byte[]> identityResponse = daemonClient.getIdentity(address);
+        HttpResponse<byte[]> identityResponse = daemonClient.getHandshakeIdentity(address);
         if (identityResponse.statusCode() != 200) {
             throw new RuntimeException("Identity request failed: " + identityResponse.statusCode());
         }
         HandshakeIdentityResponseDTO responseDTO = objectMapper
                 .readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
-        String fingerprintExpected = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responseDTO.publicKey()));
+        byte[] payloadBytesExpected = objectMapper.writeValueAsBytes(responseDTO.payload());
+
         boolean verify = CryptoUtils.verify(
-                fingerprintExpected.getBytes(),
-                CryptoUtils.decodeBase64(responseDTO.fingerprintSignature()),
-                CryptoUtils.decodeBase64(responseDTO.publicKey())
+                payloadBytesExpected,
+                CryptoUtils.decodeBase64(responseDTO.signature()),
+                CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(responseDTO.payload().publicKey()))
         );
 
         if (!verify) {

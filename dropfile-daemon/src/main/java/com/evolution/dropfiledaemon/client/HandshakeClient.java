@@ -30,7 +30,7 @@ public class HandshakeClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getIdentity(String address) {
-        URI addressURI = CommonUtils.toURI(address).resolve("/handshake/identity");
+        URI addressURI = CommonUtils.toURI(address).resolve("/handshake");
 
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()

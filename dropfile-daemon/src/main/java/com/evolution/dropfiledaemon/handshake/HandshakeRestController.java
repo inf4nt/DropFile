@@ -16,16 +16,24 @@ public class HandshakeRestController {
         this.handshakeFacade = handshakeFacade;
     }
 
-    @GetMapping("/identity")
+    @GetMapping
     public HandshakeIdentityResponseDTO getIdentity() {
         return handshakeFacade.getHandshakeIdentity();
     }
 
+    @PostMapping
+    public ResponseEntity<HandshakeResponseDTO> doHandshake(
+            @RequestBody HandshakeRequestDTO requestDTO) {
+        return null;
+    }
+
+    @Deprecated
     @PostMapping("/request")
     public ResponseEntity<HandshakeRequestResponseDTO> request(@RequestBody HandshakeRequestBodyDTO requestDTO) {
         return ResponseEntity.ok(handshakeFacade.request(requestDTO));
     }
 
+    @Deprecated
     @GetMapping("/trust/{fingerprint}")
     public ResponseEntity<HandshakeTrustResponseDTO> getTrustStatus(@PathVariable String fingerprint) {
         return handshakeFacade
@@ -34,6 +42,7 @@ public class HandshakeRestController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @Deprecated
     @PostMapping("/challenge")
     public ResponseEntity<HandshakeChallengeResponseDTO> challenge(
             @RequestBody HandshakeChallengeRequestBodyDTO requestDTO) {

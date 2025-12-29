@@ -7,6 +7,8 @@ import com.evolution.dropfiledaemon.handshake.exception.HandshakeAlreadyTrustedE
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.IncomingRequestKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,23 +23,31 @@ public class HandshakeFacade {
 
     private final KeysConfigStore keysConfigStore;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
-                           KeysConfigStore keysConfigStore) {
+                           KeysConfigStore keysConfigStore,
+                           ObjectMapper objectMapper) {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
+        this.objectMapper = objectMapper;
     }
 
+    @SneakyThrows
     public HandshakeIdentityResponseDTO getHandshakeIdentity() {
         byte[] publicKey = keysConfigStore.getRequired().publicKey();
-        byte[] fingerprintSignature = CryptoUtils.sign(
-                CryptoUtils.getFingerprint(publicKey),
+        HandshakeIdentityResponseDTO.HandshakeIdentityPayload payload
+                = new HandshakeIdentityResponseDTO.HandshakeIdentityPayload(CryptoUtils.encodeBase64(publicKey));
+
+        byte[] signature = CryptoUtils.sign(
+                objectMapper.writeValueAsBytes(payload),
                 CryptoUtils.getPrivateKey(keysConfigStore.getRequired().privateKey())
         );
 
         return new HandshakeIdentityResponseDTO(
-                CryptoUtils.encodeBase64(publicKey),
-                CryptoUtils.encodeBase64(fingerprintSignature)
+                payload,
+                CryptoUtils.encodeBase64(signature)
         );
     }
 

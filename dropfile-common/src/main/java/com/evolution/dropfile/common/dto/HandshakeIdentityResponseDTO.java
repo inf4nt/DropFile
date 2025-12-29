@@ -1,5 +1,9 @@
 package com.evolution.dropfile.common.dto;
 
-public record HandshakeIdentityResponseDTO(String publicKey,
-                                           String fingerprintSignature) {
+public record HandshakeIdentityResponseDTO(HandshakeIdentityPayload payload,
+                                           String signature) {
+
+    public record HandshakeIdentityPayload(String publicKey) {
+
+    }
 }

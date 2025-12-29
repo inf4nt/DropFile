@@ -88,6 +88,15 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
+    public static boolean verify(byte[] data, byte[] signature, PublicKey publicKey) {
+        Signature sig = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
+        sig.initVerify(publicKey);
+        sig.update(data);
+        return sig.verify(signature);
+    }
+
+    @Deprecated
+    @SneakyThrows
     public static boolean verify(byte[] data, byte[] signature, byte[] publicKeyByteArray) {
         Signature sig = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         PublicKey publicKey = getPublicKey(publicKeyByteArray);
@@ -96,11 +105,20 @@ public class CryptoUtils {
         return sig.verify(signature);
     }
 
+    @Deprecated
     @SneakyThrows
     public static byte[] sign(String data, PrivateKey privateKey) {
         Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         signature.initSign(privateKey);
         signature.update(data.getBytes());
+        return signature.sign();
+    }
+
+    @SneakyThrows
+    public static byte[] sign(byte[] data, PrivateKey privateKey) {
+        Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
+        signature.initSign(privateKey);
+        signature.update(data);
         return signature.sign();
     }
 
