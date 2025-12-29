@@ -72,18 +72,20 @@ public class ConnectCommand implements Runnable {
     @SneakyThrows
     private void handshakeRequest(String publicKeyBase64) {
         int count = 1;
-        HttpResponse<String> retry = null;
+        HttpResponse<String> retry;
         while (count <= timeout) {
             System.out.println(String.format("Attempt %s to connect %s", count, address));
             retry = daemonClient.handshakeRequest(publicKeyBase64, address);
+            if (retry.statusCode() != 200) {
+                System.out.println("Handshake request failed");
+            }
+            System.out.println("Handshake status: " + retry.statusCode());
+            System.out.println("Handshake response: " + retry.body());
             if (HandshakeApiRequestResponseStatus.SUCCESS.name().equals(retry.body())) {
                 break;
             }
             count++;
             Thread.sleep(1000);
-        }
-        if (retry != null) {
-            System.out.println("Handshake status: " + retry.body());
         }
     }
 
