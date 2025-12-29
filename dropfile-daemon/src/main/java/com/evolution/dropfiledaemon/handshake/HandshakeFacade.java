@@ -30,9 +30,14 @@ public class HandshakeFacade {
 
     public HandshakeIdentityResponseDTO getHandshakeIdentity() {
         byte[] publicKey = keysConfigStore.getRequired().publicKey();
+        byte[] fingerprintSignature = CryptoUtils.sign(
+                CryptoUtils.getFingerprint(publicKey),
+                CryptoUtils.getPrivateKey(keysConfigStore.getRequired().privateKey())
+        );
+
         return new HandshakeIdentityResponseDTO(
                 CryptoUtils.encodeBase64(publicKey),
-                CryptoUtils.getFingerprint(publicKey)
+                CryptoUtils.encodeBase64(fingerprintSignature)
         );
     }
 
@@ -73,7 +78,7 @@ public class HandshakeFacade {
     public HandshakeChallengeResponseDTO challenge(HandshakeChallengeRequestBodyDTO requestDTO) {
         byte[] signature = CryptoUtils.sign(
                 requestDTO.challenge(),
-                keysConfigStore.getRequired().privateKey()
+                CryptoUtils.getPrivateKey(keysConfigStore.getRequired().privateKey())
         );
         String signatureBase64 = CryptoUtils.encodeBase64(signature);
         return new HandshakeChallengeResponseDTO(signatureBase64);

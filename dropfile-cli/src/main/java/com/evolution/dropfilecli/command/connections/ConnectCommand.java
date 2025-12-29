@@ -66,7 +66,20 @@ public class ConnectCommand implements Runnable {
         if (identityResponse.statusCode() != 200) {
             throw new RuntimeException("Identity request failed: " + identityResponse.statusCode());
         }
-        return objectMapper.readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
+        HandshakeIdentityResponseDTO responseDTO = objectMapper
+                .readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
+        String fingerprintExpected = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responseDTO.publicKey()));
+        boolean verify = CryptoUtils.verify(
+                fingerprintExpected.getBytes(),
+                CryptoUtils.decodeBase64(responseDTO.fingerprintSignature()),
+                CryptoUtils.decodeBase64(responseDTO.publicKey())
+        );
+
+        if (!verify) {
+            throw new RuntimeException("Verification failed");
+        }
+
+        return responseDTO;
     }
 
     @SneakyThrows

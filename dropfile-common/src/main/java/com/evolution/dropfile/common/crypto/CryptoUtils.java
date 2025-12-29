@@ -104,15 +104,6 @@ public class CryptoUtils {
         return signature.sign();
     }
 
-    @SneakyThrows
-    public static byte[] sign(String data, byte[] privateKeyByteArray) {
-        Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
-        PrivateKey privateKey = getPrivateKey(privateKeyByteArray);
-        signature.initSign(privateKey);
-        signature.update(data.getBytes());
-        return signature.sign();
-    }
-
     public static byte[] decodeBase64(String base64String) {
         return Base64.getDecoder().decode(base64String);
     }
