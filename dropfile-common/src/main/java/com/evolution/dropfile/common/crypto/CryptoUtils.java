@@ -3,6 +3,9 @@ package com.evolution.dropfile.common.crypto;
 import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyAgreement;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -52,6 +55,66 @@ public class CryptoUtils {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
         generator.initialize(2048);
         return generator.generateKeyPair();
+    }
+
+    @SneakyThrows
+    public static KeyPair generateKeyPairDH() {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("X25519");
+        return kpg.generateKeyPair();
+    }
+
+    @SneakyThrows
+    public static SecretKey secretKey(byte[] secret) {
+        return new SecretKeySpec(
+                MessageDigest
+                        .getInstance("SHA-256")
+                        .digest(secret),
+                "ChaCha20"
+        );
+    }
+
+    @SneakyThrows
+    public static byte[] deriveSharedSecret(PrivateKey privateKey, PublicKey publicKey) {
+        KeyAgreement ka = KeyAgreement.getInstance("X25519");
+        ka.init(privateKey);
+        ka.doPhase(publicKey, true);
+        return ka.generateSecret();
+    }
+
+    @SneakyThrows
+    public static PublicKey getPublicKeyDH(byte[] publicKey) {
+        return KeyFactory.getInstance("X25519")
+                .generatePublic(new X509EncodedKeySpec(publicKey));
+    }
+
+    @SneakyThrows
+    public static PrivateKey getPrivateKeyDH(byte[] privateKey) {
+        return KeyFactory.getInstance("X25519")
+                .generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+    }
+
+    @SneakyThrows
+    public static void main(String[] args) {
+        KeyPair keyPair1 = generateKeyPairDH();
+        KeyPair keyPair2 = generateKeyPairDH();
+
+        byte[] secret = deriveSharedSecret(
+                CryptoUtils.getPrivateKeyDH(keyPair1.getPrivate().getEncoded()),
+                CryptoUtils.getPublicKeyDH(keyPair2.getPublic().getEncoded())
+        );
+
+        SecretKey secretKey = new SecretKeySpec(
+                MessageDigest
+                        .getInstance("SHA-256")
+                        .digest(secret),
+                "ChaCha20"
+        );
+
+        CryptoTunnelChaCha.SecureEnvelope encrypt = CryptoTunnelChaCha
+                .encrypt("Hello world test".getBytes(), secretKey);
+
+        byte[] decrypt = CryptoTunnelChaCha.decrypt(encrypt, secretKey);
+        System.out.println(new String(decrypt));
     }
 
     @SneakyThrows

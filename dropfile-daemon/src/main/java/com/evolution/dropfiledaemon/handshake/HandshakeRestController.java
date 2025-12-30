@@ -24,7 +24,13 @@ public class HandshakeRestController {
     @PostMapping
     public ResponseEntity<HandshakeResponseDTO> doHandshake(
             @RequestBody HandshakeRequestDTO requestDTO) {
-        return null;
+        return ResponseEntity.ok(handshakeFacade.doHandshake(requestDTO));
+    }
+
+    @PostMapping("/ping")
+    public ResponseEntity<Void> ping(@RequestBody PingRequestDTO requestDTO) {
+        handshakeFacade.ping(requestDTO);
+        return ResponseEntity.ok().build();
     }
 
     @Deprecated

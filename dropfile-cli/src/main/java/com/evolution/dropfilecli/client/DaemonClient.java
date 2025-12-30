@@ -124,7 +124,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<String> handshakeRequest(String publicKey, String nodeAddress) {
+    public HttpResponse<String> handshakeRequest(HandshakeApiRequestBodyDTO requestBodyDTO) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -137,7 +137,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new HandshakeApiRequestBodyDTO(publicKey, nodeAddress))
+                        objectMapper.writeValueAsBytes(requestBodyDTO)
                 ))
                 .header("Content-Type", "application/json")
                 .build();

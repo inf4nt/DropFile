@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
 import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import com.evolution.dropfilecli.client.DaemonClient;
@@ -40,7 +41,7 @@ public class ConnectCommand implements Runnable {
     @Override
     public void run() {
         HandshakeIdentityResponseDTO identity = getIdentity(address);
-        String publicKeyBase64 = identity.payload().publicKey();
+        String publicKeyBase64 = identity.payload().publicKeyRSA();
         String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(publicKeyBase64));
 
         System.out.println("RSA fingerprint is: " + fingerprint);
@@ -48,7 +49,7 @@ public class ConnectCommand implements Runnable {
         HttpResponse<byte[]> trustOut = daemonClient.getTrustOut(fingerprint);
         if (trustOut.statusCode() == 200) {
             System.out.println("Reconnecting...");
-            handshakeRequest(publicKeyBase64);
+            handshakeRequest(identity.payload());
             return;
         }
 
@@ -57,7 +58,7 @@ public class ConnectCommand implements Runnable {
             return;
         }
 
-        handshakeRequest(publicKeyBase64);
+        handshakeRequest(identity.payload());
     }
 
     @SneakyThrows
@@ -73,7 +74,7 @@ public class ConnectCommand implements Runnable {
         boolean verify = CryptoUtils.verify(
                 payloadBytesExpected,
                 CryptoUtils.decodeBase64(responseDTO.signature()),
-                CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(responseDTO.payload().publicKey()))
+                CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(responseDTO.payload().publicKeyRSA()))
         );
 
         if (!verify) {
@@ -84,12 +85,19 @@ public class ConnectCommand implements Runnable {
     }
 
     @SneakyThrows
-    private void handshakeRequest(String publicKeyBase64) {
+    private void handshakeRequest(HandshakeIdentityResponseDTO.HandshakeIdentityPayload identityPayload) {
         int count = 1;
         HttpResponse<String> retry;
         while (count <= timeout) {
             System.out.println(String.format("Attempt %s to connect %s", count, address));
-            retry = daemonClient.handshakeRequest(publicKeyBase64, address);
+
+            HandshakeApiRequestBodyDTO requestBodyDTO = new HandshakeApiRequestBodyDTO(
+                    address,
+                    identityPayload.publicKeyRSA(),
+                    identityPayload.publicKeyDH()
+            );
+
+            retry = daemonClient.handshakeRequest(requestBodyDTO);
             if (retry.statusCode() != 200) {
                 System.out.println("Handshake request failed");
             }

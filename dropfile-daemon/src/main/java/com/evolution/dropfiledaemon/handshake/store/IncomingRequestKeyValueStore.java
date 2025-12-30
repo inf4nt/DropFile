@@ -7,6 +7,6 @@ import java.net.URI;
 public interface IncomingRequestKeyValueStore
         extends KeyValueStore<String, IncomingRequestKeyValueStore.IncomingRequestValue> {
 
-    record IncomingRequestValue(URI addressURI, byte[] publicKey) {
+    record IncomingRequestValue(byte[] publicKeyRSA, byte[] publicKeyDH) {
     }
 }

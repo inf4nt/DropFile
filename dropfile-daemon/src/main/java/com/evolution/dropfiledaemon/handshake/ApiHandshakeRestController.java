@@ -64,9 +64,10 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping("/request")
-    public String handshakeRequest(
+    public ResponseEntity<String> handshakeRequest(
             @RequestBody HandshakeApiRequestBodyDTO requestBody) {
-        return apiHandshakeFacade.initializeRequest(requestBody).name();
+        HandshakeApiRequestResponseStatus status = apiHandshakeFacade.handshake(requestBody);
+        return ResponseEntity.ok(status.name());
     }
 
     @PostMapping("/identity")

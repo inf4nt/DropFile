@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.client;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.HandshakeChallengeRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeRequestBodyDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.PingRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +31,8 @@ public class HandshakeClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getIdentity(String address) {
-        URI addressURI = CommonUtils.toURI(address).resolve("/handshake");
+    public HttpResponse<byte[]> getIdentity(URI address) {
+        URI addressURI = address.resolve("/handshake");
 
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
@@ -40,6 +42,37 @@ public class HandshakeClient {
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @SneakyThrows
+    public HttpResponse<Void> ping(URI address, PingRequestDTO requestDTO) {
+        URI addressURI = address.resolve("/handshake/ping");
+
+        HttpRequest httpRequest = HttpRequest
+                .newBuilder()
+                .uri(addressURI)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(requestDTO))
+                )
+                .header("Content-Type", "application/json")
+                .build();
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> doHandshake(URI address, HandshakeRequestDTO requestDTO) {
+        URI addressURI = address.resolve("/handshake");
+
+        HttpRequest httpRequest = HttpRequest
+                .newBuilder()
+                .uri(addressURI)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(requestDTO))
+                )
+                .header("Content-Type", "application/json")
+                .build();
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> getChallenge(URI handshakeNodeAddressURI, String challenge) {
         HttpRequest httpRequest = HttpRequest
@@ -53,6 +86,7 @@ public class HandshakeClient {
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> getHandshake(URI handshakeNodeAddressURI, String fingerprint) {
         HttpRequest httpRequest = HttpRequest
@@ -65,6 +99,7 @@ public class HandshakeClient {
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> handshakeRequest(URI currentAddressURI,
                                                  URI handshakeNodeAddressURI,

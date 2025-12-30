@@ -30,11 +30,13 @@ public class ApiRestController {
         return apiFacade.getDaemonInfo();
     }
 
+    @Deprecated
     @GetMapping("/node/ping/{fingerprint}")
     public String nodePing(@PathVariable String fingerprint) {
         return apiFacade.nodePing(fingerprint);
     }
 
+    @Deprecated
     @PostMapping("/config/public_address")
     public void setPublicAddress(@RequestBody DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
         apiFacade.setPublicAddress(requestBodyDTO);

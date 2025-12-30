@@ -5,13 +5,7 @@ public record HandshakeResponseDTO(HandshakePayload payload,
 
     public record HandshakePayload(String publicKeyRSA,
                                    String publicKeyDH,
-                                   HandshakeStatus status,
                                    long timestamp) {
 
-    }
-
-    public enum HandshakeStatus {
-        PENDING,
-        APPROVED
     }
 }

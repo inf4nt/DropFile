@@ -19,6 +19,7 @@ public class NodeClient {
         this.httpClient = httpClient;
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<String> nodePing(URI nodeAddressURI, String token) {
         URI addressURI = nodeAddressURI

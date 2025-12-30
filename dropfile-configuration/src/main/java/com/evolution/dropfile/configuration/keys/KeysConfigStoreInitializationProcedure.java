@@ -15,10 +15,18 @@ public class KeysConfigStoreInitializationProcedure
             return;
         }
 
-        KeyPair keyPair = CryptoUtils.generateKeyPair();
+        KeyPair keyPairRSA = CryptoUtils.generateKeyPair();
+        KeyPair keyPairDH = CryptoUtils.generateKeyPairDH();
+
         KeysConfig config = new KeysConfig(
-                keyPair.getPublic().getEncoded(),
-                keyPair.getPrivate().getEncoded()
+                new KeysConfig.Keys(
+                        keyPairRSA.getPublic().getEncoded(),
+                        keyPairRSA.getPrivate().getEncoded()
+                ),
+                new KeysConfig.Keys(
+                        keyPairDH.getPublic().getEncoded(),
+                        keyPairDH.getPrivate().getEncoded()
+                )
         );
         store.save(config);
     }

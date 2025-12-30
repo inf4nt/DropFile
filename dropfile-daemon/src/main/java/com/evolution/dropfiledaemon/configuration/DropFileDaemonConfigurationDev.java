@@ -5,12 +5,12 @@ import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.app.AppConfig;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.app.ImmutableAppConfigStore;
+import com.evolution.dropfile.configuration.keys.ImmutableKeysConfigStore;
 import com.evolution.dropfile.configuration.keys.KeysConfig;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
-import com.evolution.dropfile.configuration.keys.ImmutableKeysConfigStore;
+import com.evolution.dropfile.configuration.secret.ImmutableSecretsConfigStore;
 import com.evolution.dropfile.configuration.secret.SecretsConfig;
 import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
-import com.evolution.dropfile.configuration.secret.ImmutableSecretsConfigStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 import java.security.KeyPair;
-import java.util.Base64;
 import java.util.Optional;
 
 @Slf4j
@@ -61,23 +60,50 @@ public class DropFileDaemonConfigurationDev {
     @Bean
     public KeysConfigStore keysConfigStore(Environment environment) {
         return new ImmutableKeysConfigStore(() -> {
-            String publicKey = environment.getProperty("dropfile.public.key");
-            String privateKey = environment.getProperty("dropfile.private.key");
+            String publicKeyRSA = environment.getProperty("dropfile.publicrsa.key");
+            String privateKeyRSA = environment.getProperty("dropfile.privatersa.key");
+            String publicKeyDH = environment.getProperty("dropfile.publicdh.key");
+            String privateKeyDH = environment.getProperty("dropfile.privatedh.key");
 
-            if (publicKey == null || privateKey == null) {
-                KeyPair keyPair = CryptoUtils.generateKeyPair();
-                log.info("Generated public key: {}", CryptoUtils.encodeBase64(keyPair.getPublic().getEncoded()));
-                log.info("Generated private key: {}", CryptoUtils.encodeBase64(keyPair.getPrivate().getEncoded()));
+            if (publicKeyRSA == null || privateKeyRSA == null || publicKeyDH == null || privateKeyDH == null) {
+                KeyPair keyPairRSA = CryptoUtils.generateKeyPair();
+                KeyPair keyPairDH = CryptoUtils.generateKeyPairDH();
 
-                return new KeysConfig(keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+                log.info("Generated RSA public key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPublic().getEncoded()));
+                log.info("Generated RSA private key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPrivate().getEncoded()));
+
+                log.info("Generated DH public key: {}", CryptoUtils.encodeBase64(keyPairDH.getPublic().getEncoded()));
+                log.info("Generated DH private key: {}", CryptoUtils.encodeBase64(keyPairDH.getPrivate().getEncoded()));
+
+                log.info("Generated fingerprint RSA public key: {}", CryptoUtils.getFingerprint(keyPairRSA.getPublic()));
+                log.info("Generated fingerprint DH public key: {}", CryptoUtils.getFingerprint(keyPairDH.getPublic()));
+
+                return new KeysConfig(
+                        new KeysConfig.Keys(
+                                keyPairRSA.getPublic().getEncoded(),
+                                keyPairRSA.getPrivate().getEncoded()
+                        ),
+                        new KeysConfig.Keys(
+                                keyPairDH.getPublic().getEncoded(),
+                                keyPairDH.getPrivate().getEncoded()
+                        )
+                );
             }
 
-            log.info("Provided public key: {}", publicKey);
-            log.info("Provided private key: {}", privateKey);
+            log.info("Provided public RSA key: {}", publicKeyRSA);
+            log.info("Provided private RSA key: {}", privateKeyRSA);
+            log.info("Provided public DH key: {}", publicKeyDH);
+            log.info("Provided private DH key: {}", privateKeyDH);
 
             return new KeysConfig(
-                    CryptoUtils.getPublicKey(Base64.getDecoder().decode(publicKey)).getEncoded(),
-                    CryptoUtils.getPrivateKey(Base64.getDecoder().decode(privateKey)).getEncoded()
+                    new KeysConfig.Keys(
+                            CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(publicKeyRSA)).getEncoded(),
+                            CryptoUtils.getPrivateKey(CryptoUtils.decodeBase64(privateKeyRSA)).getEncoded()
+                    ),
+                    new KeysConfig.Keys(
+                            CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(publicKeyDH)).getEncoded(),
+                            CryptoUtils.getPrivateKey(CryptoUtils.decodeBase64(privateKeyDH)).getEncoded()
+                    )
             );
         });
     }

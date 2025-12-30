@@ -64,28 +64,33 @@ public class ApiFacade {
     }
 
     public DaemonInfoResponseDTO getDaemonInfo() {
-        byte[] publicKey = keysConfigStore.getRequired().publicKey();
-        String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
-        String fingerprint = CryptoUtils.getFingerprint(publicKey);
+        byte[] publicKeyRSA = keysConfigStore.getRequired().rsa().publicKey();
+        byte[] publicKeyDH = keysConfigStore.getRequired().dh().publicKey();
+        String fingerprint = CryptoUtils.getFingerprint(publicKeyRSA);
 
-        return new DaemonInfoResponseDTO(fingerprint, publicKeyBase64);
+        return new DaemonInfoResponseDTO(
+                fingerprint,
+                CryptoUtils.encodeBase64(publicKeyRSA),
+                CryptoUtils.encodeBase64(publicKeyDH)
+        );
     }
 
     @SneakyThrows
     public String nodePing(String fingerprint) {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore
-                .trustedOutStore()
-                .get(fingerprint)
-                .orElseThrow();
-        byte[] encrypt = CryptoUtils.encrypt(trustedOutValue.publicKey(), trustedOutValue.secret().getBytes());
-        String tokenBase64 = CryptoUtils.encodeBase64(encrypt);
-
-        URI nodeAddressURI = trustedOutValue.addressURI();
-
-        HttpResponse<String> httpResponse = nodeClient.nodePing(nodeAddressURI, tokenBase64);
-        if (httpResponse.statusCode() == 200) {
-            return httpResponse.body();
-        }
-        throw new ApiFacadePingNodeException(fingerprint);
+//        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore
+//                .trustedOutStore()
+//                .get(fingerprint)
+//                .orElseThrow();
+//        byte[] encrypt = CryptoUtils.encrypt(trustedOutValue.publicKey(), trustedOutValue.secret().getBytes());
+//        String tokenBase64 = CryptoUtils.encodeBase64(encrypt);
+//
+//        URI nodeAddressURI = trustedOutValue.addressURI();
+//
+//        HttpResponse<String> httpResponse = nodeClient.nodePing(nodeAddressURI, tokenBase64);
+//        if (httpResponse.statusCode() == 200) {
+//            return httpResponse.body();
+//        }
+//        throw new ApiFacadePingNodeException(fingerprint);
+        throw new RuntimeException();
     }
 }

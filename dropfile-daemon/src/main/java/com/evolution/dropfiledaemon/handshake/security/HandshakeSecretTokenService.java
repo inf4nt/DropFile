@@ -24,23 +24,24 @@ public class HandshakeSecretTokenService {
     }
 
     public boolean isValid(String tokenBase64) {
-        if (tokenBase64 == null) {
-            return false;
-        }
-
-        Map<String, TrustedInKeyValueStore.TrustedInValue> trusted = handshakeStore
-                .trustedInStore()
-                .getAll();
-        if (trusted.isEmpty()) {
-            return false;
-        }
-
-        byte[] token = CryptoUtils.decodeBase64(tokenBase64);
-        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfigStore.getRequired().privateKey(), token);
-        String tokenSecret = new String(decryptTokenSecret);
-
-        return trusted.values()
-                .stream()
-                .anyMatch(it -> it.secret().equals(tokenSecret));
+//        if (tokenBase64 == null) {
+//            return false;
+//        }
+//
+//        Map<String, TrustedInKeyValueStore.TrustedInValue> trusted = handshakeStore
+//                .trustedInStore()
+//                .getAll();
+//        if (trusted.isEmpty()) {
+//            return false;
+//        }
+//
+//        byte[] token = CryptoUtils.decodeBase64(tokenBase64);
+//        byte[] decryptTokenSecret = CryptoUtils.decrypt(keysConfigStore.getRequired().privateKey(), token);
+//        String tokenSecret = new String(decryptTokenSecret);
+//
+//        return trusted.values()
+//                .stream()
+//                .anyMatch(it -> it.secret().equals(tokenSecret));
+        return false;
     }
 }
