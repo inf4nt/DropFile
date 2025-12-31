@@ -11,10 +11,6 @@ public class CryptoECDH {
 
     private static final String X25519_ALGORITHM = "X25519";
 
-    private static final String SHA256_ALGORITHM = "SHA-256";
-
-    private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
-
     @SneakyThrows
     public static KeyPair generateKeyPair() {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(X25519_ALGORITHM);
