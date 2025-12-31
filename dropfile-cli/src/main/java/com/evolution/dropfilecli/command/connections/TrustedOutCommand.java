@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
@@ -45,18 +46,7 @@ public class TrustedOutCommand implements CommandHttpHandler<byte[]> {
                         }
                 );
         if (!values.isEmpty()) {
-            for (int i = 0; i < values.size(); i++) {
-                if (i ==0) {
-                    System.out.println("---------------------------");
-                }
-                HandshakeApiTrustOutResponseDTO value = values.get(i);
-                System.out.println("Fingerprint: " + value.fingerprint());
-                System.out.println("PublicKey: " + value.publicKey());
-                System.out.println("AddressURI: " + value.addressURI());
-                if (i <= values.size() - 1) {
-                    System.out.println("---------------------------");
-                }
-            }
+            PrintReflection.print(values);
         } else {
             System.out.println("No trusted-out connections found");
         }

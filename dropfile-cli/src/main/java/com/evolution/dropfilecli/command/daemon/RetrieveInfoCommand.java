@@ -1,13 +1,18 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
+import java.lang.reflect.Field;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Component
 @CommandLine.Command(
@@ -34,10 +39,6 @@ public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         DaemonInfoResponseDTO daemonInfoResponseDTO = objectMapper.readValue(response.body(), DaemonInfoResponseDTO.class);
-        System.out.println("---------------------------");
-        System.out.println("Fingerprint: " + daemonInfoResponseDTO.fingerprint());
-        System.out.println("PublicKey RSA: " + daemonInfoResponseDTO.publicKeyRSA());
-        System.out.println("PublicKey DH: " + daemonInfoResponseDTO.publicKeyDH());
-        System.out.println("---------------------------");
+        PrintReflection.print(daemonInfoResponseDTO);
     }
 }
