@@ -38,7 +38,7 @@ public class CurrentConnectionCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         HandshakeApiTrustOutResponseDTO responseDTO = objectMapper.readValue(response.body(), HandshakeApiTrustOutResponseDTO.class);
-        PrintReflection.print(List.of(responseDTO));
+        PrintReflection.print(responseDTO);
     }
 
     @Override

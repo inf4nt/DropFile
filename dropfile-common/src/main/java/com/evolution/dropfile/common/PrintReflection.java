@@ -3,14 +3,19 @@ package com.evolution.dropfile.common;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 public class PrintReflection {
 
     private static final String SEPARATOR = "---------------------------";
 
     @SneakyThrows
-    public static void print(Iterable<?> objects) {
-        print(objects, SEPARATOR);
+    public static void print(Object object) {
+        if (object instanceof Iterable) {
+            print((Iterable<?>) object, SEPARATOR);
+        } else {
+            print(List.of(object), SEPARATOR);
+        }
     }
 
     @SneakyThrows
