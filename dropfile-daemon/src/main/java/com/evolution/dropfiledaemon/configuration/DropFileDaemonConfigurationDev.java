@@ -1,6 +1,8 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.app.AppConfig;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
@@ -66,8 +68,8 @@ public class DropFileDaemonConfigurationDev {
             String privateKeyDH = environment.getProperty("dropfile.privatedh.key");
 
             if (publicKeyRSA == null || privateKeyRSA == null || publicKeyDH == null || privateKeyDH == null) {
-                KeyPair keyPairRSA = CryptoUtils.generateKeyPair();
-                KeyPair keyPairDH = CryptoUtils.generateKeyPairDH();
+                KeyPair keyPairRSA = CryptoRSA.generateKeyPair();
+                KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
                 log.info("Generated RSA public key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPublic().getEncoded()));
                 log.info("Generated RSA private key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPrivate().getEncoded()));
@@ -97,12 +99,12 @@ public class DropFileDaemonConfigurationDev {
 
             return new KeysConfig(
                     new KeysConfig.Keys(
-                            CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(publicKeyRSA)).getEncoded(),
-                            CryptoUtils.getPrivateKey(CryptoUtils.decodeBase64(privateKeyRSA)).getEncoded()
+                            CryptoRSA.getPublicKey(CryptoUtils.decodeBase64(publicKeyRSA)).getEncoded(),
+                            CryptoRSA.getPrivateKey(CryptoUtils.decodeBase64(privateKeyRSA)).getEncoded()
                     ),
                     new KeysConfig.Keys(
-                            CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(publicKeyDH)).getEncoded(),
-                            CryptoUtils.getPrivateKey(CryptoUtils.decodeBase64(privateKeyDH)).getEncoded()
+                            CryptoECDH.getPublicKey(CryptoUtils.decodeBase64(publicKeyDH)).getEncoded(),
+                            CryptoECDH.getPrivateKey(CryptoUtils.decodeBase64(privateKeyDH)).getEncoded()
                     )
             );
         });

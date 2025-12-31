@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestResponseStatus;
@@ -71,10 +72,10 @@ public class ConnectCommand implements Runnable {
                 .readValue(identityResponse.body(), HandshakeIdentityResponseDTO.class);
         byte[] payloadBytesExpected = objectMapper.writeValueAsBytes(responseDTO.payload());
 
-        boolean verify = CryptoUtils.verify(
+        boolean verify = CryptoRSA.verify(
                 payloadBytesExpected,
                 CryptoUtils.decodeBase64(responseDTO.signature()),
-                CryptoUtils.getPublicKey(CryptoUtils.decodeBase64(responseDTO.payload().publicKeyRSA()))
+                CryptoRSA.getPublicKey(CryptoUtils.decodeBase64(responseDTO.payload().publicKeyRSA()))
         );
 
         if (!verify) {

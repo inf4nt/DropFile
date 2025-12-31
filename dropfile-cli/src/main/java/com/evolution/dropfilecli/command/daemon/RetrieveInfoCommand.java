@@ -39,6 +39,6 @@ public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         DaemonInfoResponseDTO daemonInfoResponseDTO = objectMapper.readValue(response.body(), DaemonInfoResponseDTO.class);
-        PrintReflection.print(daemonInfoResponseDTO);
+        PrintReflection.print(List.of(daemonInfoResponseDTO));
     }
 }

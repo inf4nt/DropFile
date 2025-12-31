@@ -1,6 +1,8 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha;
+import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
@@ -28,13 +30,16 @@ public class HandshakeFacade {
 
     private final ObjectMapper objectMapper;
 
+    private final CryptoTunnel cryptoTunnel;
+
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
                            KeysConfigStore keysConfigStore,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper, CryptoTunnel cryptoTunnel) {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
         this.objectMapper = objectMapper;
+        this.cryptoTunnel = cryptoTunnel;
     }
 
     @SneakyThrows
@@ -44,9 +49,9 @@ public class HandshakeFacade {
                 CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
         );
 
-        byte[] signature = CryptoUtils.sign(
+        byte[] signature = CryptoRSA.sign(
                 objectMapper.writeValueAsBytes(payload),
-                CryptoUtils.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
         );
 
         return new HandshakeIdentityResponseDTO(
@@ -83,9 +88,9 @@ public class HandshakeFacade {
                 CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 System.currentTimeMillis()
         );
-        byte[] signature = CryptoUtils.sign(
+        byte[] signature = CryptoRSA.sign(
                 objectMapper.writeValueAsBytes(payloadResponse),
-                CryptoUtils.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
         );
 
         return new HandshakeResponseDTO(
@@ -105,19 +110,14 @@ public class HandshakeFacade {
             throw new RuntimeException("No trusted fingerprint found");
         }
 
-        byte[] secret = CryptoUtils.deriveSharedSecret(
-                CryptoUtils.getPrivateKeyDH(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoUtils.getPublicKeyDH(trustedInValue.publicKeyDH())
+        byte[] secret = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPublicKey(trustedInValue.publicKeyDH())
         );
 
-        SecretKey secretKey = new SecretKeySpec(
-                MessageDigest
-                        .getInstance("SHA-256")
-                        .digest(secret),
-                "ChaCha20"
-        );
+        SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
-        byte[] decryptPayload = CryptoTunnelChaCha
+        byte[] decryptPayload = cryptoTunnel
                 .decrypt(requestDTO.payload(), requestDTO.nonce(), secretKey);
 
         PingRequestDTO.PingRequestPayload pingRequestPayload = objectMapper

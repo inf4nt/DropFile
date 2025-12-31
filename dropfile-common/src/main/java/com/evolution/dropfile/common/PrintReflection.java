@@ -3,24 +3,18 @@ package com.evolution.dropfile.common;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 
 public class PrintReflection {
 
     private static final String SEPARATOR = "---------------------------";
 
     @SneakyThrows
-    public static void print(Object... object) {
-        print(Arrays.asList(object));
-    }
-
-    @SneakyThrows
-    public static void print(Iterable<Object> objects) {
+    public static void print(Iterable<?> objects) {
         print(objects, SEPARATOR);
     }
 
     @SneakyThrows
-    public static void print(Iterable<Object> objects, String separator) {
+    public static void print(Iterable<?> objects, String separator) {
         if (!objects.iterator().hasNext()) {
             return;
         }

@@ -1,8 +1,7 @@
 package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.*;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
@@ -35,16 +34,20 @@ public class ApiHandshakeFacade {
 
     private final AppConfigStore appConfigStore;
 
+    private final CryptoTunnel cryptoTunnel;
+
     public ApiHandshakeFacade(HandshakeStore handshakeStore,
                               HandshakeClient handshakeClient,
                               ObjectMapper objectMapper,
                               KeysConfigStore keysConfigStore,
-                              AppConfigStore appConfigStore) {
+                              AppConfigStore appConfigStore,
+                              CryptoTunnel cryptoTunnel) {
         this.handshakeStore = handshakeStore;
         this.handshakeClient = handshakeClient;
         this.objectMapper = objectMapper;
         this.keysConfigStore = keysConfigStore;
         this.appConfigStore = appConfigStore;
+        this.cryptoTunnel = cryptoTunnel;
     }
 
     @SneakyThrows
@@ -152,15 +155,15 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public HandshakeApiRequestResponseStatus handshake(HandshakeApiRequestBodyDTO requestBody) {
-        byte[] secret = CryptoUtils.deriveSharedSecret(
-                CryptoUtils.getPrivateKeyDH(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoUtils.getPublicKeyDH(CryptoUtils.decodeBase64(requestBody.publicKeyDH()))
+        byte[] secret = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPublicKey(CryptoUtils.decodeBase64(requestBody.publicKeyDH()))
         );
 
-        SecretKey secretKey = CryptoUtils.secretKey(secret);
+        SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
         PingRequestDTO.PingRequestPayload pingRequestPayload = new PingRequestDTO.PingRequestPayload(System.currentTimeMillis());
-        CryptoTunnelChaCha.SecureEnvelope secureEnvelope = CryptoTunnelChaCha.encrypt(
+        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(pingRequestPayload),
                 secretKey
         );
@@ -182,7 +185,7 @@ public class ApiHandshakeFacade {
                     requestBody.publicKeyRSA()
             );
             byte[] publicKeyDH = CryptoUtils.decodeBase64(requestBody.publicKeyDH());
-            String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.getPublicKey(publicKeyRSA));
+            String fingerprint = CryptoUtils.getFingerprint(CryptoRSA.getPublicKey(publicKeyRSA));
 
             handshakeStore.outgoingRequestStore().remove(fingerprint);
             handshakeStore.trustedOutStore()
@@ -204,9 +207,9 @@ public class ApiHandshakeFacade {
                 System.currentTimeMillis()
         );
 
-        String signature = CryptoUtils.encodeBase64(CryptoUtils.sign(
+        String signature = CryptoUtils.encodeBase64(CryptoRSA.sign(
                 objectMapper.writeValueAsBytes(handshakePayload),
-                CryptoUtils.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
         ));
 
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
@@ -223,10 +226,10 @@ public class ApiHandshakeFacade {
             byte[] publicKeyRSA = CryptoUtils.decodeBase64(
                     requestBody.publicKeyRSA()
             );
-            boolean verify = CryptoUtils.verify(
+            boolean verify = CryptoRSA.verify(
                     objectMapper.writeValueAsBytes(handshakeResponseDTO.payload()),
                     CryptoUtils.decodeBase64(handshakeResponseDTO.signature()),
-                    CryptoUtils.getPublicKey(publicKeyRSA)
+                    CryptoRSA.getPublicKey(publicKeyRSA)
             );
             if (!verify) {
                 throw new RuntimeException("Signature verification failed");
@@ -236,7 +239,7 @@ public class ApiHandshakeFacade {
                 throw new RuntimeException("Timed out");
             }
 
-            String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.getPublicKey(publicKeyRSA));
+            String fingerprint = CryptoUtils.getFingerprint(CryptoRSA.getPublicKey(publicKeyRSA));
             byte[] publicKeyDH = CryptoUtils.decodeBase64(requestBody.publicKeyDH());
             handshakeStore.outgoingRequestStore()
                     .save(

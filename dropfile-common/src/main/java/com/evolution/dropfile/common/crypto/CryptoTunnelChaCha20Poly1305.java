@@ -5,19 +5,32 @@ import lombok.SneakyThrows;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 
-public class CryptoTunnelChaCha {
+public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private static final String CIPHER_ALGORITHM = "ChaCha20-Poly1305";
 
+    private static final String SHA256_ALGORITHM = "SHA-256";
+
+    private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
+
     private static final int NONCE_LENGTH = 12;
 
-    public record SecureEnvelope(byte[] payload, byte[] nonce) {
+    @SneakyThrows
+    @Override
+    public SecretKey secretKey(byte[] secret) {
+        byte[] digest = MessageDigest
+                .getInstance(SHA256_ALGORITHM)
+                .digest(secret);
+        return new SecretKeySpec(digest, SECRET_KEY_ALGORITHM);
     }
 
     @SneakyThrows
-    public static SecureEnvelope encrypt(byte[] data, SecretKey key) {
+    @Override
+    public SecureEnvelope encrypt(byte[] data, SecretKey key) {
         byte[] nonce = generateNonce();
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
@@ -28,12 +41,8 @@ public class CryptoTunnelChaCha {
     }
 
     @SneakyThrows
-    public static byte[] decrypt(SecureEnvelope envelope, SecretKey key) {
-        return decrypt(envelope.payload(), envelope.nonce(), key);
-    }
-
-    @SneakyThrows
-    public static byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key) {
+    @Override
+    public byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key) {
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 

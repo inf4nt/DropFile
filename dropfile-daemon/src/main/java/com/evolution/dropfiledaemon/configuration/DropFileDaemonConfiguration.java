@@ -1,5 +1,7 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeIncomingRequestKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeOutgoingRequestKeyValueStore;
@@ -37,5 +39,10 @@ public class DropFileDaemonConfiguration {
                 new RuntimeTrustedInKeyValueStore(),
                 new RuntimeTrustedOutKeyValueStore()
         );
+    }
+
+    @Bean
+    public CryptoTunnel cryptoTunnel() {
+        return new CryptoTunnelChaCha20Poly1305();
     }
 }

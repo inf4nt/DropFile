@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Component
 @CommandLine.Command(
@@ -36,9 +38,7 @@ public class CurrentConnectionCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         HandshakeApiTrustOutResponseDTO responseDTO = objectMapper.readValue(response.body(), HandshakeApiTrustOutResponseDTO.class);
-        System.out.println("Current connection fingerprint: " + responseDTO.fingerprint());
-        System.out.println("Current connection public key: " + responseDTO.publicKey());
-        System.out.println("Current address URI: " + responseDTO.addressURI());
+        PrintReflection.print(List.of(responseDTO));
     }
 
     @Override

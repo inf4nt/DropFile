@@ -1,6 +1,7 @@
 package com.evolution.dropfile.configuration.keys;
 
-import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.configuration.store.single.StoreInitializationProcedure;
 
 import java.security.KeyPair;
@@ -15,8 +16,8 @@ public class KeysConfigStoreInitializationProcedure
             return;
         }
 
-        KeyPair keyPairRSA = CryptoUtils.generateKeyPair();
-        KeyPair keyPairDH = CryptoUtils.generateKeyPairDH();
+        KeyPair keyPairRSA = CryptoRSA.generateKeyPair();
+        KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
         KeysConfig config = new KeysConfig(
                 new KeysConfig.Keys(
