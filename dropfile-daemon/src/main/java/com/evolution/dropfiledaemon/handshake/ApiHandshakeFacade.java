@@ -1,19 +1,21 @@
 package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.*;
+import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.exception.NoIncomingRequestFoundException;
 import com.evolution.dropfiledaemon.handshake.store.*;
+import com.evolution.dropfiledaemon.tunnel.TunnelClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Instant;
@@ -36,18 +38,22 @@ public class ApiHandshakeFacade {
 
     private final CryptoTunnel cryptoTunnel;
 
+    private final TunnelClient tunnelClient;
+
     public ApiHandshakeFacade(HandshakeStore handshakeStore,
                               HandshakeClient handshakeClient,
                               ObjectMapper objectMapper,
                               KeysConfigStore keysConfigStore,
                               AppConfigStore appConfigStore,
-                              CryptoTunnel cryptoTunnel) {
+                              CryptoTunnel cryptoTunnel,
+                              TunnelClient tunnelClient) {
         this.handshakeStore = handshakeStore;
         this.handshakeClient = handshakeClient;
         this.objectMapper = objectMapper;
         this.keysConfigStore = keysConfigStore;
         this.appConfigStore = appConfigStore;
         this.cryptoTunnel = cryptoTunnel;
+        this.tunnelClient = tunnelClient;
     }
 
     @SneakyThrows
@@ -155,32 +161,29 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public HandshakeApiRequestResponseStatus handshake(HandshakeApiRequestBodyDTO requestBody) {
-        byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(CryptoUtils.decodeBase64(requestBody.publicKeyDH()))
-        );
-
-        SecretKey secretKey = cryptoTunnel.secretKey(secret);
-
-        PingRequestDTO.PingRequestPayload pingRequestPayload = new PingRequestDTO.PingRequestPayload(System.currentTimeMillis());
-        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
-                objectMapper.writeValueAsBytes(pingRequestPayload),
-                secretKey
-        );
-
         URI nodeAddressURI = CommonUtils.toURI(requestBody.nodeAddress());
-        String thisFingerprint = CryptoUtils.getFingerprint(
-                keysConfigStore.getRequired().rsa().publicKey()
+
+        String response = tunnelClient.send(
+                new TunnelClient.RequestEmptyBody() {
+                    @Override
+                    public URI getAddress() {
+                        return nodeAddressURI;
+                    }
+
+                    @Override
+                    public String getAction() {
+                        return "ping";
+                    }
+
+                    @Override
+                    public String getPublicKeyDH() {
+                        return requestBody.publicKeyDH();
+                    }
+                },
+                String.class
         );
-        HttpResponse<Void> pingResponse = handshakeClient.ping(
-                nodeAddressURI,
-                new PingRequestDTO(
-                        thisFingerprint,
-                        secureEnvelope.payload(),
-                        secureEnvelope.nonce()
-                )
-        );
-        if (pingResponse.statusCode() == 200) {
+
+        if (response != null) {
             byte[] publicKeyRSA = CryptoUtils.decodeBase64(
                     requestBody.publicKeyRSA()
             );

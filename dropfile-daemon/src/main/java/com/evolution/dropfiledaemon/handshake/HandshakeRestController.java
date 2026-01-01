@@ -1,6 +1,8 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,33 +27,5 @@ public class HandshakeRestController {
     public ResponseEntity<HandshakeResponseDTO> doHandshake(
             @RequestBody HandshakeRequestDTO requestDTO) {
         return ResponseEntity.ok(handshakeFacade.doHandshake(requestDTO));
-    }
-
-    @PostMapping("/ping")
-    public ResponseEntity<Void> ping(@RequestBody PingRequestDTO requestDTO) {
-        handshakeFacade.ping(requestDTO);
-        return ResponseEntity.ok().build();
-    }
-
-    @Deprecated
-    @PostMapping("/request")
-    public ResponseEntity<HandshakeRequestResponseDTO> request(@RequestBody HandshakeRequestBodyDTO requestDTO) {
-        return ResponseEntity.ok(handshakeFacade.request(requestDTO));
-    }
-
-    @Deprecated
-    @GetMapping("/trust/{fingerprint}")
-    public ResponseEntity<HandshakeTrustResponseDTO> getTrustStatus(@PathVariable String fingerprint) {
-        return handshakeFacade
-                .getHandshakeApprove(fingerprint)
-                .map(it -> ResponseEntity.ok().body(it))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @Deprecated
-    @PostMapping("/challenge")
-    public ResponseEntity<HandshakeChallengeResponseDTO> challenge(
-            @RequestBody HandshakeChallengeRequestBodyDTO requestDTO) {
-        return ResponseEntity.ok(handshakeFacade.challenge(requestDTO));
     }
 }
