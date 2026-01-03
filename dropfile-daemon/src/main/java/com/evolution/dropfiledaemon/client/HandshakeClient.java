@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.client;
 
-import com.evolution.dropfile.common.dto.DoHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +27,9 @@ public class HandshakeClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getIdentity(URI address) {
-        URI addressURI = address.resolve("/handshake");
-
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
-                .uri(addressURI)
+                .uri(address.resolve("/handshake"))
                 .GET()
                 .build();
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
@@ -39,12 +37,12 @@ public class HandshakeClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI addressURI,
-                                          DoHandshakeRequestDTO doHandshakeRequestDTO) {
+                                          HandshakeRequestDTO handshakeRequestDTO) {
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
                 .uri(addressURI.resolve("/handshake"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(doHandshakeRequestDTO))
+                        objectMapper.writeValueAsBytes(handshakeRequestDTO))
                 )
                 .header("Content-Type", "application/json")
                 .build();

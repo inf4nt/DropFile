@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.dto.DoHandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.DoHandshakeResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ public class HandshakeRestController {
     }
 
     @PostMapping
-    public DoHandshakeResponseDTO handshake(@RequestBody DoHandshakeRequestDTO requestDTO) {
+    public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
 }

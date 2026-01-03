@@ -19,17 +19,17 @@ public class ApiRestController {
         this.apiFacade = apiFacade;
     }
 
-    @GetMapping("/ping")
+    @GetMapping("/daemon/ping")
     public String ping() {
         return "pong";
     }
 
-    @PostMapping("/shutdown")
+    @PostMapping("/daemon/shutdown")
     public void shutdown() {
         apiFacade.shutdown();
     }
 
-    @GetMapping("/info")
+    @GetMapping("/daemon/info")
     public DaemonInfoResponseDTO getInfo() {
         return apiFacade.getDaemonInfo();
     }

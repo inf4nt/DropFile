@@ -18,9 +18,14 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> doHandshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
-        apiHandshakeFacade.doHandshake(requestDTO);
-        return ResponseEntity.ok().build();
+    public ApiHandshakeStatusResponseDTO handshake(
+            @RequestBody ApiHandshakeRequestDTO requestDTO) {
+        return apiHandshakeFacade.handshake(requestDTO);
+    }
+
+    @PostMapping("/status")
+    public ApiHandshakeStatusResponseDTO handshakeStatus() {
+        return apiHandshakeFacade.handshakeStatus();
     }
 
     @PostMapping("/identity")

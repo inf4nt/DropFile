@@ -128,7 +128,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/info");
+                .resolve("/api/daemon/info");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -222,7 +222,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/ping");
+                .resolve("/api/daemon/ping");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -241,7 +241,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/shutdown");
+                .resolve("/api/daemon/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -257,7 +257,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> doHandshake(URI address,
+    public HttpResponse<byte[]> handshake(URI address,
                                             String key) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
@@ -276,6 +276,26 @@ public class DaemonClient {
                                 key
                         ))
                 ))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> handshakeStatus() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/handshake/status");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
                 .header("Content-Type", "application/json")
                 .build();
 

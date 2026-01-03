@@ -1,7 +1,11 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.PrintReflection;
+import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -23,16 +27,25 @@ public class ConnectCommand implements Runnable {
 
     private final DaemonClient daemonClient;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
-    public ConnectCommand(DaemonClient daemonClient) {
+    public ConnectCommand(DaemonClient daemonClient,
+                          ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
+        this.objectMapper = objectMapper;
     }
 
+    @SneakyThrows
     @Override
     public void run() {
-        HttpResponse<byte[]> handshakeResponse = daemonClient.doHandshake(CommonUtils.toURI(address), key);
+        HttpResponse<byte[]> handshakeResponse = daemonClient.handshake(CommonUtils.toURI(address), key);
         if (handshakeResponse.statusCode() == 200) {
-            System.out.println("OK");
+            ApiHandshakeStatusResponseDTO responseDTO = objectMapper.readValue(
+                    handshakeResponse.body(),
+                    ApiHandshakeStatusResponseDTO.class
+            );
+            PrintReflection.print(responseDTO);
         } else {
             System.out.println("Failed");
         }

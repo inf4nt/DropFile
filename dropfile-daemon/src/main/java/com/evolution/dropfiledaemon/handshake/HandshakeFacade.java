@@ -1,12 +1,9 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.common.dto.DoHandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.DoHandshakeResponseDTO;
+import com.evolution.dropfile.common.crypto.*;
 import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.configuration.access.AccessKey;
 import com.evolution.dropfile.configuration.access.AccessKeyStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
@@ -64,20 +61,73 @@ public class HandshakeFacade {
     }
 
     @SneakyThrows
-    public DoHandshakeResponseDTO handshake(DoHandshakeRequestDTO requestDTO) {
+    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
         AccessKey accessKey = accessKeyStore.get(accessKeyId).orElse(null);
-        if (accessKey == null) {
-            throw new RuntimeException("No access key found: " + accessKeyId);
+        if (accessKey != null) {
+            return handshakeBasedOnSecret(requestDTO, accessKey);
         }
+        TrustedInKeyValueStore.TrustedInValue trustedInValue = handshakeStore.trustedInStore()
+                .get(accessKeyId)
+                .orElse(null);
+        if (trustedInValue != null) {
+            return handshakeBasedOnFingerprint(requestDTO, trustedInValue);
+        }
+        throw new RuntimeException("No access key and trusted-in connections found: " + accessKeyId);
+    }
+
+    @SneakyThrows
+    private HandshakeResponseDTO handshakeBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
+        byte[] secret = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPublicKey(trustedIn.publicKeyDH())
+        );
+        SecretKey secretKey = cryptoTunnel.secretKey(secret);
+        byte[] decryptMessage = cryptoTunnel.decrypt(
+                CryptoUtils.decodeBase64(requestDTO.payload()),
+                CryptoUtils.decodeBase64(requestDTO.nonce()),
+                secretKey
+        );
+        HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
+                .readValue(decryptMessage, HandshakeRequestDTO.HandshakePayload.class);
+
+        String fingerprint = requestDTO.id();
+        if (!CryptoUtils.getFingerprint(trustedIn.publicKeyDH()).equals(fingerprint)) {
+            throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
+        }
+
+        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
+        HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
+                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                HandshakeResponseDTO.HandshakeStatus.OK,
+                cryptoTunnel.getAlgorithm(),
+                System.currentTimeMillis()
+        );
+        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                objectMapper.writeValueAsBytes(responsePayload),
+                secretKey
+        );
+
+        return new HandshakeResponseDTO(
+                CryptoUtils.encodeBase64(secureEnvelope.payload()),
+                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+        );
+    }
+
+    @SneakyThrows
+    private HandshakeResponseDTO handshakeBasedOnSecret(HandshakeRequestDTO requestDTO, AccessKey accessKey) {
+        String accessKeyId = requestDTO.id();
         SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 CryptoUtils.decodeBase64(requestDTO.payload()),
                 CryptoUtils.decodeBase64(requestDTO.nonce()),
                 secretKey
         );
-        DoHandshakeRequestDTO.DoHandshakePayload requestPayload = objectMapper
-                .readValue(decryptMessage, DoHandshakeRequestDTO.DoHandshakePayload.class);
+        HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
+                .readValue(decryptMessage, HandshakeRequestDTO.HandshakePayload.class);
 
         if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > 30_000) {
             throw new RuntimeException("Timed out");
@@ -92,9 +142,10 @@ public class HandshakeFacade {
                         )
                 );
 
-        DoHandshakeResponseDTO.DoHandshakePayload responsePayload = new DoHandshakeResponseDTO.DoHandshakePayload(
+        HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
                 CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
-                DoHandshakeResponseDTO.HandshakeStatus.APPROVED,
+                HandshakeResponseDTO.HandshakeStatus.OK,
+                cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
@@ -104,7 +155,7 @@ public class HandshakeFacade {
 
         accessKeyStore.remove(accessKeyId);
 
-        return new DoHandshakeResponseDTO(
+        return new HandshakeResponseDTO(
                 CryptoUtils.encodeBase64(secureEnvelope.payload()),
                 CryptoUtils.encodeBase64(secureEnvelope.nonce())
         );

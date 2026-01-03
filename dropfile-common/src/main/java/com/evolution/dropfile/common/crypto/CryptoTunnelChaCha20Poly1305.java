@@ -19,6 +19,11 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private static final int NONCE_LENGTH = 12;
 
+    @Override
+    public String getAlgorithm() {
+        return CIPHER_ALGORITHM;
+    }
+
     @SneakyThrows
     @Override
     public SecretKey secretKey(byte[] secret) {

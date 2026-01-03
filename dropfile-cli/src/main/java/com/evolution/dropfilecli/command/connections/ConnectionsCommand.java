@@ -15,7 +15,8 @@ import picocli.CommandLine;
                 TrustedOutCommand.class,
                 DisconnectCommand.class,
                 RevokeCommand.class,
-                AccessCommand.class
+                AccessCommand.class,
+                StatusConnectionCommand.class
         }
 )
 public class ConnectionsCommand implements Runnable {
