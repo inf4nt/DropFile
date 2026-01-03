@@ -71,13 +71,13 @@ public class HandshakeFacade {
                 .get(accessKeyId)
                 .orElse(null);
         if (trustedInValue != null) {
-            return handshakeStatusBasedOnFingerprint(requestDTO, trustedInValue);
+            return handshakeBasedOnFingerprint(requestDTO, trustedInValue);
         }
         throw new RuntimeException("No access key or trusted-in connections found: " + accessKeyId);
     }
 
     @SneakyThrows
-    private HandshakeResponseDTO handshakeStatusBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
+    private HandshakeResponseDTO handshakeBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(trustedIn.publicKeyDH())

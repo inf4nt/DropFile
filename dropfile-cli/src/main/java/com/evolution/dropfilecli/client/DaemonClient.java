@@ -2,6 +2,7 @@ package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeIdentityRequestDTO;
 import com.evolution.dropfile.configuration.app.AppConfig;
@@ -258,7 +259,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI address,
-                                            String key) {
+                                          String key) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -274,6 +275,30 @@ public class DaemonClient {
                         objectMapper.writeValueAsBytes(new ApiHandshakeRequestDTO(
                                 address.toString(),
                                 key
+                        ))
+                ))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> handshakeReconnect(URI address) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/handshake/reconnect");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(new ApiHandshakeReconnectRequestDTO(
+                                address.toString()
                         ))
                 ))
                 .header("Content-Type", "application/json")

@@ -69,16 +69,41 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    public ApiHandshakeStatusResponseDTO handshakeStatus() {
-        HandshakeApiTrustOutResponseDTO currentConnection = getLatestTrustOut()
+    public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore().getAll().values().stream()
+                .filter(it -> it.addressURI().equals(CommonUtils.toURI(requestDTO.address())))
+                .findFirst()
                 .orElse(null);
-        if (currentConnection == null) {
-            throw new IllegalStateException("No connections found");
+        if (trustedOutValue == null) {
+            throw new RuntimeException("No trusted out found: " + requestDTO.address());
         }
+        ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
+        handshakeStore.trustedOutStore().save(
+                CryptoUtils.getFingerprint(trustedOutValue.publicKeyDH()),
+                new TrustedOutKeyValueStore.TrustedOutValue(
+                        trustedOutValue.addressURI(),
+                        trustedOutValue.publicKeyDH(),
+                        Instant.now()
+                )
+        );
+        return apiHandshakeStatusResponseDTO;
+    }
 
+    public ApiHandshakeStatusResponseDTO handshakeStatus() {
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getLatestTrustOut()
+                .flatMap(it -> handshakeStore.trustedOutStore().get(it.fingerprint()))
+                .orElse(null);
+        if (trustedOutValue == null) {
+            throw new RuntimeException("No trusted out connections found");
+        }
+        return pingHandshake(trustedOutValue);
+    }
+
+    @SneakyThrows
+    public ApiHandshakeStatusResponseDTO pingHandshake(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(CryptoUtils.decodeBase64(currentConnection.publicKeyDH()))
+                CryptoECDH.getPublicKey(trustedOutValue.publicKeyDH())
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
@@ -98,7 +123,7 @@ public class ApiHandshakeFacade {
                 CryptoUtils.encodeBase64(secureEnvelope.nonce())
         );
 
-        URI addressURI = CommonUtils.toURI(currentConnection.addressURI());
+        URI addressURI = trustedOutValue.addressURI();
 
         HttpResponse<byte[]> handshakeResponse = handshakeClient
                 .handshake(addressURI, handshakeRequestDTO);
@@ -117,9 +142,9 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.HandshakePayload.class
         );
-        String fingerprintActual = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH()));
-        if (!currentConnection.fingerprint().equals(fingerprintActual)) {
-            throw new RuntimeException("Fingerprint mismatch: " + fingerprintActual);
+        String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH()));
+        if (!CryptoUtils.getFingerprint(trustedOutValue.publicKeyDH()).equals(fingerprint)) {
+            throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
         }
 
         if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
@@ -131,9 +156,9 @@ public class ApiHandshakeFacade {
         }
 
         return new ApiHandshakeStatusResponseDTO(
-                currentConnection.fingerprint(),
+                fingerprint,
                 addressURI.toString(),
-                "Active",
+                "Online",
                 responsePayload.tunnelAlgorithm()
         );
     }
@@ -188,6 +213,13 @@ public class ApiHandshakeFacade {
             throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
         }
 
+        TrustedOutKeyValueStore.TrustedOutValue alreadyExistingURI = handshakeStore.trustedOutStore().getAll().values().stream()
+                .filter(it -> it.addressURI().equals(addressURI))
+                .findFirst()
+                .orElse(null);
+        if (alreadyExistingURI != null) {
+            throw new RuntimeException("Connection URI must be unique. Fingerprint: " + CryptoUtils.getFingerprint(alreadyExistingURI.publicKeyDH()));
+        }
         handshakeStore.trustedOutStore().save(
                 CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH())),
                 new TrustedOutKeyValueStore.TrustedOutValue(
@@ -199,7 +231,7 @@ public class ApiHandshakeFacade {
         return new ApiHandshakeStatusResponseDTO(
                 CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH())),
                 addressURI.toString(),
-                "Active",
+                "Online",
                 responsePayload.tunnelAlgorithm()
         );
     }

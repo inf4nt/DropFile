@@ -23,6 +23,11 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.handshake(requestDTO);
     }
 
+    @PostMapping("/reconnect")
+    public ApiHandshakeStatusResponseDTO handshakeReconnect(@RequestBody ApiHandshakeReconnectRequestDTO requestDTO) {
+        return apiHandshakeFacade.handshakeReconnect(requestDTO);
+    }
+
     @PostMapping("/status")
     public ApiHandshakeStatusResponseDTO handshakeStatus() {
         return apiHandshakeFacade.handshakeStatus();
