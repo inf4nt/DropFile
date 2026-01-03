@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 public class RevokeCommand implements CommandHttpHandler<Void> {
     @Override
     public HttpResponse<Void> execute() throws Exception {
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
