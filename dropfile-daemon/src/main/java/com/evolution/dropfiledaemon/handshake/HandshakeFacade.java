@@ -73,7 +73,7 @@ public class HandshakeFacade {
         if (trustedInValue != null) {
             return handshakeBasedOnFingerprint(requestDTO, trustedInValue);
         }
-        throw new RuntimeException("No access key and trusted-in connections found: " + accessKeyId);
+        throw new RuntimeException("No access key or trusted-in connections found: " + accessKeyId);
     }
 
     @SneakyThrows
