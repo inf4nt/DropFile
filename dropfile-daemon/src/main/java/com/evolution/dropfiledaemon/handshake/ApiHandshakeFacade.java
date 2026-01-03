@@ -117,6 +117,10 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.HandshakePayload.class
         );
+        String fingerprintActual = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH()));
+        if (!currentConnection.fingerprint().equals(fingerprintActual)) {
+            throw new RuntimeException("Fingerprint mismatch: " + fingerprintActual);
+        }
 
         if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
             throw new RuntimeException("Timed out");
