@@ -8,6 +8,6 @@ import java.time.Instant;
 public interface TrustedOutKeyValueStore
         extends KeyValueStore<String, TrustedOutKeyValueStore.TrustedOutValue> {
 
-    record TrustedOutValue(URI addressURI, @Deprecated byte[] publicKeyRSA, byte[] publicKeyDH, Instant updated) {
+    record TrustedOutValue(URI addressURI, byte[] publicKeyDH, Instant updated) {
     }
 }

@@ -1,7 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
-import com.evolution.dropfilecli.command.connections.request.RequestsCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -10,13 +9,10 @@ import picocli.CommandLine;
         name = "connections",
         description = "Connections",
         subcommands = {
-                RequestsCommand.class,
                 ConnectCommand.class,
                 CurrentConnectionCommand.class,
                 TrustedInCommand.class,
                 TrustedOutCommand.class,
-                ApproveIncomingRequestConnectionCommand.class,
-                PingNodeCommand.class,
                 DisconnectCommand.class,
                 RevokeCommand.class,
                 AccessCommand.class

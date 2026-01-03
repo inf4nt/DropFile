@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
-import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfiledaemon.facade.ApiFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -58,17 +57,5 @@ public class ApiRestController {
     public ResponseEntity<Void> revokeAllAccessKeys() {
         apiFacade.revokeAllAccessKeys();
         return ResponseEntity.ok().build();
-    }
-
-    @Deprecated
-    @GetMapping("/node/ping/{fingerprint}")
-    public String nodePing(@PathVariable String fingerprint) {
-        return apiFacade.nodePing(fingerprint);
-    }
-
-    @Deprecated
-    @PostMapping("/config/public_address")
-    public void setPublicAddress(@RequestBody DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
-        apiFacade.setPublicAddress(requestBodyDTO);
     }
 }

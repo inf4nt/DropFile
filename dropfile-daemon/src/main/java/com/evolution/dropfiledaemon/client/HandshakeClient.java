@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.client;
 
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.DoHandshakeRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Base64;
 
 @Component
 public class HandshakeClient {
@@ -47,86 +46,6 @@ public class HandshakeClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(doHandshakeRequestDTO))
                 )
-                .header("Content-Type", "application/json")
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @Deprecated
-    @SneakyThrows
-    public HttpResponse<Void> ping(URI address, PingRequestDTO requestDTO) {
-        URI addressURI = address.resolve("/handshake/ping");
-
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(addressURI)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(requestDTO))
-                )
-                .header("Content-Type", "application/json")
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
-    }
-
-    @Deprecated
-    @SneakyThrows
-    public HttpResponse<byte[]> doHandshake(URI address, HandshakeRequestDTO requestDTO) {
-        URI addressURI = address.resolve("/handshake");
-
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(addressURI)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(requestDTO))
-                )
-                .header("Content-Type", "application/json")
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @Deprecated
-    @SneakyThrows
-    public HttpResponse<byte[]> getChallenge(URI handshakeNodeAddressURI, String challenge) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(handshakeNodeAddressURI.resolve("/handshake/challenge"))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new HandshakeChallengeRequestBodyDTO(challenge))
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @Deprecated
-    @SneakyThrows
-    public HttpResponse<byte[]> getHandshake(URI handshakeNodeAddressURI, String fingerprint) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(handshakeNodeAddressURI.resolve("/handshake/trust/")
-                        .resolve(fingerprint)
-                )
-                .GET()
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @Deprecated
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeRequest(URI currentAddressURI,
-                                                 URI handshakeNodeAddressURI,
-                                                 byte[] publicKey) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(handshakeNodeAddressURI.resolve("/handshake/request"))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(
-                                new HandshakeRequestBodyDTO(
-                                        currentAddressURI,
-                                        Base64.getEncoder().encodeToString(publicKey)
-                                )
-                        )
-                ))
                 .header("Content-Type", "application/json")
                 .build();
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());

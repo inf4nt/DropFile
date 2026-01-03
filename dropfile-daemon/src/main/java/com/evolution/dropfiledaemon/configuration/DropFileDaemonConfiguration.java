@@ -5,8 +5,6 @@ import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfile.configuration.access.AccessKeyStore;
 import com.evolution.dropfile.configuration.access.RuntimeAccessKeyStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeIncomingRequestKeyValueStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeOutgoingRequestKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,8 +36,6 @@ public class DropFileDaemonConfiguration {
     @Bean
     public HandshakeStore handshakeStore() {
         return new HandshakeStore(
-                new RuntimeIncomingRequestKeyValueStore(),
-                new RuntimeOutgoingRequestKeyValueStore(),
                 new RuntimeTrustedInKeyValueStore(),
                 new RuntimeTrustedOutKeyValueStore()
         );
