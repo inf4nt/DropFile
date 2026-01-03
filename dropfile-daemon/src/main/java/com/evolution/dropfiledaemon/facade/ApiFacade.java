@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
@@ -37,8 +36,8 @@ public class ApiFacade {
     public DaemonInfoResponseDTO getDaemonInfo() {
         byte[] publicKeyDH = keysConfigStore.getRequired().dh().publicKey();
         return new DaemonInfoResponseDTO(
-                CryptoUtils.getFingerprint(publicKeyDH),
-                CryptoUtils.encodeBase64(publicKeyDH)
+                CommonUtils.getFingerprint(publicKeyDH),
+                CommonUtils.encodeBase64(publicKeyDH)
         );
     }
 
@@ -81,7 +80,7 @@ public class ApiFacade {
     private AccessKeyInfoResponseDTO toAccessKeyInfoResponseDTO(AccessKey accessKey) {
         String idAndSecret = accessKey.id() + "+" + accessKey.key();
         return new AccessKeyInfoResponseDTO(
-                CryptoUtils.encodeBase64(idAndSecret.getBytes()),
+                CommonUtils.encodeBase64(idAndSecret.getBytes()),
                 accessKey.created()
         );
     }

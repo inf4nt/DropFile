@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.app.AppConfig;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.app.ImmutableAppConfigStore;
@@ -71,14 +70,14 @@ public class DropFileDaemonConfigurationDev {
                 KeyPair keyPairRSA = CryptoRSA.generateKeyPair();
                 KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
-                log.info("Generated RSA public key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPublic().getEncoded()));
-                log.info("Generated RSA private key: {}", CryptoUtils.encodeBase64(keyPairRSA.getPrivate().getEncoded()));
+                log.info("Generated RSA public key: {}", CommonUtils.encodeBase64(keyPairRSA.getPublic().getEncoded()));
+                log.info("Generated RSA private key: {}", CommonUtils.encodeBase64(keyPairRSA.getPrivate().getEncoded()));
 
-                log.info("Generated DH public key: {}", CryptoUtils.encodeBase64(keyPairDH.getPublic().getEncoded()));
-                log.info("Generated DH private key: {}", CryptoUtils.encodeBase64(keyPairDH.getPrivate().getEncoded()));
+                log.info("Generated DH public key: {}", CommonUtils.encodeBase64(keyPairDH.getPublic().getEncoded()));
+                log.info("Generated DH private key: {}", CommonUtils.encodeBase64(keyPairDH.getPrivate().getEncoded()));
 
-                log.info("Generated fingerprint RSA public key: {}", CryptoUtils.getFingerprint(keyPairRSA.getPublic()));
-                log.info("Generated fingerprint DH public key: {}", CryptoUtils.getFingerprint(keyPairDH.getPublic()));
+                log.info("Generated fingerprint RSA public key: {}", CommonUtils.getFingerprint(keyPairRSA.getPublic()));
+                log.info("Generated fingerprint DH public key: {}", CommonUtils.getFingerprint(keyPairDH.getPublic()));
 
                 return new KeysConfig(
                         new KeysConfig.Keys(
@@ -99,12 +98,12 @@ public class DropFileDaemonConfigurationDev {
 
             return new KeysConfig(
                     new KeysConfig.Keys(
-                            CryptoRSA.getPublicKey(CryptoUtils.decodeBase64(publicKeyRSA)).getEncoded(),
-                            CryptoRSA.getPrivateKey(CryptoUtils.decodeBase64(privateKeyRSA)).getEncoded()
+                            CryptoRSA.getPublicKey(CommonUtils.decodeBase64(publicKeyRSA)).getEncoded(),
+                            CryptoRSA.getPrivateKey(CommonUtils.decodeBase64(privateKeyRSA)).getEncoded()
                     ),
                     new KeysConfig.Keys(
-                            CryptoECDH.getPublicKey(CryptoUtils.decodeBase64(publicKeyDH)).getEncoded(),
-                            CryptoECDH.getPrivateKey(CryptoUtils.decodeBase64(privateKeyDH)).getEncoded()
+                            CryptoECDH.getPublicKey(CommonUtils.decodeBase64(publicKeyDH)).getEncoded(),
+                            CryptoECDH.getPrivateKey(CommonUtils.decodeBase64(privateKeyDH)).getEncoded()
                     )
             );
         });

@@ -1,13 +1,9 @@
 package com.evolution.dropfiledaemon.handshake.security;
 
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 public class HandshakeSecretTokenService {

@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
@@ -79,7 +78,7 @@ public class ApiHandshakeFacade {
         }
         ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
         handshakeStore.trustedOutStore().save(
-                CryptoUtils.getFingerprint(trustedOutValue.publicKeyDH()),
+                CommonUtils.getFingerprint(trustedOutValue.publicKeyDH()),
                 new TrustedOutKeyValueStore.TrustedOutValue(
                         trustedOutValue.addressURI(),
                         trustedOutValue.publicKeyDH(),
@@ -108,7 +107,7 @@ public class ApiHandshakeFacade {
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
         HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 System.currentTimeMillis()
         );
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
@@ -116,11 +115,11 @@ public class ApiHandshakeFacade {
                 secretKey
         );
 
-        String requestId = CryptoUtils.getFingerprint(keysConfigStore.getRequired().dh().publicKey());
+        String requestId = CommonUtils.getFingerprint(keysConfigStore.getRequired().dh().publicKey());
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
-                CryptoUtils.encodeBase64(secureEnvelope.payload()),
-                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+                CommonUtils.encodeBase64(secureEnvelope.payload()),
+                CommonUtils.encodeBase64(secureEnvelope.nonce())
         );
 
         URI addressURI = trustedOutValue.addressURI();
@@ -134,16 +133,16 @@ public class ApiHandshakeFacade {
         HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
 
         byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                CryptoUtils.decodeBase64(handshakeResponseDTO.payload()),
-                CryptoUtils.decodeBase64(handshakeResponseDTO.nonce()),
+                CommonUtils.decodeBase64(handshakeResponseDTO.payload()),
+                CommonUtils.decodeBase64(handshakeResponseDTO.nonce()),
                 secretKey
         );
         HandshakeResponseDTO.HandshakePayload responsePayload = objectMapper.readValue(
                 decryptResponsePayload,
                 HandshakeResponseDTO.HandshakePayload.class
         );
-        String fingerprint = CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH()));
-        if (!CryptoUtils.getFingerprint(trustedOutValue.publicKeyDH()).equals(fingerprint)) {
+        String fingerprint = CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyDH()));
+        if (!CommonUtils.getFingerprint(trustedOutValue.publicKeyDH()).equals(fingerprint)) {
             throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
         }
 
@@ -165,11 +164,11 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
-        String key = new String(CryptoUtils.decodeBase64(requestDTO.key()));
+        String key = new String(CommonUtils.decodeBase64(requestDTO.key()));
         String secret = extractSecret(key);
 
         HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 System.currentTimeMillis()
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret.getBytes());
@@ -181,8 +180,8 @@ public class ApiHandshakeFacade {
         String requestId = extractSecretId(key);
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
-                CryptoUtils.encodeBase64(secureEnvelope.payload()),
-                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+                CommonUtils.encodeBase64(secureEnvelope.payload()),
+                CommonUtils.encodeBase64(secureEnvelope.nonce())
         );
 
         URI addressURI = CommonUtils.toURI(requestDTO.address());
@@ -196,8 +195,8 @@ public class ApiHandshakeFacade {
         HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
 
         byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                CryptoUtils.decodeBase64(handshakeResponseDTO.payload()),
-                CryptoUtils.decodeBase64(handshakeResponseDTO.nonce()),
+                CommonUtils.decodeBase64(handshakeResponseDTO.payload()),
+                CommonUtils.decodeBase64(handshakeResponseDTO.nonce()),
                 secretKey
         );
         HandshakeResponseDTO.HandshakePayload responsePayload = objectMapper.readValue(
@@ -218,18 +217,18 @@ public class ApiHandshakeFacade {
                 .findFirst()
                 .orElse(null);
         if (alreadyExistingURI != null) {
-            throw new RuntimeException("Connection URI must be unique. Fingerprint: " + CryptoUtils.getFingerprint(alreadyExistingURI.publicKeyDH()));
+            throw new RuntimeException("Connection URI must be unique. Fingerprint: " + CommonUtils.getFingerprint(alreadyExistingURI.publicKeyDH()));
         }
         handshakeStore.trustedOutStore().save(
-                CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH())),
+                CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyDH())),
                 new TrustedOutKeyValueStore.TrustedOutValue(
                         addressURI,
-                        CryptoUtils.decodeBase64(responsePayload.publicKeyDH()),
+                        CommonUtils.decodeBase64(responsePayload.publicKeyDH()),
                         Instant.now()
                 )
         );
         return new ApiHandshakeStatusResponseDTO(
-                CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH())),
+                CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyDH())),
                 addressURI.toString(),
                 "Online",
                 responsePayload.tunnelAlgorithm()
@@ -254,7 +253,7 @@ public class ApiHandshakeFacade {
                 .stream()
                 .map(entry -> {
                     String fingerprint = entry.getKey();
-                    String publicKeyDH = CryptoUtils.encodeBase64(entry.getValue().publicKeyDH());
+                    String publicKeyDH = CommonUtils.encodeBase64(entry.getValue().publicKeyDH());
                     return new HandshakeApiTrustInResponseDTO(fingerprint, publicKeyDH);
                 })
                 .toList();
@@ -269,7 +268,7 @@ public class ApiHandshakeFacade {
                 .map(entry -> {
                     String fingerprint = entry.getKey();
                     URI addressURI = entry.getValue().addressURI();
-                    String publicKeyDH = CryptoUtils.encodeBase64(entry.getValue().publicKeyDH());
+                    String publicKeyDH = CommonUtils.encodeBase64(entry.getValue().publicKeyDH());
                     return new HandshakeApiTrustOutResponseDTO(fingerprint, publicKeyDH, addressURI.toString());
                 })
                 .toList();
@@ -284,7 +283,7 @@ public class ApiHandshakeFacade {
                 .findFirst()
                 .map(it -> new HandshakeApiTrustOutResponseDTO(
                                 it.getKey(),
-                                CryptoUtils.encodeBase64(it.getValue().publicKeyDH()),
+                                CommonUtils.encodeBase64(it.getValue().publicKeyDH()),
                                 it.getValue().addressURI().toString()
                         )
                 );

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -55,14 +55,14 @@ public class HttpTunnelClient implements TunnelClient {
                     System.currentTimeMillis()
             );
 
-            SecretKey secretKey = getSecretKey(CryptoUtils.decodeBase64(request.getPublicKeyDH()));
+            SecretKey secretKey = getSecretKey(CommonUtils.decodeBase64(request.getPublicKeyDH()));
 
             SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(objectMapper.writeValueAsBytes(requestPayload), secretKey);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CryptoUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                    CryptoUtils.encodeBase64(secureEnvelope.payload()),
-                    CryptoUtils.encodeBase64(secureEnvelope.nonce())
+                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                    CommonUtils.encodeBase64(secureEnvelope.payload()),
+                    CommonUtils.encodeBase64(secureEnvelope.nonce())
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -81,8 +81,8 @@ public class HttpTunnelClient implements TunnelClient {
 
             TunnelResponseDTO tunnelResponseDTO = objectMapper.readValue(httpResponse.body(), TunnelResponseDTO.class);
             byte[] decryptPayload = cryptoTunnel.decrypt(
-                    CryptoUtils.decodeBase64(tunnelResponseDTO.payload()),
-                    CryptoUtils.decodeBase64(tunnelResponseDTO.nonce()),
+                    CommonUtils.decodeBase64(tunnelResponseDTO.payload()),
+                    CommonUtils.decodeBase64(tunnelResponseDTO.nonce()),
                     secretKey
             );
             if (String.class.equals(responseType)) {
@@ -125,7 +125,7 @@ public class HttpTunnelClient implements TunnelClient {
 
                         @Override
                         public String getPublicKeyDH() {
-                            return CryptoUtils.encodeBase64(trustedOutValue.publicKeyDH());
+                            return CommonUtils.encodeBase64(trustedOutValue.publicKeyDH());
                         }
                     },
                 responseType

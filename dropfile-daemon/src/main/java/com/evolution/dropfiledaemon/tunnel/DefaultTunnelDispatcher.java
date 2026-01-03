@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -86,16 +86,16 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
         SecureEnvelope encrypt = cryptoTunnel.encrypt(payload, secretKey);
         return new TunnelResponseDTO(
-                CryptoUtils.encodeBase64(encrypt.payload()),
-                CryptoUtils.encodeBase64(encrypt.nonce())
+                CommonUtils.encodeBase64(encrypt.payload()),
+                CommonUtils.encodeBase64(encrypt.nonce())
         );
     }
 
     @SneakyThrows
     private TunnelRequestDTO.TunnelRequestPayload decrypt(TunnelRequestDTO requestDTO, SecretKey secretKey) {
         byte[] decrypt = cryptoTunnel.decrypt(
-                CryptoUtils.decodeBase64(requestDTO.requestPayload()),
-                CryptoUtils.decodeBase64(requestDTO.nonce()),
+                CommonUtils.decodeBase64(requestDTO.requestPayload()),
+                CommonUtils.decodeBase64(requestDTO.nonce()),
                 secretKey
         );
         return objectMapper.readValue(decrypt, TunnelRequestDTO.TunnelRequestPayload.class);

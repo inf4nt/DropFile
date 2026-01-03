@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.handshake;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.*;
 import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
@@ -45,8 +46,8 @@ public class HandshakeFacade {
     @SneakyThrows
     public HandshakeIdentityResponseDTO getHandshakeIdentity() {
         HandshakeIdentityResponseDTO.HandshakeIdentityPayload payload = new HandshakeIdentityResponseDTO.HandshakeIdentityPayload(
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
         );
 
         byte[] signature = CryptoRSA.sign(
@@ -56,7 +57,7 @@ public class HandshakeFacade {
 
         return new HandshakeIdentityResponseDTO(
                 payload,
-                CryptoUtils.encodeBase64(signature)
+                CommonUtils.encodeBase64(signature)
         );
     }
 
@@ -84,15 +85,15 @@ public class HandshakeFacade {
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
         byte[] decryptMessage = cryptoTunnel.decrypt(
-                CryptoUtils.decodeBase64(requestDTO.payload()),
-                CryptoUtils.decodeBase64(requestDTO.nonce()),
+                CommonUtils.decodeBase64(requestDTO.payload()),
+                CommonUtils.decodeBase64(requestDTO.nonce()),
                 secretKey
         );
         HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
                 .readValue(decryptMessage, HandshakeRequestDTO.HandshakePayload.class);
 
         String fingerprint = requestDTO.id();
-        if (!CryptoUtils.getFingerprint(trustedIn.publicKeyDH()).equals(fingerprint)) {
+        if (!CommonUtils.getFingerprint(trustedIn.publicKeyDH()).equals(fingerprint)) {
             throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
         }
 
@@ -101,7 +102,7 @@ public class HandshakeFacade {
         }
 
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
@@ -112,8 +113,8 @@ public class HandshakeFacade {
         );
 
         return new HandshakeResponseDTO(
-                CryptoUtils.encodeBase64(secureEnvelope.payload()),
-                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+                CommonUtils.encodeBase64(secureEnvelope.payload()),
+                CommonUtils.encodeBase64(secureEnvelope.nonce())
         );
     }
 
@@ -122,8 +123,8 @@ public class HandshakeFacade {
         String accessKeyId = requestDTO.id();
         SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
-                CryptoUtils.decodeBase64(requestDTO.payload()),
-                CryptoUtils.decodeBase64(requestDTO.nonce()),
+                CommonUtils.decodeBase64(requestDTO.payload()),
+                CommonUtils.decodeBase64(requestDTO.nonce()),
                 secretKey
         );
         HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
@@ -133,17 +134,17 @@ public class HandshakeFacade {
             throw new RuntimeException("Timed out");
         }
 
-        byte[] publicKeyDH = CryptoUtils.decodeBase64(requestPayload.publicKeyDH());
+        byte[] publicKeyDH = CommonUtils.decodeBase64(requestPayload.publicKeyDH());
         handshakeStore.trustedInStore()
                 .save(
-                        CryptoUtils.getFingerprint(publicKeyDH),
+                        CommonUtils.getFingerprint(publicKeyDH),
                         new TrustedInKeyValueStore.TrustedInValue(
                                 publicKeyDH
                         )
                 );
 
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
-                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
@@ -156,8 +157,8 @@ public class HandshakeFacade {
         accessKeyStore.remove(accessKeyId);
 
         return new HandshakeResponseDTO(
-                CryptoUtils.encodeBase64(secureEnvelope.payload()),
-                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+                CommonUtils.encodeBase64(secureEnvelope.payload()),
+                CommonUtils.encodeBase64(secureEnvelope.nonce())
         );
     }
 }
