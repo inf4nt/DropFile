@@ -23,7 +23,7 @@ public class ConnectCommand implements Runnable {
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
 
-    @CommandLine.Parameters(index = "1", description = "Instance Key", defaultValue = "")
+    @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
     private final DaemonClient daemonClient;
