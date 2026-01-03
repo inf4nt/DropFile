@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiRequestBodyDTO;
 import com.evolution.dropfile.common.dto.HandshakeIdentityRequestDTO;
@@ -41,6 +42,89 @@ public class DaemonClient {
         this.secretsConfigStore = secretsConfigStore;
     }
 
+    @SneakyThrows
+    public HttpResponse<byte[]> generateAccessKeys(boolean permanent) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/access");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(
+                                new AccessKeyGenerateRequestDTO(permanent)
+                        )
+                ))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> getAccessKeys() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/access");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<Void> revokeAccessKey(String id) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/access/")
+                .resolve(id);
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
+    public HttpResponse<Void> revokeAllAccessKeys() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/access");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @Deprecated
     @SneakyThrows
     public HttpResponse<Void> setPublicAddress(String publicAddress) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -84,6 +168,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<Void> pingDaemon() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -123,6 +208,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<String> handshakeRequest(HandshakeApiRequestBodyDTO requestBodyDTO) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -145,6 +231,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> getIncomingRequests() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -162,6 +249,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> getOutgoingRequests() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -180,6 +268,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> getOutgoingRequest(String fingerprint) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -272,6 +361,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> trust(String fingerprint) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
@@ -291,6 +381,7 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<String> nodePing(String fingerprint) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();

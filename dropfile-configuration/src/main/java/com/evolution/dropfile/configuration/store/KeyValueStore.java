@@ -4,9 +4,12 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface KeyValueStore<K, V> {
+
     V save(K key, V value);
 
     V remove(K key);
+
+    void removeAll();
 
     Map<K, V> getAll();
 

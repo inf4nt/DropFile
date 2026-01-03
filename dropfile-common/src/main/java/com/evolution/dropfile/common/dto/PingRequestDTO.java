@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common.dto;
 
+@Deprecated
 public record PingRequestDTO(String fingerprint,
                              byte[] payload,
                              byte[] nonce) {

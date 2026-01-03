@@ -17,6 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot.dependencies.version>3.5.7</spring.boot.dependencies.version>
         <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
+        <guava.version>33.4.8-jre</guava.version>
     </properties>
 
     <dependencies>
@@ -33,6 +34,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 

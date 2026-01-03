@@ -1,22 +1,22 @@
 app connections connect <host>:<port>
                 current
-                ping
+                status
+                info <host>:<port>
                 trusted-out -out -o
                 trusted-in  -in  -i
-                requests -r
-                        incoming -in  -i
-                        outgoing -out -o
-                approve <fingerprint>
                 disconnect <fingerprint>
                 revoke     <fingerprint>
-
+                access
+                        generate -permanent
+                        ls
+                        revoke -id=12d1as
+                        revoke -all
 app daemon
                 info
                 status
                 shutdown
-                config
-                      set-public address -spa
+                start
 
 app files       ls
-                download
-                
+                download --id=b56f34
+                add --alias=text.txt                

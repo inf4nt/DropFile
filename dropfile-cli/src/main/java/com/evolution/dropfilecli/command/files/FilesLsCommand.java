@@ -8,17 +8,17 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "download",
-        description = "Download command"
+        name = "ls",
+        description = "LS command"
 )
-public class DownloadCommand implements CommandHttpHandler<Void> {
+public class FilesLsCommand implements CommandHttpHandler<byte[]> {
     @Override
-    public HttpResponse<Void> execute() throws Exception {
+    public HttpResponse<byte[]> execute() throws Exception {
         return null;
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
+    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
 
     }
 }

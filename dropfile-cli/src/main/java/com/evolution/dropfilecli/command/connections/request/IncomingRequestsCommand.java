@@ -12,6 +12,7 @@ import picocli.CommandLine;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+@Deprecated
 @Component
 @CommandLine.Command(
         name = "incoming",

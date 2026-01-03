@@ -9,6 +9,7 @@ import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
 
+@Deprecated
 @Component
 @CommandLine.Command(
         name = "ping",

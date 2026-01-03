@@ -41,6 +41,11 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
     }
 
     @Override
+    public void removeAll() {
+        removeAllStore();
+    }
+
+    @Override
     public Map<String, V> getAll() {
         return readAll();
     }
@@ -119,6 +124,19 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
             lock.release();
 
             return removedValue;
+        }
+    }
+
+    @SneakyThrows
+    private void removeAllStore() {
+        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+            FileLock lock = channel.lock();
+
+            byte[] byteArray = jsonSerde.serialize(new LinkedHashMap<>());
+
+            channel.write(ByteBuffer.wrap(byteArray), 0);
+
+            lock.release();
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common.dto;
 
+@Deprecated
 public enum HandshakeApiRequestResponseStatus {
     PENDING,
     SUCCESS,

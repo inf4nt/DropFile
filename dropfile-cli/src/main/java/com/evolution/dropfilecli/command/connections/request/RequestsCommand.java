@@ -3,6 +3,7 @@ package com.evolution.dropfilecli.command.connections.request;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+@Deprecated
 @Component
 @CommandLine.Command(
         name = "requests",

@@ -2,21 +2,27 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
+import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfile.common.dto.DaemonSetPublicAddressRequestBodyDTO;
+import com.evolution.dropfile.configuration.access.AccessKey;
+import com.evolution.dropfile.configuration.access.AccessKeyStore;
 import com.evolution.dropfile.configuration.app.AppConfig;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.client.NodeClient;
-import com.evolution.dropfiledaemon.exception.ApiFacadePingNodeException;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 @Component
@@ -30,18 +36,23 @@ public class ApiFacade {
 
     private final KeysConfigStore keysConfigStore;
 
+    private final AccessKeyStore accessKeyStore;
+
     @Autowired
     public ApiFacade(NodeClient nodeClient,
                      HandshakeStore handshakeStore,
                      AppConfigStore appConfigStore,
-                     KeysConfigStore keysConfigStore) {
+                     KeysConfigStore keysConfigStore,
+                     AccessKeyStore accessKeyStore) {
         this.nodeClient = nodeClient;
         this.handshakeStore = handshakeStore;
         this.appConfigStore = appConfigStore;
         this.keysConfigStore = keysConfigStore;
+        this.accessKeyStore = accessKeyStore;
     }
 
 
+    @Deprecated
     public void setPublicAddress(DaemonSetPublicAddressRequestBodyDTO requestBodyDTO) {
         AppConfig existingAppConfig = appConfigStore.getRequired();
 
@@ -75,6 +86,7 @@ public class ApiFacade {
         );
     }
 
+    @Deprecated
     @SneakyThrows
     public String nodePing(String fingerprint) {
 //        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore
@@ -92,5 +104,51 @@ public class ApiFacade {
 //        }
 //        throw new ApiFacadePingNodeException(fingerprint);
         throw new RuntimeException();
+    }
+
+    public List<AccessKeyInfoResponseDTO> getAccessKeys() {
+        return accessKeyStore.getAll()
+                .values()
+                .stream()
+                .map(it -> new AccessKeyInfoResponseDTO(
+                        it.id(),
+                        it.id() + "+" + it.key(),
+                        it.created()
+                ))
+                .toList();
+    }
+
+    public AccessKeyInfoResponseDTO generateAccessKeys(AccessKeyGenerateRequestDTO requestDTO) {
+        String id = CommonUtils.random();
+        id = CommonUtils.digest(id.getBytes());
+        String key = CommonUtils.generateSecret();
+
+        AccessKey accessKey = accessKeyStore.save(
+                id,
+                new AccessKey(id, key, Instant.now())
+        );
+
+        return new AccessKeyInfoResponseDTO(
+                accessKey.id(),
+                accessKey.id() + "+" + accessKey.key(),
+                accessKey.created()
+        );
+    }
+
+    public AccessKeyInfoResponseDTO revokeAccessKey(String id) {
+        AccessKey accessKey = accessKeyStore.remove(id);
+        if (accessKey == null) {
+            return null;
+        }
+
+        return new AccessKeyInfoResponseDTO(
+                accessKey.id(),
+                accessKey.id() + "+" + accessKey.key(),
+                accessKey.created()
+        );
+    }
+
+    public void revokeAllAccessKeys() {
+        accessKeyStore.removeAll();
     }
 }
