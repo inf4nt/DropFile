@@ -73,14 +73,16 @@ public class ApiHandshakeFacade {
                 CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
                 System.currentTimeMillis()
         );
-        String secret = extractSecret(requestDTO.key());
+        String key = new String(CryptoUtils.decodeBase64(requestDTO.key()));
+        String secret = extractSecret(key);
+
         SecretKey secretKey = cryptoTunnel.secretKey(secret.getBytes());
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(requestPayload),
                 secretKey
         );
 
-        String secretId = extractSecretId(requestDTO.key());
+        String secretId = extractSecretId(key);
         DoHandshakeRequestDTO doHandshakeRequestDTO = new DoHandshakeRequestDTO(
                 secretId,
                 CryptoUtils.encodeBase64(secureEnvelope.payload()),

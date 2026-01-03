@@ -7,7 +7,6 @@ import java.net.URI;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.UUID;
 
 public class CommonUtils {
 
@@ -38,11 +37,6 @@ public class CommonUtils {
             sb.append(s.charAt(i));
         }
         return sb.toString();
-    }
-
-    public static String random() {
-        return UUID.randomUUID().toString()
-                .replaceAll("-", "");
     }
 
     @SneakyThrows

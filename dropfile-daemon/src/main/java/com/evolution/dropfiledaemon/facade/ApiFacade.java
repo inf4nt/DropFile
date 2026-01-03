@@ -47,7 +47,6 @@ public class ApiFacade {
                 .values()
                 .stream()
                 .map(it -> new AccessKeyInfoResponseDTO(
-                        it.id(),
                         it.id() + "+" + it.key(),
                         it.created()
                 ))
@@ -55,7 +54,7 @@ public class ApiFacade {
     }
 
     public AccessKeyInfoResponseDTO generateAccessKeys(AccessKeyGenerateRequestDTO requestDTO) {
-        String id = CommonUtils.digest(CommonUtils.random().getBytes());
+        String id = CommonUtils.generateSecret();
         String key = CommonUtils.generateSecret();
 
         AccessKey accessKey = accessKeyStore.save(
@@ -63,11 +62,7 @@ public class ApiFacade {
                 new AccessKey(id, key, Instant.now())
         );
 
-        return new AccessKeyInfoResponseDTO(
-                accessKey.id(),
-                accessKey.id() + "+" + accessKey.key(),
-                accessKey.created()
-        );
+        return toAccessKeyInfoResponseDTO(accessKey);
     }
 
     public AccessKeyInfoResponseDTO revokeAccessKey(String id) {
@@ -76,14 +71,18 @@ public class ApiFacade {
             return null;
         }
 
-        return new AccessKeyInfoResponseDTO(
-                accessKey.id(),
-                accessKey.id() + "+" + accessKey.key(),
-                accessKey.created()
-        );
+        return toAccessKeyInfoResponseDTO(accessKey);
     }
 
     public void revokeAllAccessKeys() {
         accessKeyStore.removeAll();
+    }
+
+    private AccessKeyInfoResponseDTO toAccessKeyInfoResponseDTO(AccessKey accessKey) {
+        String idAndSecret = accessKey.id() + "+" + accessKey.key();
+        return new AccessKeyInfoResponseDTO(
+                CryptoUtils.encodeBase64(idAndSecret.getBytes()),
+                accessKey.created()
+        );
     }
 }

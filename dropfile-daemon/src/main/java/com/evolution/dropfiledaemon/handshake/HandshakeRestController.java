@@ -1,8 +1,9 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.DoHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.DoHandshakeResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,11 +26,4 @@ public class HandshakeRestController {
     public DoHandshakeResponseDTO handshake(@RequestBody DoHandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
-//
-//    @Deprecated
-//    @PostMapping
-//    public ResponseEntity<HandshakeResponseDTO> doHandshake(
-//            @RequestBody HandshakeRequestDTO requestDTO) {
-//        return ResponseEntity.ok(handshakeFacade.doHandshake(requestDTO));
-//    }
 }
