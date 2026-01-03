@@ -1,10 +1,9 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.*;
 import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.configuration.access.AccessKey;
+import com.evolution.dropfile.configuration.access.AccessKeyStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.IncomingRequestKeyValueStore;
@@ -16,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.MessageDigest;
 import java.util.Optional;
 
 @Slf4j
@@ -32,14 +29,19 @@ public class HandshakeFacade {
 
     private final CryptoTunnel cryptoTunnel;
 
+    private final AccessKeyStore accessKeyStore;
+
     @Autowired
     public HandshakeFacade(HandshakeStore handshakeStore,
                            KeysConfigStore keysConfigStore,
-                           ObjectMapper objectMapper, CryptoTunnel cryptoTunnel) {
+                           ObjectMapper objectMapper,
+                           CryptoTunnel cryptoTunnel,
+                           AccessKeyStore accessKeyStore) {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
         this.objectMapper = objectMapper;
         this.cryptoTunnel = cryptoTunnel;
+        this.accessKeyStore = accessKeyStore;
     }
 
     @SneakyThrows
@@ -60,6 +62,55 @@ public class HandshakeFacade {
         );
     }
 
+    @SneakyThrows
+    public DoHandshakeResponseDTO handshake(DoHandshakeRequestDTO requestDTO) {
+        String accessKeyId = requestDTO.id();
+        AccessKey accessKey = accessKeyStore.get(accessKeyId).orElse(null);
+        if (accessKey == null) {
+            throw new RuntimeException("No access key found: " + accessKeyId);
+        }
+        SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
+        byte[] decryptMessage = cryptoTunnel.decrypt(
+                CryptoUtils.decodeBase64(requestDTO.payload()),
+                CryptoUtils.decodeBase64(requestDTO.nonce()),
+                secretKey
+        );
+        DoHandshakeRequestDTO.DoHandshakePayload requestPayload = objectMapper
+                .readValue(decryptMessage, DoHandshakeRequestDTO.DoHandshakePayload.class);
+
+        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
+        byte[] publicKeyDH = CryptoUtils.decodeBase64(requestPayload.publicKeyDH());
+        handshakeStore.trustedInStore()
+                .save(
+                        CryptoUtils.getFingerprint(publicKeyDH),
+                        new TrustedInKeyValueStore.TrustedInValue(
+                                null,
+                                publicKeyDH
+                        )
+                );
+
+        DoHandshakeResponseDTO.DoHandshakePayload responsePayload = new DoHandshakeResponseDTO.DoHandshakePayload(
+                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                DoHandshakeResponseDTO.HandshakeStatus.APPROVED,
+                System.currentTimeMillis()
+        );
+        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                objectMapper.writeValueAsBytes(responsePayload),
+                secretKey
+        );
+
+        accessKeyStore.remove(accessKeyId);
+
+        return new DoHandshakeResponseDTO(
+                CryptoUtils.encodeBase64(secureEnvelope.payload()),
+                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+        );
+    }
+
+    @Deprecated
     @SneakyThrows
     public HandshakeResponseDTO doHandshake(HandshakeRequestDTO requestDTO) {
         HandshakeRequestDTO.HandshakePayload payload = requestDTO.payload();
@@ -99,6 +150,7 @@ public class HandshakeFacade {
         );
     }
 
+    @Deprecated
     @SneakyThrows
     public void ping(PingRequestDTO requestDTO) {
         String fingerprint = requestDTO.fingerprint();

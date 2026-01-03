@@ -17,21 +17,9 @@ public class ApiHandshakeRestController {
         this.apiHandshakeFacade = apiHandshakeFacade;
     }
 
-    @GetMapping("/request/incoming")
-    public List<HandshakeApiIncomingResponseDTO> getIncomingRequests() {
-        return apiHandshakeFacade.getIncomingRequests();
-    }
-
-    @GetMapping("/request/outgoing")
-    public List<HandshakeApiOutgoingResponseDTO> getOutgoingRequests() {
-        return apiHandshakeFacade.getOutgoingRequests();
-    }
-
-    @GetMapping("/request/outgoing/{fingerprint}")
-    public ResponseEntity<HandshakeApiOutgoingResponseDTO> getOutgoingRequests(@PathVariable String fingerprint) {
-        return apiHandshakeFacade.getOutgoingRequest(fingerprint)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @PostMapping("/identity")
+    public HandshakeIdentityResponseDTO identity(@RequestBody HandshakeIdentityRequestDTO requestDTO) {
+        return apiHandshakeFacade.identity(requestDTO.address());
     }
 
     @GetMapping("/trust/in")
@@ -58,11 +46,19 @@ public class ApiHandshakeRestController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping
+    public ResponseEntity<Void> doHandshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
+        apiHandshakeFacade.doHandshake(requestDTO);
+        return ResponseEntity.ok().build();
+    }
+
+    @Deprecated
     @PostMapping("/trust/{fingerprint}")
     public void trust(@PathVariable String fingerprint) {
         apiHandshakeFacade.trust(fingerprint);
     }
 
+    @Deprecated
     @PostMapping("/request")
     public ResponseEntity<String> handshakeRequest(
             @RequestBody HandshakeApiRequestBodyDTO requestBody) {
@@ -70,8 +66,23 @@ public class ApiHandshakeRestController {
         return ResponseEntity.ok(status.name());
     }
 
-    @PostMapping("/identity")
-    public HandshakeIdentityResponseDTO identity(@RequestBody HandshakeIdentityRequestDTO requestDTO) {
-        return apiHandshakeFacade.identity(requestDTO.address());
+    @Deprecated
+    @GetMapping("/request/incoming")
+    public List<HandshakeApiIncomingResponseDTO> getIncomingRequests() {
+        return apiHandshakeFacade.getIncomingRequests();
+    }
+
+    @Deprecated
+    @GetMapping("/request/outgoing")
+    public List<HandshakeApiOutgoingResponseDTO> getOutgoingRequests() {
+        return apiHandshakeFacade.getOutgoingRequests();
+    }
+
+    @Deprecated
+    @GetMapping("/request/outgoing/{fingerprint}")
+    public ResponseEntity<HandshakeApiOutgoingResponseDTO> getOutgoingRequests(@PathVariable String fingerprint) {
+        return apiHandshakeFacade.getOutgoingRequest(fingerprint)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

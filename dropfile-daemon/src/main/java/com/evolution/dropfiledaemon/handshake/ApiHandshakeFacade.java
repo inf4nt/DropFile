@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoUtils;
+import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.app.AppConfigStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
@@ -16,6 +17,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Instant;
@@ -66,6 +68,75 @@ public class ApiHandshakeFacade {
         return objectMapper.readValue(identity.body(), HandshakeIdentityResponseDTO.class);
     }
 
+    @SneakyThrows
+    public void doHandshake(ApiHandshakeRequestDTO requestDTO) {
+        DoHandshakeRequestDTO.DoHandshakePayload requestPayload = new DoHandshakeRequestDTO.DoHandshakePayload(
+                CryptoUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                System.currentTimeMillis()
+        );
+        String secret = extractSecret(requestDTO.key());
+        SecretKey secretKey = cryptoTunnel.secretKey(secret.getBytes());
+        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                objectMapper.writeValueAsBytes(requestPayload),
+                secretKey
+        );
+
+        String secretId = extractSecretId(requestDTO.key());
+        DoHandshakeRequestDTO doHandshakeRequestDTO = new DoHandshakeRequestDTO(
+                secretId,
+                CryptoUtils.encodeBase64(secureEnvelope.payload()),
+                CryptoUtils.encodeBase64(secureEnvelope.nonce())
+        );
+
+        URI addressURI = CommonUtils.toURI(requestDTO.address());
+
+        HttpResponse<byte[]> handshakeResponse = handshakeClient
+                .handshake(addressURI, doHandshakeRequestDTO);
+        if (handshakeResponse.statusCode() != 200) {
+            throw new RuntimeException("Unexpected handshake response: " + handshakeResponse.statusCode());
+        }
+
+        DoHandshakeResponseDTO doHandshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), DoHandshakeResponseDTO.class);
+
+        byte[] decryptResponsePayload = cryptoTunnel.decrypt(
+                CryptoUtils.decodeBase64(doHandshakeResponseDTO.payload()),
+                CryptoUtils.decodeBase64(doHandshakeResponseDTO.nonce()),
+                secretKey
+        );
+        DoHandshakeResponseDTO.DoHandshakePayload responsePayload = objectMapper.readValue(
+                decryptResponsePayload,
+                DoHandshakeResponseDTO.DoHandshakePayload.class
+        );
+
+        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
+        if (responsePayload.status() != DoHandshakeResponseDTO.HandshakeStatus.APPROVED) {
+            throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
+        }
+
+        handshakeStore.trustedOutStore().save(
+                CryptoUtils.getFingerprint(CryptoUtils.decodeBase64(responsePayload.publicKeyDH())),
+                new TrustedOutKeyValueStore.TrustedOutValue(
+                        addressURI,
+                        null,
+                        CryptoUtils.decodeBase64(responsePayload.publicKeyDH()),
+                        Instant.now()
+                )
+        );
+    }
+
+    private String extractSecretId(String key) {
+        String[] split = key.split("\\+");
+        return split[0];
+    }
+
+    private String extractSecret(String key) {
+        String[] split = key.split("\\+");
+        return split[1];
+    }
+
     public List<HandshakeApiIncomingResponseDTO> getIncomingRequests() {
         return handshakeStore
                 .incomingRequestStore()
@@ -105,9 +176,7 @@ public class ApiHandshakeFacade {
                 .stream()
                 .map(entry -> {
                     String fingerprint = entry.getKey();
-                    byte[] publicKey = entry.getValue().publicKeyRSA();
-                    String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
-                    return new HandshakeApiTrustInResponseDTO(fingerprint, publicKeyBase64, null);
+                    return new HandshakeApiTrustInResponseDTO(fingerprint, null, null);
                 })
                 .toList();
     }
@@ -121,9 +190,7 @@ public class ApiHandshakeFacade {
                 .map(entry -> {
                     String fingerprint = entry.getKey();
                     URI addressURI = entry.getValue().addressURI();
-                    byte[] publicKey = entry.getValue().publicKeyRSA();
-                    String publicKeyBase64 = CryptoUtils.encodeBase64(publicKey);
-                    return new HandshakeApiTrustOutResponseDTO(fingerprint, publicKeyBase64, addressURI.toString());
+                    return new HandshakeApiTrustOutResponseDTO(fingerprint, null, addressURI.toString());
                 })
                 .toList();
     }
@@ -137,7 +204,7 @@ public class ApiHandshakeFacade {
                 .findFirst()
                 .map(it -> new HandshakeApiTrustOutResponseDTO(
                                 it.getKey(),
-                                CryptoUtils.encodeBase64(it.getValue().publicKeyRSA()),
+                                null,
                                 it.getValue().addressURI().toString()
                         )
                 );

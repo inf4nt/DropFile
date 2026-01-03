@@ -1,10 +1,6 @@
 package com.evolution.dropfiledaemon.client;
 
-import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.HandshakeChallengeRequestBodyDTO;
-import com.evolution.dropfile.common.dto.HandshakeRequestBodyDTO;
-import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.PingRequestDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +39,21 @@ public class HandshakeClient {
     }
 
     @SneakyThrows
+    public HttpResponse<byte[]> handshake(URI addressURI,
+                                          DoHandshakeRequestDTO doHandshakeRequestDTO) {
+        HttpRequest httpRequest = HttpRequest
+                .newBuilder()
+                .uri(addressURI.resolve("/handshake"))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(doHandshakeRequestDTO))
+                )
+                .header("Content-Type", "application/json")
+                .build();
+        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @Deprecated
+    @SneakyThrows
     public HttpResponse<Void> ping(URI address, PingRequestDTO requestDTO) {
         URI addressURI = address.resolve("/handshake/ping");
 
@@ -57,6 +68,7 @@ public class HandshakeClient {
         return httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
     }
 
+    @Deprecated
     @SneakyThrows
     public HttpResponse<byte[]> doHandshake(URI address, HandshakeRequestDTO requestDTO) {
         URI addressURI = address.resolve("/handshake");
