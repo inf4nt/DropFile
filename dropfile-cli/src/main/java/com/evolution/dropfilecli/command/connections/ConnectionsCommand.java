@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
+import com.evolution.dropfilecli.command.connections.files.ConnectionsFilesCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -16,7 +17,8 @@ import picocli.CommandLine;
                 DisconnectCommand.class,
                 RevokeCommand.class,
                 AccessCommand.class,
-                StatusConnectionCommand.class
+                StatusConnectionCommand.class,
+                ConnectionsFilesCommand.class
         }
 )
 public class ConnectionsCommand implements Runnable {

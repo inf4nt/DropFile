@@ -36,5 +36,4 @@ public class CryptoECDH {
         return KeyFactory.getInstance(X25519_ALGORITHM)
                 .generatePrivate(new PKCS8EncodedKeySpec(privateKey));
     }
-
 }

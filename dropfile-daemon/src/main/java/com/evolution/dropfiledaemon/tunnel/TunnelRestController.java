@@ -1,5 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel;
 
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

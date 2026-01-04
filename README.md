@@ -11,6 +11,9 @@ app connections connect <host>:<port>
                         ls
                         revoke -id=12d1as
                         revoke -all
+                files
+                    ls
+                    download --id
 app daemon
                 info
                 status
@@ -18,5 +21,5 @@ app daemon
                 start
 
 app files       ls
-                download --id=b56f34
-                add --alias=text.txt                
+                add --alias=text.txt
+                rm --id=31123 --all

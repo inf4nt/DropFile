@@ -10,10 +10,11 @@ import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
-import com.evolution.dropfiledaemon.tunnel.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -31,30 +32,23 @@ public class ApiHandshakeFacade {
 
     private final HandshakeClient handshakeClient;
 
-    private final ObjectMapper objectMapper;
-
     private final KeysConfigStore keysConfigStore;
-
-    private final AppConfigStore appConfigStore;
 
     private final CryptoTunnel cryptoTunnel;
 
-    private final TunnelClient tunnelClient;
+    private final ObjectMapper objectMapper;
 
+    @Autowired
     public ApiHandshakeFacade(HandshakeStore handshakeStore,
                               HandshakeClient handshakeClient,
-                              ObjectMapper objectMapper,
                               KeysConfigStore keysConfigStore,
-                              AppConfigStore appConfigStore,
                               CryptoTunnel cryptoTunnel,
-                              TunnelClient tunnelClient) {
+                              ObjectMapper objectMapper) {
         this.handshakeStore = handshakeStore;
         this.handshakeClient = handshakeClient;
-        this.objectMapper = objectMapper;
         this.keysConfigStore = keysConfigStore;
-        this.appConfigStore = appConfigStore;
         this.cryptoTunnel = cryptoTunnel;
-        this.tunnelClient = tunnelClient;
+        this.objectMapper = objectMapper;
     }
 
     @SneakyThrows

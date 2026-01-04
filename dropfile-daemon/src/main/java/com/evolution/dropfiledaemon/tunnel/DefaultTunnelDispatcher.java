@@ -7,7 +7,10 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
-import com.evolution.dropfiledaemon.tunnel.handler.TunnelActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.handler.GlobalActionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,14 +18,13 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final CryptoTunnel cryptoTunnel;
 
-    private final TunnelActionHandler tunnelActionHandler;
+    private final GlobalActionHandler globalActionHandler;
 
     private final HandshakeStore handshakeStore;
 
@@ -32,12 +34,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     @Autowired
     public DefaultTunnelDispatcher(CryptoTunnel cryptoTunnel,
-                                   TunnelActionHandler tunnelActionHandler,
+                                   GlobalActionHandler globalActionHandler,
                                    HandshakeStore handshakeStore,
                                    KeysConfigStore keysConfigStore,
                                    ObjectMapper objectMapper) {
         this.cryptoTunnel = cryptoTunnel;
-        this.tunnelActionHandler = tunnelActionHandler;
+        this.globalActionHandler = globalActionHandler;
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
         this.objectMapper = objectMapper;
@@ -53,9 +55,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             throw new RuntimeException("Timed out");
         }
 
-        Object body = tunnelActionHandler.handle(payload);
-
-        Objects.requireNonNull(body);
+        Object body = globalActionHandler.handle(payload);
 
         return encrypt(body, secretKey);
     }
@@ -63,7 +63,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private SecretKey getSecretKey(String fingerprint) {
         TrustedInKeyValueStore.TrustedInValue trustedInValue = handshakeStore
                 .trustedInStore()
-                .get(fingerprint).orElse(null);
+                .get(fingerprint)
+                .orElse(null);
         if (trustedInValue == null) {
             throw new RuntimeException("No trusted in key store found for fingerprint " + fingerprint);
         }
@@ -77,7 +78,9 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     @SneakyThrows
     private TunnelResponseDTO encrypt(Object object, SecretKey secretKey) {
         byte[] payload;
-        if (object instanceof byte[]) {
+        if (object == null) {
+            payload = new byte[0];
+        } else if (object instanceof byte[]) {
             payload = (byte[]) object;
         } else if (object instanceof String) {
             payload = object.toString().getBytes(StandardCharsets.UTF_8);

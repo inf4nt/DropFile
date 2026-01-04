@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel;
+package com.evolution.dropfiledaemon.tunnel.framework;
 
 public record TunnelRequestDTO(String fingerprint,
                                String requestPayload,

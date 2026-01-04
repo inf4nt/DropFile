@@ -7,13 +7,15 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -49,24 +51,35 @@ public class HttpTunnelClient implements TunnelClient {
     @Override
     public <T> T send(Request request, Class<T> responseType) {
         try {
-            TunnelRequestDTO.TunnelRequestPayload requestPayload = new TunnelRequestDTO.TunnelRequestPayload(
-                    request.getAction(),
-                    request.getPayload() == null ? null : objectMapper.writeValueAsBytes(request.getPayload()),
-                    System.currentTimeMillis()
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                    .get(request.fingerprint())
+                    .orElse(null);
+
+            if (trustedOutValue == null) {
+                throw new Exception("No trusted-out found: " + request.fingerprint());
+            }
+
+            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
+
+            SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                    objectMapper.writeValueAsBytes(
+                            new TunnelRequestDTO.TunnelRequestPayload(
+                                    request.action(),
+                                    request.payload() == null ? null : objectMapper.writeValueAsBytes(request.payload()),
+                                    System.currentTimeMillis()
+                            )
+                    ),
+                    secretKey
             );
 
-            SecretKey secretKey = getSecretKey(CommonUtils.decodeBase64(request.getPublicKeyDH()));
-
-            SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(objectMapper.writeValueAsBytes(requestPayload), secretKey);
-
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                    CommonUtils.getFingerprint(keysConfigStore.getRequired().dh().publicKey()),
                     CommonUtils.encodeBase64(secureEnvelope.payload()),
                     CommonUtils.encodeBase64(secureEnvelope.nonce())
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(request.getAddress().resolve("/tunnel"))
+                    .uri(trustedOutValue.addressURI().resolve("/tunnel"))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
@@ -94,82 +107,6 @@ public class HttpTunnelClient implements TunnelClient {
             e.printStackTrace();
             return null;
         }
-    }
-
-    @SneakyThrows
-    @Override
-    public <T> T send(RequestTrusted request, Class<T> responseType) {
-        String fingerprint = request.fingerprint();
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-                .get(fingerprint)
-                .orElse(null);
-        if (trustedOutValue == null) {
-            throw new RuntimeException("No trusted-out connection found: " + fingerprint);
-        }
-
-        return send(new Request() {
-                        @Override
-                        public URI getAddress() {
-                            return trustedOutValue.addressURI();
-                        }
-
-                        @Override
-                        public String getAction() {
-                            return request.getAction();
-                        }
-
-                        @Override
-                        public Object getPayload() {
-                            return request.getPayload();
-                        }
-
-                        @Override
-                        public String getPublicKeyDH() {
-                            return CommonUtils.encodeBase64(trustedOutValue.publicKeyDH());
-                        }
-                    },
-                responseType
-        );
-
-//        String fingerprint = request.fingerprint();
-//        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-//                .get(fingerprint)
-//                .orElse(null);
-//        if (trustedOutValue == null) {
-//            throw new RuntimeException("No trusted-out connection found: " + fingerprint);
-//        }
-//
-//        TunnelRequestDTO.TunnelRequestPayload requestPayload = new TunnelRequestDTO.TunnelRequestPayload(
-//                request.getAction(),
-//                objectMapper.writeValueAsBytes(request.getPayload()),
-//                System.currentTimeMillis()
-//        );
-//
-//        SecretKey secretKey = getSecretKey(trustedOutValue);
-//
-//        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(objectMapper.writeValueAsBytes(requestPayload), secretKey);
-//
-//        TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-//                CryptoUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-//                CryptoUtils.encodeBase64(secureEnvelope.payload()),
-//                CryptoUtils.encodeBase64(secureEnvelope.nonce())
-//        );
-//
-//        HttpRequest httpRequest = HttpRequest.newBuilder()
-//                .uri(trustedOutValue.addressURI().resolve("/tunnel"))
-//                .POST(HttpRequest.BodyPublishers.ofByteArray(
-//                        objectMapper.writeValueAsBytes(tunnelRequestDTO))
-//                )
-//                .header("Content-Type", "application/json")
-//                .build();
-//
-//        HttpResponse<byte[]> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-//
-//        if (httpResponse.statusCode() != 200) {
-//            throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
-//        }
-//
-//        return objectMapper.readValue(httpResponse.body(), responseType);
     }
 
     private SecretKey getSecretKey(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {

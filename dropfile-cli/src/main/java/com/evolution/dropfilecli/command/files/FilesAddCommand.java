@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "download",
         description = "Download command"
 )
-public class FilesDownloadCommand implements CommandHttpHandler<Void> {
+public class FilesAddCommand implements CommandHttpHandler<Void> {
     @Override
     public HttpResponse<Void> execute() throws Exception {
         return null;

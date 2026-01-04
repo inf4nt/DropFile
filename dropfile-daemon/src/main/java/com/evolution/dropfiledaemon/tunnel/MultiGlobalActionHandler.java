@@ -1,6 +1,9 @@
-package com.evolution.dropfiledaemon.tunnel.handler;
+package com.evolution.dropfiledaemon.tunnel;
 
-import com.evolution.dropfiledaemon.tunnel.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.handler.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.handler.GlobalActionHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,12 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class DefaultTunnelActionHandler implements TunnelActionHandler {
+public class MultiGlobalActionHandler implements GlobalActionHandler {
 
     private final Map<String, ActionHandler> handlerActions;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
-    public DefaultTunnelActionHandler(List<ActionHandler> actionHandlers) {
+    public MultiGlobalActionHandler(List<ActionHandler> actionHandlers,
+                                    ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
         Map<String, ActionHandler> handlerActionsMap = new HashMap<>();
         for (ActionHandler actionHandler : actionHandlers) {
             String action = actionHandler.getAction();
@@ -35,6 +42,10 @@ public class DefaultTunnelActionHandler implements TunnelActionHandler {
         if (actionHandler == null) {
             throw new RuntimeException("No action found: " + payload.action());
         }
-        return actionHandler.handle(payload);
+        if (actionHandler.getPayloadType().equals(Void.class)) {
+            return actionHandler.handle(null);
+        }
+        Object object = objectMapper.readValue(payload.payload(), actionHandler.getPayloadType());
+        return actionHandler.handle(object);
     }
 }

@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.files;
+package com.evolution.dropfilecli.command.connections.files;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -6,14 +6,13 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "files",
-        description = "Files commands",
+        description = "File operations",
         subcommands = {
-                FilesLsCommand.class,
-                FilesAddCommand.class,
-                FilesRmCommand.class
+                ConnectionsDownloadFilesCommand.class,
+                ConnectionsLsFilesCommand.class
         }
 )
-public class FilesCommand implements Runnable {
+public class ConnectionsFilesCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
