@@ -125,7 +125,9 @@ public class ApiFacade {
 
     public ApiFileInfoResponseDTO deleteFile(String id) {
         FileEntry entry = fileEntryStore.remove(id);
-        Objects.requireNonNull(entry);
+        if (entry == null) {
+            return null;
+        }
         return toApiFileInfoResponseDTO(id, entry);
     }
 
