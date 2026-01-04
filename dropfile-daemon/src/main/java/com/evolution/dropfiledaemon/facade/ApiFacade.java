@@ -156,21 +156,21 @@ public class ApiFacade {
         fileEntryStore.removeAll();
     }
 
-    public LsFileResponseDTO connectionsGetFiles() {
+    public LsFileTunnelResponse connectionsGetFiles() {
         return tunnelClient.send(
                 new TunnelClient.Request("ls-file"),
-                LsFileResponseDTO.class
+                LsFileTunnelResponse.class
         );
     }
 
     @SneakyThrows
     public ApiConnectionsDownloadFileDTO connectionsDownloadFile(String id) {
-        DownloadFileResponseDTO responseDTO = tunnelClient.send(
+        DownloadFileTunnelResponse responseDTO = tunnelClient.send(
                 new TunnelClient.Request(
                         "download-file",
-                        new DownloadFileRequestDTO(id)
+                        new DownloadFileTunnelRequest(id)
                 ),
-                DownloadFileResponseDTO.class
+                DownloadFileTunnelResponse.class
         );
         if (responseDTO == null) {
             return null;

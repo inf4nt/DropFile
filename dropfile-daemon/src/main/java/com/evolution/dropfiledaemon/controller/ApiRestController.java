@@ -58,8 +58,8 @@ public class ApiRestController {
     }
 
     @GetMapping("/connections/files/ls")
-    public ResponseEntity<LsFileResponseDTO> connectionsLsFiles() {
-        LsFileResponseDTO responseDTO = apiFacade.connectionsGetFiles();
+    public ResponseEntity<LsFileTunnelResponse> connectionsLsFiles() {
+        LsFileTunnelResponse responseDTO = apiFacade.connectionsGetFiles();
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }

@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.files;
 
-import com.evolution.dropfile.common.dto.DownloadFileRequestDTO;
-import com.evolution.dropfile.common.dto.DownloadFileResponseDTO;
+import com.evolution.dropfile.common.dto.DownloadFileTunnelRequest;
+import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
 import com.evolution.dropfile.configuration.files.FileEntry;
 import com.evolution.dropfile.configuration.files.FileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.handler.ActionHandler;
@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 
 @Component
 public class DownloadFileActionHandler
-        implements ActionHandler<DownloadFileRequestDTO, DownloadFileResponseDTO> {
+        implements ActionHandler<DownloadFileTunnelRequest, DownloadFileTunnelResponse> {
 
     private final FileEntryStore fileEntryStore;
 
@@ -29,15 +29,15 @@ public class DownloadFileActionHandler
     }
 
     @Override
-    public Class<DownloadFileRequestDTO> getPayloadType() {
-        return DownloadFileRequestDTO.class;
+    public Class<DownloadFileTunnelRequest> getPayloadType() {
+        return DownloadFileTunnelRequest.class;
     }
 
     @SneakyThrows
     @Override
-    public DownloadFileResponseDTO handle(DownloadFileRequestDTO requestDTO) {
+    public DownloadFileTunnelResponse handle(DownloadFileTunnelRequest requestDTO) {
         FileEntry fileEntry = fileEntryStore.get(requestDTO.id()).orElseThrow();
         byte[] allBytes = Files.readAllBytes(Paths.get(fileEntry.absolutePath()));
-        return new DownloadFileResponseDTO(fileEntry.id(), fileEntry.alias(), allBytes);
+        return new DownloadFileTunnelResponse(fileEntry.id(), fileEntry.alias(), allBytes);
     }
 }
