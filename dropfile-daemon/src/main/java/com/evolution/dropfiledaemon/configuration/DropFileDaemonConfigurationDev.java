@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 import java.security.KeyPair;
-import java.util.Optional;
 
 @Slf4j
 @Profile("dev")
@@ -31,19 +30,16 @@ public class DropFileDaemonConfigurationDev {
         return new ImmutableAppConfigStore(() -> {
 
             Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
-            String daemonPublicAddress = environment.getProperty("dropfile.daemon.public.address");
             String daemonDownloadDirectory = environment.getRequiredProperty("dropfile.daemon.download.directory");
 
             log.info("Provided download directory: {}", daemonDownloadDirectory);
             log.info("Provided daemon port: {}", daemonPort);
-            log.info("Provided public address: {}", daemonPublicAddress);
 
             return new AppConfig(
                     null,
                     new AppConfig.DaemonAppConfig(
                             daemonDownloadDirectory,
-                            daemonPort,
-                            Optional.ofNullable(daemonPublicAddress).map(it -> CommonUtils.toURI(it)).orElse(null)
+                            daemonPort
                     )
             );
         });

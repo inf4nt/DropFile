@@ -12,6 +12,7 @@ public class AppConfigStoreInitializationProcedure
         if (configOptional.isPresent()) {
             return;
         }
+
         Integer daemonPort = 18181;
         AppConfig config = new AppConfig(
                 new AppConfig.CliAppConfig(
@@ -20,8 +21,7 @@ public class AppConfigStoreInitializationProcedure
                 ),
                 new AppConfig.DaemonAppConfig(
                         ".dropfile",
-                        daemonPort,
-                        null
+                        daemonPort
                 )
         );
         store.save(config);

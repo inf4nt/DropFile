@@ -14,6 +14,7 @@ app connections connect <host>:<port>
                 files
                         ls --remote(optional)=finger_print
                         download --remote(optional)=finger_print 
+                                --name(optional)=text.txt
                                 --id 
                                 --alias 
                                 --directory=/home/example/test.txt, dir_alias, dir_id

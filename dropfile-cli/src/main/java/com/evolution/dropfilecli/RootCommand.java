@@ -33,13 +33,10 @@ public class RootCommand implements Runnable {
 
     @Override
     public void run() {
-        AppConfig appConfig = appConfigStore.getRequired();
-        AppConfig.CliAppConfig cliAppConfig = appConfig.cliAppConfig();
-        AppConfig.DaemonAppConfig daemonAppConfig = appConfig.daemonAppConfig();
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         System.out.println("Daemon host: " + cliAppConfig.daemonHost());
         System.out.println("Daemon port: " + cliAppConfig.daemonPort());
-        System.out.println("Daemon public address URI: " + daemonAppConfig.publicDaemonAddressURI());
         spec.commandLine().usage(System.out);
     }
 }
