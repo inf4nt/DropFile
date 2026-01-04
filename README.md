@@ -12,14 +12,28 @@ app connections connect <host>:<port>
                         revoke -id=12d1as
                         revoke -all
                 files
-                    ls
-                    download --id
+                        ls
+                        download --id --alias --directory=/home/example/test.txt, dir_alias, dir_id
+                        cat --id --alias
+                        info --id --alias --all
 app daemon
                 info
                 status
                 shutdown
                 start
-
-app files       ls
-                add --alias=text.txt
-                rm --id=31123 --all
+app share files 
+                ls
+                add  --alias=text.txt
+                rm   --id --all
+                info --id --all
+app downloads files
+                    ls --directory(optional)=dir_alias,dir_id
+                    rm --id
+                    cat --id
+                    info --id
+              directory
+                        pin --id --alias=photos
+                        current
+                        add --alias=photos --path=/home/example/download
+                        ls 
+                        rm --id --alias=photos
