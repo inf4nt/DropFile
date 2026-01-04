@@ -14,5 +14,11 @@ public interface TunnelClient {
         public Request(String action, Object payload) {
             this(action, null, payload);
         }
+
+        public Request(String action, String fingerprint, Object payload) {
+            this.action = action;
+            this.fingerprint = fingerprint;
+            this.payload = payload;
+        }
     }
 }
