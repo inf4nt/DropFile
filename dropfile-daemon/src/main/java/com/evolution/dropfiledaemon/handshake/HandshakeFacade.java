@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -47,15 +48,15 @@ public class HandshakeFacade {
     @SneakyThrows
     public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
-        AccessKey accessKey = accessKeyStore.get(accessKeyId).orElse(null);
+        Map.Entry<String, AccessKey> accessKey = accessKeyStore.get(accessKeyId).orElse(null);
         if (accessKey != null) {
-            return handshakeBasedOnSecret(requestDTO, accessKey);
+            return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
         }
-        TrustedInKeyValueStore.TrustedInValue trustedInValue = handshakeStore.trustedInStore()
+        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore.trustedInStore()
                 .get(accessKeyId)
                 .orElse(null);
         if (trustedInValue != null) {
-            return handshakeBasedOnFingerprint(requestDTO, trustedInValue);
+            return handshakeBasedOnFingerprint(requestDTO, trustedInValue.getValue());
         }
         throw new RuntimeException("No access key or trusted-in connections found: " + accessKeyId);
     }

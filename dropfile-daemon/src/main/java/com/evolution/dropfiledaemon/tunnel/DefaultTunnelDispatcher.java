@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
@@ -61,7 +62,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        TrustedInKeyValueStore.TrustedInValue trustedInValue = handshakeStore
+        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore
                 .trustedInStore()
                 .get(fingerprint)
                 .orElse(null);
@@ -70,7 +71,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(trustedInValue.publicKeyDH())
+                CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
         );
         return cryptoTunnel.secretKey(secret);
     }

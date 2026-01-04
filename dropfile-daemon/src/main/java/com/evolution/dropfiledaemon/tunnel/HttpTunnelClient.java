@@ -59,6 +59,7 @@ public class HttpTunnelClient implements TunnelClient {
                 trustedOutValue = handshakeStore
                         .trustedOutStore()
                         .get(request.fingerprint())
+                        .map(it -> it.getValue())
                         .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.fingerprint()));
             }
 

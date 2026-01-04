@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @Component
 public class DownloadFileActionHandler
@@ -36,8 +37,8 @@ public class DownloadFileActionHandler
     @SneakyThrows
     @Override
     public DownloadFileTunnelResponse handle(DownloadFileTunnelRequest requestDTO) {
-        FileEntry fileEntry = fileEntryStore.get(requestDTO.id()).orElseThrow();
-        byte[] allBytes = Files.readAllBytes(Paths.get(fileEntry.absolutePath()));
-        return new DownloadFileTunnelResponse(fileEntry.id(), fileEntry.alias(), allBytes);
+        Map.Entry<String, FileEntry> fileEntry = fileEntryStore.get(requestDTO.id()).orElseThrow();
+        byte[] allBytes = Files.readAllBytes(Paths.get(fileEntry.getValue().absolutePath()));
+        return new DownloadFileTunnelResponse(fileEntry.getKey(), fileEntry.getValue().alias(), allBytes);
     }
 }

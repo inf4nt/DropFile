@@ -73,6 +73,7 @@ public class ApiHandshakeFacade {
     public ApiHandshakeStatusResponseDTO handshakeStatus() {
         TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getLatestTrustOut()
                 .flatMap(it -> handshakeStore.trustedOutStore().get(it.fingerprint()))
+                .map(it -> it.getValue())
                 .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
         return pingHandshake(trustedOutValue);
     }

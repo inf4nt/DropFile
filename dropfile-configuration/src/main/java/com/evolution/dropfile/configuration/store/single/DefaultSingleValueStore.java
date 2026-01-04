@@ -2,6 +2,7 @@ package com.evolution.dropfile.configuration.store.single;
 
 import com.evolution.dropfile.configuration.store.KeyValueStore;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
@@ -18,7 +19,7 @@ public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
 
     @Override
     public Optional<V> get() {
-        return store.get(storeName);
+        return store.get(storeName).map(Map.Entry::getValue);
     }
 
     @Override

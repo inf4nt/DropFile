@@ -1,5 +1,6 @@
 package com.evolution.dropfile.configuration.store;
 
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,11 +18,13 @@ public interface KeyValueStore<K, V> {
 
     }
 
-    default Optional<V> get(K key) {
-        return Optional.ofNullable(getAll().get(key));
+    default Optional<Map.Entry<K, V>> get(K key) {
+        return Optional.ofNullable(getAll().get(key))
+                .map(it -> new AbstractMap.SimpleEntry<>(key, it));
     }
 
-    default V getRequired(K key) {
-        return get(key).orElseThrow();
+    default Map.Entry<K, V> getRequired(K key) {
+        return get(key)
+                .orElseThrow();
     }
 }
