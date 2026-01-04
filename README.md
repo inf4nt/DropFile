@@ -12,10 +12,13 @@ app connections connect <host>:<port>
                         revoke -id=12d1as
                         revoke -all
                 files
-                        ls
-                        download --id --alias --directory=/home/example/test.txt, dir_alias, dir_id
-                        cat --id --alias
-                        info --id --alias --all
+                        ls --remote(optional)=finger_print
+                        download --remote(optional)=finger_print 
+                                --id 
+                                --alias 
+                                --directory=/home/example/test.txt, dir_alias, dir_id
+                        cat --remote(optional)=finger_print --id --alias
+                        info --remote(optional)=finger_print --id --alias --all
 app daemon
                 info
                 status
