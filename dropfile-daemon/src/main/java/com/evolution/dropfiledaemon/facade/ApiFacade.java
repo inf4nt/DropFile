@@ -17,6 +17,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
 @Component
@@ -103,34 +104,34 @@ public class ApiFacade {
     }
 
     public ApiFileInfoResponseDTO addFile(ApiFileAddRequestDTO requestDTO) {
-        String fileId = CommonUtils.random();
+        String id = CommonUtils.random();
         FileEntry entry = fileEntryStore.save(
-                fileId,
+                id,
                 new FileEntry(
-                        fileId,
                         requestDTO.alias(),
                         requestDTO.absoluteFilePath()
                 )
         );
-        return toApiFileInfoResponseDTO(entry);
+        return toApiFileInfoResponseDTO(id, entry);
     }
 
     public List<ApiFileInfoResponseDTO> getFiles() {
         return fileEntryStore.getAll()
-                .values()
+                .entrySet()
                 .stream()
-                .map(it -> toApiFileInfoResponseDTO(it))
+                .map(it -> toApiFileInfoResponseDTO(it.getKey(), it.getValue()))
                 .toList();
     }
 
     public ApiFileInfoResponseDTO deleteFile(String id) {
         FileEntry entry = fileEntryStore.remove(id);
-        return toApiFileInfoResponseDTO(entry);
+        Objects.requireNonNull(entry);
+        return toApiFileInfoResponseDTO(id, entry);
     }
 
-    private ApiFileInfoResponseDTO toApiFileInfoResponseDTO(FileEntry fileEntry) {
-        return  new ApiFileInfoResponseDTO(
-                fileEntry.id(),
+    private ApiFileInfoResponseDTO toApiFileInfoResponseDTO(String id, FileEntry fileEntry) {
+        return new ApiFileInfoResponseDTO(
+                id,
                 fileEntry.alias(),
                 fileEntry.absolutePath()
         );

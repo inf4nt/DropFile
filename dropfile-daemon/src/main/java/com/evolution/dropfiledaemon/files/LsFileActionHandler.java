@@ -30,11 +30,12 @@ public class LsFileActionHandler implements ActionHandler<Void, LsFileTunnelResp
 
     @Override
     public LsFileTunnelResponse handle(Void unused) {
-        List<LsFileTunnelResponse.LsFileEntry> entries = fileEntryStore.getAll()
-                .values()
+        List<LsFileTunnelResponse.LsFileEntry> entries = fileEntryStore
+                .getAll()
+                .entrySet()
                 .stream()
                 .map(it -> new LsFileTunnelResponse.LsFileEntry(
-                        it.id(), it.alias()
+                        it.getKey(), it.getValue().alias()
                 ))
                 .toList();
         return new LsFileTunnelResponse(entries);
