@@ -92,7 +92,7 @@ public class HttpTunnelClient implements TunnelClient {
             HttpResponse<byte[]> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
 
             if (httpResponse.statusCode() != 200) {
-                return null;
+                throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
             }
 
             TunnelResponseDTO tunnelResponseDTO = objectMapper.readValue(httpResponse.body(), TunnelResponseDTO.class);
