@@ -20,6 +20,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 
 @Component
 public class HttpTunnelClient implements TunnelClient {
@@ -51,12 +52,14 @@ public class HttpTunnelClient implements TunnelClient {
     @Override
     public <T> T send(Request request, Class<T> responseType) {
         try {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-                    .get(request.fingerprint())
-                    .orElse(null);
-
-            if (trustedOutValue == null) {
-                throw new Exception("No trusted-out found: " + request.fingerprint());
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue;
+            if (request.fingerprint() == null) {
+                trustedOutValue = getLatestConnection();
+            } else {
+                trustedOutValue = handshakeStore
+                        .trustedOutStore()
+                        .get(request.fingerprint())
+                        .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.fingerprint()));
             }
 
             SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
@@ -109,15 +112,18 @@ public class HttpTunnelClient implements TunnelClient {
         }
     }
 
-    private SecretKey getSecretKey(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {
-        return getSecretKey(trustedOutValue.publicKeyDH());
-    }
-
     private SecretKey getSecretKey(byte[] publicKeyDH) {
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(publicKeyDH)
         );
         return cryptoTunnel.secretKey(secret);
+    }
+
+    private TrustedOutKeyValueStore.TrustedOutValue getLatestConnection() {
+        return handshakeStore.trustedOutStore().getAll().values()
+                .stream()
+                .max(Comparator.comparing(TrustedOutKeyValueStore.TrustedOutValue::updated))
+                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
     }
 }

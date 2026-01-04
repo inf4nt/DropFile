@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.UUID;
 
 public class CommonUtils {
 
@@ -23,6 +24,10 @@ public class CommonUtils {
         byte[] bytes = new byte[12];
         new SecureRandom().nextBytes(bytes);
         return bytes;
+    }
+
+    public static String random() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
     public static String generateSecret() {

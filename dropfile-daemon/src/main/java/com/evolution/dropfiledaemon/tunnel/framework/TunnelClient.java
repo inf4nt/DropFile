@@ -7,14 +7,12 @@ public interface TunnelClient {
     record Request(String action,
                    String fingerprint,
                    Object payload) {
-        public Request(String action, String fingerprint, Object payload) {
-            this.action = action;
-            this.fingerprint = fingerprint;
-            this.payload = payload;
+        public Request(String action) {
+            this(action, null, null);
         }
 
-        public Request(String action, String fingerprint) {
-            this(action, fingerprint, null);
+        public Request(String action, Object payload) {
+            this(action, null, payload);
         }
     }
 }

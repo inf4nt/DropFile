@@ -1,14 +1,20 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
-import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
-import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.configuration.access.AccessKey;
 import com.evolution.dropfile.configuration.access.AccessKeyStore;
+import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.configuration.files.FileEntry;
+import com.evolution.dropfile.configuration.files.FileEntryStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -16,15 +22,29 @@ import java.util.concurrent.Executors;
 @Component
 public class ApiFacade {
 
+    private final AppConfigStore appConfigStore;
+
     private final KeysConfigStore keysConfigStore;
 
     private final AccessKeyStore accessKeyStore;
 
-    public ApiFacade(KeysConfigStore keysConfigStore,
-                     AccessKeyStore accessKeyStore) {
+    private final FileEntryStore fileEntryStore;
+
+    private final TunnelClient tunnelClient;
+
+    @Autowired
+    public ApiFacade(AppConfigStore appConfigStore,
+                     KeysConfigStore keysConfigStore,
+                     AccessKeyStore accessKeyStore,
+                     FileEntryStore fileEntryStore,
+                     TunnelClient tunnelClient) {
+        this.appConfigStore = appConfigStore;
         this.keysConfigStore = keysConfigStore;
         this.accessKeyStore = accessKeyStore;
+        this.fileEntryStore = fileEntryStore;
+        this.tunnelClient = tunnelClient;
     }
+
 
     public void shutdown() {
         Executors.newSingleThreadExecutor()
@@ -83,5 +103,85 @@ public class ApiFacade {
                 CommonUtils.encodeBase64(idAndSecret.getBytes()),
                 accessKey.created()
         );
+    }
+
+    public ApiFileInfoResponseDTO addFile(ApiFileAddRequestDTO requestDTO) {
+        FileEntry fileEntry = fileEntryStore.getAll().values().stream()
+                .filter(it -> it.alias().equals(requestDTO.alias()))
+                .findAny()
+                .orElse(null);
+        if (fileEntry != null) {
+            throw new RuntimeException(String.format(
+                    "Duplicate alias:  %s id: %s", requestDTO.alias(), fileEntry.id()
+            ));
+        }
+        String fileId = CommonUtils.random();
+        FileEntry saved = fileEntryStore.save(
+                fileId,
+                new FileEntry(
+                        fileId,
+                        requestDTO.alias(),
+                        requestDTO.absoluteFilePath()
+                )
+        );
+        return new ApiFileInfoResponseDTO(
+                saved.id(),
+                saved.alias(),
+                saved.absolutePath()
+        );
+    }
+
+    public List<ApiFileInfoResponseDTO> getFiles() {
+        return fileEntryStore.getAll()
+                .values()
+                .stream()
+                .map(it -> new ApiFileInfoResponseDTO(
+                        it.id(),
+                        it.alias(),
+                        it.absolutePath())
+                )
+                .toList();
+    }
+
+    public ApiFileInfoResponseDTO deleteFile(String id) {
+        FileEntry remove = fileEntryStore.remove(id);
+        return new ApiFileInfoResponseDTO(
+                remove.id(),
+                remove.alias(),
+                remove.absolutePath()
+        );
+    }
+
+    public void deleteAllFiles() {
+        fileEntryStore.removeAll();
+    }
+
+    public LsFileResponseDTO connectionsGetFiles() {
+        return tunnelClient.send(
+                new TunnelClient.Request("ls-file"),
+                LsFileResponseDTO.class
+        );
+    }
+
+    @SneakyThrows
+    public ApiConnectionsDownloadFileDTO connectionsDownloadFile(String id) {
+        DownloadFileResponseDTO responseDTO = tunnelClient.send(
+                new TunnelClient.Request(
+                        "download-file",
+                        new DownloadFileRequestDTO(id)
+                ),
+                DownloadFileResponseDTO.class
+        );
+        if (responseDTO == null) {
+            return null;
+        }
+
+        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        File downloadFile = new File(new File(downloadDirectory), responseDTO.id() + "-" + responseDTO.alias());
+        if (Files.notExists(downloadFile.toPath())) {
+            Files.createFile(downloadFile.toPath());
+        }
+        Files.write(downloadFile.toPath(), responseDTO.payload());
+        return new ApiConnectionsDownloadFileDTO(downloadFile.getAbsolutePath());
     }
 }

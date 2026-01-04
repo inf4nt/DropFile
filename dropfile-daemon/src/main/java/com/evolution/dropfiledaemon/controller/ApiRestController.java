@@ -1,8 +1,6 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
-import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
-import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.facade.ApiFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +54,49 @@ public class ApiRestController {
     @DeleteMapping("/connections/access")
     public ResponseEntity<Void> revokeAllAccessKeys() {
         apiFacade.revokeAllAccessKeys();
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/connections/files/ls")
+    public ResponseEntity<LsFileResponseDTO> connectionsLsFiles() {
+        LsFileResponseDTO responseDTO = apiFacade.connectionsGetFiles();
+        if (responseDTO != null) {
+            return ResponseEntity.ok(responseDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/connections/files/download/{id}")
+    public ResponseEntity<ApiConnectionsDownloadFileDTO> connectionsDownloadFile(@PathVariable String id) {
+        ApiConnectionsDownloadFileDTO responseDTO = apiFacade.connectionsDownloadFile(id);
+        if (responseDTO != null) {
+            return ResponseEntity.ok(responseDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/files")
+    public ApiFileInfoResponseDTO addFile(@RequestBody ApiFileAddRequestDTO requestDTO) {
+        return apiFacade.addFile(requestDTO);
+    }
+
+    @GetMapping("/files")
+    public List<ApiFileInfoResponseDTO> getFiles() {
+        return apiFacade.getFiles();
+    }
+
+    @DeleteMapping("/files/{id}")
+    public ResponseEntity<ApiFileInfoResponseDTO> deleteFile(@PathVariable String id) {
+        ApiFileInfoResponseDTO responseDTO = apiFacade.deleteFile(id);
+        if (responseDTO != null) {
+            return ResponseEntity.ok(responseDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/files")
+    public ResponseEntity<Void> deleteAllFiles() {
+        apiFacade.deleteAllFiles();
         return ResponseEntity.ok().build();
     }
 }

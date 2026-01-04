@@ -14,7 +14,11 @@ public interface CommandHttpHandler<T> extends Runnable {
         System.out.println("Unaccepted. HTTP response code: " + response.statusCode());
         T body = response.body();
         if (!ObjectUtils.isEmpty(body)) {
-            System.out.println("HTTP response body: " + body);
+            if (body instanceof byte[]) {
+                System.out.println("HTTP response body: " + new String((byte[]) body));
+            } else {
+                System.out.println("HTTP response body: " + body);
+            }
         }
     }
 
