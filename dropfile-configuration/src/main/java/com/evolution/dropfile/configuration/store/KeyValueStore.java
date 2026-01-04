@@ -13,7 +13,7 @@ public interface KeyValueStore<K, V> {
 
     Map<K, V> getAll();
 
-    default void validateUpdate(K key, V value) {
+    default void validate(K key, V value) {
 
     }
 

@@ -13,10 +13,11 @@ public interface TrustedOutKeyValueStore
     }
 
     @Override
-    default void validateUpdate(String key, TrustedOutValue value) {
+    default void validate(String key, TrustedOutValue value) {
         Map.Entry<String, TrustedOutValue> entry = getAll().entrySet()
                 .stream()
                 .filter(it -> it.getValue().addressURI().equals(value.addressURI()))
+                .filter(it -> !it.getKey().equals(key))
                 .findAny()
                 .orElse(null);
         if (entry != null) {

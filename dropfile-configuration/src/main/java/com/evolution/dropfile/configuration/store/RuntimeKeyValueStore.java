@@ -11,9 +11,7 @@ public class RuntimeKeyValueStore<K, V> implements KeyValueStore<K, V> {
     @Override
     public V save(K key, V value) {
         return store.compute(key, (k, v) -> {
-            if (v == null) {
-                validateUpdate(key, value);
-            }
+            validate(key, value);
             return value;
         });
     }
