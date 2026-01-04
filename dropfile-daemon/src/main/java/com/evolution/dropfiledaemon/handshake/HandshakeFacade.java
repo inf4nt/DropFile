@@ -1,8 +1,9 @@
 package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.*;
-import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
+import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.configuration.access.AccessKey;
@@ -41,24 +42,6 @@ public class HandshakeFacade {
         this.accessKeyStore = accessKeyStore;
         this.cryptoTunnel = cryptoTunnel;
         this.objectMapper = objectMapper;
-    }
-
-    @SneakyThrows
-    public HandshakeIdentityResponseDTO getHandshakeIdentity() {
-        HandshakeIdentityResponseDTO.HandshakeIdentityPayload payload = new HandshakeIdentityResponseDTO.HandshakeIdentityPayload(
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
-        );
-
-        byte[] signature = CryptoRSA.sign(
-                objectMapper.writeValueAsBytes(payload),
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
-        );
-
-        return new HandshakeIdentityResponseDTO(
-                payload,
-                CommonUtils.encodeBase64(signature)
-        );
     }
 
     @SneakyThrows

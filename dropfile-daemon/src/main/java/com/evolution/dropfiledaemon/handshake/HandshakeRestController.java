@@ -2,9 +2,11 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
-import com.evolution.dropfile.common.dto.HandshakeIdentityResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/handshake")
@@ -15,11 +17,6 @@ public class HandshakeRestController {
     @Autowired
     public HandshakeRestController(HandshakeFacade handshakeFacade) {
         this.handshakeFacade = handshakeFacade;
-    }
-
-    @GetMapping
-    public HandshakeIdentityResponseDTO getIdentity() {
-        return handshakeFacade.getHandshakeIdentity();
     }
 
     @PostMapping

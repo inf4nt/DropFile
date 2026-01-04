@@ -53,16 +53,6 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    public HandshakeIdentityResponseDTO identity(String address) {
-        URI addressURI = CommonUtils.toURI(address);
-        HttpResponse<byte[]> identity = handshakeClient.getIdentity(addressURI);
-        if (identity.statusCode() != 200) {
-            throw new RuntimeException("Unexpected identity response: " + new String(identity.body()));
-        }
-        return objectMapper.readValue(identity.body(), HandshakeIdentityResponseDTO.class);
-    }
-
-    @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
         TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore().getAll().values().stream()
                 .filter(it -> it.addressURI().equals(CommonUtils.toURI(requestDTO.address())))

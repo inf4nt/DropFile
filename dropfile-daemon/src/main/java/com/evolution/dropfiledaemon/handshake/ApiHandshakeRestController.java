@@ -33,11 +33,6 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.handshakeStatus();
     }
 
-    @PostMapping("/identity")
-    public HandshakeIdentityResponseDTO identity(@RequestBody HandshakeIdentityRequestDTO requestDTO) {
-        return apiHandshakeFacade.identity(requestDTO.address());
-    }
-
     @GetMapping("/trust/in")
     public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
         return apiHandshakeFacade.getTrustIt();
