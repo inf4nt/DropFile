@@ -21,6 +21,7 @@ import javax.crypto.SecretKey;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,10 +67,7 @@ public class ApiHandshakeFacade {
         TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore().getAll().values().stream()
                 .filter(it -> it.addressURI().equals(CommonUtils.toURI(requestDTO.address())))
                 .findFirst()
-                .orElse(null);
-        if (trustedOutValue == null) {
-            throw new RuntimeException("No trusted out found: " + requestDTO.address());
-        }
+                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + requestDTO.address()));
         ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
         handshakeStore.trustedOutStore().save(
                 CommonUtils.getFingerprint(trustedOutValue.publicKeyDH()),
@@ -85,10 +83,7 @@ public class ApiHandshakeFacade {
     public ApiHandshakeStatusResponseDTO handshakeStatus() {
         TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getLatestTrustOut()
                 .flatMap(it -> handshakeStore.trustedOutStore().get(it.fingerprint()))
-                .orElse(null);
-        if (trustedOutValue == null) {
-            throw new RuntimeException("No trusted out connections found");
-        }
+                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
         return pingHandshake(trustedOutValue);
     }
 
@@ -206,13 +201,6 @@ public class ApiHandshakeFacade {
             throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
         }
 
-        TrustedOutKeyValueStore.TrustedOutValue alreadyExistingURI = handshakeStore.trustedOutStore().getAll().values().stream()
-                .filter(it -> it.addressURI().equals(addressURI))
-                .findFirst()
-                .orElse(null);
-        if (alreadyExistingURI != null) {
-            throw new RuntimeException("Connection URI must be unique. Fingerprint: " + CommonUtils.getFingerprint(alreadyExistingURI.publicKeyDH()));
-        }
         handshakeStore.trustedOutStore().save(
                 CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyDH())),
                 new TrustedOutKeyValueStore.TrustedOutValue(
@@ -273,8 +261,7 @@ public class ApiHandshakeFacade {
                 .getAll()
                 .entrySet()
                 .stream()
-                .sorted((o1, o2) -> o2.getValue().updated().compareTo(o1.getValue().updated()))
-                .findFirst()
+                .max(Comparator.comparing(o -> o.getValue().updated()))
                 .map(it -> new HandshakeApiTrustOutResponseDTO(
                                 it.getKey(),
                                 CommonUtils.encodeBase64(it.getValue().publicKeyDH()),

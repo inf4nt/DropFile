@@ -65,10 +65,7 @@ public class ApiFacade {
         return accessKeyStore.getAll()
                 .values()
                 .stream()
-                .map(it -> new AccessKeyInfoResponseDTO(
-                        it.id() + "+" + it.key(),
-                        it.created()
-                ))
+                .map(it -> toAccessKeyInfoResponseDTO(it))
                 .toList();
     }
 
@@ -106,17 +103,8 @@ public class ApiFacade {
     }
 
     public ApiFileInfoResponseDTO addFile(ApiFileAddRequestDTO requestDTO) {
-        FileEntry fileEntry = fileEntryStore.getAll().values().stream()
-                .filter(it -> it.alias().equals(requestDTO.alias()))
-                .findAny()
-                .orElse(null);
-        if (fileEntry != null) {
-            throw new RuntimeException(String.format(
-                    "Duplicate alias:  %s id: %s", requestDTO.alias(), fileEntry.id()
-            ));
-        }
         String fileId = CommonUtils.random();
-        FileEntry saved = fileEntryStore.save(
+        FileEntry entry = fileEntryStore.save(
                 fileId,
                 new FileEntry(
                         fileId,
@@ -124,31 +112,27 @@ public class ApiFacade {
                         requestDTO.absoluteFilePath()
                 )
         );
-        return new ApiFileInfoResponseDTO(
-                saved.id(),
-                saved.alias(),
-                saved.absolutePath()
-        );
+        return toApiFileInfoResponseDTO(entry);
     }
 
     public List<ApiFileInfoResponseDTO> getFiles() {
         return fileEntryStore.getAll()
                 .values()
                 .stream()
-                .map(it -> new ApiFileInfoResponseDTO(
-                        it.id(),
-                        it.alias(),
-                        it.absolutePath())
-                )
+                .map(it -> toApiFileInfoResponseDTO(it))
                 .toList();
     }
 
     public ApiFileInfoResponseDTO deleteFile(String id) {
-        FileEntry remove = fileEntryStore.remove(id);
-        return new ApiFileInfoResponseDTO(
-                remove.id(),
-                remove.alias(),
-                remove.absolutePath()
+        FileEntry entry = fileEntryStore.remove(id);
+        return toApiFileInfoResponseDTO(entry);
+    }
+
+    private ApiFileInfoResponseDTO toApiFileInfoResponseDTO(FileEntry fileEntry) {
+        return  new ApiFileInfoResponseDTO(
+                fileEntry.id(),
+                fileEntry.alias(),
+                fileEntry.absolutePath()
         );
     }
 

@@ -13,6 +13,10 @@ public interface KeyValueStore<K, V> {
 
     Map<K, V> getAll();
 
+    default void validateUpdate(K key, V value) {
+
+    }
+
     default Optional<V> get(K key) {
         return Optional.ofNullable(getAll().get(key));
     }
