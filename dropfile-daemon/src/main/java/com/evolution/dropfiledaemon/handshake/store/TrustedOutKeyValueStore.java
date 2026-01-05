@@ -9,7 +9,7 @@ import java.util.Map;
 public interface TrustedOutKeyValueStore
         extends KeyValueStore<String, TrustedOutKeyValueStore.TrustedOutValue> {
 
-    record TrustedOutValue(URI addressURI, byte[] publicKeyDH, Instant updated) {
+    record TrustedOutValue(URI addressURI, byte[] publicKeyRSA, byte[] publicKeyDH, Instant updated) {
     }
 
     @Override

@@ -4,4 +4,5 @@ public record ApiHandshakeStatusResponseDTO(String fingerprint,
                                             String connection,
                                             String tunnel,
                                             String algorithm) {
+
 }

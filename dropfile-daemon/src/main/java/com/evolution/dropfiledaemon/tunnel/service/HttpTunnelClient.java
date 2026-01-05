@@ -72,7 +72,7 @@ public class HttpTunnelClient implements TunnelClient {
             SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(keysConfigStore.getRequired().dh().publicKey()),
+                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
                     CommonUtils.encodeBase64(secureEnvelope.payload()),
                     CommonUtils.encodeBase64(secureEnvelope.nonce())
             );

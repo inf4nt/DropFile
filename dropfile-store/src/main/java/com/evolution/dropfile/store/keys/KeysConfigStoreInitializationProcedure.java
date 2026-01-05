@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.keys;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.store.store.single.StoreInitializationProcedure;
 
 import java.security.KeyPair;
@@ -15,9 +16,14 @@ public class KeysConfigStoreInitializationProcedure
             return;
         }
 
+        KeyPair keyPairRSA = CryptoRSA.generateKeyPair();
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
         KeysConfig config = new KeysConfig(
+                new KeysConfig.Keys(
+                        keyPairRSA.getPublic().getEncoded(),
+                        keyPairRSA.getPrivate().getEncoded()
+                ),
                 new KeysConfig.Keys(
                         keyPairDH.getPublic().getEncoded(),
                         keyPairDH.getPrivate().getEncoded()

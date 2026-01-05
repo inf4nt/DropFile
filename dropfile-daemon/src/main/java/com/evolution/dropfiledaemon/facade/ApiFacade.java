@@ -56,10 +56,10 @@ public class ApiFacade {
     }
 
     public DaemonInfoResponseDTO getDaemonInfo() {
-        byte[] publicKeyDH = keysConfigStore.getRequired().dh().publicKey();
         return new DaemonInfoResponseDTO(
-                CommonUtils.getFingerprint(publicKeyDH),
-                CommonUtils.encodeBase64(publicKeyDH)
+                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
+                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
         );
     }
 
@@ -161,7 +161,7 @@ public class ApiFacade {
     }
 
     @SneakyThrows
-    public ApiConnectionsDownloadFileDTO connectionsDownloadFile(String id) {
+    public ApiConnectionsDownloadFileResponseDTO connectionsDownloadFile(String id) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .action("download-file")
@@ -179,6 +179,6 @@ public class ApiFacade {
             Files.createFile(downloadFile.toPath());
         }
         Files.write(downloadFile.toPath(), responseDTO.payload());
-        return new ApiConnectionsDownloadFileDTO(downloadFile.getAbsolutePath());
+        return new ApiConnectionsDownloadFileResponseDTO(downloadFile.getAbsolutePath());
     }
 }

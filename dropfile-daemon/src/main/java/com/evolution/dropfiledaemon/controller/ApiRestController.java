@@ -64,8 +64,8 @@ public class ApiRestController {
     }
 
     @GetMapping("/connections/files/download/{id}")
-    public ResponseEntity<ApiConnectionsDownloadFileDTO> connectionsDownloadFile(@PathVariable String id) {
-        ApiConnectionsDownloadFileDTO responseDTO = apiFacade.connectionsDownloadFile(id);
+    public ResponseEntity<ApiConnectionsDownloadFileResponseDTO> connectionsDownloadFile(@PathVariable String id) {
+        ApiConnectionsDownloadFileResponseDTO responseDTO = apiFacade.connectionsDownloadFile(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }
