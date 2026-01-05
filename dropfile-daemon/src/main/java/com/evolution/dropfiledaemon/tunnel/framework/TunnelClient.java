@@ -1,24 +1,20 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.Builder;
+import lombok.Getter;
+
 public interface TunnelClient {
 
     <T> T send(Request request, Class<T> responseType);
 
-    record Request(String action,
-                   String fingerprint,
-                   Object payload) {
-        public Request(String action) {
-            this(action, null, null);
-        }
+    <T> T send(Request request, TypeReference<T> responseType);
 
-        public Request(String action, Object payload) {
-            this(action, null, payload);
-        }
-
-        public Request(String action, String fingerprint, Object payload) {
-            this.action = action;
-            this.fingerprint = fingerprint;
-            this.payload = payload;
-        }
+    @Builder
+    @Getter
+    class Request {
+        private final String action;
+        private final String fingerprint;
+        private final Object body;
     }
 }

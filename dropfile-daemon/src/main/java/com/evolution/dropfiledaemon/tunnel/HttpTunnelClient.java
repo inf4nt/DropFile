@@ -10,12 +10,15 @@ import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.lang.reflect.Type;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -51,21 +54,22 @@ public class HttpTunnelClient implements TunnelClient {
     @SneakyThrows
     @Override
     public <T> T send(Request request, Class<T> responseType) {
+        return send(request, new TypeReference<T>() {
+            @Override
+            public Type getType() {
+                return responseType;
+            }
+        });
+    }
+
+    @Override
+    public <T> T send(Request request, TypeReference<T> responseType) {
         try {
             TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
 
             SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
 
-            SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
-                    objectMapper.writeValueAsBytes(
-                            new TunnelRequestDTO.TunnelRequestPayload(
-                                    request.action(),
-                                    request.payload() == null ? null : objectMapper.writeValueAsBytes(request.payload()),
-                                    System.currentTimeMillis()
-                            )
-                    ),
-                    secretKey
-            );
+            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
                     CommonUtils.getFingerprint(keysConfigStore.getRequired().dh().publicKey()),
@@ -93,10 +97,9 @@ public class HttpTunnelClient implements TunnelClient {
                     CommonUtils.decodeBase64(tunnelResponseDTO.nonce()),
                     secretKey
             );
-            if (String.class.equals(responseType)) {
+            if (String.class.equals(responseType.getType())) {
                 return (T) new String(decryptPayload, StandardCharsets.UTF_8);
             }
-
             return objectMapper.readValue(decryptPayload, responseType);
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,15 +107,35 @@ public class HttpTunnelClient implements TunnelClient {
         }
     }
 
+    private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
+        byte[] payload = switch (request.getBody()) {
+            case null -> null;
+            case String string -> string.getBytes(StandardCharsets.UTF_8);
+            case byte[] byteArray -> byteArray;
+            default -> objectMapper.writeValueAsBytes(request.getBody());
+        };
+
+        return cryptoTunnel.encrypt(
+                objectMapper.writeValueAsBytes(
+                        new TunnelRequestDTO.TunnelRequestPayload(
+                                request.getAction(),
+                                payload,
+                                System.currentTimeMillis()
+                        )
+                ),
+                secretKey
+        );
+    }
+
     private TrustedOutKeyValueStore.TrustedOutValue getTrustedOutValue(Request request) {
-        if (request.fingerprint() == null) {
+        if (request.getFingerprint() == null) {
             return getLatestConnection();
         }
         return handshakeStore
                 .trustedOutStore()
-                .get(request.fingerprint())
+                .get(request.getFingerprint())
                 .map(it -> it.getValue())
-                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.fingerprint()));
+                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.getFingerprint()));
     }
 
     private SecretKey getSecretKey(byte[] publicKeyDH) {

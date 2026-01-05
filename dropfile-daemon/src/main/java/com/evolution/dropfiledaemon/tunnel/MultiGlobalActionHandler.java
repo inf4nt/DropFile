@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,14 @@ public class MultiGlobalActionHandler implements GlobalActionHandler {
         if (actionHandler.getPayloadType().equals(Void.class)) {
             return actionHandler.handle(null);
         }
-        Object object = objectMapper.readValue(payload.payload(), actionHandler.getPayloadType());
-        return actionHandler.handle(object);
+        Object body;
+        if (actionHandler.getPayloadType().equals(String.class)) {
+            body = new String(payload.payload(), StandardCharsets.UTF_8);
+        } else if (actionHandler.getPayloadType().equals(byte[].class)) {
+            body = payload.payload();
+        } else {
+            body = objectMapper.readValue(payload.payload(), actionHandler.getPayloadType());
+        }
+        return actionHandler.handle(body);
     }
 }

@@ -1,9 +1,10 @@
 package com.evolution.dropfilecli.command.connections.files;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.LsFileTunnelResponse;
+import com.evolution.dropfile.common.dto.FileEntryResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,12 +38,11 @@ public class ConnectionsLsFilesCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<LsFileTunnelResponse.LsFileEntry> values = objectMapper
-                .readValue(
-                        response.body(),
-                        LsFileTunnelResponse.class
-                )
-                .entries();
+        List<FileEntryResponseDTO> values = objectMapper.readValue(
+                response.body(),
+                new TypeReference<List<FileEntryResponseDTO>>() {
+                }
+        );
         if (!values.isEmpty()) {
             PrintReflection.print(values);
         } else {

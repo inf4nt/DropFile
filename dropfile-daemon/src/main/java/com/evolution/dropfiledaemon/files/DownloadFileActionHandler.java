@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.files;
 
-import com.evolution.dropfile.common.dto.DownloadFileTunnelRequest;
 import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
 import com.evolution.dropfile.configuration.files.FileEntry;
 import com.evolution.dropfile.configuration.files.FileEntryStore;
@@ -15,7 +14,7 @@ import java.util.Map;
 
 @Component
 public class DownloadFileActionHandler
-        implements ActionHandler<DownloadFileTunnelRequest, DownloadFileTunnelResponse> {
+        implements ActionHandler<String, DownloadFileTunnelResponse> {
 
     private final FileEntryStore fileEntryStore;
 
@@ -30,14 +29,14 @@ public class DownloadFileActionHandler
     }
 
     @Override
-    public Class<DownloadFileTunnelRequest> getPayloadType() {
-        return DownloadFileTunnelRequest.class;
+    public Class<String> getPayloadType() {
+        return String.class;
     }
 
     @SneakyThrows
     @Override
-    public DownloadFileTunnelResponse handle(DownloadFileTunnelRequest requestDTO) {
-        Map.Entry<String, FileEntry> fileEntry = fileEntryStore.get(requestDTO.id()).orElseThrow();
+    public DownloadFileTunnelResponse handle(String id) {
+        Map.Entry<String, FileEntry> fileEntry = fileEntryStore.get(id).orElseThrow();
         byte[] allBytes = Files.readAllBytes(Paths.get(fileEntry.getValue().absolutePath()));
         return new DownloadFileTunnelResponse(fileEntry.getKey(), fileEntry.getValue().alias(), allBytes);
     }

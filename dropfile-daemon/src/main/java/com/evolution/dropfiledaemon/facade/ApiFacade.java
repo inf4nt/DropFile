@@ -9,6 +9,7 @@ import com.evolution.dropfile.configuration.files.FileEntry;
 import com.evolution.dropfile.configuration.files.FileEntryStore;
 import com.evolution.dropfile.configuration.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 
 @Component
@@ -143,20 +144,29 @@ public class ApiFacade {
         fileEntryStore.removeAll();
     }
 
-    public LsFileTunnelResponse connectionsGetFiles() {
-        return tunnelClient.send(
-                new TunnelClient.Request("ls-file"),
-                LsFileTunnelResponse.class
+    public List<FileEntryResponseDTO> connectionsGetFiles() {
+        List<FileEntryTunnelResponse> files = tunnelClient.send(
+                TunnelClient.Request.builder()
+                        .action("ls-file")
+                        .build(),
+                new TypeReference<List<FileEntryTunnelResponse>>() {
+                }
         );
+        if (files == null) {
+            return Collections.emptyList();
+        }
+        return files.stream()
+                .map(it -> new FileEntryResponseDTO(it.id(), it.alias()))
+                .toList();
     }
 
     @SneakyThrows
     public ApiConnectionsDownloadFileDTO connectionsDownloadFile(String id) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
-                new TunnelClient.Request(
-                        "download-file",
-                        new DownloadFileTunnelRequest(id)
-                ),
+                TunnelClient.Request.builder()
+                        .action("download-file")
+                        .body(id)
+                        .build(),
                 DownloadFileTunnelResponse.class
         );
         if (responseDTO == null) {

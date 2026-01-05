@@ -58,12 +58,9 @@ public class ApiRestController {
     }
 
     @GetMapping("/connections/files/ls")
-    public ResponseEntity<LsFileTunnelResponse> connectionsLsFiles() {
-        LsFileTunnelResponse responseDTO = apiFacade.connectionsGetFiles();
-        if (responseDTO != null) {
-            return ResponseEntity.ok(responseDTO);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<List<FileEntryResponseDTO>> connectionsLsFiles() {
+        List<FileEntryResponseDTO> files = apiFacade.connectionsGetFiles();
+        return ResponseEntity.ok(files);
     }
 
     @GetMapping("/connections/files/download/{id}")

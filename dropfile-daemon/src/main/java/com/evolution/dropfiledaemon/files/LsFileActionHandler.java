@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.files;
 
-import com.evolution.dropfile.common.dto.LsFileTunnelResponse;
+import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
 import com.evolution.dropfile.configuration.files.FileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.handler.ActionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class LsFileActionHandler implements ActionHandler<Void, LsFileTunnelResponse> {
+public class LsFileActionHandler implements ActionHandler<Void, List<FileEntryTunnelResponse>> {
 
     private final FileEntryStore fileEntryStore;
 
@@ -29,15 +29,12 @@ public class LsFileActionHandler implements ActionHandler<Void, LsFileTunnelResp
     }
 
     @Override
-    public LsFileTunnelResponse handle(Void unused) {
-        List<LsFileTunnelResponse.LsFileEntry> entries = fileEntryStore
+    public List<FileEntryTunnelResponse> handle(Void unused) {
+        return fileEntryStore
                 .getAll()
                 .entrySet()
                 .stream()
-                .map(it -> new LsFileTunnelResponse.LsFileEntry(
-                        it.getKey(), it.getValue().alias()
-                ))
+                .map(it -> new FileEntryTunnelResponse(it.getKey(), it.getValue().alias()))
                 .toList();
-        return new LsFileTunnelResponse(entries);
     }
 }
