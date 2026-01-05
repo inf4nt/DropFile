@@ -65,7 +65,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                 .trustedInStore()
                 .get(fingerprint)
                 .orElseThrow(() -> new RuntimeException(
-                        "No trusted in key store found for fingerprint: " + fingerprint
+                        "No trusted-in connection found for fingerprint: " + fingerprint
                 ));
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
