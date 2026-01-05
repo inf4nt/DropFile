@@ -10,10 +10,8 @@ import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.handler.GlobalActionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -24,9 +22,9 @@ import java.util.Objects;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
-    private final CryptoTunnel cryptoTunnel;
+    private final ActionHandlerExecutor actionHandlerExecutor;
 
-    private final GlobalActionHandler globalActionHandler;
+    private final CryptoTunnel cryptoTunnel;
 
     private final HandshakeStore handshakeStore;
 
@@ -34,14 +32,13 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    public DefaultTunnelDispatcher(CryptoTunnel cryptoTunnel,
-                                   GlobalActionHandler globalActionHandler,
+    public DefaultTunnelDispatcher(ActionHandlerExecutor actionHandlerExecutor,
+                                   CryptoTunnel cryptoTunnel,
                                    HandshakeStore handshakeStore,
                                    KeysConfigStore keysConfigStore,
                                    ObjectMapper objectMapper) {
+        this.actionHandlerExecutor = actionHandlerExecutor;
         this.cryptoTunnel = cryptoTunnel;
-        this.globalActionHandler = globalActionHandler;
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
         this.objectMapper = objectMapper;
@@ -57,7 +54,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             throw new RuntimeException("Timed out");
         }
 
-        Object body = globalActionHandler.handle(payload);
+        Object body = actionHandlerExecutor.handle(payload);
         Objects.requireNonNull(body);
 
         return encrypt(body, secretKey);
