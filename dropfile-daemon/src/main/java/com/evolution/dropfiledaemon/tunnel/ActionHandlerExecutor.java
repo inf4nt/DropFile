@@ -31,20 +31,18 @@ public class ActionHandlerExecutor {
         this.handers = map;
     }
 
-    private ActionHandler getHandler(String action) {
-        ActionHandler actionHandler = handers.get(action);
-        if (actionHandler == null) {
-            throw new RuntimeException("No handler found: " + action);
-        }
-        return actionHandler;
-    }
-
     @SneakyThrows
     public Object handle(TunnelRequestDTO.TunnelRequestPayload payload) {
         ActionHandler actionHandler = getHandler(payload.action());
         if (actionHandler == null) {
             throw new RuntimeException("No action found: " + payload.action());
         }
+        Object body = getBody(actionHandler, payload);
+        return actionHandler.handle(body);
+    }
+
+    @SneakyThrows
+    private Object getBody(ActionHandler actionHandler, TunnelRequestDTO.TunnelRequestPayload payload) {
         Object body;
         if (actionHandler.getPayloadType().equals(Void.class)) {
             body = null;
@@ -55,6 +53,14 @@ public class ActionHandlerExecutor {
         } else {
             body = objectMapper.readValue(payload.payload(), actionHandler.getPayloadType());
         }
-        return actionHandler.handle(body);
+        return body;
+    }
+
+    private ActionHandler getHandler(String action) {
+        ActionHandler actionHandler = handers.get(action);
+        if (actionHandler == null) {
+            throw new RuntimeException("No handler found: " + action);
+        }
+        return actionHandler;
     }
 }
