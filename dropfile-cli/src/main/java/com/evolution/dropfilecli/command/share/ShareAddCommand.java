@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.files;
+package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
@@ -19,7 +19,7 @@ import java.nio.file.Files;
         name = "add",
         description = "Add file command"
 )
-public class FilesAddCommand implements CommandHttpHandler<byte[]> {
+public class ShareAddCommand implements CommandHttpHandler<byte[]> {
 
     @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
@@ -32,7 +32,7 @@ public class FilesAddCommand implements CommandHttpHandler<byte[]> {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public FilesAddCommand(DaemonClient daemonClient,
+    public ShareAddCommand(DaemonClient daemonClient,
                            ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;

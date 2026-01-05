@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Map;
 
 @Slf4j
@@ -147,7 +148,8 @@ public class HandshakeFacade {
                         CommonUtils.getFingerprint(publicKeyRSA),
                         new TrustedInKeyValueStore.TrustedInValue(
                                 publicKeyRSA,
-                                publicKeyDH
+                                publicKeyDH,
+                                Instant.now()
                         )
                 );
 

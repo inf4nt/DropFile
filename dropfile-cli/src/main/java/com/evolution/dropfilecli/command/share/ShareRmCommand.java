@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.files;
+package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
         name = "rm",
         description = "Remove file"
 )
-public class FilesRmCommand implements CommandHttpHandler<byte[]> {
+public class ShareRmCommand implements CommandHttpHandler<byte[]> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -34,7 +34,7 @@ public class FilesRmCommand implements CommandHttpHandler<byte[]> {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public FilesRmCommand(DaemonClient daemonClient,
+    public ShareRmCommand(DaemonClient daemonClient,
                           ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;

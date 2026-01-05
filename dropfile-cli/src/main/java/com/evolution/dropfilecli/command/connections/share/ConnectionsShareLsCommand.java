@@ -1,7 +1,7 @@
-package com.evolution.dropfilecli.command.files;
+package com.evolution.dropfilecli.command.connections.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
+import com.evolution.dropfile.common.dto.FileEntryResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,31 +16,31 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "LS command"
+        description = "Retrieve files"
 )
-public class FilesLsCommand implements CommandHttpHandler<byte[]> {
+public class ConnectionsShareLsCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public FilesLsCommand(DaemonClient daemonClient,
-                          ObjectMapper objectMapper) {
+    public ConnectionsShareLsCommand(DaemonClient daemonClient,
+                                     ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getFiles();
+        return daemonClient.getConnectionFiles();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<ApiFileInfoResponseDTO> values = objectMapper.readValue(
+        List<FileEntryResponseDTO> values = objectMapper.readValue(
                 response.body(),
-                new TypeReference<List<ApiFileInfoResponseDTO>>() {
+                new TypeReference<List<FileEntryResponseDTO>>() {
                 }
         );
         if (!values.isEmpty()) {

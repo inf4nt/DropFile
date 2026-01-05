@@ -1,19 +1,19 @@
-package com.evolution.dropfilecli.command.files;
+package com.evolution.dropfilecli.command.share;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "files",
-        description = "Files commands",
+        name = "share",
+        description = "Share commands",
         subcommands = {
-                FilesLsCommand.class,
-                FilesAddCommand.class,
-                FilesRmCommand.class
+                ShareLsCommand.class,
+                ShareAddCommand.class,
+                ShareRmCommand.class
         }
 )
-public class FilesCommand implements Runnable {
+public class ShareCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

@@ -1,48 +1,52 @@
-package com.evolution.dropfilecli.command.connections.files;
+package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiConnectionsDownloadFileResponseDTO;
+import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "download",
-        description = "Download file"
+        name = "ls",
+        description = "LS command"
 )
-public class ConnectionsDownloadFilesCommand implements CommandHttpHandler<byte[]> {
-
-    @CommandLine.Parameters(index = "0", description = "File id")
-    private String id;
+public class ShareLsCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public ConnectionsDownloadFilesCommand(DaemonClient daemonClient,
-                                           ObjectMapper objectMapper) {
+    public ShareLsCommand(DaemonClient daemonClient,
+                          ObjectMapper objectMapper) {
         this.daemonClient = daemonClient;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadFile(id);
+        return daemonClient.getFiles();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        ApiConnectionsDownloadFileResponseDTO responseDTO = objectMapper.readValue(
+        List<ApiFileInfoResponseDTO> values = objectMapper.readValue(
                 response.body(),
-                ApiConnectionsDownloadFileResponseDTO.class
+                new TypeReference<List<ApiFileInfoResponseDTO>>() {
+                }
         );
-        PrintReflection.print(responseDTO);
+        if (!values.isEmpty()) {
+            PrintReflection.print(values);
+        } else {
+            System.out.println("No files found");
+        }
     }
 }
