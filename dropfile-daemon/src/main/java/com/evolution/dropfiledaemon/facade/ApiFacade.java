@@ -2,12 +2,12 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.configuration.access.AccessKey;
-import com.evolution.dropfile.configuration.access.AccessKeyStore;
-import com.evolution.dropfile.configuration.app.AppConfigStore;
-import com.evolution.dropfile.configuration.files.FileEntry;
-import com.evolution.dropfile.configuration.files.FileEntryStore;
-import com.evolution.dropfile.configuration.keys.KeysConfigStore;
+import com.evolution.dropfile.store.access.AccessKey;
+import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.files.FileEntry;
+import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;

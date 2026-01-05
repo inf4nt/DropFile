@@ -1,11 +1,11 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
-import com.evolution.dropfile.configuration.access.AccessKeyStore;
-import com.evolution.dropfile.configuration.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.configuration.files.FileEntryStore;
-import com.evolution.dropfile.configuration.files.RuntimeFileEntryStore;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
+import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.files.RuntimeFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;

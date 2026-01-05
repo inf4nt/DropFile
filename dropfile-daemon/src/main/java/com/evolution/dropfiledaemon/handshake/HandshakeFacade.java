@@ -2,13 +2,13 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
-import com.evolution.dropfile.configuration.access.AccessKey;
-import com.evolution.dropfile.configuration.access.AccessKeyStore;
-import com.evolution.dropfile.configuration.keys.KeysConfigStore;
+import com.evolution.dropfile.store.access.AccessKey;
+import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;

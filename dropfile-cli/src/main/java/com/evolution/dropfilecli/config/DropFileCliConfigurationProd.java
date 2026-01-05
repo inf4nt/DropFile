@@ -1,11 +1,11 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.configuration.app.AppConfigStore;
-import com.evolution.dropfile.configuration.app.AppConfigStoreInitializationProcedure;
-import com.evolution.dropfile.configuration.app.JsonFileAppConfigStore;
-import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
-import com.evolution.dropfile.configuration.secret.SecretsConfigStoreInitializationProcedure;
-import com.evolution.dropfile.configuration.secret.JsonFileSecretsConfigStore;
+import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
+import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

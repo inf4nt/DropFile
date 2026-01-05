@@ -1,11 +1,11 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.configuration.app.AppConfig;
-import com.evolution.dropfile.configuration.app.AppConfigStore;
-import com.evolution.dropfile.configuration.app.ImmutableAppConfigStore;
-import com.evolution.dropfile.configuration.secret.ImmutableSecretsConfigStore;
-import com.evolution.dropfile.configuration.secret.SecretsConfig;
-import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.app.AppConfig;
+import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
+import com.evolution.dropfile.store.secret.ImmutableSecretsConfigStore;
+import com.evolution.dropfile.store.secret.SecretsConfig;
+import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

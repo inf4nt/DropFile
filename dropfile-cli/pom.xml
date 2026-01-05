@@ -18,7 +18,7 @@
         <picocli.version>4.7.7</picocli.version>
         <commons.io.version>2.21.0</commons.io.version>
         <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
-        <dropfile.configuration.version>0.0.1-SNAPSHOT</dropfile.configuration.version>
+        <dropfile.store.version>0.0.1-SNAPSHOT</dropfile.store.version>
     </properties>
     <dependencies>
         <dependency>
@@ -29,8 +29,8 @@
         </dependency>
         <dependency>
             <groupId>com.evolution</groupId>
-            <artifactId>dropfile-configuration</artifactId>
-            <version>${dropfile.configuration.version}</version>
+            <artifactId>dropfile-store</artifactId>
+            <version>${dropfile.store.version}</version>
             <scope>compile</scope>
         </dependency>
 

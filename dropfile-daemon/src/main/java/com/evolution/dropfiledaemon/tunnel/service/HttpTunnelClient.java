@@ -2,9 +2,9 @@ package com.evolution.dropfiledaemon.tunnel.service;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.configuration.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
+import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;

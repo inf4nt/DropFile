@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.files;
 
 import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
-import com.evolution.dropfile.configuration.files.FileEntryStore;
+import com.evolution.dropfile.store.files.FileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

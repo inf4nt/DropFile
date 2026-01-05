@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.store.app.AppConfigStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;

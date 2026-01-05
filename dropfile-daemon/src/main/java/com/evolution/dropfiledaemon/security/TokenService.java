@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.security;
 
-import com.evolution.dropfile.configuration.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;

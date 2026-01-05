@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfile.configuration.app.AppConfig;
-import com.evolution.dropfile.configuration.app.AppConfigStore;
+import com.evolution.dropfile.store.app.AppConfig;
+import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.files.FilesCommand;

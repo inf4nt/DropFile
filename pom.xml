@@ -12,7 +12,7 @@
 
     <modules>
         <module>dropfile-common</module>
-        <module>dropfile-configuration</module>
+        <module>dropfile-store</module>
         <module>dropfile-cli</module>
         <module>dropfile-daemon</module>
     </modules>
