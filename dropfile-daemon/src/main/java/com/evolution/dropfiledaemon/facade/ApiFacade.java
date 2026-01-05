@@ -72,8 +72,8 @@ public class ApiFacade {
     }
 
     public AccessKeyInfoResponseDTO generateAccessKeys(AccessKeyGenerateRequestDTO requestDTO) {
-        String id = CommonUtils.generateSecret();
-        String key = CommonUtils.generateSecret();
+        String id = CommonUtils.generateSecretNonce16();
+        String key = CommonUtils.generateSecretNonce16();
 
         AccessKey accessKey = accessKeyStore.save(
                 id,

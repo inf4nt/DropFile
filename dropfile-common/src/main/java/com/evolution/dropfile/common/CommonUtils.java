@@ -30,29 +30,11 @@ public class CommonUtils {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
-    public static String generateSecret() {
+    public static String generateSecretNonce16() {
         byte[] bytes = nonce16();
-        String base64 = Base64.getUrlEncoder()
+        return Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(bytes);
-
-        return format(base64, 4, 4);
-    }
-
-    private static String format(String s, int groupSize, int groups) {
-        s = s.replaceAll("-", "")
-                .replaceAll("_", "");
-
-        StringBuilder sb = new StringBuilder();
-        int max = Math.min(s.length(), groupSize * groups);
-
-        for (int i = 0; i < max; i++) {
-            if (i > 0 && i % groupSize == 0) {
-                sb.append('-');
-            }
-            sb.append(s.charAt(i));
-        }
-        return sb.toString();
     }
 
     public static URI toURI(String host) {
@@ -74,7 +56,7 @@ public class CommonUtils {
     }
 
     public static String encodeBase64(byte[] data) {
-        return Base64.getEncoder().encodeToString(data);
+        return Base64.getEncoder().withoutPadding().encodeToString(data);
     }
 
     @SneakyThrows

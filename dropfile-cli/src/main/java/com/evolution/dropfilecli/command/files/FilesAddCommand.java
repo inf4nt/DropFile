@@ -24,7 +24,7 @@ public class FilesAddCommand implements CommandHttpHandler<byte[]> {
     @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
 
-    @CommandLine.Parameters(index = "1", description = "File alias")
+    @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")
     private String alias;
 
     private final DaemonClient daemonClient;
@@ -48,7 +48,8 @@ public class FilesAddCommand implements CommandHttpHandler<byte[]> {
             throw new UnsupportedOperationException(file.getAbsolutePath() + " is a directory");
         }
         String absolutePath = toAdd.getCanonicalFile().getAbsolutePath();
-        return daemonClient.addFile(alias, absolutePath);
+        String filename = getFilename();
+        return daemonClient.addFile(filename, absolutePath);
     }
 
     @Override
@@ -58,5 +59,12 @@ public class FilesAddCommand implements CommandHttpHandler<byte[]> {
                 ApiFileInfoResponseDTO.class
         );
         PrintReflection.print(responseDTO);
+    }
+
+    private String getFilename() {
+        if (alias == null) {
+            return file.getName();
+        }
+        return alias;
     }
 }

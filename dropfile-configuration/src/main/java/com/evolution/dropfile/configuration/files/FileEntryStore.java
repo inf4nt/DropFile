@@ -19,16 +19,5 @@ public interface FileEntryStore extends KeyValueStore<String, FileEntry> {
                     "Duplicate file alias %s %s", value.alias(), alias.getKey()
             ));
         }
-
-        Map.Entry<String, FileEntry> fileAbsolutePath = getAll().entrySet().stream()
-                .filter(it -> it.getValue().absolutePath().equals(value.absolutePath()))
-                .filter(it -> !it.getKey().equals(key))
-                .findAny()
-                .orElse(null);
-        if (fileAbsolutePath != null) {
-            throw new RuntimeException(String.format(
-                    "Duplicate absolute file path %s %s", value.absolutePath(), fileAbsolutePath.getKey()
-            ));
-        }
     }
 }
