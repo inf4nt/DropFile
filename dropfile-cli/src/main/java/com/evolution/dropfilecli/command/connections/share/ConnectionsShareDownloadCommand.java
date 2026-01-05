@@ -21,6 +21,12 @@ public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[
     @CommandLine.Parameters(index = "0", description = "File id")
     private String id;
 
+    @CommandLine.Option(names = {"-filename", "--filename"}, description = "Filename")
+    private String filename;
+
+    @CommandLine.Option(names = {"-rewrite", "--rewrite"}, description = "Rewrite already existing file")
+    private boolean rewrite;
+
     private final DaemonClient daemonClient;
 
     private final ObjectMapper objectMapper;
@@ -34,7 +40,7 @@ public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadFile(id);
+        return daemonClient.connectionsDownloadFile(id, filename, rewrite);
     }
 
     @Override

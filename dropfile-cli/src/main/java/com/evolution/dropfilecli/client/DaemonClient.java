@@ -1,10 +1,7 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.AccessKeyGenerateRequestDTO;
-import com.evolution.dropfile.common.dto.ApiFileAddRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfig;
@@ -63,12 +60,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDownloadFile(String id) {
+    public HttpResponse<byte[]> connectionsDownloadFile(String id, String filename, boolean rewrite) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/files/download/")
-                .resolve(id);
+                .resolve("/api/connections/files/download");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -76,7 +72,9 @@ public class DaemonClient {
                 .newBuilder()
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
-                .GET()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
+                        new ApiConnectionsDownloadFileRequestDTO(id, filename, rewrite)
+                )))
                 .header("Content-Type", "application/json")
                 .build();
 

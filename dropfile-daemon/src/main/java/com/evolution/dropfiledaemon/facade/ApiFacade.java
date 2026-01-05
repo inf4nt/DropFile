@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -161,11 +162,11 @@ public class ApiFacade {
     }
 
     @SneakyThrows
-    public ApiConnectionsDownloadFileResponseDTO connectionsDownloadFile(String id) {
+    public ApiConnectionsDownloadFileResponseDTO connectionsDownloadFile(ApiConnectionsDownloadFileRequestDTO requestDTO) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .action("download-file")
-                        .body(id)
+                        .body(requestDTO.id())
                         .build(),
                 DownloadFileTunnelResponse.class
         );
@@ -174,10 +175,21 @@ public class ApiFacade {
         }
 
         String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
-        File downloadFile = new File(new File(downloadDirectory), responseDTO.id() + "-" + responseDTO.alias());
+        File downloadFile;
+        if (ObjectUtils.isEmpty(requestDTO.filename())) {
+            downloadFile = new File(new File(downloadDirectory), responseDTO.id() + "-" + responseDTO.alias());
+        } else {
+            downloadFile = new File(new File(downloadDirectory), requestDTO.filename());
+        }
+
         if (Files.notExists(downloadFile.toPath())) {
             Files.createFile(downloadFile.toPath());
         }
+
+        if (!requestDTO.rewrite() && Files.size(downloadFile.toPath()) != 0) {
+            throw new RuntimeException("Unable to rewrite file");
+        }
+
         Files.write(downloadFile.toPath(), responseDTO.payload());
         return new ApiConnectionsDownloadFileResponseDTO(downloadFile.getAbsolutePath());
     }
