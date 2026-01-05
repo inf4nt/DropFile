@@ -67,10 +67,9 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore
                 .trustedInStore()
                 .get(fingerprint)
-                .orElse(null);
-        if (trustedInValue == null) {
-            throw new RuntimeException("No trusted in key store found for fingerprint " + fingerprint);
-        }
+                .orElseThrow(() -> new RuntimeException(
+                        "No trusted in key store found for fingerprint: " + fingerprint
+                ));
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())

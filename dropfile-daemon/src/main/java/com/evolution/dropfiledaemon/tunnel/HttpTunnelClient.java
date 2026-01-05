@@ -52,16 +52,7 @@ public class HttpTunnelClient implements TunnelClient {
     @Override
     public <T> T send(Request request, Class<T> responseType) {
         try {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue;
-            if (request.fingerprint() == null) {
-                trustedOutValue = getLatestConnection();
-            } else {
-                trustedOutValue = handshakeStore
-                        .trustedOutStore()
-                        .get(request.fingerprint())
-                        .map(it -> it.getValue())
-                        .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.fingerprint()));
-            }
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
 
             SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
 
@@ -111,6 +102,17 @@ public class HttpTunnelClient implements TunnelClient {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private TrustedOutKeyValueStore.TrustedOutValue getTrustedOutValue(Request request) {
+        if (request.fingerprint() == null) {
+            return getLatestConnection();
+        }
+        return handshakeStore
+                .trustedOutStore()
+                .get(request.fingerprint())
+                .map(it -> it.getValue())
+                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.fingerprint()));
     }
 
     private SecretKey getSecretKey(byte[] publicKeyDH) {
