@@ -31,8 +31,7 @@ public class CommonUtils {
     }
 
     public static String generateSecretNonce16() {
-        byte[] bytes = new byte[16];
-        new SecureRandom().nextBytes(bytes);
+        byte[] bytes = nonce16();
         return Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(bytes);
