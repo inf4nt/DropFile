@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
@@ -57,6 +58,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
 
         Object body = globalActionHandler.handle(payload);
+        Objects.requireNonNull(body);
 
         return encrypt(body, secretKey);
     }
@@ -79,9 +81,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     @SneakyThrows
     private TunnelResponseDTO encrypt(Object object, SecretKey secretKey) {
         byte[] payload;
-        if (object == null) {
-            payload = new byte[0];
-        } else if (object instanceof byte[]) {
+        if (object instanceof byte[]) {
             payload = (byte[]) object;
         } else if (object instanceof String) {
             payload = object.toString().getBytes(StandardCharsets.UTF_8);
