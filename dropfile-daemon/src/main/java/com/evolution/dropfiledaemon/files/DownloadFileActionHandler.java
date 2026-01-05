@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.files;
 import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
 import com.evolution.dropfile.configuration.files.FileEntry;
 import com.evolution.dropfile.configuration.files.FileEntryStore;
-import com.evolution.dropfiledaemon.tunnel.framework.handler.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

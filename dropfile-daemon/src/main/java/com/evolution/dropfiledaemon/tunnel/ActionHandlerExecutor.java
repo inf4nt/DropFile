@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel;
 
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.handler.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;

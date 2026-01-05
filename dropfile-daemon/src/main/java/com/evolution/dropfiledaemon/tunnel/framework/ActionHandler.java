@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.framework.handler;
+package com.evolution.dropfiledaemon.tunnel.framework;
 
 public interface ActionHandler<T, R> {
 
