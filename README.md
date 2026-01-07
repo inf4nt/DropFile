@@ -19,25 +19,16 @@ app connections connect <host>:<port>
                                 --alias 
                                 --directory=/home/example/test.txt, dir_alias, dir_id
                         cat --remote(optional)=finger_print --id --alias
-                        info --remote(optional)=finger_print --id --alias --all
 app daemon
-                info
-                status
-                shutdown
-                start
-app share files 
-                ls
-                add  --alias=text.txt
-                rm   --id --all
-                info --id --all
-app downloads files
-                    ls --directory(optional)=dir_alias,dir_id
-                    rm --id
-                    cat --id
-                    info --id
-              directory
-                        pin --id --alias=photos
-                        current
-                        add --alias=photos --path=/home/example/download
-                        ls 
-                        rm --id --alias=photos
+            info
+            status
+            shutdown
+            start
+app share
+            ls
+            add  --alias=text.txt
+            rm   --id --all
+app files
+            ls --directory(optional)=dir_alias,dir_id
+            rm --id
+            cat --id

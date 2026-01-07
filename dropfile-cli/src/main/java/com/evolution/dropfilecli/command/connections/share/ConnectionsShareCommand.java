@@ -9,7 +9,8 @@ import picocli.CommandLine;
         description = "Share operations",
         subcommands = {
                 ConnectionsShareDownloadCommand.class,
-                ConnectionsShareLsCommand.class
+                ConnectionsShareLsCommand.class,
+                ConnectionsShareCatCommand.class
         }
 )
 public class ConnectionsShareCommand implements Runnable {

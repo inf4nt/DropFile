@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
+import com.evolution.dropfilecli.command.files.FilesCommand;
 import com.evolution.dropfilecli.command.share.ShareCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,8 @@ import picocli.CommandLine;
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                ShareCommand.class
+                ShareCommand.class,
+                FilesCommand.class
         }
 )
 public class RootCommand implements Runnable {
