@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "Retrieve files"
+        description = "ls shared files"
 )
 public class ConnectionsShareLsCommand implements CommandHttpHandler<byte[]> {
 
@@ -33,7 +33,7 @@ public class ConnectionsShareLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getConnectionFiles();
+        return daemonClient.getConnectionShareFiles();
     }
 
     @Override

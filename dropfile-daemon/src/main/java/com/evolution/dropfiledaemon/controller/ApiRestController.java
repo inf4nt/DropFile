@@ -57,13 +57,13 @@ public class ApiRestController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/connections/files/ls")
+    @GetMapping("/connections/share/ls")
     public ResponseEntity<List<FileEntryResponseDTO>> connectionsLsFiles() {
         List<FileEntryResponseDTO> files = apiFacade.connectionsGetFiles();
         return ResponseEntity.ok(files);
     }
 
-    @PostMapping("/connections/files/download")
+    @PostMapping("/connections/share/download")
     public ResponseEntity<ApiConnectionsDownloadFileResponseDTO> connectionsDownloadFile(@RequestBody ApiConnectionsDownloadFileRequestDTO requestDTO) {
         ApiConnectionsDownloadFileResponseDTO responseDTO = apiFacade.connectionsDownloadFile(requestDTO);
         if (responseDTO != null) {

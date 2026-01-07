@@ -22,29 +22,29 @@ public class DaemonClient {
 
     private final HttpClient httpClient;
 
-    private final ObjectMapper objectMapper;
-
     private final AppConfigStore appConfigStore;
 
     private final SecretsConfigStore secretsConfigStore;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
     public DaemonClient(HttpClient httpClient,
-                        ObjectMapper objectMapper,
                         AppConfigStore appConfigStore,
-                        SecretsConfigStore secretsConfigStore) {
+                        SecretsConfigStore secretsConfigStore,
+                        ObjectMapper objectMapper) {
         this.httpClient = httpClient;
-        this.objectMapper = objectMapper;
         this.appConfigStore = appConfigStore;
         this.secretsConfigStore = secretsConfigStore;
+        this.objectMapper = objectMapper;
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getConnectionFiles() {
+    public HttpResponse<byte[]> getConnectionShareFiles() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/files/ls");
+                .resolve("/api/connections/share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -60,11 +60,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDownloadFile(String id, String filename, boolean rewrite) {
+    public HttpResponse<byte[]> connectionsDownloadShareFile(String id, String filename, boolean rewrite) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/files/download");
+                .resolve("/api/connections/share/download");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

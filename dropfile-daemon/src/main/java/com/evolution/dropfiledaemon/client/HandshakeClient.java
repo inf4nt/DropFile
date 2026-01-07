@@ -26,16 +26,6 @@ public class HandshakeClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getIdentity(URI address) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(address.resolve("/handshake"))
-                .GET()
-                .build();
-        return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
     public HttpResponse<byte[]> handshake(URI addressURI,
                                           HandshakeRequestDTO handshakeRequestDTO) {
         HttpRequest httpRequest = HttpRequest

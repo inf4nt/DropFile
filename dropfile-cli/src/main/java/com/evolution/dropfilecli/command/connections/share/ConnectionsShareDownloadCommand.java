@@ -40,7 +40,7 @@ public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadFile(id, filename, rewrite);
+        return daemonClient.connectionsDownloadShareFile(id, filename, rewrite);
     }
 
     @Override
