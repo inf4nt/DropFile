@@ -82,11 +82,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getFiles() {
+    public HttpResponse<byte[]> getShareFiles() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/files");
+                .resolve("/api/share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -102,11 +102,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> addFile(String alias, String absoluteFilePath) {
+    public HttpResponse<byte[]> addShareFile(String alias, String absoluteFilePath) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/files");
+                .resolve("/api/share/add");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -126,11 +126,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> removeFile(String id) {
+    public HttpResponse<byte[]> rmShareFile(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/files/")
+                .resolve("/api/share/rm/")
                 .resolve(id);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -147,11 +147,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> removeAllFiles() {
+    public HttpResponse<byte[]> rmAllShareFiles() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/files");
+                .resolve("/api/share/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

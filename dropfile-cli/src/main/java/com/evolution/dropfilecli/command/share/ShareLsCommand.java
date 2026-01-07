@@ -33,7 +33,7 @@ public class ShareLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getFiles();
+        return daemonClient.getShareFiles();
     }
 
     @Override

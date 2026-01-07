@@ -49,7 +49,7 @@ public class ShareAddCommand implements CommandHttpHandler<byte[]> {
         }
         String absolutePath = toAdd.getCanonicalFile().getAbsolutePath();
         String filename = getFilename();
-        return daemonClient.addFile(filename, absolutePath);
+        return daemonClient.addShareFile(filename, absolutePath);
     }
 
     @Override

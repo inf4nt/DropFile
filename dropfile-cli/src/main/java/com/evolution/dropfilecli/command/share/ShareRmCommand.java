@@ -43,9 +43,9 @@ public class ShareRmCommand implements CommandHttpHandler<byte[]> {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.id != null) {
-            return daemonClient.removeFile(exclusive.id);
+            return daemonClient.rmShareFile(exclusive.id);
         } else if (exclusive.all) {
-            return daemonClient.removeAllFiles();
+            return daemonClient.rmAllShareFiles();
         }
         throw new RuntimeException();
     }

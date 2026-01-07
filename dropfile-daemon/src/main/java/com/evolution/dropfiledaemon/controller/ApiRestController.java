@@ -72,18 +72,18 @@ public class ApiRestController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/files")
-    public ApiFileInfoResponseDTO addFile(@RequestBody ApiFileAddRequestDTO requestDTO) {
+    @PostMapping("/share/add")
+    public ApiFileInfoResponseDTO addShareFile(@RequestBody ApiFileAddRequestDTO requestDTO) {
         return apiFacade.addFile(requestDTO);
     }
 
-    @GetMapping("/files")
-    public List<ApiFileInfoResponseDTO> getFiles() {
+    @GetMapping("/share/ls")
+    public List<ApiFileInfoResponseDTO> getShareFiles() {
         return apiFacade.getFiles();
     }
 
-    @DeleteMapping("/files/{id}")
-    public ResponseEntity<ApiFileInfoResponseDTO> deleteFile(@PathVariable String id) {
+    @DeleteMapping("/share/rm/{id}")
+    public ResponseEntity<ApiFileInfoResponseDTO> rmShareFile(@PathVariable String id) {
         ApiFileInfoResponseDTO responseDTO = apiFacade.deleteFile(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
@@ -91,8 +91,8 @@ public class ApiRestController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/files")
-    public ResponseEntity<Void> deleteAllFiles() {
+    @DeleteMapping("/share/rm-all")
+    public ResponseEntity<Void> rmAllShareFiles() {
         apiFacade.deleteAllFiles();
         return ResponseEntity.ok().build();
     }
