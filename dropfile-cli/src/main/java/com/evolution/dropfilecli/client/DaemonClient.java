@@ -171,7 +171,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/access");
+                .resolve("/api/connections/access/generate");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -195,7 +195,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/access");
+                .resolve("/api/connections/access/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -214,7 +214,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/access/")
+                .resolve("/api/connections/access/rm/")
                 .resolve(id);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -234,7 +234,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/access");
+                .resolve("/api/connections/access/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

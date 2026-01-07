@@ -32,17 +32,17 @@ public class ApiRestController {
         return apiFacade.getDaemonInfo();
     }
 
-    @PostMapping("/connections/access")
+    @PostMapping("/connections/access/generate")
     public AccessKeyInfoResponseDTO generateAccessKeys(@RequestBody AccessKeyGenerateRequestDTO requestDTO) {
         return apiFacade.generateAccessKeys(requestDTO);
     }
 
-    @GetMapping("/connections/access")
+    @GetMapping("/connections/access/ls")
     public List<AccessKeyInfoResponseDTO> getAccessKeys() {
         return apiFacade.getAccessKeys();
     }
 
-    @DeleteMapping("/connections/access/{id}")
+    @DeleteMapping("/connections/access/rm/{id}")
     public ResponseEntity<Void> revokeAccessKey(@PathVariable String id) {
         AccessKeyInfoResponseDTO key = apiFacade.revokeAccessKey(id);
         if (key != null) {
@@ -51,7 +51,7 @@ public class ApiRestController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/connections/access")
+    @DeleteMapping("/connections/access/rm-all")
     public ResponseEntity<Void> revokeAllAccessKeys() {
         apiFacade.revokeAllAccessKeys();
         return ResponseEntity.ok().build();
