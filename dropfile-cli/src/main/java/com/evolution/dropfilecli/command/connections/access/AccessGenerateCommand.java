@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.connections.access;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,15 +30,15 @@ public class AccessGenerateCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.generateAccessKeys(false);
+        return daemonClient.connectionsAccessGenerate(false);
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        AccessKeyInfoResponseDTO value = objectMapper
+        ApiConnectionsAccessInfoResponseDTO value = objectMapper
                 .readValue(
                         response.body(),
-                        AccessKeyInfoResponseDTO.class
+                        ApiConnectionsAccessInfoResponseDTO.class
                 );
         PrintReflection.print(value);
     }

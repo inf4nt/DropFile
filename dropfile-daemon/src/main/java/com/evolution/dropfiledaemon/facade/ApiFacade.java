@@ -64,7 +64,7 @@ public class ApiFacade {
         );
     }
 
-    public List<AccessKeyInfoResponseDTO> getAccessKeys() {
+    public List<ApiConnectionsAccessInfoResponseDTO> getAccessKeys() {
         return accessKeyStore.getAll()
                 .entrySet()
                 .stream()
@@ -72,7 +72,7 @@ public class ApiFacade {
                 .toList();
     }
 
-    public AccessKeyInfoResponseDTO generateAccessKeys(AccessKeyGenerateRequestDTO requestDTO) {
+    public ApiConnectionsAccessInfoResponseDTO generateAccessKeys(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         String id = CommonUtils.random();
         String key = CommonUtils.generateSecretNonce16();
 
@@ -96,16 +96,16 @@ public class ApiFacade {
         accessKeyStore.removeAll();
     }
 
-    private AccessKeyInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
+    private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
         String idAndSecret = id + "+" + accessKey.key();
-        return new AccessKeyInfoResponseDTO(
+        return new ApiConnectionsAccessInfoResponseDTO(
                 id,
                 CommonUtils.encodeBase64(idAndSecret.getBytes()),
                 accessKey.created()
         );
     }
 
-    public ApiFileInfoResponseDTO addFile(ApiFileAddRequestDTO requestDTO) {
+    public ApiShareInfoResponseDTO addFile(ApiShareAddRequestDTO requestDTO) {
         String id = CommonUtils.random();
         FileEntry entry = fileEntryStore.save(
                 id,
@@ -117,7 +117,7 @@ public class ApiFacade {
         return toApiFileInfoResponseDTO(id, entry);
     }
 
-    public List<ApiFileInfoResponseDTO> getFiles() {
+    public List<ApiShareInfoResponseDTO> getFiles() {
         return fileEntryStore.getAll()
                 .entrySet()
                 .stream()
@@ -125,7 +125,7 @@ public class ApiFacade {
                 .toList();
     }
 
-    public ApiFileInfoResponseDTO deleteFile(String id) {
+    public ApiShareInfoResponseDTO deleteFile(String id) {
         if (ObjectUtils.isEmpty(id)) {
             return null;
         }
@@ -136,8 +136,8 @@ public class ApiFacade {
         return toApiFileInfoResponseDTO(id, entry);
     }
 
-    private ApiFileInfoResponseDTO toApiFileInfoResponseDTO(String id, FileEntry fileEntry) {
-        return new ApiFileInfoResponseDTO(
+    private ApiShareInfoResponseDTO toApiFileInfoResponseDTO(String id, FileEntry fileEntry) {
+        return new ApiShareInfoResponseDTO(
                 id,
                 fileEntry.alias(),
                 fileEntry.absolutePath()
@@ -148,10 +148,10 @@ public class ApiFacade {
         fileEntryStore.removeAll();
     }
 
-    public List<FileEntryResponseDTO> connectionsShareLs() {
+    public List<ApiConnectionsShareLsResponseDTO> connectionsShareLs() {
         List<FileEntryTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
-                        .action("ls-file")
+                        .action("share-ls")
                         .build(),
                 new TypeReference<List<FileEntryTunnelResponse>>() {
                 }
@@ -160,15 +160,15 @@ public class ApiFacade {
             return Collections.emptyList();
         }
         return files.stream()
-                .map(it -> new FileEntryResponseDTO(it.id(), it.alias()))
+                .map(it -> new ApiConnectionsShareLsResponseDTO(it.id(), it.alias()))
                 .toList();
     }
 
     @SneakyThrows
-    public ApiConnectionsDownloadFileResponseDTO connectionsShareDownload(ApiConnectionsDownloadFileRequestDTO requestDTO) {
+    public ApiConnectionsShareDownloadResponseDTO connectionsShareDownload(ApiConnectionsShareDownloadRequestDTO requestDTO) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
                 TunnelClient.Request.builder()
-                        .action("download-file")
+                        .action("share-download")
                         .body(requestDTO.id())
                         .build(),
                 DownloadFileTunnelResponse.class
@@ -194,7 +194,7 @@ public class ApiFacade {
         }
 
         Files.write(downloadFile.toPath(), responseDTO.payload());
-        return new ApiConnectionsDownloadFileResponseDTO(downloadFile.getAbsolutePath());
+        return new ApiConnectionsShareDownloadResponseDTO(downloadFile.getAbsolutePath());
     }
 
     public String connectionsShareCat(String id) {

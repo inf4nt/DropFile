@@ -40,7 +40,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getConnectionShareFiles() {
+    public HttpResponse<byte[]> connectionShareLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -60,7 +60,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDownloadShareFile(String id, String filename, boolean rewrite) {
+    public HttpResponse<byte[]> connectionsShareDownload(String id, String filename, boolean rewrite) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -73,7 +73,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiConnectionsDownloadFileRequestDTO(id, filename, rewrite)
+                        new ApiConnectionsShareDownloadRequestDTO(id, filename, rewrite)
                 )))
                 .header("Content-Type", "application/json")
                 .build();
@@ -82,7 +82,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsCatShareFile(String id) {
+    public HttpResponse<byte[]> connectionsShareCat(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -103,7 +103,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getShareFiles() {
+    public HttpResponse<byte[]> shareLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -123,7 +123,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> addShareFile(String alias, String absoluteFilePath) {
+    public HttpResponse<byte[]> shareAdd(String alias, String absoluteFilePath) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -137,7 +137,7 @@ public class DaemonClient {
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(
-                                new ApiFileAddRequestDTO(alias, absoluteFilePath)
+                                new ApiShareAddRequestDTO(alias, absoluteFilePath)
                         )
                 ))
                 .header("Content-Type", "application/json")
@@ -147,7 +147,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> rmShareFile(String id) {
+    public HttpResponse<byte[]> shareRm(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -168,7 +168,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> rmAllShareFiles() {
+    public HttpResponse<byte[]> shareRmAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -188,7 +188,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> generateAccessKeys(boolean permanent) {
+    public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -202,7 +202,7 @@ public class DaemonClient {
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(
-                                new AccessKeyGenerateRequestDTO(permanent)
+                                new ApiConnectionsAccessGenerateRequestDTO(permanent)
                         )
                 ))
                 .header("Content-Type", "application/json")
@@ -212,7 +212,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getAccessKeys() {
+    public HttpResponse<byte[]> connectionsAccessLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -231,7 +231,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> rmAccessKey(String id) {
+    public HttpResponse<Void> connectionsAccessRm(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -251,7 +251,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> rmAllAccessKeys() {
+    public HttpResponse<Void> connectionsAccessRmAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -270,7 +270,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> getDaemonInfo() {
+    public HttpResponse<byte[]> daemonInfo() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -343,7 +343,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> pingDaemon() {
+    public HttpResponse<Void> daemonPing() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -362,7 +362,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> shutdown() {
+    public HttpResponse<Void> daemonShutdown() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())

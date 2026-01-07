@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.connections.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.FileEntryResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -33,14 +33,14 @@ public class ConnectionsShareLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getConnectionShareFiles();
+        return daemonClient.connectionShareLs();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<FileEntryResponseDTO> values = objectMapper.readValue(
+        List<ApiConnectionsShareLsResponseDTO> values = objectMapper.readValue(
                 response.body(),
-                new TypeReference<List<FileEntryResponseDTO>>() {
+                new TypeReference<List<ApiConnectionsShareLsResponseDTO>>() {
                 }
         );
         if (!values.isEmpty()) {

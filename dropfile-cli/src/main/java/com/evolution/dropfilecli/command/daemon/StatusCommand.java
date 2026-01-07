@@ -24,7 +24,7 @@ public class StatusCommand implements CommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<Void> execute() throws Exception {
-        return daemonClient.pingDaemon();
+        return daemonClient.daemonPing();
     }
 
     @Override

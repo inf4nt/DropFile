@@ -25,7 +25,7 @@ public class ConnectionsShareCatCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsCatShareFile(id);
+        return daemonClient.connectionsShareCat(id);
     }
 
     @Override

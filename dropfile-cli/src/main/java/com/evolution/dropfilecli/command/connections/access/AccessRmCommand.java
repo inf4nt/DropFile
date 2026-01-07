@@ -36,9 +36,9 @@ public class AccessRmCommand implements CommandHttpHandler<Void> {
     @Override
     public HttpResponse<Void> execute() throws Exception {
         if (exclusive.all) {
-            return daemonClient.rmAllAccessKeys();
+            return daemonClient.connectionsAccessRmAll();
         }
-        return daemonClient.rmAccessKey(exclusive.id);
+        return daemonClient.connectionsAccessRm(exclusive.id);
     }
 
     @Override

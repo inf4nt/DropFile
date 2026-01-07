@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.connections.access;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.AccessKeyInfoResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -32,15 +32,15 @@ public class AccessLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getAccessKeys();
+        return daemonClient.connectionsAccessLs();
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<AccessKeyInfoResponseDTO> values = objectMapper
+        List<ApiConnectionsAccessInfoResponseDTO> values = objectMapper
                 .readValue(
                         response.body(),
-                        new TypeReference<List<AccessKeyInfoResponseDTO>>() {
+                        new TypeReference<List<ApiConnectionsAccessInfoResponseDTO>>() {
                         }
                 );
         if (!values.isEmpty()) {

@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
+import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,14 +49,14 @@ public class ShareAddCommand implements CommandHttpHandler<byte[]> {
         }
         String absolutePath = toAdd.getCanonicalFile().getAbsolutePath();
         String filename = getFilename();
-        return daemonClient.addShareFile(filename, absolutePath);
+        return daemonClient.shareAdd(filename, absolutePath);
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        ApiFileInfoResponseDTO responseDTO = objectMapper.readValue(
+        ApiShareInfoResponseDTO responseDTO = objectMapper.readValue(
                 response.body(),
-                ApiFileInfoResponseDTO.class
+                ApiShareInfoResponseDTO.class
         );
         PrintReflection.print(responseDTO);
     }

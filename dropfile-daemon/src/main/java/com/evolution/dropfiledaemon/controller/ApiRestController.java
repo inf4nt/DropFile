@@ -33,12 +33,12 @@ public class ApiRestController {
     }
 
     @PostMapping("/connections/access/generate")
-    public AccessKeyInfoResponseDTO generateAccessKeys(@RequestBody AccessKeyGenerateRequestDTO requestDTO) {
+    public ApiConnectionsAccessInfoResponseDTO generateAccessKeys(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         return apiFacade.generateAccessKeys(requestDTO);
     }
 
     @GetMapping("/connections/access/ls")
-    public List<AccessKeyInfoResponseDTO> getAccessKeys() {
+    public List<ApiConnectionsAccessInfoResponseDTO> getAccessKeys() {
         return apiFacade.getAccessKeys();
     }
 
@@ -58,14 +58,14 @@ public class ApiRestController {
     }
 
     @GetMapping("/connections/share/ls")
-    public ResponseEntity<List<FileEntryResponseDTO>> connectionsShareLs() {
-        List<FileEntryResponseDTO> files = apiFacade.connectionsShareLs();
+    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> connectionsShareLs() {
+        List<ApiConnectionsShareLsResponseDTO> files = apiFacade.connectionsShareLs();
         return ResponseEntity.ok(files);
     }
 
     @PostMapping("/connections/share/download")
-    public ResponseEntity<ApiConnectionsDownloadFileResponseDTO> connectionsShareDownload(@RequestBody ApiConnectionsDownloadFileRequestDTO requestDTO) {
-        ApiConnectionsDownloadFileResponseDTO responseDTO = apiFacade.connectionsShareDownload(requestDTO);
+    public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> connectionsShareDownload(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
+        ApiConnectionsShareDownloadResponseDTO responseDTO = apiFacade.connectionsShareDownload(requestDTO);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }
@@ -82,18 +82,18 @@ public class ApiRestController {
     }
 
     @PostMapping("/share/add")
-    public ApiFileInfoResponseDTO addShareFile(@RequestBody ApiFileAddRequestDTO requestDTO) {
+    public ApiShareInfoResponseDTO addShareFile(@RequestBody ApiShareAddRequestDTO requestDTO) {
         return apiFacade.addFile(requestDTO);
     }
 
     @GetMapping("/share/ls")
-    public List<ApiFileInfoResponseDTO> getShareFiles() {
+    public List<ApiShareInfoResponseDTO> getShareFiles() {
         return apiFacade.getFiles();
     }
 
     @DeleteMapping("/share/rm/{id}")
-    public ResponseEntity<ApiFileInfoResponseDTO> rmShareFile(@PathVariable String id) {
-        ApiFileInfoResponseDTO responseDTO = apiFacade.deleteFile(id);
+    public ResponseEntity<ApiShareInfoResponseDTO> rmShareFile(@PathVariable String id) {
+        ApiShareInfoResponseDTO responseDTO = apiFacade.deleteFile(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }

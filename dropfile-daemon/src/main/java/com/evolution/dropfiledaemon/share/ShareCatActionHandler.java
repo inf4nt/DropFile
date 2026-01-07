@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.files;
+package com.evolution.dropfiledaemon.share;
 
 import com.evolution.dropfile.store.files.FileEntry;
 import com.evolution.dropfile.store.files.FileEntryStore;

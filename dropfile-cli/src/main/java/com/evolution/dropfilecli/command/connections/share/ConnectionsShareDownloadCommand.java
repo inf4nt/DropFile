@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.connections.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiConnectionsDownloadFileResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,14 +40,14 @@ public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadShareFile(id, filename, rewrite);
+        return daemonClient.connectionsShareDownload(id, filename, rewrite);
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        ApiConnectionsDownloadFileResponseDTO responseDTO = objectMapper.readValue(
+        ApiConnectionsShareDownloadResponseDTO responseDTO = objectMapper.readValue(
                 response.body(),
-                ApiConnectionsDownloadFileResponseDTO.class
+                ApiConnectionsShareDownloadResponseDTO.class
         );
         PrintReflection.print(responseDTO);
     }

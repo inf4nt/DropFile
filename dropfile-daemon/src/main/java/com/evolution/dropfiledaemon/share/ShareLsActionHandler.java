@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.files;
+package com.evolution.dropfiledaemon.share;
 
 import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
 import com.evolution.dropfile.store.files.FileEntryStore;
@@ -9,18 +9,18 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class LsFileActionHandler implements ActionHandler<Void, List<FileEntryTunnelResponse>> {
+public class ShareLsActionHandler implements ActionHandler<Void, List<FileEntryTunnelResponse>> {
 
     private final FileEntryStore fileEntryStore;
 
     @Autowired
-    public LsFileActionHandler(FileEntryStore fileEntryStore) {
+    public ShareLsActionHandler(FileEntryStore fileEntryStore) {
         this.fileEntryStore = fileEntryStore;
     }
 
     @Override
     public String getAction() {
-        return "ls-file";
+        return "share-ls";
     }
 
     @Override

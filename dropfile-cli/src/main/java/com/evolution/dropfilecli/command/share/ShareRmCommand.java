@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiFileInfoResponseDTO;
+import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,9 +43,9 @@ public class ShareRmCommand implements CommandHttpHandler<byte[]> {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.id != null) {
-            return daemonClient.rmShareFile(exclusive.id);
+            return daemonClient.shareRm(exclusive.id);
         } else if (exclusive.all) {
-            return daemonClient.rmAllShareFiles();
+            return daemonClient.shareRmAll();
         }
         throw new RuntimeException();
     }
@@ -53,9 +53,9 @@ public class ShareRmCommand implements CommandHttpHandler<byte[]> {
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         if (exclusive.id != null) {
-            ApiFileInfoResponseDTO responseDTO = objectMapper.readValue(
+            ApiShareInfoResponseDTO responseDTO = objectMapper.readValue(
                     response.body(),
-                    ApiFileInfoResponseDTO.class
+                    ApiShareInfoResponseDTO.class
             );
             PrintReflection.print(responseDTO);
         } else {

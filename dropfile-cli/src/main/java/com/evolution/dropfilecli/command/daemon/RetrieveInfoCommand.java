@@ -29,7 +29,7 @@ public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.getDaemonInfo();
+        return daemonClient.daemonInfo();
     }
 
     @Override

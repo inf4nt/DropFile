@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.files;
+package com.evolution.dropfiledaemon.share;
 
 import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
 import com.evolution.dropfile.store.files.FileEntry;
@@ -13,19 +13,19 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @Component
-public class DownloadFileActionHandler
+public class ShareDownloadActionHandler
         implements ActionHandler<String, DownloadFileTunnelResponse> {
 
     private final FileEntryStore fileEntryStore;
 
     @Autowired
-    public DownloadFileActionHandler(FileEntryStore fileEntryStore) {
+    public ShareDownloadActionHandler(FileEntryStore fileEntryStore) {
         this.fileEntryStore = fileEntryStore;
     }
 
     @Override
     public String getAction() {
-        return "download-file";
+        return "share-download";
     }
 
     @Override
