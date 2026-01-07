@@ -21,7 +21,7 @@ public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[
     @CommandLine.Parameters(index = "0", description = "File id")
     private String id;
 
-    @CommandLine.Option(names = {"-filename", "--filename"}, description = "Filename")
+    @CommandLine.Option(names = {"-filename", "--filename"}, description = "Output filename")
     private String filename;
 
     @CommandLine.Option(names = {"-rewrite", "--rewrite"}, description = "Rewrite already existing file")
