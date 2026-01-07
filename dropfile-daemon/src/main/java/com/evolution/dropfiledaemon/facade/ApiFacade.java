@@ -148,7 +148,7 @@ public class ApiFacade {
         fileEntryStore.removeAll();
     }
 
-    public List<FileEntryResponseDTO> connectionsGetFiles() {
+    public List<FileEntryResponseDTO> connectionsShareLs() {
         List<FileEntryTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .action("ls-file")
@@ -165,7 +165,7 @@ public class ApiFacade {
     }
 
     @SneakyThrows
-    public ApiConnectionsDownloadFileResponseDTO connectionsDownloadFile(ApiConnectionsDownloadFileRequestDTO requestDTO) {
+    public ApiConnectionsDownloadFileResponseDTO connectionsShareDownload(ApiConnectionsDownloadFileRequestDTO requestDTO) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .action("download-file")
@@ -195,5 +195,15 @@ public class ApiFacade {
 
         Files.write(downloadFile.toPath(), responseDTO.payload());
         return new ApiConnectionsDownloadFileResponseDTO(downloadFile.getAbsolutePath());
+    }
+
+    public String connectionsShareCat(String id) {
+        return tunnelClient.send(
+                TunnelClient.Request.builder()
+                        .action("share-cat")
+                        .body(id)
+                        .build(),
+                String.class
+        );
     }
 }

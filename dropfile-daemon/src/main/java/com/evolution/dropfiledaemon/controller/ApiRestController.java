@@ -58,14 +58,23 @@ public class ApiRestController {
     }
 
     @GetMapping("/connections/share/ls")
-    public ResponseEntity<List<FileEntryResponseDTO>> connectionsLsFiles() {
-        List<FileEntryResponseDTO> files = apiFacade.connectionsGetFiles();
+    public ResponseEntity<List<FileEntryResponseDTO>> connectionsShareLs() {
+        List<FileEntryResponseDTO> files = apiFacade.connectionsShareLs();
         return ResponseEntity.ok(files);
     }
 
     @PostMapping("/connections/share/download")
-    public ResponseEntity<ApiConnectionsDownloadFileResponseDTO> connectionsDownloadFile(@RequestBody ApiConnectionsDownloadFileRequestDTO requestDTO) {
-        ApiConnectionsDownloadFileResponseDTO responseDTO = apiFacade.connectionsDownloadFile(requestDTO);
+    public ResponseEntity<ApiConnectionsDownloadFileResponseDTO> connectionsShareDownload(@RequestBody ApiConnectionsDownloadFileRequestDTO requestDTO) {
+        ApiConnectionsDownloadFileResponseDTO responseDTO = apiFacade.connectionsShareDownload(requestDTO);
+        if (responseDTO != null) {
+            return ResponseEntity.ok(responseDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/connections/share/cat/{id}")
+    public ResponseEntity<String> connectionsShareCat(@PathVariable String id) {
+        String responseDTO = apiFacade.connectionsShareCat(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }
