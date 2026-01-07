@@ -210,7 +210,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> revokeAccessKey(String id) {
+    public HttpResponse<Void> rmAccessKey(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -230,7 +230,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> revokeAllAccessKeys() {
+    public HttpResponse<Void> rmAllAccessKeys() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())

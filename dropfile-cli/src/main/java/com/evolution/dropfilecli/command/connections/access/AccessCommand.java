@@ -10,7 +10,7 @@ import picocli.CommandLine;
         subcommands = {
                 AccessGenerateCommand.class,
                 AccessLsCommand.class,
-                AccessRevokeCommand.class
+                AccessRmCommand.class
         }
 )
 public class AccessCommand implements Runnable {

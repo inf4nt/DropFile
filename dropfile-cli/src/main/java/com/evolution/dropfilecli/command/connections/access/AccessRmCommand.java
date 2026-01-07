@@ -10,35 +10,35 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "revoke",
-        description = "Revoke access key"
+        name = "rm",
+        description = "rm access key"
 )
-public class AccessRevokeCommand implements CommandHttpHandler<Void> {
+public class AccessRmCommand implements CommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "Id")
+        @CommandLine.Option(names = {"-id", "--id"}, description = "id")
         private String id;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "Revoke all access keys")
+        @CommandLine.Option(names = {"-all", "--all"}, description = "rm all access keys")
         private boolean all;
     }
 
     private final DaemonClient daemonClient;
 
     @Autowired
-    public AccessRevokeCommand(DaemonClient daemonClient) {
+    public AccessRmCommand(DaemonClient daemonClient) {
         this.daemonClient = daemonClient;
     }
 
     @Override
     public HttpResponse<Void> execute() throws Exception {
         if (exclusive.all) {
-            return daemonClient.revokeAllAccessKeys();
+            return daemonClient.rmAllAccessKeys();
         }
-        return daemonClient.revokeAccessKey(exclusive.id);
+        return daemonClient.rmAccessKey(exclusive.id);
     }
 
     @Override

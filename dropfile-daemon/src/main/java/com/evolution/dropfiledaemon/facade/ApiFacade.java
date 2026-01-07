@@ -66,40 +66,37 @@ public class ApiFacade {
 
     public List<AccessKeyInfoResponseDTO> getAccessKeys() {
         return accessKeyStore.getAll()
-                .values()
+                .entrySet()
                 .stream()
-                .map(it -> toAccessKeyInfoResponseDTO(it))
+                .map(it -> toAccessKeyInfoResponseDTO(it.getKey(), it.getValue()))
                 .toList();
     }
 
     public AccessKeyInfoResponseDTO generateAccessKeys(AccessKeyGenerateRequestDTO requestDTO) {
-        String id = CommonUtils.generateSecretNonce16();
+        String id = CommonUtils.random();
         String key = CommonUtils.generateSecretNonce16();
 
         AccessKey accessKey = accessKeyStore.save(
                 id,
-                new AccessKey(id, key, Instant.now())
+                new AccessKey(key, Instant.now())
         );
 
-        return toAccessKeyInfoResponseDTO(accessKey);
+        return toAccessKeyInfoResponseDTO(id, accessKey);
     }
 
-    public AccessKeyInfoResponseDTO revokeAccessKey(String id) {
+    public boolean rmAccessKey(String id) {
         AccessKey accessKey = accessKeyStore.remove(id);
-        if (accessKey == null) {
-            return null;
-        }
-
-        return toAccessKeyInfoResponseDTO(accessKey);
+        return accessKey != null;
     }
 
-    public void revokeAllAccessKeys() {
+    public void rmAllAccessKeys() {
         accessKeyStore.removeAll();
     }
 
-    private AccessKeyInfoResponseDTO toAccessKeyInfoResponseDTO(AccessKey accessKey) {
-        String idAndSecret = accessKey.id() + "+" + accessKey.key();
+    private AccessKeyInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
+        String idAndSecret = id + "+" + accessKey.key();
         return new AccessKeyInfoResponseDTO(
+                id,
                 CommonUtils.encodeBase64(idAndSecret.getBytes()),
                 accessKey.created()
         );

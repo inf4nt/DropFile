@@ -43,17 +43,17 @@ public class ApiRestController {
     }
 
     @DeleteMapping("/connections/access/rm/{id}")
-    public ResponseEntity<Void> revokeAccessKey(@PathVariable String id) {
-        AccessKeyInfoResponseDTO key = apiFacade.revokeAccessKey(id);
-        if (key != null) {
+    public ResponseEntity<Void> rmAccessKey(@PathVariable String id) {
+        boolean result = apiFacade.rmAccessKey(id);
+        if (result) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/connections/access/rm-all")
-    public ResponseEntity<Void> revokeAllAccessKeys() {
-        apiFacade.revokeAllAccessKeys();
+    public ResponseEntity<Void> rmAllAccessKeys() {
+        apiFacade.rmAllAccessKeys();
         return ResponseEntity.ok().build();
     }
 
