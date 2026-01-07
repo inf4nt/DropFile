@@ -85,6 +85,9 @@ public class ApiFacade {
     }
 
     public boolean rmAccessKey(String id) {
+        if (ObjectUtils.isEmpty(id)) {
+            return false;
+        }
         AccessKey accessKey = accessKeyStore.remove(id);
         return accessKey != null;
     }
@@ -123,6 +126,9 @@ public class ApiFacade {
     }
 
     public ApiFileInfoResponseDTO deleteFile(String id) {
+        if (ObjectUtils.isEmpty(id)) {
+            return null;
+        }
         FileEntry entry = fileEntryStore.remove(id);
         if (entry == null) {
             return null;

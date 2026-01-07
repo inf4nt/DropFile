@@ -178,7 +178,10 @@ public class ApiHandshakeFacade {
         );
 
         String requestId = extractSecretId(key);
-        byte[] signature = CryptoRSA.sign(requestPayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
+        byte[] signature = CryptoRSA.sign(
+                requestPayloadByteArray,
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+        );
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
                 CommonUtils.encodeBase64(secureEnvelope.payload()),
