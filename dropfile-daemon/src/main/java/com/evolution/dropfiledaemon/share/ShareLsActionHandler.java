@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.share;
 
 import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
-import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,11 +11,11 @@ import java.util.List;
 @Component
 public class ShareLsActionHandler implements ActionHandler<Void, List<FileEntryTunnelResponse>> {
 
-    private final FileEntryStore fileEntryStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Autowired
-    public ShareLsActionHandler(FileEntryStore fileEntryStore) {
-        this.fileEntryStore = fileEntryStore;
+    public ShareLsActionHandler(ShareFileEntryStore shareFileEntryStore) {
+        this.shareFileEntryStore = shareFileEntryStore;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class ShareLsActionHandler implements ActionHandler<Void, List<FileEntryT
 
     @Override
     public List<FileEntryTunnelResponse> handle(Void unused) {
-        return fileEntryStore
+        return shareFileEntryStore
                 .getAll()
                 .entrySet()
                 .stream()

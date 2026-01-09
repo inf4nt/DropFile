@@ -4,8 +4,8 @@ import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.files.FileEntryStore;
-import com.evolution.dropfile.store.files.RuntimeFileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
@@ -54,7 +54,7 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public FileEntryStore fileEntryStore() {
-        return new RuntimeFileEntryStore();
+    public ShareFileEntryStore fileEntryStore() {
+        return new RuntimeShareFileEntryStore();
     }
 }

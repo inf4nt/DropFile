@@ -1,14 +1,14 @@
-package com.evolution.dropfile.store.files;
+package com.evolution.dropfile.store.share;
 
 import com.evolution.dropfile.store.store.KeyValueStore;
 
 import java.util.Map;
 
-public interface FileEntryStore extends KeyValueStore<String, FileEntry> {
+public interface ShareFileEntryStore extends KeyValueStore<String, ShareFileEntry> {
 
     @Override
-    default void validate(String key, FileEntry value) {
-        Map.Entry<String, FileEntry> alias = getAll().entrySet()
+    default void validate(String key, ShareFileEntry value) {
+        Map.Entry<String, ShareFileEntry> alias = getAll().entrySet()
                 .stream()
                 .filter(it -> it.getValue().alias().equals(value.alias()))
                 .filter(it -> !it.getKey().equals(key))

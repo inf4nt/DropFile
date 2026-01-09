@@ -5,8 +5,8 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfile.store.files.FileEntry;
-import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntry;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,7 +31,7 @@ public class ApiFacade {
 
     private final AccessKeyStore accessKeyStore;
 
-    private final FileEntryStore fileEntryStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     private final TunnelClient tunnelClient;
 
@@ -39,12 +39,12 @@ public class ApiFacade {
     public ApiFacade(AppConfigStore appConfigStore,
                      KeysConfigStore keysConfigStore,
                      AccessKeyStore accessKeyStore,
-                     FileEntryStore fileEntryStore,
+                     ShareFileEntryStore shareFileEntryStore,
                      TunnelClient tunnelClient) {
         this.appConfigStore = appConfigStore;
         this.keysConfigStore = keysConfigStore;
         this.accessKeyStore = accessKeyStore;
-        this.fileEntryStore = fileEntryStore;
+        this.shareFileEntryStore = shareFileEntryStore;
         this.tunnelClient = tunnelClient;
     }
 
@@ -107,9 +107,9 @@ public class ApiFacade {
 
     public ApiShareInfoResponseDTO shareAdd(ApiShareAddRequestDTO requestDTO) {
         String id = CommonUtils.random();
-        FileEntry entry = fileEntryStore.save(
+        ShareFileEntry entry = shareFileEntryStore.save(
                 id,
-                new FileEntry(
+                new ShareFileEntry(
                         requestDTO.alias(),
                         requestDTO.absoluteFilePath()
                 )
@@ -118,7 +118,7 @@ public class ApiFacade {
     }
 
     public List<ApiShareInfoResponseDTO> shareLs() {
-        return fileEntryStore.getAll()
+        return shareFileEntryStore.getAll()
                 .entrySet()
                 .stream()
                 .map(it -> toApiFileInfoResponseDTO(it.getKey(), it.getValue()))
@@ -129,23 +129,23 @@ public class ApiFacade {
         if (ObjectUtils.isEmpty(id)) {
             return null;
         }
-        FileEntry entry = fileEntryStore.remove(id);
+        ShareFileEntry entry = shareFileEntryStore.remove(id);
         if (entry == null) {
             return null;
         }
         return toApiFileInfoResponseDTO(id, entry);
     }
 
-    private ApiShareInfoResponseDTO toApiFileInfoResponseDTO(String id, FileEntry fileEntry) {
+    private ApiShareInfoResponseDTO toApiFileInfoResponseDTO(String id, ShareFileEntry shareFileEntry) {
         return new ApiShareInfoResponseDTO(
                 id,
-                fileEntry.alias(),
-                fileEntry.absolutePath()
+                shareFileEntry.alias(),
+                shareFileEntry.absolutePath()
         );
     }
 
     public void shareRmAll() {
-        fileEntryStore.removeAll();
+        shareFileEntryStore.removeAll();
     }
 
     public List<ApiConnectionsShareLsResponseDTO> connectionsShareLs() {

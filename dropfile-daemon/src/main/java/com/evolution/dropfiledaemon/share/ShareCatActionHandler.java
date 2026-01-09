@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.share;
 
-import com.evolution.dropfile.store.files.FileEntry;
-import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntry;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +14,11 @@ import java.nio.file.Paths;
 @Component
 public class ShareCatActionHandler implements ActionHandler<String, String> {
 
-    private final FileEntryStore fileEntryStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Autowired
-    public ShareCatActionHandler(FileEntryStore fileEntryStore) {
-        this.fileEntryStore = fileEntryStore;
+    public ShareCatActionHandler(ShareFileEntryStore shareFileEntryStore) {
+        this.shareFileEntryStore = shareFileEntryStore;
     }
 
     @Override
@@ -34,13 +34,13 @@ public class ShareCatActionHandler implements ActionHandler<String, String> {
     @SneakyThrows
     @Override
     public String handle(String id) {
-        FileEntry fileEntry = fileEntryStore.get(id)
+        ShareFileEntry shareFileEntry = shareFileEntryStore.get(id)
                 .map(it -> it.getValue())
                 .orElse(null);
-        if (fileEntry == null) {
+        if (shareFileEntry == null) {
             return null;
         }
-        byte[] bytes = Files.readAllBytes(Paths.get(fileEntry.absolutePath()));
+        byte[] bytes = Files.readAllBytes(Paths.get(shareFileEntry.absolutePath()));
         return new String(bytes, StandardCharsets.UTF_8);
     }
 }

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.share;
 
 import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
-import com.evolution.dropfile.store.files.FileEntry;
-import com.evolution.dropfile.store.files.FileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntry;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +16,11 @@ import java.util.Map;
 public class ShareDownloadActionHandler
         implements ActionHandler<String, DownloadFileTunnelResponse> {
 
-    private final FileEntryStore fileEntryStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Autowired
-    public ShareDownloadActionHandler(FileEntryStore fileEntryStore) {
-        this.fileEntryStore = fileEntryStore;
+    public ShareDownloadActionHandler(ShareFileEntryStore shareFileEntryStore) {
+        this.shareFileEntryStore = shareFileEntryStore;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class ShareDownloadActionHandler
     @SneakyThrows
     @Override
     public DownloadFileTunnelResponse handle(String id) {
-        Map.Entry<String, FileEntry> fileEntry = fileEntryStore.get(id).orElseThrow();
+        Map.Entry<String, ShareFileEntry> fileEntry = shareFileEntryStore.get(id).orElseThrow();
         byte[] allBytes = Files.readAllBytes(Paths.get(fileEntry.getValue().absolutePath()));
         return new DownloadFileTunnelResponse(fileEntry.getKey(), fileEntry.getValue().alias(), allBytes);
     }
