@@ -9,6 +9,7 @@ public class ImmutableSingleValueStore<V>
     private final V value;
 
     public ImmutableSingleValueStore(V value) {
+        validate(value);
         this.value = Objects.requireNonNull(value);
     }
 
