@@ -88,6 +88,9 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
     private V writeKeyValue(String key, V value) {
         try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
             FileLock lock = channel.lock();
+
+            validate(key, value);
+
             Map<String, V> values = readChannel(channel);
             values = new LinkedHashMap<>(values);
 
