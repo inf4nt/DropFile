@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.util.Objects;
-
 @Service
 public class TokenService {
 
@@ -17,13 +15,12 @@ public class TokenService {
         this.secretsConfigStore = secretsConfigStore;
     }
 
-    public boolean isValid(String tokenIncoming) {
-        if (ObjectUtils.isEmpty(tokenIncoming)) {
+    public boolean isValid(String token) {
+        if (ObjectUtils.isEmpty(token) || token.trim().isEmpty()) {
             return false;
         }
         String daemonToken = secretsConfigStore.getRequired().daemonToken();
-        Objects.requireNonNull(daemonToken);
-        return daemonToken.equals(tokenIncoming);
+        return daemonToken.equals(token);
     }
 }
 

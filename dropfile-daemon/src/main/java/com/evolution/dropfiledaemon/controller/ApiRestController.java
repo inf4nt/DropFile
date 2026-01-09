@@ -23,28 +23,28 @@ public class ApiRestController {
     }
 
     @PostMapping("/daemon/shutdown")
-    public void shutdown() {
-        apiFacade.shutdown();
+    public void daemonShutdown() {
+        apiFacade.daemonShutdown();
     }
 
     @GetMapping("/daemon/info")
-    public DaemonInfoResponseDTO getInfo() {
-        return apiFacade.getDaemonInfo();
+    public DaemonInfoResponseDTO daemonInfo() {
+        return apiFacade.daemonInfo();
     }
 
     @PostMapping("/connections/access/generate")
-    public ApiConnectionsAccessInfoResponseDTO generateAccessKeys(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
-        return apiFacade.generateAccessKeys(requestDTO);
+    public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
+        return apiFacade.connectionsAccessGenerate(requestDTO);
     }
 
     @GetMapping("/connections/access/ls")
-    public List<ApiConnectionsAccessInfoResponseDTO> getAccessKeys() {
-        return apiFacade.getAccessKeys();
+    public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {
+        return apiFacade.connectionsAccessLs();
     }
 
     @DeleteMapping("/connections/access/rm/{id}")
-    public ResponseEntity<Void> rmAccessKey(@PathVariable String id) {
-        boolean result = apiFacade.rmAccessKey(id);
+    public ResponseEntity<Void> connectionsAccessRm(@PathVariable String id) {
+        boolean result = apiFacade.connectionsAccessRm(id);
         if (result) {
             return ResponseEntity.ok().build();
         }
@@ -52,7 +52,7 @@ public class ApiRestController {
     }
 
     @DeleteMapping("/connections/access/rm-all")
-    public ResponseEntity<Void> rmAllAccessKeys() {
+    public ResponseEntity<Void> connectionsAccessRmAll() {
         apiFacade.rmAllAccessKeys();
         return ResponseEntity.ok().build();
     }
@@ -83,17 +83,17 @@ public class ApiRestController {
 
     @PostMapping("/share/add")
     public ApiShareInfoResponseDTO addShareFile(@RequestBody ApiShareAddRequestDTO requestDTO) {
-        return apiFacade.addFile(requestDTO);
+        return apiFacade.shareAdd(requestDTO);
     }
 
     @GetMapping("/share/ls")
     public List<ApiShareInfoResponseDTO> getShareFiles() {
-        return apiFacade.getFiles();
+        return apiFacade.shareLs();
     }
 
     @DeleteMapping("/share/rm/{id}")
     public ResponseEntity<ApiShareInfoResponseDTO> rmShareFile(@PathVariable String id) {
-        ApiShareInfoResponseDTO responseDTO = apiFacade.deleteFile(id);
+        ApiShareInfoResponseDTO responseDTO = apiFacade.shareRm(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
         }
@@ -102,7 +102,7 @@ public class ApiRestController {
 
     @DeleteMapping("/share/rm-all")
     public ResponseEntity<Void> rmAllShareFiles() {
-        apiFacade.deleteAllFiles();
+        apiFacade.shareRmAll();
         return ResponseEntity.ok().build();
     }
 }

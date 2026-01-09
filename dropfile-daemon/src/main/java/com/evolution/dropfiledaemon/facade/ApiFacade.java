@@ -49,14 +49,14 @@ public class ApiFacade {
     }
 
 
-    public void shutdown() {
+    public void daemonShutdown() {
         Executors.newSingleThreadExecutor()
                 .submit(() -> {
                     System.exit(0);
                 });
     }
 
-    public DaemonInfoResponseDTO getDaemonInfo() {
+    public DaemonInfoResponseDTO daemonInfo() {
         return new DaemonInfoResponseDTO(
                 CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
@@ -64,7 +64,7 @@ public class ApiFacade {
         );
     }
 
-    public List<ApiConnectionsAccessInfoResponseDTO> getAccessKeys() {
+    public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {
         return accessKeyStore.getAll()
                 .entrySet()
                 .stream()
@@ -72,7 +72,7 @@ public class ApiFacade {
                 .toList();
     }
 
-    public ApiConnectionsAccessInfoResponseDTO generateAccessKeys(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
+    public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         String id = CommonUtils.random();
         String key = CommonUtils.generateSecretNonce16();
 
@@ -84,7 +84,7 @@ public class ApiFacade {
         return toAccessKeyInfoResponseDTO(id, accessKey);
     }
 
-    public boolean rmAccessKey(String id) {
+    public boolean connectionsAccessRm(String id) {
         if (ObjectUtils.isEmpty(id)) {
             return false;
         }
@@ -105,7 +105,7 @@ public class ApiFacade {
         );
     }
 
-    public ApiShareInfoResponseDTO addFile(ApiShareAddRequestDTO requestDTO) {
+    public ApiShareInfoResponseDTO shareAdd(ApiShareAddRequestDTO requestDTO) {
         String id = CommonUtils.random();
         FileEntry entry = fileEntryStore.save(
                 id,
@@ -117,7 +117,7 @@ public class ApiFacade {
         return toApiFileInfoResponseDTO(id, entry);
     }
 
-    public List<ApiShareInfoResponseDTO> getFiles() {
+    public List<ApiShareInfoResponseDTO> shareLs() {
         return fileEntryStore.getAll()
                 .entrySet()
                 .stream()
@@ -125,7 +125,7 @@ public class ApiFacade {
                 .toList();
     }
 
-    public ApiShareInfoResponseDTO deleteFile(String id) {
+    public ApiShareInfoResponseDTO shareRm(String id) {
         if (ObjectUtils.isEmpty(id)) {
             return null;
         }
@@ -144,7 +144,7 @@ public class ApiFacade {
         );
     }
 
-    public void deleteAllFiles() {
+    public void shareRmAll() {
         fileEntryStore.removeAll();
     }
 
