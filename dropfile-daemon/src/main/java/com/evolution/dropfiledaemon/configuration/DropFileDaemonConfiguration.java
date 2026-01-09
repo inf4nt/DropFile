@@ -54,7 +54,7 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public ShareFileEntryStore fileEntryStore() {
+    public ShareFileEntryStore shareFileEntryStore() {
         return new RuntimeShareFileEntryStore();
     }
 }
