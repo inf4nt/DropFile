@@ -42,9 +42,4 @@ public class StatusConnectionCommand implements CommandHttpHandler<byte[]> {
         );
         PrintReflection.print(responseDTO);
     }
-
-    @Override
-    public void handleUnsuccessful(HttpResponse<byte[]> response) {
-        System.out.println("No current connection found");
-    }
 }

@@ -40,6 +40,26 @@ public class DaemonClient {
     }
 
     @SneakyThrows
+    public HttpResponse<Void> connectionsRevoke(String fingerprint) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/revoke/")
+                .resolve(fingerprint);
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
     public HttpResponse<byte[]> connectionShareLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
@@ -96,7 +116,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .GET()
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
@@ -116,7 +135,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .GET()
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
@@ -161,7 +179,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .DELETE()
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
@@ -181,7 +198,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .DELETE()
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
@@ -375,7 +391,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.noBody())
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
@@ -445,7 +460,6 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.noBody())
-                .header("Content-Type", "application/json")
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
