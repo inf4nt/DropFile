@@ -44,6 +44,16 @@ public class ApiConnectionsShareFacade {
                 .toList();
     }
 
+    public String cat(String id) {
+        return tunnelClient.send(
+                TunnelClient.Request.builder()
+                        .action("share-cat")
+                        .body(id)
+                        .build(),
+                String.class
+        );
+    }
+
     @SneakyThrows
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
         DownloadFileTunnelResponse responseDTO = tunnelClient.send(
@@ -75,15 +85,5 @@ public class ApiConnectionsShareFacade {
 
         Files.write(downloadFile.toPath(), responseDTO.payload());
         return new ApiConnectionsShareDownloadResponseDTO(downloadFile.getAbsolutePath());
-    }
-
-    public String cat(String id) {
-        return tunnelClient.send(
-                TunnelClient.Request.builder()
-                        .action("share-cat")
-                        .body(id)
-                        .build(),
-                String.class
-        );
     }
 }
