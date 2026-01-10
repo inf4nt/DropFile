@@ -5,9 +5,9 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
@@ -20,7 +20,6 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 @Component
 public class ApiFacade {
@@ -46,22 +45,6 @@ public class ApiFacade {
         this.accessKeyStore = accessKeyStore;
         this.shareFileEntryStore = shareFileEntryStore;
         this.tunnelClient = tunnelClient;
-    }
-
-
-    public void daemonShutdown() {
-        Executors.newSingleThreadExecutor()
-                .submit(() -> {
-                    System.exit(0);
-                });
-    }
-
-    public DaemonInfoResponseDTO daemonInfo() {
-        return new DaemonInfoResponseDTO(
-                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey())
-        );
     }
 
     public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {

@@ -17,21 +17,6 @@ public class ApiRestController {
         this.apiFacade = apiFacade;
     }
 
-    @GetMapping("/daemon/ping")
-    public String ping() {
-        return "pong";
-    }
-
-    @PostMapping("/daemon/shutdown")
-    public void daemonShutdown() {
-        apiFacade.daemonShutdown();
-    }
-
-    @GetMapping("/daemon/info")
-    public DaemonInfoResponseDTO daemonInfo() {
-        return apiFacade.daemonInfo();
-    }
-
     @PostMapping("/connections/access/generate")
     public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         return apiFacade.connectionsAccessGenerate(requestDTO);
