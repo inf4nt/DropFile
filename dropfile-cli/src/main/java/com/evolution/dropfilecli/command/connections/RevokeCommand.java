@@ -32,6 +32,6 @@ public class RevokeCommand implements CommandHttpHandler<Void> {
 
     @Override
     public void handleSuccessful(HttpResponse<Void> response) throws Exception {
-        System.out.println("Successfully revoked trusted-in connection: " + fingerprint);
+        System.out.println("Revoked trusted-in connection: " + fingerprint);
     }
 }

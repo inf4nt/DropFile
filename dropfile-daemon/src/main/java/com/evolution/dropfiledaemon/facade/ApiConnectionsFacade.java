@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +13,10 @@ public class ApiConnectionsFacade {
     }
 
     public boolean revoke(String fingerprint) {
-        TrustedInKeyValueStore.TrustedInValue remove = handshakeStore.trustedInStore().remove(fingerprint);
-        return remove != null;
+        return handshakeStore.trustedInStore().remove(fingerprint) != null;
+    }
+
+    public boolean disconnect(String fingerprint) {
+        return handshakeStore.trustedOutStore().remove(fingerprint) != null;
     }
 }

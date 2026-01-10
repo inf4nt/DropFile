@@ -27,4 +27,13 @@ public class ApiConnectionsRestController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PostMapping("/disconnect/{fingerprint}")
+    public ResponseEntity<Void> disconnect(@PathVariable String fingerprint) {
+        boolean result = apiFacade.disconnect(fingerprint);
+        if (result) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
