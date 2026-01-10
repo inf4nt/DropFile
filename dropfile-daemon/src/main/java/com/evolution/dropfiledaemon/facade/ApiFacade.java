@@ -47,47 +47,6 @@ public class ApiFacade {
         this.tunnelClient = tunnelClient;
     }
 
-    public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {
-        return accessKeyStore.getAll()
-                .entrySet()
-                .stream()
-                .map(it -> toAccessKeyInfoResponseDTO(it.getKey(), it.getValue()))
-                .toList();
-    }
-
-    public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
-        String id = CommonUtils.random();
-        String key = CommonUtils.generateSecretNonce16();
-
-        AccessKey accessKey = accessKeyStore.save(
-                id,
-                new AccessKey(key, Instant.now())
-        );
-
-        return toAccessKeyInfoResponseDTO(id, accessKey);
-    }
-
-    public boolean connectionsAccessRm(String id) {
-        if (ObjectUtils.isEmpty(id)) {
-            return false;
-        }
-        AccessKey accessKey = accessKeyStore.remove(id);
-        return accessKey != null;
-    }
-
-    public void rmAllAccessKeys() {
-        accessKeyStore.removeAll();
-    }
-
-    private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
-        String idAndSecret = id + "+" + accessKey.key();
-        return new ApiConnectionsAccessInfoResponseDTO(
-                id,
-                CommonUtils.encodeBase64(idAndSecret.getBytes()),
-                accessKey.created()
-        );
-    }
-
     public ApiShareInfoResponseDTO shareAdd(ApiShareAddRequestDTO requestDTO) {
         String id = CommonUtils.random();
         ShareFileEntry entry = shareFileEntryStore.save(

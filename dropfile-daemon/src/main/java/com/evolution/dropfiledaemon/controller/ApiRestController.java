@@ -17,31 +17,6 @@ public class ApiRestController {
         this.apiFacade = apiFacade;
     }
 
-    @PostMapping("/connections/access/generate")
-    public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
-        return apiFacade.connectionsAccessGenerate(requestDTO);
-    }
-
-    @GetMapping("/connections/access/ls")
-    public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {
-        return apiFacade.connectionsAccessLs();
-    }
-
-    @DeleteMapping("/connections/access/rm/{id}")
-    public ResponseEntity<Void> connectionsAccessRm(@PathVariable String id) {
-        boolean result = apiFacade.connectionsAccessRm(id);
-        if (result) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping("/connections/access/rm-all")
-    public ResponseEntity<Void> connectionsAccessRmAll() {
-        apiFacade.rmAllAccessKeys();
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("/connections/share/ls")
     public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> connectionsShareLs() {
         List<ApiConnectionsShareLsResponseDTO> files = apiFacade.connectionsShareLs();
