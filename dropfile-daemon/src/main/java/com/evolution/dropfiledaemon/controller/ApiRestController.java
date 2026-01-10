@@ -17,30 +17,6 @@ public class ApiRestController {
         this.apiFacade = apiFacade;
     }
 
-    @GetMapping("/connections/share/ls")
-    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> connectionsShareLs() {
-        List<ApiConnectionsShareLsResponseDTO> files = apiFacade.connectionsShareLs();
-        return ResponseEntity.ok(files);
-    }
-
-    @PostMapping("/connections/share/download")
-    public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> connectionsShareDownload(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        ApiConnectionsShareDownloadResponseDTO responseDTO = apiFacade.connectionsShareDownload(requestDTO);
-        if (responseDTO != null) {
-            return ResponseEntity.ok(responseDTO);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/connections/share/cat/{id}")
-    public ResponseEntity<String> connectionsShareCat(@PathVariable String id) {
-        String responseDTO = apiFacade.connectionsShareCat(id);
-        if (responseDTO != null) {
-            return ResponseEntity.ok(responseDTO);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
     @PostMapping("/share/add")
     public ApiShareInfoResponseDTO addShareFile(@RequestBody ApiShareAddRequestDTO requestDTO) {
         return apiFacade.shareAdd(requestDTO);
