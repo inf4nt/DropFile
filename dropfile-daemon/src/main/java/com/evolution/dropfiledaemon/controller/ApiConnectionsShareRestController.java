@@ -22,13 +22,13 @@ public class ApiConnectionsShareRestController {
     }
 
     @GetMapping("/ls")
-    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> connectionsShareLs() {
+    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> ls() {
         List<ApiConnectionsShareLsResponseDTO> files = apiFacade.ls();
         return ResponseEntity.ok(files);
     }
 
     @PostMapping("/download")
-    public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> connectionsShareDownload(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
+    public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> download(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
         ApiConnectionsShareDownloadResponseDTO responseDTO = apiFacade.download(requestDTO);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);
@@ -37,7 +37,7 @@ public class ApiConnectionsShareRestController {
     }
 
     @GetMapping("/cat/{id}")
-    public ResponseEntity<String> connectionsShareCat(@PathVariable String id) {
+    public ResponseEntity<String> cat(@PathVariable String id) {
         String responseDTO = apiFacade.cat(id);
         if (responseDTO != null) {
             return ResponseEntity.ok(responseDTO);

@@ -22,17 +22,17 @@ public class ApiShareRestController {
 
     @PostMapping("/add")
     public ApiShareInfoResponseDTO add(@RequestBody ApiShareAddRequestDTO requestDTO) {
-        return apiFacade.shareAdd(requestDTO);
+        return apiFacade.add(requestDTO);
     }
 
     @GetMapping("/ls")
     public List<ApiShareInfoResponseDTO> ls() {
-        return apiFacade.shareLs();
+        return apiFacade.ls();
     }
 
     @DeleteMapping("/rm/{id}")
     public ResponseEntity<ApiShareInfoResponseDTO> rm(@PathVariable String id) {
-        boolean result = apiFacade.shareRm(id);
+        boolean result = apiFacade.rm(id);
         if (result) {
             return ResponseEntity.ok().build();
         }
@@ -41,7 +41,7 @@ public class ApiShareRestController {
 
     @DeleteMapping("/rm-all")
     public ResponseEntity<Void> rmAll() {
-        apiFacade.shareRmAll();
+        apiFacade.rmAll();
         return ResponseEntity.ok().build();
     }
 }

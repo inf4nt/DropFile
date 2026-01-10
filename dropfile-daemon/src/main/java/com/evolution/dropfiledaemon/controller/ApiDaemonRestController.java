@@ -25,13 +25,13 @@ public class ApiDaemonRestController {
     }
 
     @PostMapping("/shutdown")
-    public void daemonShutdown() {
-        apiDaemonFacade.daemonShutdown();
+    public void shutdown() {
+        apiDaemonFacade.shutdown();
     }
 
     @GetMapping("/info")
-    public DaemonInfoResponseDTO daemonInfo() {
-        return apiDaemonFacade.daemonInfo();
+    public DaemonInfoResponseDTO info() {
+        return apiDaemonFacade.info();
     }
 
 }

@@ -21,17 +21,17 @@ public class ApiConnectionsAccessRestController {
     }
 
     @PostMapping("/generate")
-    public ApiConnectionsAccessInfoResponseDTO connectionsAccessGenerate(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
+    public ApiConnectionsAccessInfoResponseDTO generate(@RequestBody ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         return apiFacade.generate(requestDTO);
     }
 
     @GetMapping("/ls")
-    public List<ApiConnectionsAccessInfoResponseDTO> connectionsAccessLs() {
+    public List<ApiConnectionsAccessInfoResponseDTO> ls() {
         return apiFacade.ls();
     }
 
     @DeleteMapping("/rm/{id}")
-    public ResponseEntity<Void> connectionsAccessRm(@PathVariable String id) {
+    public ResponseEntity<Void> rm(@PathVariable String id) {
         boolean result = apiFacade.rm(id);
         if (result) {
             return ResponseEntity.ok().build();
@@ -40,7 +40,7 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm-all")
-    public ResponseEntity<Void> connectionsAccessRmAll() {
+    public ResponseEntity<Void> rmAll() {
         apiFacade.rmAll();
         return ResponseEntity.ok().build();
     }

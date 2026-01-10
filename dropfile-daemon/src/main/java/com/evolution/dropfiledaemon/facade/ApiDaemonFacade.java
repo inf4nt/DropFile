@@ -19,13 +19,13 @@ public class ApiDaemonFacade {
         this.keysConfigStore = keysConfigStore;
     }
 
-    public void daemonShutdown() {
+    public void shutdown() {
         Executors.newSingleThreadExecutor().execute(() -> {
             System.exit(0);
         });
     }
 
-    public DaemonInfoResponseDTO daemonInfo() {
+    public DaemonInfoResponseDTO info() {
         return new DaemonInfoResponseDTO(
                 CommonUtils.getFingerprint(CryptoRSA.getPublicKey(keysConfigStore.getRequired().rsa().publicKey())),
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),

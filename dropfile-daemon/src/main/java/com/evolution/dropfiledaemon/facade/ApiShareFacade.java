@@ -20,7 +20,7 @@ public class ApiShareFacade {
         this.shareFileEntryStore = shareFileEntryStore;
     }
 
-    public ApiShareInfoResponseDTO shareAdd(ApiShareAddRequestDTO requestDTO) {
+    public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
         String id = CommonUtils.random();
         ShareFileEntry entry = shareFileEntryStore.save(
                 id,
@@ -32,7 +32,7 @@ public class ApiShareFacade {
         return toApiFileInfoResponseDTO(id, entry);
     }
 
-    public List<ApiShareInfoResponseDTO> shareLs() {
+    public List<ApiShareInfoResponseDTO> ls() {
         return shareFileEntryStore.getAll()
                 .entrySet()
                 .stream()
@@ -40,7 +40,7 @@ public class ApiShareFacade {
                 .toList();
     }
 
-    public boolean shareRm(String id) {
+    public boolean rm(String id) {
         if (ObjectUtils.isEmpty(id)) {
             return false;
         }
@@ -51,7 +51,7 @@ public class ApiShareFacade {
         return true;
     }
 
-    public void shareRmAll() {
+    public void rmAll() {
         shareFileEntryStore.removeAll();
     }
 
