@@ -68,9 +68,7 @@ public class CommonUtils {
 
     @SneakyThrows
     public static String getFingerprint(PublicKey publicKey) {
-        MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
-        byte[] hash = md.digest(publicKey.getEncoded());
-        return hexString(hash);
+        return getFingerprint(publicKey.getEncoded());
     }
 
     private static String hexString(byte[] hash) {
