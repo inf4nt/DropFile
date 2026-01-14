@@ -15,9 +15,9 @@
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.dependencies.version>3.5.7</spring.boot.dependencies.version>
-        <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
+        <spring.boot.dependencies.version>4.0.1</spring.boot.dependencies.version>
         <guava.version>33.4.8-jre</guava.version>
+        <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
     </properties>
 
     <dependencies>

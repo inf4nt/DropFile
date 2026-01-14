@@ -13,7 +13,7 @@ public class JsonFileSecretsConfigStore
         extends DefaultSingleValueStore<SecretsConfig>
         implements SecretsConfigStore {
 
-    private static final String STORE_NAME = "secrets_config";
+    private static final String STORE_NAME = "secretsConfig";
 
     public JsonFileSecretsConfigStore(ObjectMapper objectMapper) {
         super(
