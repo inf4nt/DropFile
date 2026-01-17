@@ -86,16 +86,16 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
         SecureEnvelope encrypt = cryptoTunnel.encrypt(payload, secretKey);
         return new TunnelResponseDTO(
-                CommonUtils.encodeBase64(encrypt.payload()),
-                CommonUtils.encodeBase64(encrypt.nonce())
+                encrypt.payload(),
+                encrypt.nonce()
         );
     }
 
     @SneakyThrows
     private TunnelRequestDTO.TunnelRequestPayload decrypt(TunnelRequestDTO requestDTO, SecretKey secretKey) {
         byte[] decrypt = cryptoTunnel.decrypt(
-                CommonUtils.decodeBase64(requestDTO.requestPayload()),
-                CommonUtils.decodeBase64(requestDTO.nonce()),
+                requestDTO.requestPayload(),
+                requestDTO.nonce(),
                 secretKey
         );
         return objectMapper.readValue(decrypt, TunnelRequestDTO.TunnelRequestPayload.class);

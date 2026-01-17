@@ -73,8 +73,8 @@ public class HttpTunnelClient implements TunnelClient {
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
                     CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                    CommonUtils.encodeBase64(secureEnvelope.payload()),
-                    CommonUtils.encodeBase64(secureEnvelope.nonce())
+                    secureEnvelope.payload(),
+                    secureEnvelope.nonce()
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -93,8 +93,8 @@ public class HttpTunnelClient implements TunnelClient {
 
             TunnelResponseDTO tunnelResponseDTO = objectMapper.readValue(httpResponse.body(), TunnelResponseDTO.class);
             byte[] decryptPayload = cryptoTunnel.decrypt(
-                    CommonUtils.decodeBase64(tunnelResponseDTO.payload()),
-                    CommonUtils.decodeBase64(tunnelResponseDTO.nonce()),
+                    tunnelResponseDTO.payload(),
+                    tunnelResponseDTO.nonce(),
                     secretKey
             );
             if (String.class.equals(responseType.getType())) {

@@ -5,6 +5,8 @@ import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
 import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfiledaemon.file.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.file.FileDownloadRequest;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelResponse;
@@ -156,5 +158,24 @@ public class ApiConnectionsShareFacade {
         log.info("Finished downloading {} seconds {}", manifestResponse.id(), TimeUnit.MILLISECONDS.toSeconds(end - start));
 
         return new ApiConnectionsShareDownloadResponseDTO(downloadFile.getAbsolutePath());
+    }
+
+    @Autowired
+    private FileDownloadOrchestrator fileDownloadOrchestrator;
+
+    public ApiConnectionsShareDownloadResponseDTO download2(ApiConnectionsShareDownloadRequestDTO requestDTO) {
+        if (requestDTO.filename().contains("big")) {
+            int index = requestDTO.filename().indexOf("big");
+            Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
+            for (int i = 0; i < iterations; i++) {
+                fileDownloadOrchestrator.start(
+                        new FileDownloadRequest(requestDTO.id(), i + "-" + requestDTO.filename(), requestDTO.rewrite())
+                );
+            }
+        } else {
+            fileDownloadOrchestrator.start(new FileDownloadRequest(requestDTO.id(), requestDTO.filename(), requestDTO.rewrite()));
+        }
+
+        return null;
     }
 }

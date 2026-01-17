@@ -57,6 +57,7 @@ public class ShareDownloadManifestActionHandler
         return new ShareDownloadManifestResponse(
                 id,
                 fileManifest.size(),
+                fileManifest.hash(),
                 fileManifest.chunkManifests()
                         .stream()
                         .map(it -> new ShareDownloadManifestResponse.ChunkManifest(

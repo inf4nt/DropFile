@@ -14,8 +14,8 @@ public class TunnelRestControllerExceptionHandler {
         e.printStackTrace();
         return ResponseEntity.ok(
                 new TunnelResponseDTO(
-                        CommonUtils.encodeBase64(CommonUtils.nonce16()),
-                        CommonUtils.encodeBase64(CommonUtils.nonce12())
+                        CommonUtils.nonce16(),
+                        CommonUtils.nonce12()
                 )
         );
     }

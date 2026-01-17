@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class FileManifestBuilder {
 
-    private static final Integer CHUNK_SIZE = 5_000_000;
+    private static final Integer CHUNK_SIZE = 1_000_000;
 
     private final FileHelper fileHelper;
 
@@ -49,7 +49,7 @@ public class FileManifestBuilder {
             chunkManifests.add(chunkManifest);
         });
 
-        return new FileManifest(fileName, fileLength, chunkManifests);
+        return new FileManifest(fileName, fileLength, null, chunkManifests);
     }
 
     private int getChunkSizeFactor(File file) {

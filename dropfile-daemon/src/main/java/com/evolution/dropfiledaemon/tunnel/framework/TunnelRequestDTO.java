@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
 public record TunnelRequestDTO(String fingerprint,
-                               String requestPayload,
-                               String nonce) {
+                               byte[] requestPayload,
+                               byte[] nonce) {
 
     public record TunnelRequestPayload(String action,
                                        byte[] payload,
