@@ -3,11 +3,17 @@ package com.evolution.dropfiledaemon.tunnel;
 import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.ChaCha20ParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
@@ -52,6 +58,31 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 
         return cipher.doFinal(payload);
+    }
+
+    @SneakyThrows
+    @Override
+    public void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key) {
+        byte[] nonce = generateNonce();
+        outputStream.write(nonce);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
+
+        try (CipherOutputStream cipherOut = new CipherOutputStream(outputStream, cipher)) {
+            inputStream.transferTo(cipherOut);
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public InputStream decrypt(InputStream inputStream, SecretKey key) {
+        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
+
+        return new CipherInputStream(inputStream, cipher);
     }
 
     private static byte[] generateNonce() {

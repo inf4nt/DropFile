@@ -12,8 +12,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
@@ -26,7 +29,7 @@ public class FileDownloadOrchestrator {
 
     private static final int MAX_PARALLEL_DOWNLOADING_COUNT = 10;
 
-    private static final int MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT = 10;
+    private static final int MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT = 1;
 
     private final Semaphore downloadingSemaphore = new Semaphore(MAX_PARALLEL_DOWNLOADING_COUNT);
 
@@ -148,13 +151,19 @@ public class FileDownloadOrchestrator {
                     chunkDownloadingSemaphore.acquire();
                     CompletableFuture<Void> future = CompletableFuture.runAsync(
                             () -> {
+                                InputStream inputStream = null;
                                 try {
-                                    ShareDownloadChunkTunnelResponse chunkTunnelResponse = chunkDownload(
-                                            chunkManifest.startPosition(), chunkManifest.endPosition()
-                                    );
-                                    writeChunkToFile(fileChannel, chunkTunnelResponse.data(), chunkManifest.startPosition());
+                                    inputStream = chunkDownloadStream(
+                                            chunkManifest.startPosition(), chunkManifest.endPosition());
+                                    writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
                                 } finally {
                                     chunkDownloadingSemaphore.release();
+                                    try {
+                                        inputStream.close();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        throw new RuntimeException(e);
+                                    }
                                 }
                             },
                             executorService
@@ -253,6 +262,27 @@ public class FileDownloadOrchestrator {
         }
 
         @SneakyThrows
+        private InputStream chunkDownloadStream(long start, long end) {
+//        log.info("Downloading chunk: {}", chunkManifest.hash());
+            InputStream stream = tunnelClient.stream(
+                    TunnelClient.Request.builder()
+                            .action("share-download-chunk-stream")
+                            .body(new ShareDownloadChunkTunnelRequest(
+                                    id,
+                                    start,
+                                    end
+                            ))
+                            .build()
+            );
+            if (stream == null) {
+                throw new RuntimeException(
+                        String.format("Chunk response is null: id %s start %s end %s", id, start, end)
+                );
+            }
+            return stream;
+        }
+
+        @SneakyThrows
         private void writeChunkToFile(FileChannel fileChannel,
                                       byte[] data,
                                       long position) {
@@ -260,6 +290,29 @@ public class FileDownloadOrchestrator {
             fileChannel.write(buffer, position);
             buffer.clear();
             chunksHaveDownloaded.add(data.length);
+        }
+
+        @SneakyThrows
+        private void writeChunkToFile(FileChannel fileChannel,
+                                      InputStream inputStream,
+                                      long position,
+                                      long size) {
+//            byte[] data = inputStream.readNBytes((int) size);
+//
+//            ByteBuffer buffer = ByteBuffer.wrap(data);
+//            fileChannel.write(buffer, position);
+//            buffer.clear();
+//            chunksHaveDownloaded.add(data.length);
+
+            ReadableByteChannel rbc = Channels.newChannel(inputStream);
+            fileChannel.transferFrom(rbc, position, size);
+
+
+
+//            ByteBuffer buffer = ByteBuffer.wrap(data);
+//            fileChannel.write(buffer, position);
+//            buffer.clear();
+//            chunksHaveDownloaded.add(data.length);
         }
     }
 

@@ -2,11 +2,11 @@ package com.evolution.dropfiledaemon.tunnel.service;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -49,6 +50,42 @@ public class HttpTunnelClient implements TunnelClient {
         this.cryptoTunnel = cryptoTunnel;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public InputStream stream(Request request) {
+        try {
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
+
+            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
+
+            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+
+            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
+                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                    secureEnvelope.payload(),
+                    secureEnvelope.nonce()
+            );
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(trustedOutValue.addressURI().resolve("/tunnel/stream"))
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(
+                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
+                    )
+                    .header("Content-Type", "application/json")
+                    .build();
+
+            HttpResponse<InputStream> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+
+            if (httpResponse.statusCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
+            }
+
+            return cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @SneakyThrows

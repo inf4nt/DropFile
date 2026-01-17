@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class FileManifestBuilder {
 
-    private static final Integer CHUNK_SIZE = 1_000_000;
+    private static final Integer CHUNK_SIZE = 5 * 1024 * 1024;
 
     private final FileHelper fileHelper;
 

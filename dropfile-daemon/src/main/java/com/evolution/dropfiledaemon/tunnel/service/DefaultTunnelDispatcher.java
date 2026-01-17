@@ -15,7 +15,10 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Objects;
 
@@ -58,6 +61,25 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         Objects.requireNonNull(body);
 
         return encrypt(body, secretKey);
+    }
+
+    @Override
+    public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream) {
+        SecretKey secretKey = getSecretKey(requestDTO.fingerprint());
+
+        TunnelRequestDTO.TunnelRequestPayload payload = decrypt(requestDTO, secretKey);
+
+        if (Math.abs(System.currentTimeMillis() - payload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
+        Object body = actionHandlerExecutor.handle(payload);
+        if (!(body instanceof InputStream)) {
+            throw new UnsupportedOperationException("Supports only InputStream. Current type: " + body.getClass());
+        }
+        InputStream inputStreamResult = (InputStream) body;
+
+        cryptoTunnel.encrypt(inputStreamResult, outputStream, secretKey);
     }
 
     private SecretKey getSecretKey(String fingerprint) {
