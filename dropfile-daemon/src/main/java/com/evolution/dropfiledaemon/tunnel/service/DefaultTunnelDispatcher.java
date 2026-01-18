@@ -1,12 +1,11 @@
 package com.evolution.dropfiledaemon.tunnel.service;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
@@ -15,10 +14,10 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Objects;
 
@@ -73,13 +72,27 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             throw new RuntimeException("Timed out");
         }
 
-        Object body = actionHandlerExecutor.handle(payload);
-        if (!(body instanceof InputStream)) {
-            throw new UnsupportedOperationException("Supports only InputStream. Current type: " + body.getClass());
-        }
-        InputStream inputStreamResult = (InputStream) body;
+        Object handlerResult = actionHandlerExecutor.handle(payload);
+
+        InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
 
         cryptoTunnel.encrypt(inputStreamResult, outputStream, secretKey);
+    }
+
+    @SneakyThrows
+    private InputStream handlerResultToInputStream(Object handlerResult) {
+        if (handlerResult instanceof InputStream) {
+            return (InputStream) handlerResult;
+        }
+        if (handlerResult instanceof byte[] arrayResult) {
+            return new ByteArrayInputStream(arrayResult);
+        }
+        if (handlerResult instanceof String stringResult) {
+            return new ByteArrayInputStream(stringResult.getBytes());
+        }
+
+        byte[] bytes = objectMapper.writeValueAsBytes(handlerResult);
+        return new ByteArrayInputStream(bytes);
     }
 
     private SecretKey getSecretKey(String fingerprint) {

@@ -9,11 +9,9 @@ import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class HttpTunnelClient implements TunnelClient {
@@ -53,53 +52,6 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     @Override
-    public InputStream stream(Request request) {
-        try {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
-
-            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
-
-            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
-
-            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                    secureEnvelope.payload(),
-                    secureEnvelope.nonce()
-            );
-
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(trustedOutValue.addressURI().resolve("/tunnel/stream"))
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(
-                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
-                    )
-                    .header("Content-Type", "application/json")
-                    .build();
-
-            HttpResponse<InputStream> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-
-            if (httpResponse.statusCode() != 200) {
-                throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
-            }
-
-            return cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public <T> T send(Request request, Class<T> responseType) {
-        return send(request, new TypeReference<T>() {
-            @Override
-            public Type getType() {
-                return responseType;
-            }
-        });
-    }
-
-    @Override
     public <T> T send(Request request, TypeReference<T> responseType) {
         try {
             TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
@@ -122,22 +74,24 @@ public class HttpTunnelClient implements TunnelClient {
                     .header("Content-Type", "application/json")
                     .build();
 
-            HttpResponse<byte[]> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<InputStream> httpResponse = httpClient
+                    .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
+                    .get(60, TimeUnit.SECONDS);
 
             if (httpResponse.statusCode() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
             }
 
-            TunnelResponseDTO tunnelResponseDTO = objectMapper.readValue(httpResponse.body(), TunnelResponseDTO.class);
-            byte[] decryptPayload = cryptoTunnel.decrypt(
-                    tunnelResponseDTO.payload(),
-                    tunnelResponseDTO.nonce(),
-                    secretKey
-            );
-            if (String.class.equals(responseType.getType())) {
-                return (T) new String(decryptPayload, StandardCharsets.UTF_8);
+            if (isInputStream(responseType)) {
+                return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
             }
-            return objectMapper.readValue(decryptPayload, responseType);
+
+            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
+                if (responseType.getType().equals(String.class)) {
+                    return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
+                }
+                return objectMapper.readValue(decryptInputStream, responseType);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -188,5 +142,10 @@ public class HttpTunnelClient implements TunnelClient {
                 .stream()
                 .max(Comparator.comparing(TrustedOutKeyValueStore.TrustedOutValue::updated))
                 .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
+    }
+
+    private boolean isInputStream(TypeReference<?> reference) {
+        Type type = reference.getType();
+        return type instanceof Class<?> clazz && clazz.isAssignableFrom(InputStream.class);
     }
 }

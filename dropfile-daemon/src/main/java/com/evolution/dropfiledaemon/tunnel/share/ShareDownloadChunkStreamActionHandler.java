@@ -38,6 +38,8 @@ public class ShareDownloadChunkStreamActionHandler
         return ShareDownloadChunkTunnelRequest.class;
     }
 
+    int count = 0;
+
     @Override
     public InputStream handle(ShareDownloadChunkTunnelRequest request) {
         ShareFileEntry shareFileEntry = shareFileEntryStore.get(request.id())
@@ -48,6 +50,26 @@ public class ShareDownloadChunkStreamActionHandler
         if (!Files.exists(file.toPath())) {
             throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
         }
+
+//        if (count <= 1) {
+//            count++;
+//            System.out.println("SLEEPING!");
+//            try {
+//                Thread.sleep(35000);
+//            } catch (Exception e) {
+//                System.out.println("ERROR HAS HAPPENED: " + e.getMessage());
+//                throw new RuntimeException(e);
+//            }
+//        }
+
+//        System.out.println("SLEEPING 50 SEC !");
+//        try {
+//            Thread.sleep(50000);
+//        } catch (Exception e) {
+//            System.out.println("ERROR HAS HAPPENED: " + e.getMessage());
+//            throw new RuntimeException(e);
+//        }
+//        System.out.println("DONE I AM AWAKE !!!");
 
         long skip = request.startPosition();
         int take = toInt(request.endPosition() - request.startPosition());

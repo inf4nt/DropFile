@@ -37,8 +37,8 @@ public class ActionHandlerExecutor {
         if (actionHandler == null) {
             throw new RuntimeException("No action found: " + payload.action());
         }
-        Object body = getBody(actionHandler, payload);
-        return actionHandler.handle(body);
+        Object handlerArgumentPayload = getBody(actionHandler, payload);
+        return actionHandler.handle(handlerArgumentPayload);
     }
 
     @SneakyThrows

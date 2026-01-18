@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.file;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -21,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
 @Slf4j
@@ -59,7 +58,6 @@ public class FileDownloadOrchestrator {
         try {
             file = getFile(request);
         } catch (Exception e) {
-            e.printStackTrace();
             downloadingSemaphore.release();
             throw e;
         }
@@ -73,6 +71,9 @@ public class FileDownloadOrchestrator {
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
             } finally {
                 downloadingSemaphore.release();
                 downloadProcedureExecutorService.shutdown();
@@ -142,6 +143,7 @@ public class FileDownloadOrchestrator {
 
             this.manifest = downloadManifest();
 
+            AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             try (FileChannel fileChannel = FileChannel.open(
                     file.toPath(),
@@ -149,25 +151,31 @@ public class FileDownloadOrchestrator {
                     StandardOpenOption.WRITE)) {
                 for (ShareDownloadManifestResponse.ChunkManifest chunkManifest : manifest.chunkManifests()) {
                     chunkDownloadingSemaphore.acquire();
+                    if (exceptionAtomicReference.get() != null) {
+                        throw exceptionAtomicReference.get();
+                    }
                     CompletableFuture<Void> future = CompletableFuture.runAsync(
                             () -> {
                                 InputStream inputStream = null;
                                 try {
-                                    inputStream = chunkDownloadStream(
-                                            chunkManifest.startPosition(), chunkManifest.endPosition());
+                                    inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition());
                                     writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
+                                } catch (Exception e) {
+                                    exceptionAtomicReference.set(e);
                                 } finally {
                                     chunkDownloadingSemaphore.release();
                                     try {
-                                        inputStream.close();
+                                        if (inputStream != null) {
+                                            inputStream.close();
+                                        }
                                     } catch (Exception e) {
-                                        e.printStackTrace();
-                                        throw new RuntimeException(e);
+                                        exceptionAtomicReference.set(e);
                                     }
                                 }
                             },
                             executorService
                     );
+
                     futures.add(future);
                 }
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -213,17 +221,34 @@ public class FileDownloadOrchestrator {
             return String.format(Locale.US, "%.2f %%", value);
         }
 
+        @SneakyThrows
         private ShareDownloadManifestResponse downloadManifest() {
             long start = System.currentTimeMillis();
             log.info("Downloading manifest: {} {}", id, file.getAbsolutePath());
 
-            ShareDownloadManifestResponse manifest = tunnelClient.send(
-                    TunnelClient.Request.builder()
-                            .action("share-download-manifest")
-                            .body(id)
-                            .build(),
-                    ShareDownloadManifestResponse.class
-            );
+            ShareDownloadManifestResponse manifest = null;
+            int attempt = 0;
+            while (attempt <= 10) {
+                manifest = tunnelClient.send(
+                        TunnelClient.Request.builder()
+                                .action("share-download-manifest")
+                                .body(id)
+                                .build(),
+                        ShareDownloadManifestResponse.class
+                );
+                if (manifest == null) {
+                    System.out.println(
+                            String.format(
+                                    "Manifest is null %s. Retrying in 1 sec : attempt %s", id, attempt
+                            )
+                    );
+                    attempt++;
+                    Thread.sleep(1000);
+                } else {
+                    break;
+                }
+            }
+
 
             if (manifest == null) {
                 throw new RuntimeException("Manifest is null: " + id);
@@ -240,56 +265,36 @@ public class FileDownloadOrchestrator {
         }
 
         @SneakyThrows
-        private ShareDownloadChunkTunnelResponse chunkDownload(long start, long end) {
-//        log.info("Downloading chunk: {}", chunkManifest.hash());
-            ShareDownloadChunkTunnelResponse chunkResponse = tunnelClient.send(
-                    TunnelClient.Request.builder()
-                            .action("share-download-chunk")
-                            .body(new ShareDownloadChunkTunnelRequest(
-                                    id,
-                                    start,
-                                    end
-                            ))
-                            .build(),
-                    ShareDownloadChunkTunnelResponse.class
-            );
-            if (chunkResponse == null) {
-                throw new RuntimeException(
-                        String.format("Chunk response is null: id %s start %s end %s", id, start, end)
-                );
-            }
-            return chunkResponse;
-        }
-
-        @SneakyThrows
         private InputStream chunkDownloadStream(long start, long end) {
-//        log.info("Downloading chunk: {}", chunkManifest.hash());
-            InputStream stream = tunnelClient.stream(
-                    TunnelClient.Request.builder()
-                            .action("share-download-chunk-stream")
-                            .body(new ShareDownloadChunkTunnelRequest(
-                                    id,
-                                    start,
-                                    end
-                            ))
-                            .build()
-            );
-            if (stream == null) {
-                throw new RuntimeException(
-                        String.format("Chunk response is null: id %s start %s end %s", id, start, end)
+//        log.info("Downloading chunk: {} {}", start, end);
+            InputStream stream = null;
+            int attempt = 1;
+            while (attempt <= 10) {
+                stream = tunnelClient.stream(
+                        TunnelClient.Request.builder()
+                                .action("share-download-chunk-stream")
+                                .body(new ShareDownloadChunkTunnelRequest(
+                                        id,
+                                        start,
+                                        end
+                                ))
+                                .build()
                 );
+                if (stream == null) {
+                    System.out.println(
+                            String.format(
+                                    "Stream is null %s %s. Retrying in 1 sec : attempt %s", start, end, attempt
+                            )
+                    );
+                    attempt++;
+                    Thread.sleep(1000);
+                } else {
+                    return stream;
+                }
             }
-            return stream;
-        }
-
-        @SneakyThrows
-        private void writeChunkToFile(FileChannel fileChannel,
-                                      byte[] data,
-                                      long position) {
-            ByteBuffer buffer = ByteBuffer.wrap(data);
-            fileChannel.write(buffer, position);
-            buffer.clear();
-            chunksHaveDownloaded.add(data.length);
+            throw new RuntimeException(
+                    String.format("Chunk response is null: id %s start %s end %s", id, start, end)
+            );
         }
 
         @SneakyThrows
@@ -297,21 +302,8 @@ public class FileDownloadOrchestrator {
                                       InputStream inputStream,
                                       long position,
                                       long size) {
-//            byte[] data = inputStream.readNBytes((int) size);
-//
-//            ByteBuffer buffer = ByteBuffer.wrap(data);
-//            fileChannel.write(buffer, position);
-//            buffer.clear();
-//            chunksHaveDownloaded.add(data.length);
-
             ReadableByteChannel rbc = Channels.newChannel(inputStream);
             fileChannel.transferFrom(rbc, position, size);
-
-
-
-//            ByteBuffer buffer = ByteBuffer.wrap(data);
-//            fileChannel.write(buffer, position);
-//            buffer.clear();
 //            chunksHaveDownloaded.add(data.length);
         }
     }
