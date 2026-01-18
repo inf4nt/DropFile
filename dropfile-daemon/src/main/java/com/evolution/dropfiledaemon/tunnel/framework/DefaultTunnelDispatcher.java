@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.service;
+package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
@@ -6,9 +6,6 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -46,22 +43,6 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
         this.objectMapper = objectMapper;
-    }
-
-    @Override
-    public TunnelResponseDTO dispatch(TunnelRequestDTO requestDTO) {
-        SecretKey secretKey = getSecretKey(requestDTO.fingerprint());
-
-        TunnelRequestDTO.TunnelRequestPayload payload = decrypt(requestDTO, secretKey);
-
-        if (Math.abs(System.currentTimeMillis() - payload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
-        }
-
-        Object body = actionHandlerExecutor.handle(payload);
-        Objects.requireNonNull(body);
-
-        return encrypt(body, secretKey);
     }
 
     @Override
@@ -115,24 +96,6 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                 CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
         );
         return cryptoTunnel.secretKey(secret);
-    }
-
-    @Deprecated
-    @SneakyThrows
-    private TunnelResponseDTO encrypt(Object object, SecretKey secretKey) {
-        byte[] payload;
-        if (object instanceof byte[]) {
-            payload = (byte[]) object;
-        } else if (object instanceof String) {
-            payload = object.toString().getBytes(StandardCharsets.UTF_8);
-        } else {
-            payload = objectMapper.writeValueAsBytes(object);
-        }
-        SecureEnvelope encrypt = cryptoTunnel.encrypt(payload, secretKey);
-        return new TunnelResponseDTO(
-                encrypt.payload(),
-                encrypt.nonce()
-        );
     }
 
     @SneakyThrows

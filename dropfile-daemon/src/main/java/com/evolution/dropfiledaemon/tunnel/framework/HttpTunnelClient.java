@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.service;
+package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
@@ -7,8 +7,6 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +21,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
@@ -145,14 +142,5 @@ public class HttpTunnelClient implements TunnelClient {
     private boolean isInputStream(TypeReference<?> reference) {
         Type type = reference.getType();
         return type instanceof Class<?> clazz && clazz.isAssignableFrom(InputStream.class);
-    }
-
-    public static void main(String[] args) {
-        byte[] array = CommonUtils.nonce16();
-
-        byte[] nonce = Arrays.copyOfRange(array, 0, 12);
-        byte[] rest = Arrays.copyOfRange(array, 12, array.length);
-
-        System.out.println();
     }
 }
