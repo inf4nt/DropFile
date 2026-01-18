@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.http.HttpClient;
@@ -75,23 +76,26 @@ public class HttpTunnelClient implements TunnelClient {
                 .header("Content-Type", "application/json")
                 .build();
 
-        HttpResponse<InputStream> httpResponse = httpClient
-                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
-                .get(60, TimeUnit.SECONDS);
+        if (isInputStream(responseType)) {
+            HttpResponse<InputStream> httpResponse = httpClient
+                    .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
+                    .get(60, TimeUnit.SECONDS);
+            if (httpResponse.statusCode() != 200) {
+                throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
+            }
+            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+        }
 
+        HttpResponse<byte[]> httpResponse = httpClient
+                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
+                .get(60, TimeUnit.SECONDS);
         if (httpResponse.statusCode() != 200) {
             throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
         }
 
-        if (isInputStream(responseType)) {
-            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-        }
-
-        try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
-            if (responseType.getType().equals(String.class)) {
-                return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
-            }
-            return objectMapper.readValue(decryptInputStream, responseType);
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(httpResponse.body())) {
+            InputStream decrypt = cryptoTunnel.decrypt(byteArrayInputStream, secretKey);
+            return objectMapper.readValue(decrypt, responseType);
         }
     }
 

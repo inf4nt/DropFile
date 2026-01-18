@@ -96,8 +96,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             return new ByteArrayInputStream(arrayResult);
         }
         if (handlerResult instanceof String stringResult) {
-            byte[] bytes = stringResult.getBytes(StandardCharsets.UTF_8);
-            return new ByteArrayInputStream(bytes);
+            return new ByteArrayInputStream(stringResult.getBytes());
         }
 
         byte[] bytes = objectMapper.writeValueAsBytes(handlerResult);
