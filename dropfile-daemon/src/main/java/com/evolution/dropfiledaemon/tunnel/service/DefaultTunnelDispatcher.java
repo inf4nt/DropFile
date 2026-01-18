@@ -24,6 +24,8 @@ import java.util.Objects;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
+    private static final int MAX_PAYLOAD_LIFETIME = 60_000;
+
     private final ActionHandlerExecutor actionHandlerExecutor;
 
     private final CryptoTunnel cryptoTunnel;
@@ -68,8 +70,14 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         TunnelRequestDTO.TunnelRequestPayload payload = decrypt(requestDTO, secretKey);
 
-        if (Math.abs(System.currentTimeMillis() - payload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
+        long requestTime = Math.abs(System.currentTimeMillis() - payload.timestamp());
+        if (requestTime > MAX_PAYLOAD_LIFETIME) {
+            throw new RuntimeException(
+                    String.format(
+                            "Tunnel request timeout exception. Expected %s actual %s",
+                            MAX_PAYLOAD_LIFETIME, requestTime
+                    )
+            );
         }
 
         Object handlerResult = actionHandlerExecutor.handle(payload);
