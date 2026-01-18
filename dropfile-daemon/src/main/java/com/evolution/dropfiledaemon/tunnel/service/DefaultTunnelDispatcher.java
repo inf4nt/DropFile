@@ -24,7 +24,7 @@ import java.util.Objects;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
-    private static final int MAX_PAYLOAD_LIFETIME = 60_000;
+    private static final int MAX_PAYLOAD_LIFETIME = 30_000;
 
     private final ActionHandlerExecutor actionHandlerExecutor;
 
@@ -117,6 +117,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         return cryptoTunnel.secretKey(secret);
     }
 
+    @Deprecated
     @SneakyThrows
     private TunnelResponseDTO encrypt(Object object, SecretKey secretKey) {
         byte[] payload;

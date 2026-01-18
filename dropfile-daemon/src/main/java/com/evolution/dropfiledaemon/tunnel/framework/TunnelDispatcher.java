@@ -4,6 +4,7 @@ import java.io.OutputStream;
 
 public interface TunnelDispatcher {
 
+    @Deprecated
     TunnelResponseDTO dispatch(TunnelRequestDTO requestDTO);
 
     void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream);

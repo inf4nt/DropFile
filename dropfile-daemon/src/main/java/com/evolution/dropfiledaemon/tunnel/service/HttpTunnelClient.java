@@ -12,6 +12,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,50 +52,46 @@ public class HttpTunnelClient implements TunnelClient {
         this.objectMapper = objectMapper;
     }
 
+    @SneakyThrows
     @Override
     public <T> T send(Request request, TypeReference<T> responseType) {
-        try {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
 
-            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
+        SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
 
-            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+        SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
-            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                    secureEnvelope.payload(),
-                    secureEnvelope.nonce()
-            );
+        TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
+                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                secureEnvelope.payload(),
+                secureEnvelope.nonce()
+        );
 
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(trustedOutValue.addressURI().resolve("/tunnel"))
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(
-                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
-                    )
-                    .header("Content-Type", "application/json")
-                    .build();
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(trustedOutValue.addressURI().resolve("/tunnel"))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(tunnelRequestDTO))
+                )
+                .header("Content-Type", "application/json")
+                .build();
 
-            HttpResponse<InputStream> httpResponse = httpClient
-                    .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
-                    .get(60, TimeUnit.SECONDS);
+        HttpResponse<InputStream> httpResponse = httpClient
+                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
+                .get(60, TimeUnit.SECONDS);
 
-            if (httpResponse.statusCode() != 200) {
-                throw new RuntimeException("Failed : HTTP error code : " + httpResponse.statusCode());
+        if (httpResponse.statusCode() != 200) {
+            throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
+        }
+
+        if (isInputStream(responseType)) {
+            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+        }
+
+        try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
+            if (responseType.getType().equals(String.class)) {
+                return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
             }
-
-            if (isInputStream(responseType)) {
-                return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-            }
-
-            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
-                if (responseType.getType().equals(String.class)) {
-                    return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                return objectMapper.readValue(decryptInputStream, responseType);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            return objectMapper.readValue(decryptInputStream, responseType);
         }
     }
 

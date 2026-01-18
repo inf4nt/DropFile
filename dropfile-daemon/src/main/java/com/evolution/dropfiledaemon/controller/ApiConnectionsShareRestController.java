@@ -35,9 +35,6 @@ public class ApiConnectionsShareRestController {
     @GetMapping("/cat/{id}")
     public ResponseEntity<String> cat(@PathVariable String id) {
         String responseDTO = apiFacade.cat(id);
-        if (responseDTO != null) {
-            return ResponseEntity.ok(responseDTO);
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(responseDTO);
     }
 }

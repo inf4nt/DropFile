@@ -7,6 +7,7 @@ import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfiledaemon.file.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.file.FileDownloadRequest;
+import com.evolution.dropfiledaemon.file.FileDownloadResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelResponse;
@@ -24,7 +25,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,9 +54,6 @@ public class ApiConnectionsShareFacade {
                 new TypeReference<List<FileEntryTunnelResponse>>() {
                 }
         );
-        if (files == null) {
-            return Collections.emptyList();
-        }
         return files.stream()
                 .map(it -> new ApiConnectionsShareLsResponseDTO(it.id(), it.alias()))
                 .toList();
@@ -157,7 +154,7 @@ public class ApiConnectionsShareFacade {
 
         log.info("Finished downloading {} seconds {}", manifestResponse.id(), TimeUnit.MILLISECONDS.toSeconds(end - start));
 
-        return new ApiConnectionsShareDownloadResponseDTO(downloadFile.getAbsolutePath());
+        return new ApiConnectionsShareDownloadResponseDTO(null, downloadFile.getAbsolutePath());
     }
 
     @Autowired
@@ -172,10 +169,14 @@ public class ApiConnectionsShareFacade {
                         new FileDownloadRequest(requestDTO.id(), i + "-" + requestDTO.filename(), requestDTO.rewrite())
                 );
             }
-        } else {
-            fileDownloadOrchestrator.start(new FileDownloadRequest(requestDTO.id(), requestDTO.filename(), requestDTO.rewrite()));
+            return null;
         }
-
-        return null;
+        FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(
+                new FileDownloadRequest(requestDTO.id(), requestDTO.filename(), requestDTO.rewrite())
+        );
+        return new ApiConnectionsShareDownloadResponseDTO(
+                fileDownloadResponse.operationId(),
+                fileDownloadResponse.filename()
+        );
     }
 }
