@@ -24,6 +24,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
@@ -93,10 +94,11 @@ public class HttpTunnelClient implements TunnelClient {
             throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
         }
 
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(httpResponse.body())) {
-            InputStream decrypt = cryptoTunnel.decrypt(byteArrayInputStream, secretKey);
-            return objectMapper.readValue(decrypt, responseType);
-        }
+        byte[] body = httpResponse.body();
+        byte[] nonce = Arrays.copyOfRange(body, 0, 12);
+        byte[] encodeArray = Arrays.copyOfRange(body, 12, body.length);
+        byte[] decrypt = cryptoTunnel.decrypt(encodeArray, nonce, secretKey);
+        return objectMapper.readValue(decrypt, responseType);
     }
 
     private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
@@ -148,5 +150,14 @@ public class HttpTunnelClient implements TunnelClient {
     private boolean isInputStream(TypeReference<?> reference) {
         Type type = reference.getType();
         return type instanceof Class<?> clazz && clazz.isAssignableFrom(InputStream.class);
+    }
+
+    public static void main(String[] args) {
+        byte[] array = CommonUtils.nonce16();
+
+        byte[] nonce = Arrays.copyOfRange(array, 0, 12);
+        byte[] rest = Arrays.copyOfRange(array, 12, array.length);
+
+        System.out.println();
     }
 }
