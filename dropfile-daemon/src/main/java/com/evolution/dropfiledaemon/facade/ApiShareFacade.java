@@ -45,10 +45,7 @@ public class ApiShareFacade {
             return false;
         }
         ShareFileEntry entry = shareFileEntryStore.remove(id);
-        if (entry == null) {
-            return false;
-        }
-        return true;
+        return entry != null;
     }
 
     public void rmAll() {

@@ -1,7 +1,5 @@
 package com.evolution.dropfilecli.command.share;
 
-import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +14,7 @@ import java.net.http.HttpResponse;
         name = "rm",
         description = "Remove file"
 )
-public class ShareRmCommand implements CommandHttpHandler<byte[]> {
+public class ShareRmCommand implements CommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -41,7 +39,7 @@ public class ShareRmCommand implements CommandHttpHandler<byte[]> {
     }
 
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<Void> execute() throws Exception {
         if (exclusive.id != null) {
             return daemonClient.shareRm(exclusive.id);
         } else if (exclusive.all) {
@@ -51,13 +49,9 @@ public class ShareRmCommand implements CommandHttpHandler<byte[]> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
+    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
         if (exclusive.id != null) {
-            ApiShareInfoResponseDTO responseDTO = objectMapper.readValue(
-                    response.body(),
-                    ApiShareInfoResponseDTO.class
-            );
-            PrintReflection.print(responseDTO);
+            System.out.println("Removed: " + exclusive.id);
         } else {
             System.out.println("Removed all files");
         }

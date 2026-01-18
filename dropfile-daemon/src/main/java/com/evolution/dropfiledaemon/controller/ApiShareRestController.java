@@ -31,7 +31,7 @@ public class ApiShareRestController {
     }
 
     @DeleteMapping("/rm/{id}")
-    public ResponseEntity<ApiShareInfoResponseDTO> rm(@PathVariable String id) {
+    public ResponseEntity<Void> rm(@PathVariable String id) {
         boolean result = apiFacade.rm(id);
         if (result) {
             return ResponseEntity.ok().build();
