@@ -77,28 +77,24 @@ public class HttpTunnelClient implements TunnelClient {
                 .header("Content-Type", "application/json")
                 .build();
 
-        if (isInputStream(responseType)) {
-            HttpResponse<InputStream> httpResponse = httpClient
-                    .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
-                    .get(60, TimeUnit.SECONDS);
-            if (httpResponse.statusCode() != 200) {
-                throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
-            }
-            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-        }
-
-        HttpResponse<byte[]> httpResponse = httpClient
-                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
+        HttpResponse<InputStream> httpResponse = httpClient
+                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
                 .get(60, TimeUnit.SECONDS);
+
         if (httpResponse.statusCode() != 200) {
             throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
         }
 
-        byte[] body = httpResponse.body();
-        byte[] nonce = Arrays.copyOfRange(body, 0, 12);
-        byte[] encodeArray = Arrays.copyOfRange(body, 12, body.length);
-        byte[] decrypt = cryptoTunnel.decrypt(encodeArray, nonce, secretKey);
-        return objectMapper.readValue(decrypt, responseType);
+        if (isInputStream(responseType)) {
+            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+        }
+
+        try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
+            if (responseType.getType().equals(String.class)) {
+                return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            return objectMapper.readValue(decryptInputStream, responseType);
+        }
     }
 
     private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
