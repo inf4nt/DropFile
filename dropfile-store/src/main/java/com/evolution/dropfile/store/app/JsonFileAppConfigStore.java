@@ -13,11 +13,9 @@ public class JsonFileAppConfigStore
         extends DefaultSingleValueStore<AppConfig>
         implements AppConfigStore {
 
-    private static final String STORE_NAME = "appConfig";
-
     public JsonFileAppConfigStore(ObjectMapper objectMapper) {
         super(
-                STORE_NAME,
+                "appConfig",
                 new JsonFileKeyValueStore<>(
                         new FileProvider() {
                             @Override

@@ -13,11 +13,9 @@ public class JsonFileSecretsConfigStore
         extends DefaultSingleValueStore<SecretsConfig>
         implements SecretsConfigStore {
 
-    private static final String STORE_NAME = "secretsConfig";
-
     public JsonFileSecretsConfigStore(ObjectMapper objectMapper) {
         super(
-                STORE_NAME,
+                "secretsConfig",
                 new JsonFileKeyValueStore<>(
                         new FileProtectedProvider() {
                             @Override
