@@ -1,6 +1,7 @@
-package com.evolution.dropfiledaemon.utils;
+package com.evolution.dropfiledaemon.util;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.time.Duration;
@@ -60,6 +61,7 @@ public class RetryExecutor<T> {
         return new RetryExecutorBuilder<>(callable);
     }
 
+    @RequiredArgsConstructor
     public static class RetryExecutorBuilder<T> {
 
         private final Callable<T> callable;
@@ -73,10 +75,6 @@ public class RetryExecutor<T> {
         private int attempts = 10;
 
         private Duration delay = Duration.ofSeconds(1);
-
-        public RetryExecutorBuilder(Callable<T> callable) {
-            this.callable = callable;
-        }
 
         public RetryExecutorBuilder<T> attempts(int attempts) {
             this.attempts = attempts;

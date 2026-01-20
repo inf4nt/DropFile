@@ -1,5 +1,6 @@
-package com.evolution.dropfiledaemon.utils;
+package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfiledaemon.util.function.IORunnable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ExecutionProfiling {
 
-    public static void run(String operation, RunnableExceptionable runnable) {
+    public static void run(String operation, IORunnable runnable) {
         run(
                 operation,
                 () -> {
@@ -37,10 +38,5 @@ public class ExecutionProfiling {
             log.info("[{}] finished with error. Millis {} seconds {}", operation, duration, seconds);
             throw e;
         }
-    }
-
-    @FunctionalInterface
-    public interface RunnableExceptionable {
-        void run() throws Exception;
     }
 }

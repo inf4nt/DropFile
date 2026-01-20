@@ -4,8 +4,9 @@ import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
-import com.evolution.dropfiledaemon.utils.ExecutionProfiling;
-import com.evolution.dropfiledaemon.utils.RetryExecutor;
+import com.evolution.dropfiledaemon.util.ExecutionProfiling;
+import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.util.Trying;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,14 +60,14 @@ public class FileDownloadOrchestrator {
         }
 
         downloadingSemaphore.acquire();
-        File file;
-        try {
-            file = getFile(request);
-        } catch (Exception e) {
-            downloadingSemaphore.release();
-            log.info("Exception occurred during getting file {}", e.getMessage(), e);
-            throw e;
-        }
+        File file = Trying
+                .call(() -> getFile(request))
+                .doOnError(exception -> {
+                    downloadingSemaphore.release();
+                    log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
+                })
+                .build()
+                .getOrElseThrow();
         String operationId = UUID.randomUUID().toString();
         ExecutorService downloadProcedureExecutorService = Executors.newVirtualThreadPerTaskExecutor();
         DownloadProcedure downloadProcedure = new DownloadProcedure(
@@ -74,17 +75,18 @@ public class FileDownloadOrchestrator {
                 operationId, request.id(), file
         );
         downloadProcedures.put(operationId, downloadProcedure);
-        fileDownloadingExecutorService.execute(() -> {
-            try {
-                downloadProcedure.run();
-            } catch (Exception e) {
-                log.info("Exception occurred during download process {}", e.getMessage(), e);
-                throw e;
-            } finally {
-                downloadingSemaphore.release();
-                downloadProcedureExecutorService.shutdown();
-            }
-        });
+        fileDownloadingExecutorService.execute(() ->
+                Trying.call(() -> downloadProcedure.run())
+                        .doOnError(exception -> {
+                            log.info("Exception occurred during download process {}", exception.getMessage(), exception);
+                        })
+                        .doFinally(() -> {
+                            downloadingSemaphore.release();
+                            downloadProcedureExecutorService.shutdown();
+                        })
+                        .build()
+                        .getOrElseThrow()
+        );
         return new FileDownloadResponse(operationId, file.getAbsolutePath());
     }
 
