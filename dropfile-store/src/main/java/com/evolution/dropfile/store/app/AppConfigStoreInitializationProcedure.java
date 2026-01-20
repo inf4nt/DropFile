@@ -16,11 +16,16 @@ public class AppConfigStoreInitializationProcedure
     public void init(AppConfigStore store) {
         Optional<AppConfig> configOptional = store.get();
         if (configOptional.isPresent()) {
+            String downloadDirectory = configOptional.get().daemonAppConfig().downloadDirectory();
+            Path downloadDirectoryPath = Paths.get(downloadDirectory);
+            if (Files.notExists(downloadDirectoryPath)) {
+                Files.createDirectories(downloadDirectoryPath);
+            }
             return;
         }
 
         Path homeDir = Paths.get(System.getProperty("user.home"), ".dropfile");
-        if (!Files.exists(homeDir)) {
+        if (Files.notExists(homeDir)) {
             Files.createDirectories(homeDir);
         }
 
