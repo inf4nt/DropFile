@@ -23,7 +23,7 @@ public class Trying<T> {
         return new TryingBuilder<>(callable);
     }
 
-    public static <T> TryingBuilder<T> call(IORunnable runnable) {
+    public static TryingBuilder<Void> call(IORunnable runnable) {
         return new TryingBuilder<>(() -> {
             runnable.run();
             return null;

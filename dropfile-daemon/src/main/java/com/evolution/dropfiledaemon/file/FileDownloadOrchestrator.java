@@ -177,26 +177,21 @@ public class FileDownloadOrchestrator {
                     }
                     CompletableFuture<Void> future = CompletableFuture.runAsync(
                             () -> {
-                                InputStream inputStream = null;
-                                try {
-                                    inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition());
-                                    writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
-                                } catch (Exception e) {
-                                    exceptionAtomicReference.set(e);
-                                } finally {
-                                    chunkDownloadingSemaphore.release();
-                                    try {
-                                        if (inputStream != null) {
-                                            inputStream.close();
-                                        }
-                                    } catch (Exception e) {
-                                        exceptionAtomicReference.set(e);
-                                    }
+                                if (exceptionAtomicReference.get() != null) {
+                                    return;
                                 }
+                                Trying.call(() -> {
+                                            try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
+                                                writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
+                                            }
+                                        })
+                                        .doOnError(exception -> exceptionAtomicReference.set(exception))
+                                        .doFinally(() -> chunkDownloadingSemaphore.release())
+                                        .build()
+                                        .getOrElseThrow();
                             },
                             executorService
                     );
-
                     futures.add(future);
                 }
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
