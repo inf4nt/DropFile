@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.util;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -15,8 +16,6 @@ import java.util.function.Function;
 public class RetryExecutor<T> {
 
     private final Callable<T> callable;
-
-    private final Function<List<Exception>, ? extends Exception> exceptionMapper;
 
     private final Function<List<Exception>, T> fallbackMapper;
 
@@ -48,13 +47,10 @@ public class RetryExecutor<T> {
             currentAttempt++;
             Thread.sleep(delay.toMillis());
         }
-        if (exceptionMapper != null) {
-            throw exceptionMapper.apply(exceptions);
-        }
         if (fallbackMapper != null) {
             return fallbackMapper.apply(exceptions);
         }
-        throw new RuntimeException();
+        throw new RetryExecutorException(exceptions);
     }
 
     public static <T> RetryExecutorBuilder<T> call(Callable<T> callable) {
@@ -65,8 +61,6 @@ public class RetryExecutor<T> {
     public static class RetryExecutorBuilder<T> {
 
         private final Callable<T> callable;
-
-        private Function<List<Exception>, ? extends Exception> exceptionMapper;
 
         private Function<List<Exception>, T> fallbackMapper;
 
@@ -91,18 +85,7 @@ public class RetryExecutor<T> {
             return this;
         }
 
-        public RetryExecutorBuilder<T> exceptionMapper(Function<List<Exception>, ? extends Exception> exceptionMapper) {
-            if (fallbackMapper != null) {
-                throw new RuntimeException("exceptionMapper already set");
-            }
-            this.exceptionMapper = exceptionMapper;
-            return this;
-        }
-
         public RetryExecutorBuilder<T> fallbackMapper(Function<List<Exception>, T> fallbackMapper) {
-            if (exceptionMapper != null) {
-                throw new RuntimeException("exceptionMapper already set");
-            }
             this.fallbackMapper = fallbackMapper;
             return this;
         }
@@ -110,12 +93,17 @@ public class RetryExecutor<T> {
         public RetryExecutor<T> build() {
             return new RetryExecutor<>(
                     callable,
-                    exceptionMapper,
                     fallbackMapper,
                     retryNotification,
                     attempts,
                     delay
             );
         }
+    }
+
+    @RequiredArgsConstructor
+    public static class RetryExecutorException extends RuntimeException {
+        @Getter
+        private final List<Exception> exceptions;
     }
 }

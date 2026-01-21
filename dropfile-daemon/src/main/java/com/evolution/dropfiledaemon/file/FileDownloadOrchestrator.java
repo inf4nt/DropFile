@@ -237,49 +237,51 @@ public class FileDownloadOrchestrator {
 
         @SneakyThrows
         private ShareDownloadManifestResponse downloadManifest() {
-            return RetryExecutor
-                    .call(
-                            () -> tunnelClient.send(
-                                    TunnelClient.Request.builder()
-                                            .action("share-download-manifest")
-                                            .body(id)
-                                            .build(),
-                                    ShareDownloadManifestResponse.class
-                            )
+            return Trying.call(() ->
+                            RetryExecutor.call(
+                                            () -> tunnelClient.send(
+                                                    TunnelClient.Request.builder()
+                                                            .action("share-download-manifest")
+                                                            .body(id)
+                                                            .build(),
+                                                    ShareDownloadManifestResponse.class
+                                            )
+                                    )
+                                    .doOnError((attempt, exception) -> {
+                                        log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
+                                    })
+                                    .build()
+                                    .run()
                     )
-                    .doOnError((attempt, exception) -> {
-                        log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
-                    })
-                    .exceptionMapper(exceptions -> new RuntimeException(String.format(
-                            "Unable to download manifest %s", id
-                    )))
                     .build()
-                    .run();
+                    .getOrElseThrow(exception -> new RuntimeException(String.format("Unable to download manifest %s", id)));
         }
 
         @SneakyThrows
         private InputStream chunkDownloadStream(long start, long end) {
-            return RetryExecutor
-                    .call(
-                            () -> tunnelClient.stream(
-                                    TunnelClient.Request.builder()
-                                            .action("share-download-chunk-stream")
-                                            .body(new ShareDownloadChunkTunnelRequest(
-                                                    id,
-                                                    start,
-                                                    end
-                                            ))
-                                            .build()
-                            )
+            return Trying.call(() ->
+                            RetryExecutor.call(
+                                            () -> tunnelClient.stream(
+                                                    TunnelClient.Request.builder()
+                                                            .action("share-download-chunk-stream")
+                                                            .body(new ShareDownloadChunkTunnelRequest(
+                                                                    id,
+                                                                    start,
+                                                                    end
+                                                            ))
+                                                            .build()
+                                            )
+                                    )
+                                    .doOnError((attempt, exception) -> {
+                                        log.info("Retry 'share-download-chunk-stream'. Attempt: {} {}", attempt, exception.getMessage());
+                                    })
+                                    .build()
+                                    .run()
                     )
-                    .doOnError((attempt, exception) -> {
-                        log.info("Retry 'share-download-chunk-stream'. Attempt: {} {}", attempt, exception.getMessage());
-                    })
-                    .exceptionMapper(exceptions -> new RuntimeException(String.format(
-                            "Unable to download chunk %s [%s, %s]", id, start, end
-                    )))
                     .build()
-                    .run();
+                    .getOrElseThrow(exception -> new RuntimeException(String.format(
+                            "Unable to download chunk %s [%s, %s]", id, start, end
+                    )));
         }
 
         @SneakyThrows
