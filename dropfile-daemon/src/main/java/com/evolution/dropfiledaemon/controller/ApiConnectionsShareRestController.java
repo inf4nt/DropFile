@@ -29,7 +29,7 @@ public class ApiConnectionsShareRestController {
 
     @PostMapping("/download")
     public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> download(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        return ResponseEntity.ok(apiFacade.download2(requestDTO));
+        return ResponseEntity.ok(apiFacade.download(requestDTO));
     }
 
     @GetMapping("/cat/{id}")

@@ -19,6 +19,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -272,14 +273,17 @@ public class FileDownloadOrchestrator {
 
     @SneakyThrows
     private File getFile(FileDownloadRequest request) {
-        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
-        File downloadFile;
         if (ObjectUtils.isEmpty(request.filename())) {
-            throw new UnsupportedOperationException();
+            throw new IllegalArgumentException("filename must not be empty");
         }
-        downloadFile = new File(new File(downloadDirectory), request.filename());
+        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        File downloadFile = new File(downloadDirectory, request.filename());
 
         if (Files.notExists(downloadFile.toPath())) {
+            Path parent = downloadFile.toPath().getParent();
+            if (Files.notExists(parent)) {
+                Files.createDirectories(parent);
+            }
             Files.createFile(downloadFile.toPath());
         }
 
