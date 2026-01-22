@@ -1,7 +1,5 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.store.access.AccessKeyStore;
-import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -42,11 +40,6 @@ public class DropFileDaemonConfiguration {
                 new RuntimeTrustedInKeyValueStore(),
                 new RuntimeTrustedOutKeyValueStore()
         );
-    }
-
-    @Bean
-    public AccessKeyStore accessKeyStore() {
-        return new RuntimeAccessKeyStore();
     }
 
     @Bean

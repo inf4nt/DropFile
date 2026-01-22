@@ -1,14 +1,17 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.access.AccessKeyStoreInitializationProcedure;
+import com.evolution.dropfile.store.access.JsonFileAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.keys.JsonFileKeysConfigStore;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.keys.KeysConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.keys.RuntimeKeysConfigStore;
+import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +37,11 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
+    public AccessKeyStoreInitializationProcedure accessKeyStoreInitializationProcedure() {
+        return new AccessKeyStoreInitializationProcedure();
+    }
+
+    @Bean
     public AppConfigStore appConfigStore(ObjectMapper objectMapper,
                                          AppConfigStoreInitializationProcedure initializationProcedure) {
         AppConfigStore store = new JsonFileAppConfigStore(objectMapper);
@@ -50,9 +58,18 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public KeysConfigStore keysConfigStore(KeysConfigStoreInitializationProcedure initializationProcedure) {
-        KeysConfigStore store = new RuntimeKeysConfigStore();
+    public KeysConfigStore keysConfigStore(ObjectMapper objectMapper,
+                                           KeysConfigStoreInitializationProcedure initializationProcedure) {
+        KeysConfigStore store = new JsonFileKeysConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
+    }
+
+    @Bean
+    public AccessKeyStore accessKeyStore(ObjectMapper objectMapper,
+                                         AccessKeyStoreInitializationProcedure initializationProcedure) {
+        AccessKeyStore accessKeyStore = new JsonFileAccessKeyStore(objectMapper);
+        initializationProcedure.init(accessKeyStore);
+        return accessKeyStore;
     }
 }

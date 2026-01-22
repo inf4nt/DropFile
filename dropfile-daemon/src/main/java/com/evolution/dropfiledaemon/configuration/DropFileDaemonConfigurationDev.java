@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
@@ -88,6 +90,11 @@ public class DropFileDaemonConfigurationDev {
                     )
             );
         });
+    }
+
+    @Bean
+    public AccessKeyStore accessKeyStore() {
+        return new RuntimeAccessKeyStore();
     }
 
     @SneakyThrows

@@ -263,7 +263,8 @@ public class ApiHandshakeFacade {
                 .map(entry -> new HandshakeApiTrustInResponseDTO(
                         entry.getKey(),
                         CommonUtils.encodeBase64(entry.getValue().publicKeyRSA()),
-                        CommonUtils.encodeBase64(entry.getValue().publicKeyDH())
+                        CommonUtils.encodeBase64(entry.getValue().publicKeyDH()),
+                        entry.getValue().updated()
                 ))
                 .toList();
     }
@@ -292,7 +293,8 @@ public class ApiHandshakeFacade {
                 entry.getKey(),
                 CommonUtils.encodeBase64(entry.getValue().publicKeyRSA()),
                 CommonUtils.encodeBase64(entry.getValue().publicKeyDH()),
-                entry.getValue().addressURI().toString()
+                entry.getValue().addressURI().toString(),
+                entry.getValue().updated()
         );
     }
 }

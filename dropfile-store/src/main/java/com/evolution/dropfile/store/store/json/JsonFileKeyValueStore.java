@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,7 +16,7 @@ import java.util.Objects;
 
 public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
-    private static final Integer READ_BUFFER_SIZE = 8024;
+    private static final Integer READ_BUFFER_SIZE = 8 * 1024;
 
     private final FileProvider fileProvider;
 
@@ -72,11 +73,16 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
             if (bufferSize > channel.size()) {
                 bufferSize = (int) channel.size();
             }
-            ByteBuffer buff = ByteBuffer.allocate(bufferSize);
+            ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
 
-            while (channel.read(buff) > 0) {
-                out.write(buff.array(), 0, buff.position());
-                buff.clear();
+            while (channel.read(buffer) != -1) {
+                buffer.flip();
+
+                while (buffer.hasRemaining()) {
+                    out.write(buffer.get());
+                }
+
+                buffer.clear();
             }
 
             byte[] allBytes = out.toByteArray();
@@ -87,7 +93,9 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
     @SneakyThrows
     private V writeKeyValue(String key, V value) {
-        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(),
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE)) {
             FileLock lock = channel.lock();
 
             Map<String, V> values = readChannel(channel);
@@ -95,8 +103,14 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
             values.put(key, value);
             byte[] byteArray = jsonSerde.serialize(values);
+            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
+            channel.truncate(0);
+            channel.position(0);
 
-            channel.write(ByteBuffer.wrap(byteArray), 0);
+            while (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
+
             lock.release();
             return value;
         }
@@ -104,7 +118,10 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
     @SneakyThrows
     private V removeByKey(String key) {
-        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        try (FileChannel channel = FileChannel.open(
+                fileProvider.getFile().toPath(),
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE)) {
             FileLock lock = channel.lock();
 
             Map<String, V> values = readChannel(channel);
@@ -120,8 +137,16 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
                 return null;
             }
             byte[] byteArray = jsonSerde.serialize(values);
+            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
 
-            channel.write(ByteBuffer.wrap(byteArray), 0);
+            channel.truncate(0);
+            channel.position(0);
+
+            while (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
+
+            channel.force(true);
 
             lock.release();
 
@@ -131,12 +156,23 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
     @SneakyThrows
     private void removeAllStore() {
-        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        Path filePath = fileProvider.getFile().toPath();
+        try (FileChannel channel = FileChannel.open(filePath,
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE)) {
             FileLock lock = channel.lock();
 
             byte[] byteArray = jsonSerde.serialize(new LinkedHashMap<>());
+            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
 
-            channel.write(ByteBuffer.wrap(byteArray), 0);
+            channel.truncate(0);
+            channel.position(0);
+
+            while (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
+
+            channel.force(true);
 
             lock.release();
         }
