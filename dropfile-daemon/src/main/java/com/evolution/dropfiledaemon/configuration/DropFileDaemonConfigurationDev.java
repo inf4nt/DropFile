@@ -12,12 +12,18 @@ import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.secret.ImmutableSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfig;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 
 @Slf4j
@@ -28,17 +34,19 @@ public class DropFileDaemonConfigurationDev {
     @Bean
     public AppConfigStore appConfigStore(Environment environment) {
         return new ImmutableAppConfigStore(() -> {
-
             Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
-            String daemonDownloadDirectory = environment.getRequiredProperty("dropfile.daemon.download.directory");
+            String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
 
             log.info("Provided download directory: {}", daemonDownloadDirectory);
             log.info("Provided daemon port: {}", daemonPort);
 
+            File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
+            log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
+
             return new AppConfig(
                     null,
                     new AppConfig.DaemonAppConfig(
-                            daemonDownloadDirectory,
+                            daemonDownloadDirectoryFile.getAbsolutePath(),
                             daemonPort
                     )
             );
@@ -80,5 +88,25 @@ public class DropFileDaemonConfigurationDev {
                     )
             );
         });
+    }
+
+    @SneakyThrows
+    private File getDaemonDownloadDirectory(String daemonDownloadDirectory) {
+        if (daemonDownloadDirectory != null && !daemonDownloadDirectory.isBlank()) {
+            Path daemonDownloadDirectoryPath = Paths.get(daemonDownloadDirectory)
+                    .normalize();
+            if (!daemonDownloadDirectoryPath.isAbsolute()) {
+                throw new IllegalArgumentException("Daemon download directory has to be absolute: " + daemonDownloadDirectoryPath);
+            }
+            if (Files.notExists(daemonDownloadDirectoryPath)) {
+                throw new FileNotFoundException("Daemon download directory does not exist: " + daemonDownloadDirectoryPath);
+            }
+            return daemonDownloadDirectoryPath.toFile();
+        }
+        Path downloadDirectoryPath = Paths.get(System.getProperty("user.home"), ".dropfile");
+        if (Files.notExists(downloadDirectoryPath)) {
+            Files.createDirectory(downloadDirectoryPath);
+        }
+        return downloadDirectoryPath.toFile();
     }
 }
