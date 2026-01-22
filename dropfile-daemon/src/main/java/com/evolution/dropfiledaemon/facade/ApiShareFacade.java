@@ -33,7 +33,7 @@ public class ApiShareFacade {
         if (Files.notExists(absoluteFilePathPath)) {
             throw new FileNotFoundException(absoluteFilePathPath.toString());
         }
-        if (Files.isDirectory(Paths.get(requestDTO.absoluteFilePath()))) {
+        if (Files.isDirectory(absoluteFilePathPath)) {
             throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.absoluteFilePath());
         }
 
