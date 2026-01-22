@@ -10,9 +10,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
 
 @Component
 @CommandLine.Command(
@@ -40,16 +38,8 @@ public class ShareAddCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        File toAdd = new File(file.getAbsolutePath());
-        if (Files.notExists(toAdd.toPath())) {
-            throw new FileNotFoundException(file.getAbsolutePath());
-        }
-        if (Files.isDirectory(toAdd.toPath())) {
-            throw new UnsupportedOperationException(file.getAbsolutePath() + " is a directory");
-        }
-        String absolutePath = toAdd.getCanonicalFile().getAbsolutePath();
         String filename = getFilename();
-        return daemonClient.shareAdd(filename, absolutePath);
+        return daemonClient.shareAdd(filename, file.getAbsolutePath());
     }
 
     @Override

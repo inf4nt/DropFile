@@ -1,13 +1,19 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
+import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Component
@@ -20,13 +26,23 @@ public class ApiShareFacade {
         this.shareFileEntryStore = shareFileEntryStore;
     }
 
+    @SneakyThrows
     public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
+        String alias = Paths.get(requestDTO.alias()).toString();
+        Path absoluteFilePathPath = Paths.get(requestDTO.absoluteFilePath());
+        if (Files.notExists(absoluteFilePathPath)) {
+            throw new FileNotFoundException(absoluteFilePathPath.toString());
+        }
+        if (Files.isDirectory(Paths.get(requestDTO.absoluteFilePath()))) {
+            throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.absoluteFilePath());
+        }
+
         String id = CommonUtils.random();
         ShareFileEntry entry = shareFileEntryStore.save(
                 id,
                 new ShareFileEntry(
-                        requestDTO.alias(),
-                        requestDTO.absoluteFilePath()
+                        alias,
+                        absoluteFilePathPath.toFile().getCanonicalPath()
                 )
         );
         return toApiFileInfoResponseDTO(id, entry);
