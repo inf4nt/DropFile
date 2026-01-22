@@ -56,7 +56,7 @@ public class FileDownloadOrchestrator {
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
         if (downloadingSemaphore.availablePermits() == 0) {
-            throw new IllegalStateException("No available permits");
+            throw new IllegalStateException("No available permits. Total: " + MAX_PARALLEL_DOWNLOADING_COUNT);
         }
 
         downloadingSemaphore.acquire();
@@ -95,26 +95,6 @@ public class FileDownloadOrchestrator {
                 .stream()
                 .map(it -> it.getProgress())
                 .toList();
-    }
-
-    @SneakyThrows
-    private File getFile(FileDownloadRequest request) {
-        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
-        File downloadFile;
-        if (ObjectUtils.isEmpty(request.filename())) {
-            throw new UnsupportedOperationException();
-        } else {
-            downloadFile = new File(new File(downloadDirectory), request.filename());
-        }
-
-        if (Files.notExists(downloadFile.toPath())) {
-            Files.createFile(downloadFile.toPath());
-        }
-
-        if (!request.rewrite() && Files.size(downloadFile.toPath()) != 0) {
-            throw new RuntimeException("Unable to rewrite file");
-        }
-        return downloadFile;
     }
 
     public class DownloadProcedure {
@@ -288,6 +268,25 @@ public class FileDownloadOrchestrator {
             fileChannel.transferFrom(rbc, position, size);
 //            chunksHaveDownloaded.add(data.length);
         }
+    }
+
+    @SneakyThrows
+    private File getFile(FileDownloadRequest request) {
+        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        File downloadFile;
+        if (ObjectUtils.isEmpty(request.filename())) {
+            throw new UnsupportedOperationException();
+        }
+        downloadFile = new File(new File(downloadDirectory), request.filename());
+
+        if (Files.notExists(downloadFile.toPath())) {
+            Files.createFile(downloadFile.toPath());
+        }
+
+        if (!request.rewrite() && Files.size(downloadFile.toPath()) != 0) {
+            throw new RuntimeException("Unable to rewrite file");
+        }
+        return downloadFile;
     }
 
     public record DownloadProgress(String operationId,
