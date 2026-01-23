@@ -226,6 +226,12 @@ public class FileDownloadOrchestrator {
                                     .doOnError((attempt, exception) -> {
                                         log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
                                     })
+                                    .doOnSuccessful((attempt, manifest) -> {
+                                        log.info(
+                                                "Manifest downloaded 'share-download-manifest'. Attempt: {} Hash {} Chunk size {}",
+                                                attempt, manifest.hash(), manifest.chunkManifests().size()
+                                        );
+                                    })
                                     .build()
                                     .run()
                     )

@@ -97,7 +97,7 @@ public class FileHelper {
         return bytesToHex(hash);
     }
 
-    private String bytesToHex(byte[] bytes) {
+    public String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b));

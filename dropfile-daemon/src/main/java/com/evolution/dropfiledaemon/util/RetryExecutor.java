@@ -19,7 +19,9 @@ public class RetryExecutor<T> {
 
     private final Function<List<Exception>, T> fallbackMapper;
 
-    private final BiConsumer<Integer, Exception> retryNotification;
+    private final BiConsumer<Integer, Exception> doOnError;
+
+    private final BiConsumer<Integer, T> doOnSuccessful;
 
     private final int attempts;
 
@@ -33,6 +35,13 @@ public class RetryExecutor<T> {
             try {
                 T call = callable.call();
                 if (call != null) {
+                    if (doOnSuccessful != null) {
+                        try {
+                            doOnSuccessful.accept(currentAttempt, call);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     return call;
                 }
                 throw new NullPointerException(String.format(
@@ -40,8 +49,8 @@ public class RetryExecutor<T> {
                 ));
             } catch (Exception e) {
                 exceptions.add(e);
-                if (retryNotification != null) {
-                    retryNotification.accept(currentAttempt, e);
+                if (doOnError != null) {
+                    doOnError.accept(currentAttempt, e);
                 }
             }
             currentAttempt++;
@@ -64,7 +73,9 @@ public class RetryExecutor<T> {
 
         private Function<List<Exception>, T> fallbackMapper;
 
-        private BiConsumer<Integer, Exception> retryNotification;
+        private BiConsumer<Integer, Exception> doOnError;
+
+        private BiConsumer<Integer, T> doOnSuccessful;
 
         private int attempts = 10;
 
@@ -80,8 +91,13 @@ public class RetryExecutor<T> {
             return this;
         }
 
-        public RetryExecutorBuilder<T> doOnError(BiConsumer<Integer, Exception> retryNotification) {
-            this.retryNotification = retryNotification;
+        public RetryExecutorBuilder<T> doOnError(BiConsumer<Integer, Exception> doOnError) {
+            this.doOnError = doOnError;
+            return this;
+        }
+
+        public RetryExecutorBuilder<T> doOnSuccessful(BiConsumer<Integer, T> doOnSuccessful) {
+            this.doOnSuccessful = doOnSuccessful;
             return this;
         }
 
@@ -94,7 +110,8 @@ public class RetryExecutor<T> {
             return new RetryExecutor<>(
                     callable,
                     fallbackMapper,
-                    retryNotification,
+                    doOnError,
+                    doOnSuccessful,
                     attempts,
                     delay
             );
