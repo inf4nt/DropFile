@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.AccessKeyStoreInitializationProcedure;
-import com.evolution.dropfile.store.access.JsonFileAccessKeyStore;
+import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
@@ -69,7 +69,8 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public AccessKeyStore accessKeyStore(ObjectMapper objectMapper,
                                          AccessKeyStoreInitializationProcedure initializationProcedure) {
-        AccessKeyStore accessKeyStore = new JsonFileAccessKeyStore(objectMapper);
+//        AccessKeyStore accessKeyStore = new JsonFileAccessKeyStore(objectMapper);
+        AccessKeyStore accessKeyStore = new RuntimeAccessKeyStore();
         initializationProcedure.init(accessKeyStore);
         return accessKeyStore;
     }
