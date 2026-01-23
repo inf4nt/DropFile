@@ -268,13 +268,12 @@ public class FileDownloadOrchestrator {
         }
 
         @SneakyThrows
-        private void writeChunkToFile(FileChannel fileChannel,
-                                      InputStream inputStream,
+        private void writeChunkToFile(FileChannel writeToFileChannel,
+                                      InputStream inputStreamChunk,
                                       long position,
                                       long size) {
-            ReadableByteChannel rbc = Channels.newChannel(inputStream);
-            fileChannel.transferFrom(rbc, position, size);
-//            chunksHaveDownloaded.add(data.length);
+            ReadableByteChannel rbc = Channels.newChannel(inputStreamChunk);
+            writeToFileChannel.transferFrom(rbc, position, size);
         }
     }
 
