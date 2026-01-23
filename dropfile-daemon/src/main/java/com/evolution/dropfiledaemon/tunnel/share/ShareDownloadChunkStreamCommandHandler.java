@@ -5,11 +5,13 @@ import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.manifest.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
@@ -38,6 +40,7 @@ public class ShareDownloadChunkStreamCommandHandler
         return ShareDownloadChunkTunnelRequest.class;
     }
 
+    @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkTunnelRequest request) {
         ShareFileEntry shareFileEntry = shareFileEntryStore.get(request.id())
@@ -46,7 +49,7 @@ public class ShareDownloadChunkStreamCommandHandler
 
         File file = new File(shareFileEntry.absolutePath());
         if (!Files.exists(file.toPath())) {
-            throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
+            throw new FileNotFoundException("No file found: " + file.getAbsolutePath());
         }
 
         long skip = request.startPosition();
