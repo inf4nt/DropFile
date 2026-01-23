@@ -38,8 +38,6 @@ public class ShareDownloadChunkStreamCommandHandler
         return ShareDownloadChunkTunnelRequest.class;
     }
 
-    int count = 0;
-
     @Override
     public InputStream handle(ShareDownloadChunkTunnelRequest request) {
         ShareFileEntry shareFileEntry = shareFileEntryStore.get(request.id())
@@ -50,26 +48,6 @@ public class ShareDownloadChunkStreamCommandHandler
         if (!Files.exists(file.toPath())) {
             throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
         }
-
-//        if (count <= 1) {
-//            count++;
-//            System.out.println("SLEEPING!");
-//            try {
-//                Thread.sleep(35000);
-//            } catch (Exception e) {
-//                System.out.println("ERROR HAS HAPPENED: " + e.getMessage());
-//                throw new RuntimeException(e);
-//            }
-//        }
-
-//        System.out.println("SLEEPING 50 SEC !");
-//        try {
-//            Thread.sleep(50000);
-//        } catch (Exception e) {
-//            System.out.println("ERROR HAS HAPPENED: " + e.getMessage());
-//            throw new RuntimeException(e);
-//        }
-//        System.out.println("DONE I AM AWAKE !!!");
 
         long skip = request.startPosition();
         int take = toInt(request.endPosition() - request.startPosition());
@@ -84,4 +62,35 @@ public class ShareDownloadChunkStreamCommandHandler
         }
         return Math.toIntExact(value);
     }
+
+//    int count = 0;
+//
+//    @Override
+//    public InputStream handle(ShareDownloadChunkTunnelRequest request) {
+//        ShareFileEntry shareFileEntry = shareFileEntryStore.get(request.id())
+//                .map(it -> it.getValue())
+//                .orElseThrow(() -> new RuntimeException("No found shared file: " + request.id()));
+//
+//        File file = new File(shareFileEntry.absolutePath());
+//        if (!Files.exists(file.toPath())) {
+//            throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
+//        }
+//
+//        if (count <= 1) {
+//            count++;
+//            System.out.println("SLEEPING!");
+//            try {
+//                Thread.sleep(35000);
+//            } catch (Exception e) {
+//                System.out.println("ERROR HAS HAPPENED: " + e.getMessage());
+//                throw new RuntimeException(e);
+//            }
+//        }
+//
+//        long skip = request.startPosition();
+//        int take = toInt(request.endPosition() - request.startPosition());
+//        byte[] data = fileHelper.read(file, skip, take);
+//
+//        return new ByteArrayInputStream(data);
+//    }
 }

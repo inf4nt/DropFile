@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.nio.file.Files;
 
+@Deprecated
 @Component
 public class ShareDownloadChunkCommandHandler
         implements CommandHandler<ShareDownloadChunkTunnelRequest, ShareDownloadChunkTunnelResponse> {
