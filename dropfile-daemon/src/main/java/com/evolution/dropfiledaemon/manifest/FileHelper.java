@@ -67,8 +67,7 @@ public class FileHelper {
         return sb.toString();
     }
 
-    @SneakyThrows
-    private byte[] readBytes(FileChannel fileChannel, long skip, int take) {
+    private byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(take);
         fileChannel.position(skip);
         fileChannel.read(buffer);
