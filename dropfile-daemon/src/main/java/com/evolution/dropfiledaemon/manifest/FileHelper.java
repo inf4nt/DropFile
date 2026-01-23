@@ -7,6 +7,7 @@ import org.apache.commons.io.input.BoundedInputStream;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -63,13 +64,33 @@ public class FileHelper {
         return bytesToHex(hashBytes);
     }
 
+    @SneakyThrows
+    public String sha256(File file) {
+        return sha256(file, BUFFER_SIZE);
+    }
+
+    @SneakyThrows
+    String sha256(File file, int bufferSize) {
+        MessageDigest digest = MessageDigest.getInstance(SHA256);
+        byte[] buffer = new byte[bufferSize];
+        try (InputStream inputStream = new FileInputStream(file)) {
+            while (true) {
+                int read = inputStream.read(buffer);
+                if (read == -1) {
+                    break;
+                }
+                ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, read);
+                digest.update(byteBuffer);
+            }
+        }
+        return bytesToHex(digest.digest());
+    }
+
     public void write(FileChannel fileChannel,
                       InputStream inputStream,
-                      MessageDigest digest,
                       long position) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         long offset = position;
-
         while (true) {
             int read = inputStream.read(buffer);
             if (read == -1) {
@@ -82,8 +103,6 @@ public class FileHelper {
                 int written = fileChannel.write(byteBuffer, offset);
                 offset += written;
             }
-
-            digest.update(buffer, 0, read);
         }
     }
 

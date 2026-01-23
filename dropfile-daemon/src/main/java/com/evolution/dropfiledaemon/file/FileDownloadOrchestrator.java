@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.file;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
@@ -21,7 +20,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -138,8 +136,6 @@ public class FileDownloadOrchestrator {
                     String.format("file-download-orchestrator %s %s", id, file.getAbsolutePath()),
                     () -> {
 
-                        MessageDigest sha256MessageDigest = CommonUtils.getMessageDigestSha256();
-
                         this.manifest = ExecutionProfiling.run(
                                 String.format("share-download-manifest id %s", id),
                                 () -> downloadManifest()
@@ -147,20 +143,26 @@ public class FileDownloadOrchestrator {
 
                         ExecutionProfiling.run(
                                 String.format("share-download-chunks id %s %s size %s", id, file.getAbsolutePath(), manifest.chunkManifests().size()),
-                                () -> downloadAndWriteChunks(sha256MessageDigest)
+                                () -> downloadAndWriteChunks()
                         );
 
-                        String sha256 = fileHelper.bytesToHex(sha256MessageDigest.digest());
-                        if (!manifest.hash().equals(sha256)) {
+                        String actualSha256 = ExecutionProfiling.run(
+                                "actual-manifest-digest-calculation",
+                                () -> fileHelper.sha256(file)
+                        );
+
+                        log.info("Actual sha256: {} {} {} ", actualSha256, id, file.getAbsolutePath());
+
+                        if (!manifest.hash().equals(actualSha256)) {
                             throw new RuntimeException(String.format(
-                                    "File sha256 mismatch. Actual %s expected %s file id %s", sha256, manifest.hash(), id
+                                    "File sha256 mismatch. Actual %s expected %s file id %s", actualSha256, manifest.hash(), id
                             ));
                         }
                     }
             );
         }
 
-        private void downloadAndWriteChunks(MessageDigest sha256MessageDigest) throws Exception {
+        private void downloadAndWriteChunks() throws Exception {
             AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             try (FileChannel fileChannel = FileChannel.open(
@@ -179,7 +181,7 @@ public class FileDownloadOrchestrator {
                                 }
                                 Trying.call(() -> {
                                             try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
-                                                writeChunkToFile(fileChannel, inputStream, sha256MessageDigest, chunkManifest.startPosition(), chunkManifest.size());
+                                                writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
                                             }
                                         })
                                         .doOnError(exception -> exceptionAtomicReference.set(exception))
@@ -285,10 +287,10 @@ public class FileDownloadOrchestrator {
         @SneakyThrows
         private void writeChunkToFile(FileChannel writeToFileChannel,
                                       InputStream inputStreamChunk,
-                                      MessageDigest sha256MessageDigest,
                                       long position,
                                       int size) {
-            fileHelper.write(writeToFileChannel, inputStreamChunk, sha256MessageDigest, position);
+            fileHelper.write(writeToFileChannel, inputStreamChunk, position);
+            chunksHaveDownloaded.add(size);
         }
     }
 
