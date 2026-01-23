@@ -9,11 +9,8 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.file.Files;
 
 @Component
 public class ShareDownloadChunkStreamCommandHandler
@@ -43,20 +40,14 @@ public class ShareDownloadChunkStreamCommandHandler
     @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkTunnelRequest request) {
-        ShareFileEntry shareFileEntry = shareFileEntryStore.get(request.id())
-                .map(it -> it.getValue())
-                .orElseThrow(() -> new RuntimeException("No found shared file: " + request.id()));
+        ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(request.id())
+                .getValue();
 
         File file = new File(shareFileEntry.absolutePath());
-        if (!Files.exists(file.toPath())) {
-            throw new FileNotFoundException("No file found: " + file.getAbsolutePath());
-        }
-
         long skip = request.startPosition();
         int take = toInt(request.endPosition() - request.startPosition());
-        byte[] data = fileHelper.read(file, skip, take);
 
-        return new ByteArrayInputStream(data);
+        return fileHelper.readStream(file, skip, take);
     }
 
     private int toInt(long value) {

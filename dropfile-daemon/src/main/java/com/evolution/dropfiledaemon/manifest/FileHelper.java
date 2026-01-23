@@ -1,12 +1,16 @@
 package com.evolution.dropfiledaemon.manifest;
 
 import lombok.SneakyThrows;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.util.function.Consumer;
 
@@ -15,11 +19,10 @@ public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
 
-    @SneakyThrows
-    public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) {
+    public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) throws IOException {
         long fileLength = file.length();
         long processed = 0;
-        try (FileInputStream targetStream = new FileInputStream(file)) {
+        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
             while (processed < fileLength) {
                 int chunkToProcess = chunkSizeFactor;
                 long leftOver = fileLength - processed;
@@ -27,26 +30,26 @@ public class FileHelper {
                     chunkToProcess = Math.toIntExact(leftOver);
                 }
 
-                byte[] chunk = readBytes(targetStream, processed, chunkToProcess);
+                byte[] chunk = readBytes(fileChannel, processed, chunkToProcess);
                 consumer.accept(new ChunkContainer(chunk, processed, processed + chunkToProcess));
                 processed = processed + chunk.length;
             }
         }
     }
 
-    @SneakyThrows
-    public byte[] read(File file, long skip, int take) {
-        try (FileInputStream fileInputStream = new FileInputStream(file)) {
-            return readBytes(fileInputStream, skip, take);
+    public InputStream readStream(File file, long skip, int take) throws IOException {
+        FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+        try {
+            fileChannel.position(skip);
+            InputStream inputStream = Channels.newInputStream(fileChannel);
+            return BoundedInputStream.builder()
+                    .setInputStream(inputStream)
+                    .setCount(take)
+                    .get();
+        } catch (IOException e) {
+            fileChannel.close();
+            throw e;
         }
-    }
-
-    @SneakyThrows
-    public byte[] readBytes(FileInputStream inputStream, long skip, int take) {
-        ByteBuffer buffer = ByteBuffer.allocate(take);
-        FileChannel fileChannel = inputStream.getChannel();
-        fileChannel.read(buffer, skip);
-        return buffer.array();
     }
 
     @SneakyThrows
@@ -62,6 +65,14 @@ public class FileHelper {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    @SneakyThrows
+    private byte[] readBytes(FileChannel fileChannel, long skip, int take) {
+        ByteBuffer buffer = ByteBuffer.allocate(take);
+        fileChannel.position(skip);
+        fileChannel.read(buffer);
+        return buffer.array();
     }
 
     public record ChunkContainer(byte[] data, long from, long to) {
