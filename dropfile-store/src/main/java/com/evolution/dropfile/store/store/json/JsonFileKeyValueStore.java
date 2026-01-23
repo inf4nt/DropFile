@@ -103,13 +103,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
 
             values.put(key, value);
             byte[] byteArray = jsonSerde.serialize(values);
-            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
-            channel.truncate(0);
-            channel.position(0);
-
-            while (buffer.hasRemaining()) {
-                channel.write(buffer);
-            }
+            writeData(channel, byteArray);
 
             lock.release();
             return value;
@@ -137,16 +131,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
                 return null;
             }
             byte[] byteArray = jsonSerde.serialize(values);
-            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
-
-            channel.truncate(0);
-            channel.position(0);
-
-            while (buffer.hasRemaining()) {
-                channel.write(buffer);
-            }
-
-            channel.force(true);
+            writeData(channel, byteArray);
 
             lock.release();
 
@@ -163,18 +148,23 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
             FileLock lock = channel.lock();
 
             byte[] byteArray = jsonSerde.serialize(new LinkedHashMap<>());
-            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
-
-            channel.truncate(0);
-            channel.position(0);
-
-            while (buffer.hasRemaining()) {
-                channel.write(buffer);
-            }
-
-            channel.force(true);
+            writeData(channel, byteArray);
 
             lock.release();
         }
+    }
+
+    @SneakyThrows
+    private void writeData(FileChannel fileChannel, byte[] array) {
+        ByteBuffer buffer = ByteBuffer.wrap(array);
+
+        fileChannel.truncate(0);
+        fileChannel.position(0);
+
+        while (buffer.hasRemaining()) {
+            fileChannel.write(buffer);
+        }
+
+        fileChannel.force(true);
     }
 }
