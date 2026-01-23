@@ -33,7 +33,7 @@ public class ApiConnectionsShareFacade {
     public List<ApiConnectionsShareLsResponseDTO> ls() {
         List<FileEntryTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
-                        .action("share-ls")
+                        .command("share-ls")
                         .build(),
                 new TypeReference<List<FileEntryTunnelResponse>>() {
                 }
@@ -46,7 +46,7 @@ public class ApiConnectionsShareFacade {
     public String cat(String id) {
         return tunnelClient.send(
                 TunnelClient.Request.builder()
-                        .action("share-cat")
+                        .command("share-cat")
                         .body(id)
                         .build(),
                 String.class

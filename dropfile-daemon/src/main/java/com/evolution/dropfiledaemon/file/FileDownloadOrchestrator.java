@@ -217,7 +217,7 @@ public class FileDownloadOrchestrator {
                             RetryExecutor.call(
                                             () -> tunnelClient.send(
                                                     TunnelClient.Request.builder()
-                                                            .action("share-download-manifest")
+                                                            .command("share-download-manifest")
                                                             .body(id)
                                                             .build(),
                                                     ShareDownloadManifestResponse.class
@@ -239,7 +239,7 @@ public class FileDownloadOrchestrator {
                             RetryExecutor.call(
                                             () -> tunnelClient.stream(
                                                     TunnelClient.Request.builder()
-                                                            .action("share-download-chunk-stream")
+                                                            .command("share-download-chunk-stream")
                                                             .body(new ShareDownloadChunkTunnelRequest(
                                                                     id,
                                                                     start,

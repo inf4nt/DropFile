@@ -4,7 +4,7 @@ import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,22 +13,22 @@ import java.io.File;
 import java.nio.file.Files;
 
 @Component
-public class ShareDownloadManifestActionHandler
-        implements ActionHandler<String, ShareDownloadManifestResponse> {
+public class ShareDownloadManifestCommandHandler
+        implements CommandHandler<String, ShareDownloadManifestResponse> {
 
     private final ShareFileEntryStore shareFileEntryStore;
 
     private final FileManifestBuilder fileManifestBuilder;
 
     @Autowired
-    public ShareDownloadManifestActionHandler(ShareFileEntryStore shareFileEntryStore,
-                                              FileManifestBuilder fileManifestBuilder) {
+    public ShareDownloadManifestCommandHandler(ShareFileEntryStore shareFileEntryStore,
+                                               FileManifestBuilder fileManifestBuilder) {
         this.shareFileEntryStore = shareFileEntryStore;
         this.fileManifestBuilder = fileManifestBuilder;
     }
 
     @Override
-    public String getAction() {
+    public String getCommandName() {
         return "share-download-manifest";
     }
 

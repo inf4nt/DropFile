@@ -4,7 +4,7 @@ public record TunnelRequestDTO(String fingerprint,
                                byte[] requestPayload,
                                byte[] nonce) {
 
-    public record TunnelRequestPayload(String action,
+    public record TunnelRequestPayload(String command,
                                        byte[] payload,
                                        long timestamp) {
     }

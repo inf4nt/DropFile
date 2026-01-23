@@ -27,7 +27,7 @@ public interface TunnelClient {
     @Builder
     @Getter
     class Request {
-        private final String action;
+        private final String command;
         private final String fingerprint;
         private final Object body;
     }

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
-public interface ActionHandler<T, R> {
+public interface CommandHandler<T, R> {
 
-    String getAction();
+    String getCommandName();
 
     Class<T> getPayloadType();
 

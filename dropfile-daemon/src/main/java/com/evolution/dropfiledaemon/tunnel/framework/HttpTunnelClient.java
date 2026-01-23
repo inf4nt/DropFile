@@ -104,7 +104,7 @@ public class HttpTunnelClient implements TunnelClient {
         return cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(
                         new TunnelRequestDTO.TunnelRequestPayload(
-                                request.getAction(),
+                                request.getCommand(),
                                 payload,
                                 System.currentTimeMillis()
                         )

@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.share;
 import com.evolution.dropfile.common.dto.DownloadFileTunnelResponse;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,18 +13,18 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @Component
-public class ShareDownloadActionHandler
-        implements ActionHandler<String, DownloadFileTunnelResponse> {
+public class ShareDownloadCommandHandler
+        implements CommandHandler<String, DownloadFileTunnelResponse> {
 
     private final ShareFileEntryStore shareFileEntryStore;
 
     @Autowired
-    public ShareDownloadActionHandler(ShareFileEntryStore shareFileEntryStore) {
+    public ShareDownloadCommandHandler(ShareFileEntryStore shareFileEntryStore) {
         this.shareFileEntryStore = shareFileEntryStore;
     }
 
     @Override
-    public String getAction() {
+    public String getCommandName() {
         return "share-download";
     }
 

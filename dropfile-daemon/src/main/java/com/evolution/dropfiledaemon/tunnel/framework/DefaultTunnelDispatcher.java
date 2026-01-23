@@ -5,7 +5,6 @@ import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -14,16 +13,14 @@ import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private static final int MAX_PAYLOAD_LIFETIME = 30_000;
 
-    private final ActionHandlerExecutor actionHandlerExecutor;
+    private final CommandHandlerExecutor commandHandlerExecutor;
 
     private final CryptoTunnel cryptoTunnel;
 
@@ -33,12 +30,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final ObjectMapper objectMapper;
 
-    public DefaultTunnelDispatcher(ActionHandlerExecutor actionHandlerExecutor,
+    public DefaultTunnelDispatcher(CommandHandlerExecutor commandHandlerExecutor,
                                    CryptoTunnel cryptoTunnel,
                                    HandshakeStore handshakeStore,
                                    KeysConfigStore keysConfigStore,
                                    ObjectMapper objectMapper) {
-        this.actionHandlerExecutor = actionHandlerExecutor;
+        this.commandHandlerExecutor = commandHandlerExecutor;
         this.cryptoTunnel = cryptoTunnel;
         this.handshakeStore = handshakeStore;
         this.keysConfigStore = keysConfigStore;
@@ -61,7 +58,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             );
         }
 
-        Object handlerResult = actionHandlerExecutor.handle(payload);
+        Object handlerResult = commandHandlerExecutor.handle(payload);
 
         InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
 

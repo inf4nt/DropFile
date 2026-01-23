@@ -2,24 +2,24 @@ package com.evolution.dropfiledaemon.tunnel.share;
 
 import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.tunnel.framework.ActionHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class ShareLsActionHandler implements ActionHandler<Void, List<FileEntryTunnelResponse>> {
+public class ShareLsCommandHandler implements CommandHandler<Void, List<FileEntryTunnelResponse>> {
 
     private final ShareFileEntryStore shareFileEntryStore;
 
     @Autowired
-    public ShareLsActionHandler(ShareFileEntryStore shareFileEntryStore) {
+    public ShareLsCommandHandler(ShareFileEntryStore shareFileEntryStore) {
         this.shareFileEntryStore = shareFileEntryStore;
     }
 
     @Override
-    public String getAction() {
+    public String getCommandName() {
         return "share-ls";
     }
 
