@@ -76,6 +76,7 @@ public class FileDownloadOrchestrator {
                 operationId, request.id(), file
         );
         downloadProcedures.put(operationId, downloadProcedure);
+        // TODO create a temp file, download data to the temp file, check hash, move temp file to real file
         fileDownloadingExecutorService.execute(() ->
                 Trying.call(() -> downloadProcedure.run())
                         .doOnError(exception -> {
