@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.nio.file.Files;
 
 @Component
 public class ShareDownloadManifestCommandHandler
@@ -39,32 +38,20 @@ public class ShareDownloadManifestCommandHandler
 
     @Override
     public ShareDownloadManifestResponse handle(String id) {
-        ShareFileEntry fileEntry = shareFileEntryStore.get(id)
-                .map(it -> it.getValue())
-                .orElse(null);
+        ShareFileEntry fileEntry = shareFileEntryStore.getRequired(id).getValue();
+        FileManifest fileManifest = fileManifestBuilder.build(new File(fileEntry.absolutePath()));
 
-        if (fileEntry == null) {
-            throw new RuntimeException("No shared file entry found: " + id);
-        }
-
-        File file = new File(fileEntry.absolutePath());
-
-        if (!Files.exists(file.toPath())) {
-            throw new RuntimeException("No shared file found: " + file.getAbsolutePath());
-        }
-
-        FileManifest fileManifest = fileManifestBuilder.build(file);
         return new ShareDownloadManifestResponse(
                 id,
-                fileManifest.size(),
                 fileManifest.hash(),
+                fileManifest.size(),
                 fileManifest.chunkManifests()
                         .stream()
                         .map(it -> new ShareDownloadManifestResponse.ChunkManifest(
-                                it.startPosition(),
-                                it.endPosition(),
+                                it.hash(),
                                 it.size(),
-                                it.hash()
+                                it.startPosition(),
+                                it.endPosition()
                         ))
                         .toList()
         );

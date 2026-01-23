@@ -8,36 +8,12 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 @Component
 public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
-
-    @SneakyThrows
-    public List<byte[]> read(File file, int chunkSizeFactor) {
-        long fileLength = file.length();
-        List<byte[]> chunks = new ArrayList<>();
-        long processed = 0;
-        try (FileInputStream targetStream = new FileInputStream(file)) {
-            while (processed < fileLength) {
-                int chunkToProcess = chunkSizeFactor;
-                long leftOver = fileLength - processed;
-                if (leftOver < chunkToProcess) {
-                    chunkToProcess = Math.toIntExact(leftOver);
-                }
-
-                byte[] chunk = readBytes(targetStream, processed, chunkToProcess);
-                chunks.add(chunk);
-                processed = processed + chunk.length;
-            }
-        }
-
-        return chunks;
-    }
 
     @SneakyThrows
     public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) {
@@ -78,23 +54,6 @@ public class FileHelper {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
         byte[] hashBytes = digest.digest(data);
         return bytesToHex(hashBytes);
-    }
-
-    @SneakyThrows
-    public String sha256(File file) {
-        MessageDigest digest = MessageDigest.getInstance(SHA256);
-
-        byte[] buffer = new byte[64 * 1024];
-        int bytesRead;
-
-        try (FileInputStream fis = new FileInputStream(file)) {
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                digest.update(buffer, 0, bytesRead);
-            }
-        }
-
-        byte[] hash = digest.digest();
-        return bytesToHex(hash);
     }
 
     public String bytesToHex(byte[] bytes) {

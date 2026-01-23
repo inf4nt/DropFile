@@ -25,6 +25,8 @@ public interface KeyValueStore<K, V> {
 
     default Map.Entry<K, V> getRequired(K key) {
         return get(key)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException(String.format(
+                        "No entry for key: %s found. Store %s", key, this.getClass().getName()
+                )));
     }
 }

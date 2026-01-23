@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -32,35 +33,34 @@ public class FileManifestBuilder {
         }
 
         if (Files.isDirectory(file.toPath())) {
-            throw new UnsupportedOperationException("Directory is not allowed: " + file.getAbsolutePath());
+            throw new UnsupportedOperationException("Directories are unsupported: " + file.getAbsolutePath());
         }
 
-        long fileLength = file.length();
-        String fileName = file.getName();
-
-        List<ChunkManifest> chunkManifests = new ArrayList<>();
-
+        List<ChunkManifest> chunkManifests = Collections.synchronizedList(new ArrayList<>());
         int chunkSizeFactor = getChunkSizeFactor(file);
-
         MessageDigest manifestMessageDigest = MessageDigest.getInstance(SHA256);
 
         fileHelper.read(file, chunkSizeFactor, chunkContainer -> {
             byte[] data = chunkContainer.data();
             int chunkSize = data.length;
-            String hash = fileHelper.sha256(data);
+            String sha256 = fileHelper.sha256(data);
             manifestMessageDigest.update(data);
             ChunkManifest chunkManifest = new ChunkManifest(
-                    chunkContainer.from(),
-                    chunkContainer.to(),
+                    sha256,
                     chunkSize,
-                    hash
+                    chunkContainer.from(),
+                    chunkContainer.to()
             );
             chunkManifests.add(chunkManifest);
         });
 
+        long totalSize = chunkManifests.stream().map(it -> it.size())
+                .mapToLong(Long::valueOf)
+                .sum();
+
         String manifestSha256 = fileHelper.bytesToHex(manifestMessageDigest.digest());
 
-        return new FileManifest(fileName, fileLength, manifestSha256, chunkManifests);
+        return new FileManifest(file.getName(), manifestSha256, totalSize, chunkManifests);
     }
 
     private int getChunkSizeFactor(File file) {
