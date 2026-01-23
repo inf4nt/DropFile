@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public class CommonUtils {
 
-    private static final String SHA256_ALGORITHM = "SHA256";
+    private static final String SHA256_ALGORITHM = "SHA-256";
 
     public static byte[] nonce16() {
         byte[] bytes = new byte[16];
@@ -64,6 +64,11 @@ public class CommonUtils {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         byte[] hash = md.digest(data);
         return hexString(hash);
+    }
+
+    @SneakyThrows
+    public static MessageDigest getMessageDigestSha256() {
+        return MessageDigest.getInstance(SHA256_ALGORITHM);
     }
 
     @SneakyThrows

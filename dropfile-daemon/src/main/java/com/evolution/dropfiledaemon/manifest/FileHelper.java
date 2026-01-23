@@ -1,5 +1,7 @@
 package com.evolution.dropfiledaemon.manifest;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import java.util.function.Consumer;
 
 @Component
 public class FileHelper {
+
+    private static final int BUFFER_SIZE = 64 * 1024;
 
     private static final String SHA256 = "SHA-256";
 
@@ -44,7 +48,7 @@ public class FileHelper {
             InputStream inputStream = Channels.newInputStream(fileChannel);
             return BoundedInputStream.builder()
                     .setInputStream(inputStream)
-                    .setCount(take)
+                    .setMaxCount(take)
                     .get();
         } catch (IOException e) {
             fileChannel.close();
@@ -59,7 +63,23 @@ public class FileHelper {
         return bytesToHex(hashBytes);
     }
 
-    public String bytesToHex(byte[] bytes) {
+    public void write(FileChannel fileChannel,
+                      InputStream inputStream,
+                      MessageDigest digest,
+                      long position,
+                      int size) throws IOException {
+        byte[] buffer = new byte[size]; // TODO use small buffer
+        while (true) {
+            int read = inputStream.read(buffer);
+            if (read == -1) {
+                break;
+            }
+            fileChannel.write(ByteBuffer.wrap(buffer, 0, read), position);
+            digest.update(buffer, 0, read);
+        }
+    }
+
+    public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b));
@@ -67,14 +87,18 @@ public class FileHelper {
         return sb.toString();
     }
 
-    private byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
+    public byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(take);
         fileChannel.position(skip);
         fileChannel.read(buffer);
         return buffer.array();
     }
 
-    public record ChunkContainer(byte[] data, long from, long to) {
-
+    @Data
+    @RequiredArgsConstructor
+    public static class ChunkContainer {
+        private final byte[] data;
+        private final long from;
+        private final long to;
     }
 }

@@ -1,6 +1,8 @@
 package com.evolution.dropfiledaemon.file;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfiledaemon.manifest.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
@@ -15,12 +17,11 @@ import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -47,11 +48,15 @@ public class FileDownloadOrchestrator {
 
     private final AppConfigStore appConfigStore;
 
+    private final FileHelper fileHelper;
+
     @Autowired
     public FileDownloadOrchestrator(TunnelClient tunnelClient,
-                                    AppConfigStore appConfigStore) {
+                                    AppConfigStore appConfigStore,
+                                    FileHelper fileHelper) {
         this.tunnelClient = tunnelClient;
         this.appConfigStore = appConfigStore;
+        this.fileHelper = fileHelper;
     }
 
     @SneakyThrows
@@ -132,6 +137,9 @@ public class FileDownloadOrchestrator {
             ExecutionProfiling.run(
                     String.format("file-download-orchestrator %s %s", id, file.getAbsolutePath()),
                     () -> {
+
+                        MessageDigest sha256MessageDigest = CommonUtils.getMessageDigestSha256();
+
                         this.manifest = ExecutionProfiling.run(
                                 String.format("share-download-manifest id %s", id),
                                 () -> downloadManifest()
@@ -139,13 +147,20 @@ public class FileDownloadOrchestrator {
 
                         ExecutionProfiling.run(
                                 String.format("share-download-chunks id %s %s size %s", id, file.getAbsolutePath(), manifest.chunkManifests().size()),
-                                () -> downloadAndWriteChunks()
+                                () -> downloadAndWriteChunks(sha256MessageDigest)
                         );
+
+                        String sha256 = fileHelper.bytesToHex(sha256MessageDigest.digest());
+                        if (!manifest.hash().equals(sha256)) {
+                            throw new RuntimeException(String.format(
+                                    "File sha256 mismatch. Actual %s expected %s file id %s", sha256, manifest.hash(), id
+                            ));
+                        }
                     }
             );
         }
 
-        private void downloadAndWriteChunks() throws Exception {
+        private void downloadAndWriteChunks(MessageDigest sha256MessageDigest) throws Exception {
             AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             try (FileChannel fileChannel = FileChannel.open(
@@ -164,7 +179,7 @@ public class FileDownloadOrchestrator {
                                 }
                                 Trying.call(() -> {
                                             try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
-                                                writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
+                                                writeChunkToFile(fileChannel, inputStream, sha256MessageDigest, chunkManifest.startPosition(), chunkManifest.size());
                                             }
                                         })
                                         .doOnError(exception -> exceptionAtomicReference.set(exception))
@@ -270,10 +285,10 @@ public class FileDownloadOrchestrator {
         @SneakyThrows
         private void writeChunkToFile(FileChannel writeToFileChannel,
                                       InputStream inputStreamChunk,
+                                      MessageDigest sha256MessageDigest,
                                       long position,
-                                      long size) {
-            ReadableByteChannel rbc = Channels.newChannel(inputStreamChunk);
-            writeToFileChannel.transferFrom(rbc, position, size);
+                                      int size) {
+            fileHelper.write(writeToFileChannel, inputStreamChunk, sha256MessageDigest, position, size);
         }
     }
 

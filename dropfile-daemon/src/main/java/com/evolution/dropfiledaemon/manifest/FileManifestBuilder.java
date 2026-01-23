@@ -17,7 +17,7 @@ public class FileManifestBuilder {
 
     private static final String SHA256 = "SHA-256";
 
-    private static final Integer CHUNK_SIZE = 1 * 1024 * 1024;
+    private static final Integer CHUNK_SIZE = 7 * 1024 * 1024;
 
     private final FileHelper fileHelper;
 
@@ -41,15 +41,15 @@ public class FileManifestBuilder {
         MessageDigest manifestMessageDigest = MessageDigest.getInstance(SHA256);
 
         fileHelper.read(file, chunkSizeFactor, chunkContainer -> {
-            byte[] data = chunkContainer.data();
+            byte[] data = chunkContainer.getData();
             int chunkSize = data.length;
             String sha256 = fileHelper.sha256(data);
             manifestMessageDigest.update(data);
             ChunkManifest chunkManifest = new ChunkManifest(
                     sha256,
                     chunkSize,
-                    chunkContainer.from(),
-                    chunkContainer.to()
+                    chunkContainer.getFrom(),
+                    chunkContainer.getTo()
             );
             chunkManifests.add(chunkManifest);
         });
