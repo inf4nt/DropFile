@@ -66,15 +66,23 @@ public class FileHelper {
     public void write(FileChannel fileChannel,
                       InputStream inputStream,
                       MessageDigest digest,
-                      long position,
-                      int size) throws IOException {
-        byte[] buffer = new byte[size]; // TODO use small buffer
+                      long position) throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        long offset = position;
+
         while (true) {
             int read = inputStream.read(buffer);
             if (read == -1) {
                 break;
             }
-            fileChannel.write(ByteBuffer.wrap(buffer, 0, read), position);
+
+            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, read);
+
+            while (byteBuffer.hasRemaining()) {
+                int written = fileChannel.write(byteBuffer, offset);
+                offset += written;
+            }
+
             digest.update(buffer, 0, read);
         }
     }

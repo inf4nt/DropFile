@@ -288,7 +288,7 @@ public class FileDownloadOrchestrator {
                                       MessageDigest sha256MessageDigest,
                                       long position,
                                       int size) {
-            fileHelper.write(writeToFileChannel, inputStreamChunk, sha256MessageDigest, position, size);
+            fileHelper.write(writeToFileChannel, inputStreamChunk, sha256MessageDigest, position);
         }
     }
 
