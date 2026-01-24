@@ -48,10 +48,12 @@ public class Trying<T> {
         try {
             return callable.call();
         } catch (Exception e) {
-            try {
-                doOnError.accept(e);
-            } catch (Exception exception) {
-                exception.printStackTrace();
+            if (doOnError != null) {
+                try {
+                    doOnError.accept(e);
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
             }
             if (orElse != null) {
                 return orElse.apply(e);

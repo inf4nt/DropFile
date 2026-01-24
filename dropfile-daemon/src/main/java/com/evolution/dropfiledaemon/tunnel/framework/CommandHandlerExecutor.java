@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class CommandHandlerExecutor {
@@ -36,7 +37,14 @@ public class CommandHandlerExecutor {
             throw new RuntimeException("No found: " + payload.command());
         }
         Object handlerArgumentPayload = getBody(commandHandler, payload);
-        return commandHandler.handle(handlerArgumentPayload);
+        Object result = commandHandler.handle(handlerArgumentPayload);
+        Objects.requireNonNull(
+                result,
+                String.format(
+                        "Tunnel command handler %s returned null", commandHandler.getCommandName()
+                )
+        );
+        return result;
     }
 
     @SneakyThrows

@@ -21,11 +21,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Comparator;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class HttpTunnelClient implements TunnelClient {
+
+    private static final Duration HTTP_REQUEST_TIME = Duration.ofSeconds(60);
 
     private final HandshakeStore handshakeStore;
 
@@ -53,43 +55,54 @@ public class HttpTunnelClient implements TunnelClient {
     @SneakyThrows
     @Override
     public <T> T send(Request request, TypeReference<T> responseType) {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
+        HttpResponse<InputStream> httpResponse = null;
+        try {
+            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
 
-        SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
+            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
 
-        SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
-        TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                secureEnvelope.payload(),
-                secureEnvelope.nonce()
-        );
+            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
+                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                    secureEnvelope.payload(),
+                    secureEnvelope.nonce()
+            );
 
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(trustedOutValue.addressURI().resolve("/tunnel"))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(tunnelRequestDTO))
-                )
-                .header("Content-Type", "application/json")
-                .build();
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(trustedOutValue.addressURI().resolve("/tunnel"))
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(
+                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
+                    )
+                    .header("Content-Type", "application/json")
+                    .timeout(HTTP_REQUEST_TIME)
+                    .build();
 
-        HttpResponse<InputStream> httpResponse = httpClient
-                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
-                .get(60, TimeUnit.SECONDS);
-
-        if (httpResponse.statusCode() != 200) {
-            throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
-        }
-
-        if (isInputStream(responseType)) {
-            return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-        }
-
-        try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
-            if (responseType.getType().equals(String.class)) {
-                return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
+            httpResponse = httpClient
+                    .send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            if (httpResponse.statusCode() != 200) {
+                throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
             }
-            return objectMapper.readValue(decryptInputStream, responseType);
+
+            if (isInputStream(responseType)) {
+                return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+            }
+
+            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
+                if (responseType.getType().equals(String.class)) {
+                    return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
+                }
+                return objectMapper.readValue(decryptInputStream, responseType);
+            }
+        } catch (Exception e) {
+            if (httpResponse != null) {
+                try {
+                    httpResponse.body().close();
+                } catch (Exception closeException) {
+                    closeException.printStackTrace();
+                }
+            }
+            throw e;
         }
     }
 
