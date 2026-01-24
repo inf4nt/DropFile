@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -44,13 +45,14 @@ public class RetryExecutor<T> {
                     }
                     return call;
                 }
-                throw new NullPointerException(String.format(
-                        "Call returned null. Attempt %s", currentAttempt
-                ));
             } catch (Exception e) {
                 exceptions.add(e);
                 if (doOnError != null) {
-                    doOnError.accept(currentAttempt, e);
+                    try {
+                        doOnError.accept(currentAttempt, e);
+                    } catch (Exception doOnErrorException) {
+                        doOnErrorException.printStackTrace();
+                    }
                 }
             }
             currentAttempt++;
@@ -82,12 +84,15 @@ public class RetryExecutor<T> {
         private Duration delay = Duration.ofSeconds(1);
 
         public RetryExecutorBuilder<T> attempts(int attempts) {
+            if (attempts <= 0) {
+                throw new IllegalArgumentException("Attempt count must be positive");
+            }
             this.attempts = attempts;
             return this;
         }
 
         public RetryExecutorBuilder<T> delay(Duration delay) {
-            this.delay = delay;
+            this.delay = Objects.requireNonNull(delay);
             return this;
         }
 
