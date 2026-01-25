@@ -15,10 +15,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -64,22 +66,28 @@ public class FileDownloadOrchestrator {
         }
 
         downloadingSemaphore.acquire();
-        File file;
+        File destinationFile;
+        File temporaryFile;
         try {
-            file = getFile(request);
+            destinationFile = getDestinationFile(request);
+            temporaryFile = getTemporaryFile(request);
         } catch (Exception exception) {
             downloadingSemaphore.release();
             log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
             throw exception;
         }
+
         String operationId = CommonUtils.random();
         ExecutorService downloadProcedureExecutorService = Executors.newVirtualThreadPerTaskExecutor();
         DownloadProcedure downloadProcedure = new DownloadProcedure(
-                new Semaphore(MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT), downloadProcedureExecutorService,
-                operationId, request.id(), file
+                new Semaphore(MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT),
+                downloadProcedureExecutorService,
+                operationId,
+                request,
+                destinationFile,
+                temporaryFile
         );
         downloadProcedures.put(operationId, downloadProcedure);
-        // TODO create a temp file, download data to the temp file, check hash, move temp file to real file
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run();
@@ -91,7 +99,7 @@ public class FileDownloadOrchestrator {
                 downloadProcedureExecutorService.shutdown();
             }
         });
-        return new FileDownloadResponse(operationId, file.getAbsolutePath());
+        return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());
     }
 
     public List<DownloadProgress> getDownloadProgressList() {
@@ -111,60 +119,75 @@ public class FileDownloadOrchestrator {
 
         private final String operationId;
 
-        private final String id;
+        private final FileDownloadRequest request;
 
-        private final File file;
+        private final File destinationFile;
+
+        private final File temporaryFile;
 
         private ShareDownloadManifestResponse manifest;
 
         public DownloadProcedure(Semaphore chunkDownloadingSemaphore,
                                  ExecutorService executorService,
                                  String operationId,
-                                 String id,
-                                 File file) {
+                                 FileDownloadRequest request,
+                                 File destinationFile,
+                                 File temporaryFile) {
             this.chunkDownloadingSemaphore = chunkDownloadingSemaphore;
             this.executorService = executorService;
             this.operationId = operationId;
-            this.id = id;
-            this.file = file;
+            this.request = request;
+            this.destinationFile = destinationFile;
+            this.temporaryFile = temporaryFile;
         }
 
+        @SneakyThrows
         public void run() {
-            ExecutionProfiling.run(
-                    String.format("file-download-orchestrator %s %s", id, file.getAbsolutePath()),
-                    () -> {
+            try {
+                ExecutionProfiling.run(
+                        String.format("file-download-orchestrator operation %s file id %s", operationId, request.id()),
+                        () -> {
 
-                        this.manifest = ExecutionProfiling.run(
-                                String.format("share-download-manifest id %s", id),
-                                () -> downloadManifest()
-                        );
+                            ExecutionProfiling.run(
+                                    String.format("download-manifest operation %s file id %s", operationId, request.id()),
+                                    () -> downloadManifest()
+                            );
 
-                        ExecutionProfiling.run(
-                                String.format("share-download-chunks id %s %s size %s", id, file.getAbsolutePath(), manifest.chunkManifests().size()),
-                                () -> downloadAndWriteChunks()
-                        );
+                            ExecutionProfiling.run(
+                                    String.format("download-chunks operation %s file id %s chunks %s",
+                                            operationId, request.id(), manifest.chunkManifests().size()
+                                    ),
+                                    () -> downloadAndWriteChunks()
+                            );
 
-                        String actualSha256 = ExecutionProfiling.run(
-                                "actual-manifest-digest-calculation",
-                                () -> fileHelper.sha256(file)
-                        );
+                            String actualSha256 = ExecutionProfiling.run(
+                                    String.format("digest-calculation operation %s file id %s", operationId, request.id()),
+                                    () -> fileHelper.sha256(temporaryFile)
+                            );
 
-                        log.info("Actual sha256: {} {} {} ", actualSha256, id, file.getAbsolutePath());
+                            log.info("Actual sha256. operation {} sha256 {} file id {}", operationId, actualSha256, request.id());
 
-                        if (!manifest.hash().equals(actualSha256)) {
-                            throw new RuntimeException(String.format(
-                                    "Mismatch sha256 %s expected %s file id %s", actualSha256, manifest.hash(), id
-                            ));
+                            if (!manifest.hash().equals(actualSha256)) {
+                                throw new RuntimeException(String.format(
+                                        "Mismatch sha256. Actual %s expected %s file id %s", actualSha256, manifest.hash(), request.id()
+                                ));
+                            }
+
+                            Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
                         }
-                    }
-            );
+                );
+            } finally {
+                if (temporaryFile != null && Files.exists(temporaryFile.toPath())) {
+                    Files.delete(temporaryFile.toPath());
+                }
+            }
         }
 
         private void downloadAndWriteChunks() throws Exception {
             AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             try (FileChannel fileChannel = FileChannel.open(
-                    file.toPath(),
+                    temporaryFile.toPath(),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE)) {
                 for (ShareDownloadManifestResponse.ChunkManifest chunkManifest : manifest.chunkManifests()) {
@@ -198,8 +221,8 @@ public class FileDownloadOrchestrator {
             if (manifest == null) {
                 return new DownloadProgress(
                         operationId,
-                        id,
-                        file.getAbsolutePath(),
+                        request.id(),
+                        destinationFile.getAbsolutePath(),
                         0,
                         0,
                         "0.00 %"
@@ -209,8 +232,8 @@ public class FileDownloadOrchestrator {
             String percent = percent(downloaded, manifest.size());
             return new DownloadProgress(
                     operationId,
-                    id,
-                    file.getAbsolutePath(),
+                    request.id(),
+                    destinationFile.getAbsolutePath(),
                     downloaded,
                     manifest.size(),
                     percent
@@ -226,13 +249,13 @@ public class FileDownloadOrchestrator {
             return String.format(Locale.US, "%.2f %%", value);
         }
 
-        private ShareDownloadManifestResponse downloadManifest() {
+        private void downloadManifest() {
             try {
-                return RetryExecutor.call(
+                this.manifest = RetryExecutor.call(
                                 () -> tunnelClient.send(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
-                                                .body(id)
+                                                .body(request.id())
                                                 .build(),
                                         ShareDownloadManifestResponse.class
                                 )
@@ -249,7 +272,7 @@ public class FileDownloadOrchestrator {
                         .build()
                         .run();
             } catch (Exception e) {
-                throw new RuntimeException(String.format("Unable to download manifest %s", id), e);
+                throw new RuntimeException(String.format("Unable to download manifest %s", request.id()), e);
             }
         }
 
@@ -260,7 +283,7 @@ public class FileDownloadOrchestrator {
                                         TunnelClient.Request.builder()
                                                 .command("share-download-chunk-stream")
                                                 .body(new ShareDownloadChunkTunnelRequest(
-                                                        id,
+                                                        request.id(),
                                                         start,
                                                         end
                                                 ))
@@ -274,7 +297,7 @@ public class FileDownloadOrchestrator {
                         .run();
             } catch (Exception e) {
                 throw new RuntimeException(String.format(
-                        "Unable to download chunk %s [%s, %s]", id, start, end
+                        "Unable to download chunk %s [%s, %s]", request.id(), start, end
                 ), e);
             }
         }
@@ -289,25 +312,42 @@ public class FileDownloadOrchestrator {
         }
     }
 
-    @SneakyThrows
-    private File getFile(FileDownloadRequest request) {
+    private File getDestinationFile(FileDownloadRequest request) throws IOException {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
+
+        if (Paths.get(request.filename()).isAbsolute()) {
+            throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
+        }
+
         String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
-        File downloadFile = new File(downloadDirectory, request.filename());
+        File downloadFile = new File(downloadDirectory, request.filename()).getCanonicalFile();
+
+        if (Files.exists(downloadFile.toPath())) {
+            throw new IllegalArgumentException(String.format("file already exists: %s", downloadFile.getAbsolutePath()));
+        }
+
+        return downloadFile;
+    }
+
+    private File getTemporaryFile(FileDownloadRequest request) throws IOException {
+        if (ObjectUtils.isEmpty(request.filename())) {
+            throw new IllegalArgumentException("filename must not be empty");
+        }
+        if (Paths.get(request.filename()).isAbsolute()) {
+            throw new UnsupportedOperationException("filename must not be absolute. Unsupported yet: " + request.filename());
+        }
+
+        String filenamePrefix = CommonUtils.random();
+        String filename = String.format("Unconfirmed-%s-%s.crdownload", filenamePrefix, request.filename());
+        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        File downloadFile = new File(downloadDirectory, filename).getCanonicalFile();
 
         if (Files.notExists(downloadFile.toPath())) {
-            Path parent = downloadFile.toPath().getParent();
-            if (Files.notExists(parent)) {
-                Files.createDirectories(parent);
-            }
             Files.createFile(downloadFile.toPath());
         }
 
-        if (!request.rewrite() && Files.size(downloadFile.toPath()) != 0) {
-            throw new RuntimeException("Unable to rewrite file");
-        }
         return downloadFile;
     }
 

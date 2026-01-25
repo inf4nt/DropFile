@@ -100,7 +100,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareDownload(String id, String filename, boolean rewrite) {
+    public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -113,7 +113,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiConnectionsShareDownloadRequestDTO(id, filename, rewrite)
+                        new ApiConnectionsShareDownloadRequestDTO(id, filename)
                 )))
                 .header("Content-Type", "application/json")
                 .build();

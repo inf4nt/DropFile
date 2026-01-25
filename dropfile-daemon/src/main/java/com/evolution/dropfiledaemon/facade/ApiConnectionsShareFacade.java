@@ -59,14 +59,14 @@ public class ApiConnectionsShareFacade {
             Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
             for (int i = 0; i < iterations; i++) {
                 fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(requestDTO.id(), i + "-" + requestDTO.filename(), requestDTO.rewrite())
+                        new FileDownloadRequest(requestDTO.id(), i + "-" + requestDTO.filename())
                 );
             }
             return null;
         }
 
         FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(
-                new FileDownloadRequest(requestDTO.id(), requestDTO.filename(), requestDTO.rewrite())
+                new FileDownloadRequest(requestDTO.id(), requestDTO.filename())
         );
         return new ApiConnectionsShareDownloadResponseDTO(
                 fileDownloadResponse.operationId(),
