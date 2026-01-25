@@ -14,6 +14,7 @@ public record DownloadFileEntry(String fileId,
     public enum DownloadFileEntryStatus {
         DOWNLOADING,
         ERROR,
+        STOPPED,
         COMPLETED
     }
 }

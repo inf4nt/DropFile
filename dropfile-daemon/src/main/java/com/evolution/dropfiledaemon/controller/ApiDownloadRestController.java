@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfiledaemon.file.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/downloads")
+@RequestMapping("/api/download")
 @RequiredArgsConstructor
-public class ApiDownloadsRestController {
+public class ApiDownloadRestController {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
@@ -71,12 +71,17 @@ public class ApiDownloadsRestController {
                     .filter(it -> it.status() == ApiDownloadFileResponse.Status.COMPLETED)
                     .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                     .toList();
+            List<ApiDownloadFileResponse> stopped = responses.stream()
+                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.STOPPED)
+                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
+                    .toList();
             List<ApiDownloadFileResponse> error = responses.stream()
                     .filter(it -> it.status() == ApiDownloadFileResponse.Status.ERROR)
                     .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                     .toList();
             addAll(downloading);
             addAll(completed);
+            addAll(stopped);
             addAll(error);
         }};
     }
@@ -88,16 +93,24 @@ public class ApiDownloadsRestController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.status(404)
-                .body("No operation found, completed or already stopped");
+                .body("No operation to stop");
+    }
+
+    @PostMapping("/stop-all")
+    public ResponseEntity<Void> stopAll() {
+        fileDownloadOrchestrator.stopAll();
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/rm/{operationId}")
-    public ResponseEntity<Void> rm(@PathVariable String operationId) {
-        throw new UnsupportedOperationException("Unsupported yet");
+    public ResponseEntity<String> rm(@PathVariable String operationId) {
+        DownloadFileEntry remove = fileDownloadEntryStore.remove(operationId);
+        return remove != null ? ResponseEntity.ok().build() : ResponseEntity.status(404).body("No operation found");
     }
 
     @DeleteMapping("/rm-all")
     public ResponseEntity<Void> rmAll() {
-        throw new UnsupportedOperationException("Unsupported yet");
+        fileDownloadEntryStore.removeAll();
+        return ResponseEntity.ok().build();
     }
 }

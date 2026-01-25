@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.file;
+package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
@@ -117,6 +117,10 @@ public class FileDownloadOrchestrator {
                         )
                 );
             } catch (Exception exception) {
+                DownloadFileEntry.DownloadFileEntryStatus status = exception instanceof DownloadingStoppedException ?
+                        DownloadFileEntry.DownloadFileEntryStatus.STOPPED :
+                        DownloadFileEntry.DownloadFileEntryStatus.ERROR;
+
                 fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
@@ -126,7 +130,7 @@ public class FileDownloadOrchestrator {
                                 downloadProcedure.getProgress().hash(),
                                 downloadProcedure.getProgress().downloaded(),
                                 downloadProcedure.getProgress().total(),
-                                DownloadFileEntry.DownloadFileEntryStatus.ERROR,
+                                status,
                                 Instant.now()
                         )
                 );
@@ -147,6 +151,12 @@ public class FileDownloadOrchestrator {
             result.put(entry.getKey(), entry.getValue().getProgress());
         }
         return result;
+    }
+
+    public void stopAll() {
+        for (DownloadProcedure procedure : downloadProcedures.values()) {
+            procedure.stop();
+        }
     }
 
     public boolean stop(String operation) {
@@ -253,12 +263,11 @@ public class FileDownloadOrchestrator {
                                 }
                                 try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
                                     if (stop.get()) {
-                                        throw new RuntimeException("Downloading stopped: " + operationId);
+                                        throw new DownloadingStoppedException("Downloading has been stopped: " + operationId);
                                     }
                                     writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
                                 } catch (Exception exception) {
                                     exceptionAtomicReference.set(exception);
-                                    throw new RuntimeException(exception);
                                 } finally {
                                     SafeUtil.execute(() -> chunkDownloadingSemaphore.release());
                                 }
@@ -410,5 +419,11 @@ public class FileDownloadOrchestrator {
                                    long total,
                                    String percentage) {
 
+    }
+
+    public static class DownloadingStoppedException extends IOException {
+        public DownloadingStoppedException(String message) {
+            super(message);
+        }
     }
 }

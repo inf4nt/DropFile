@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.downloads;
+package com.evolution.dropfilecli.command.download;
 
 import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
@@ -18,7 +18,7 @@ import java.util.List;
         name = "ls"
 )
 @RequiredArgsConstructor
-public class DownloadsLsCommand implements CommandHttpHandler<byte[]> {
+public class DownloadLsCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
@@ -26,7 +26,7 @@ public class DownloadsLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.downloadsLs();
+        return daemonClient.downloadLs();
     }
 
     @Override
@@ -36,7 +36,7 @@ public class DownloadsLsCommand implements CommandHttpHandler<byte[]> {
         if (!values.isEmpty()) {
             PrintReflection.print(values);
         } else {
-            System.out.println("No downloading found");
+            System.out.println("No download found");
         }
     }
 }

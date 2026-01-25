@@ -467,11 +467,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> downloadsLs() {
+    public HttpResponse<byte[]> downloadLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/downloads/ls");
+                .resolve("/api/download/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -486,11 +486,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> downloadsStop(String operation) {
+    public HttpResponse<byte[]> downloadStop(String operation) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/downloads/stop/")
+                .resolve("/api/download/stop/")
                 .resolve(operation);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -500,6 +500,64 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> downloadStopAll() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/download/stop-all");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> downloadRm(String operationId) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/download/rm/")
+                .resolve(operationId);
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> downloadRmAll() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/download/rm-all");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
                 .build();
 
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());

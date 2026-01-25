@@ -15,6 +15,7 @@ public record ApiDownloadFileResponse(String operation,
     public enum Status {
         DOWNLOADING,
         COMPLETED,
+        STOPPED,
         ERROR
     }
 }

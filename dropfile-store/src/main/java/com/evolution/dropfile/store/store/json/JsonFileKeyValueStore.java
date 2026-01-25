@@ -29,7 +29,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
     }
 
     @Override
-    public V save(String key, V value) {
+    public synchronized V save(String key, V value) {
         Objects.requireNonNull(key, "key cannot be null");
         Objects.requireNonNull(value, "value cannot be null");
         validate(key, value);
@@ -37,18 +37,18 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
     }
 
     @Override
-    public V remove(String key) {
+    public synchronized V remove(String key) {
         Objects.requireNonNull(key, "key cannot be null");
         return removeByKey(key);
     }
 
     @Override
-    public void removeAll() {
+    public synchronized void removeAll() {
         removeAllStore();
     }
 
     @Override
-    public Map<String, V> getAll() {
+    public synchronized Map<String, V> getAll() {
         return readAll();
     }
 
