@@ -6,6 +6,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "share",
+        aliases = {"-s", "--s"},
         description = "Share operations",
         subcommands = {
                 ConnectionsShareDownloadCommand.class,

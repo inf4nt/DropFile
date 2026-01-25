@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "connect",
+        aliases = {"-c", "--c"},
         description = "Connect"
 )
 public class ConnectCommand implements Runnable {

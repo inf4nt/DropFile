@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "download",
+        aliases = {"-d", "--d"},
         description = "Download file"
 )
 public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[]> {

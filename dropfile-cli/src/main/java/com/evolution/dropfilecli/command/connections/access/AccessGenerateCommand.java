@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "generate",
+        aliases = {"-g", "--g"},
         description = "Generate access key command"
 )
 public class AccessGenerateCommand implements CommandHttpHandler<byte[]> {

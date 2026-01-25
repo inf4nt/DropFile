@@ -6,6 +6,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "access",
+        aliases = {"-a", "--a"},
         description = "Access keys command",
         subcommands = {
                 AccessGenerateCommand.class,
