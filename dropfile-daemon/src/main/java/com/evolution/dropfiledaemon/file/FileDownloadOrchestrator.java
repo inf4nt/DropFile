@@ -8,6 +8,7 @@ import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelReq
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.util.SafeUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,7 @@ public class FileDownloadOrchestrator {
             destinationFile = getDestinationFile(request);
             temporaryFile = getTemporaryFile(request);
         } catch (Exception exception) {
-            downloadingSemaphore.release();
+            SafeUtil.execute(() -> downloadingSemaphore.release());
             log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
             throw exception;
         }
@@ -95,8 +96,8 @@ public class FileDownloadOrchestrator {
                 log.info("Exception occurred during download process {}", exception.getMessage(), exception);
                 throw new RuntimeException(exception);
             } finally {
-                downloadingSemaphore.release();
-                downloadProcedureExecutorService.shutdown();
+                SafeUtil.execute(() -> downloadProcedureExecutorService.close());
+                SafeUtil.execute(() -> downloadingSemaphore.release());
             }
         });
         return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());
@@ -169,7 +170,7 @@ public class FileDownloadOrchestrator {
 
                             if (!manifest.hash().equals(actualSha256)) {
                                 throw new RuntimeException(String.format(
-                                        "Mismatch sha256. Actual %s expected %s file id %s", actualSha256, manifest.hash(), request.id()
+                                        "Mismatch sha256. Operation %s actual %s expected %s file id %s", operationId, actualSha256, manifest.hash(), request.id()
                                 ));
                             }
 
@@ -178,7 +179,7 @@ public class FileDownloadOrchestrator {
                 );
             } finally {
                 if (temporaryFile != null && Files.exists(temporaryFile.toPath())) {
-                    Files.delete(temporaryFile.toPath());
+                    SafeUtil.execute(() -> Files.delete(temporaryFile.toPath()));
                 }
             }
         }
@@ -206,7 +207,7 @@ public class FileDownloadOrchestrator {
                                     exceptionAtomicReference.set(exception);
                                     throw new RuntimeException(exception);
                                 } finally {
-                                    chunkDownloadingSemaphore.release();
+                                    SafeUtil.execute(() -> chunkDownloadingSemaphore.release());
                                 }
                             },
                             executorService
