@@ -8,7 +8,8 @@ import picocli.CommandLine;
         name = "downloads",
         description = "Downloads command",
         subcommands = {
-                DownloadsLsCommand.class
+                DownloadsLsCommand.class,
+                DownloadsStopCommand.class
         }
 )
 public class DownloadsCommand implements Runnable {

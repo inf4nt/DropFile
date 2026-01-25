@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -148,7 +149,18 @@ public class FileDownloadOrchestrator {
         return result;
     }
 
+    public boolean stop(String operation) {
+        DownloadProcedure downloadProcedure = downloadProcedures.get(operation);
+        if (downloadProcedure != null) {
+            downloadProcedure.stop();
+            return true;
+        }
+        return false;
+    }
+
     public class DownloadProcedure {
+
+        private final AtomicBoolean stop = new AtomicBoolean(false);
 
         private final LongAdder chunksHaveDownloaded = new LongAdder();
 
@@ -240,6 +252,9 @@ public class FileDownloadOrchestrator {
                                     return;
                                 }
                                 try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
+                                    if (stop.get()) {
+                                        throw new RuntimeException("Downloading stopped: " + operationId);
+                                    }
                                     writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
                                 } catch (Exception exception) {
                                     exceptionAtomicReference.set(exception);
@@ -254,6 +269,10 @@ public class FileDownloadOrchestrator {
                 }
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
             }
+        }
+
+        public void stop() {
+            stop.set(true);
         }
 
         public DownloadProgress getProgress() {

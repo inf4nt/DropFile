@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,8 +82,13 @@ public class ApiDownloadsRestController {
     }
 
     @PostMapping("/stop/{operationId}")
-    public ResponseEntity<Void> stop(@PathVariable String operationId) {
-        throw new UnsupportedOperationException("Unsupported yet");
+    public ResponseEntity<String> stop(@PathVariable String operationId) {
+        boolean stop = fileDownloadOrchestrator.stop(operationId);
+        if (stop) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(404)
+                .body("No operation found, completed or already stopped");
     }
 
     @DeleteMapping("/rm/{operationId}")

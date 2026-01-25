@@ -485,6 +485,26 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @SneakyThrows
+    public HttpResponse<byte[]> downloadsStop(String operation) {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/downloads/stop/")
+                .resolve(operation);
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
     private String getDaemonAuthorizationToken() {
         SecretsConfig secretsConfig = secretsConfigStore.getRequired();
 
