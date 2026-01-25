@@ -8,7 +8,6 @@ import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelReq
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
