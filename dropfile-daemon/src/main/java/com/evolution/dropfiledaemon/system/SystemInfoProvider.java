@@ -1,8 +1,5 @@
 package com.evolution.dropfiledaemon.system;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
@@ -11,13 +8,6 @@ import java.util.Map;
 
 @Component
 public class SystemInfoProvider {
-
-    private final ObjectMapper objectMapper;
-
-    @Autowired
-    public SystemInfoProvider(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public Map<String, Object> getSystemInfo() {
         return new LinkedHashMap<>() {{
@@ -32,11 +22,6 @@ public class SystemInfoProvider {
             long freeMemory = Runtime.getRuntime().freeMemory();
             put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + toMb(freeMemory) + " MB)");
         }};
-    }
-
-    @SneakyThrows
-    public String getSystemInfoAsJson() {
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(getSystemInfo());
     }
 
     private long toMb(long value) {
