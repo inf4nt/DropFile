@@ -1,6 +1,7 @@
-package com.evolution.dropfiledaemon.manifest;
+package com.evolution.dropfiledaemon.util;
 
 
+import com.evolution.dropfiledaemon.util.FileHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

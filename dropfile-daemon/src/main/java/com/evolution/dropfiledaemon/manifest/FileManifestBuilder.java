@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.manifest;
 
+import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

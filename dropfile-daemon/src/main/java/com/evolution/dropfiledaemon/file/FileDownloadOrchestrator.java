@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.file;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfiledaemon.manifest.FileHelper;
+import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;

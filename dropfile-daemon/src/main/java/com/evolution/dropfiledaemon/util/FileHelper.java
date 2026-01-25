@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.manifest;
+package com.evolution.dropfiledaemon.util;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

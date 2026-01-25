@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.share;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.manifest.FileHelper;
+import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import lombok.SneakyThrows;
