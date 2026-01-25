@@ -2,9 +2,9 @@ package com.evolution.dropfile.common.dto;
 
 import java.time.Instant;
 
-public record ApiDownloadFileResponse(String operationId,
+public record ApiDownloadFileResponse(String operation,
                                       String fileId,
-                                      String fileAbsolutePath,
+                                      String file,
                                       String hash,
                                       long downloaded,
                                       long total,

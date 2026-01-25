@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,24 @@ public class ApiDownloadingRestController {
                 ));
             }
         }
-        return responses;
+
+        return new ArrayList<>() {{
+            List<ApiDownloadFileResponse> downloading = responses.stream()
+                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.DOWNLOADING)
+                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .toList();
+            List<ApiDownloadFileResponse> completed = responses.stream()
+                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.COMPLETED)
+                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .toList();
+            List<ApiDownloadFileResponse> error = responses.stream()
+                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.ERROR)
+                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .toList();
+            addAll(downloading);
+            addAll(completed);
+            addAll(error);
+        }};
     }
 
     @PostMapping("/stop/{operationId}")
