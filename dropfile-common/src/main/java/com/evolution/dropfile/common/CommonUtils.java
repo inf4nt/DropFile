@@ -27,7 +27,9 @@ public class CommonUtils {
     }
 
     public static String random() {
-        return UUID.randomUUID().toString().replaceAll("-", "");
+        return UUID.randomUUID().toString()
+                .replaceAll("-", "")
+                .substring(0, 10);
     }
 
     public static String generateSecretNonce16() {
@@ -64,11 +66,6 @@ public class CommonUtils {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         byte[] hash = md.digest(data);
         return hexString(hash);
-    }
-
-    @SneakyThrows
-    public static MessageDigest getMessageDigestSha256() {
-        return MessageDigest.getInstance(SHA256_ALGORITHM);
     }
 
     @SneakyThrows
