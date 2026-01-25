@@ -19,11 +19,6 @@ public class ApiDaemonRestController {
         this.apiDaemonFacade = apiDaemonFacade;
     }
 
-    @GetMapping("/ping")
-    public String ping() {
-        return "pong";
-    }
-
     @PostMapping("/shutdown")
     public void shutdown() {
         apiDaemonFacade.shutdown();

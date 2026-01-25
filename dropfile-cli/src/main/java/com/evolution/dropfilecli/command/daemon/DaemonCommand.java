@@ -9,7 +9,6 @@ import picocli.CommandLine;
         description = "Daemon commands",
         subcommands = {
                 ShutdownCommand.class,
-                StatusCommand.class,
                 RetrieveInfoCommand.class
         }
 )

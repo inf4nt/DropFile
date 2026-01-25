@@ -379,25 +379,6 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> daemonPing() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
-
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/daemon/ping");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-    }
-
-    @SneakyThrows
     public HttpResponse<Void> daemonShutdown() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 

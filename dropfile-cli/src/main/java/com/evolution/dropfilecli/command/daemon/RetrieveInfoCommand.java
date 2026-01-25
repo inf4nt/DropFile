@@ -12,8 +12,8 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "info",
-        description = "Retrieve info"
+        name = "status",
+        description = "Daemon status"
 )
 public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
 
