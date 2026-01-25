@@ -2,7 +2,7 @@ package com.evolution.dropfile.store.download;
 
 import com.evolution.dropfile.store.store.RuntimeKeyValueStore;
 
-public class RuntimeDownloadFileEntryStore
+public class RuntimeFileDownloadEntryStore
         extends RuntimeKeyValueStore<String, DownloadFileEntry>
-        implements DownloadFileEntryStore {
+        implements FileDownloadEntryStore {
 }

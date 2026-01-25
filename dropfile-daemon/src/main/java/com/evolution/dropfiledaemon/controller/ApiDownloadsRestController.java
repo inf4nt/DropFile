@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.DownloadFileEntryStore;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.file.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +15,20 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/downloading")
+@RequestMapping("/api/downloads")
 @RequiredArgsConstructor
-public class ApiDownloadingRestController {
+public class ApiDownloadsRestController {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
-    private final DownloadFileEntryStore downloadFileEntryStore;
+    private final FileDownloadEntryStore fileDownloadEntryStore;
 
     private final FileHelper fileHelper;
 
     @GetMapping("/ls")
     public List<ApiDownloadFileResponse> ls() {
         List<ApiDownloadFileResponse> responses = new ArrayList<>();
-        Map<String, DownloadFileEntry> entryMap = downloadFileEntryStore.getAll();
+        Map<String, DownloadFileEntry> entryMap = fileDownloadEntryStore.getAll();
         for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
             FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
                     .getDownloadProcedures()
@@ -66,15 +66,15 @@ public class ApiDownloadingRestController {
         return new ArrayList<>() {{
             List<ApiDownloadFileResponse> downloading = responses.stream()
                     .filter(it -> it.status() == ApiDownloadFileResponse.Status.DOWNLOADING)
-                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                     .toList();
             List<ApiDownloadFileResponse> completed = responses.stream()
                     .filter(it -> it.status() == ApiDownloadFileResponse.Status.COMPLETED)
-                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                     .toList();
             List<ApiDownloadFileResponse> error = responses.stream()
                     .filter(it -> it.status() == ApiDownloadFileResponse.Status.ERROR)
-                    .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                     .toList();
             addAll(downloading);
             addAll(completed);

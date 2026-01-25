@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.downloading;
+package com.evolution.dropfilecli.command.downloads;
 
 import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
@@ -18,7 +18,7 @@ import java.util.List;
         name = "ls"
 )
 @RequiredArgsConstructor
-public class DownloadingLsCommand implements CommandHttpHandler<byte[]> {
+public class DownloadsLsCommand implements CommandHttpHandler<byte[]> {
 
     private final DaemonClient daemonClient;
 
@@ -26,7 +26,7 @@ public class DownloadingLsCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.downloadingLs();
+        return daemonClient.downloadsLs();
     }
 
     @Override

@@ -1,17 +1,17 @@
-package com.evolution.dropfilecli.command.downloading;
+package com.evolution.dropfilecli.command.downloads;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "downloading",
-        description = "Downloading command",
+        name = "downloads",
+        description = "Downloads command",
         subcommands = {
-                DownloadingLsCommand.class
+                DownloadsLsCommand.class
         }
 )
-public class DownloadingCommand implements Runnable {
+public class DownloadsCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

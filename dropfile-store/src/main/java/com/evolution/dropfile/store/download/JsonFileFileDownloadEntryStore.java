@@ -8,10 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class JsonFileDownloadFileEntryStore
+public class JsonFileFileDownloadEntryStore
         extends JsonFileKeyValueStore<DownloadFileEntry>
-        implements DownloadFileEntryStore {
-    public JsonFileDownloadFileEntryStore(ObjectMapper objectMapper) {
+        implements FileDownloadEntryStore {
+    public JsonFileFileDownloadEntryStore(ObjectMapper objectMapper) {
         super(
                 new FileProvider() {
                     @Override

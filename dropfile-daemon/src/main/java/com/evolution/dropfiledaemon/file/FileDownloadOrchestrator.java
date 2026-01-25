@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.file;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.DownloadFileEntryStore;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
@@ -55,7 +55,7 @@ public class FileDownloadOrchestrator {
 
     private final FileHelper fileHelper;
 
-    private final DownloadFileEntryStore downloadFileEntryStore;
+    private final FileDownloadEntryStore fileDownloadEntryStore;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -86,7 +86,7 @@ public class FileDownloadOrchestrator {
                 temporaryFile
         );
         downloadProcedures.put(operationId, downloadProcedure);
-        downloadFileEntryStore.save(
+        fileDownloadEntryStore.save(
                 operationId,
                 new DownloadFileEntry(
                         request.id(),
@@ -102,7 +102,7 @@ public class FileDownloadOrchestrator {
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run();
-                downloadFileEntryStore.save(
+                fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
                                 request.id(),
@@ -116,7 +116,7 @@ public class FileDownloadOrchestrator {
                         )
                 );
             } catch (Exception exception) {
-                downloadFileEntryStore.save(
+                fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
                                 request.id(),

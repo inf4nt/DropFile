@@ -2,6 +2,6 @@ package com.evolution.dropfile.store.download;
 
 import com.evolution.dropfile.store.store.KeyValueStore;
 
-public interface DownloadFileEntryStore
+public interface FileDownloadEntryStore
         extends KeyValueStore<String, DownloadFileEntry> {
 }

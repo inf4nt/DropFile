@@ -467,11 +467,11 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> downloadingLs() {
+    public HttpResponse<byte[]> downloadsLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/downloading/ls");
+                .resolve("/api/downloads/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

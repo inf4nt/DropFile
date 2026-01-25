@@ -5,8 +5,8 @@ import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
-import com.evolution.dropfile.store.download.DownloadFileEntryStore;
-import com.evolution.dropfile.store.download.JsonFileDownloadFileEntryStore;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.keys.KeysConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.keys.RuntimeKeysConfigStore;
@@ -73,9 +73,9 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DownloadFileEntryStore downloadFileEntryStore(ObjectMapper objectMapper,
+    public FileDownloadEntryStore fileDownloadEntryStore(ObjectMapper objectMapper,
                                                          DefaultJsonFileKeyValueStoreInitializationProcedure initializationProcedure) {
-        DownloadFileEntryStore fileEntryStore = new JsonFileDownloadFileEntryStore(objectMapper);
+        FileDownloadEntryStore fileEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
         initializationProcedure.init(fileEntryStore);
         return fileEntryStore;
     }
