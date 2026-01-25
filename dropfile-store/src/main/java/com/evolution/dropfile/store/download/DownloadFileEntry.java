@@ -5,6 +5,7 @@ import java.time.Instant;
 public record DownloadFileEntry(String fileId,
                                 String destinationFile,
                                 String temporaryFile,
+                                String hash,
                                 long downloaded,
                                 long total,
                                 DownloadFileEntryStatus status,

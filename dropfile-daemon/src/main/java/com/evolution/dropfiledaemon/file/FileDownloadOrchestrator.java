@@ -92,6 +92,7 @@ public class FileDownloadOrchestrator {
                         request.id(),
                         destinationFile.getAbsolutePath(),
                         temporaryFile.getAbsolutePath(),
+                        null,
                         0,
                         0,
                         DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
@@ -107,8 +108,9 @@ public class FileDownloadOrchestrator {
                                 request.id(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
-                                downloadProcedure.getProgress().downloaded,
-                                downloadProcedure.getProgress().total,
+                                downloadProcedure.getProgress().hash(),
+                                downloadProcedure.getProgress().downloaded(),
+                                downloadProcedure.getProgress().total(),
                                 DownloadFileEntry.DownloadFileEntryStatus.COMPLETED,
                                 Instant.now()
                         )
@@ -120,8 +122,9 @@ public class FileDownloadOrchestrator {
                                 request.id(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
-                                downloadProcedure.getProgress().downloaded,
-                                downloadProcedure.getProgress().total,
+                                downloadProcedure.getProgress().hash(),
+                                downloadProcedure.getProgress().downloaded(),
+                                downloadProcedure.getProgress().total(),
                                 DownloadFileEntry.DownloadFileEntryStatus.ERROR,
                                 Instant.now()
                         )
@@ -259,6 +262,7 @@ public class FileDownloadOrchestrator {
                         operationId,
                         request.id(),
                         destinationFile.getAbsolutePath(),
+                        null,
                         0,
                         0,
                         "0.00 %"
@@ -270,6 +274,7 @@ public class FileDownloadOrchestrator {
                     operationId,
                     request.id(),
                     destinationFile.getAbsolutePath(),
+                    manifest.hash(),
                     downloaded,
                     manifest.size(),
                     percent
@@ -381,6 +386,7 @@ public class FileDownloadOrchestrator {
     public record DownloadProgress(String operationId,
                                    String fileId,
                                    String filename,
+                                   String hash,
                                    long downloaded,
                                    long total,
                                    String percentage) {

@@ -37,6 +37,7 @@ public class ApiDownloadingRestController {
                         downloadProgress.operationId(),
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
+                        null,
                         downloadProgress.downloaded(),
                         downloadProgress.total(),
                         downloadProgress.percentage(),
@@ -46,14 +47,16 @@ public class ApiDownloadingRestController {
             } else {
                 String operation = entry.getKey();
                 DownloadFileEntry downloadFileEntry = entry.getValue();
+                ApiDownloadFileResponse.Status status = ApiDownloadFileResponse.Status.valueOf(downloadFileEntry.status().name());
                 responses.add(new ApiDownloadFileResponse(
                         operation,
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
+                        status == ApiDownloadFileResponse.Status.COMPLETED ? downloadFileEntry.hash() : null,
                         downloadFileEntry.downloaded(),
                         downloadFileEntry.total(),
                         fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
-                        ApiDownloadFileResponse.Status.valueOf(downloadFileEntry.status().name()),
+                        status,
                         downloadFileEntry.updated()
                 ));
             }

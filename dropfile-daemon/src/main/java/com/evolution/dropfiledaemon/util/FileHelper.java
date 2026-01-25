@@ -124,11 +124,11 @@ public class FileHelper {
 
     public String percent(long downloaded, long total) {
         if (total <= 0) {
-            return "0.0 %";
+            return "0.00%";
         }
 
         double value = (double) downloaded * 100.0 / total;
-        return String.format(Locale.US, "%.2f %%", value);
+        return String.format(Locale.US, "%.2f%%", value);
     }
 
     @Data
