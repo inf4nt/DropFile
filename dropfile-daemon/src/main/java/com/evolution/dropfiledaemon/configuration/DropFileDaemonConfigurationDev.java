@@ -8,6 +8,8 @@ import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
+import com.evolution.dropfile.store.download.DownloadFileEntryStore;
+import com.evolution.dropfile.store.download.RuntimeDownloadFileEntryStore;
 import com.evolution.dropfile.store.keys.ImmutableKeysConfigStore;
 import com.evolution.dropfile.store.keys.KeysConfig;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
@@ -95,6 +97,11 @@ public class DropFileDaemonConfigurationDev {
     @Bean
     public AccessKeyStore accessKeyStore() {
         return new RuntimeAccessKeyStore();
+    }
+
+    @Bean
+    public DownloadFileEntryStore downloadFileEntryStore() {
+        return new RuntimeDownloadFileEntryStore();
     }
 
     @SneakyThrows

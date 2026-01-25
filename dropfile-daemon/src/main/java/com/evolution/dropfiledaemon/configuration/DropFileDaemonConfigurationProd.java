@@ -1,17 +1,19 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
-import com.evolution.dropfile.store.access.AccessKeyStoreInitializationProcedure;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.download.DownloadFileEntryStore;
+import com.evolution.dropfile.store.download.JsonFileDownloadFileEntryStore;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.keys.KeysConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.keys.RuntimeKeysConfigStore;
 import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.store.store.json.DefaultJsonFileKeyValueStoreInitializationProcedure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,11 +36,6 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public KeysConfigStoreInitializationProcedure keysConfigStoreInitializationProcedure() {
         return new KeysConfigStoreInitializationProcedure();
-    }
-
-    @Bean
-    public AccessKeyStoreInitializationProcedure accessKeyStoreInitializationProcedure() {
-        return new AccessKeyStoreInitializationProcedure();
     }
 
     @Bean
@@ -68,10 +65,18 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public AccessKeyStore accessKeyStore(ObjectMapper objectMapper,
-                                         AccessKeyStoreInitializationProcedure initializationProcedure) {
+                                         DefaultJsonFileKeyValueStoreInitializationProcedure initializationProcedure) {
 //        AccessKeyStore accessKeyStore = new JsonFileAccessKeyStore(objectMapper);
         AccessKeyStore accessKeyStore = new RuntimeAccessKeyStore();
         initializationProcedure.init(accessKeyStore);
         return accessKeyStore;
+    }
+
+    @Bean
+    public DownloadFileEntryStore downloadFileEntryStore(ObjectMapper objectMapper,
+                                                         DefaultJsonFileKeyValueStoreInitializationProcedure initializationProcedure) {
+        DownloadFileEntryStore fileEntryStore = new JsonFileDownloadFileEntryStore(objectMapper);
+        initializationProcedure.init(fileEntryStore);
+        return fileEntryStore;
     }
 }

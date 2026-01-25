@@ -2,16 +2,18 @@ package com.evolution.dropfiledaemon.file;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfiledaemon.util.FileHelper;
+import com.evolution.dropfile.store.download.DownloadFileEntry;
+import com.evolution.dropfile.store.download.DownloadFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
+import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.SafeUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -23,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +36,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FileDownloadOrchestrator {
 
     private static final int MAX_PARALLEL_DOWNLOADING_COUNT = 10;
@@ -51,14 +55,7 @@ public class FileDownloadOrchestrator {
 
     private final FileHelper fileHelper;
 
-    @Autowired
-    public FileDownloadOrchestrator(TunnelClient tunnelClient,
-                                    AppConfigStore appConfigStore,
-                                    FileHelper fileHelper) {
-        this.tunnelClient = tunnelClient;
-        this.appConfigStore = appConfigStore;
-        this.fileHelper = fileHelper;
-    }
+    private final DownloadFileEntryStore downloadFileEntryStore;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -89,13 +86,50 @@ public class FileDownloadOrchestrator {
                 temporaryFile
         );
         downloadProcedures.put(operationId, downloadProcedure);
+        downloadFileEntryStore.save(
+                operationId,
+                new DownloadFileEntry(
+                        request.id(),
+                        destinationFile.getAbsolutePath(),
+                        temporaryFile.getAbsolutePath(),
+                        0,
+                        0,
+                        DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                        Instant.now()
+                )
+        );
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run();
+                downloadFileEntryStore.save(
+                        operationId,
+                        new DownloadFileEntry(
+                                request.id(),
+                                destinationFile.getAbsolutePath(),
+                                temporaryFile.getAbsolutePath(),
+                                downloadProcedure.getProgress().downloaded,
+                                downloadProcedure.getProgress().total,
+                                DownloadFileEntry.DownloadFileEntryStatus.COMPLETED,
+                                Instant.now()
+                        )
+                );
             } catch (Exception exception) {
+                downloadFileEntryStore.save(
+                        operationId,
+                        new DownloadFileEntry(
+                                request.id(),
+                                destinationFile.getAbsolutePath(),
+                                temporaryFile.getAbsolutePath(),
+                                downloadProcedure.getProgress().downloaded,
+                                downloadProcedure.getProgress().total,
+                                DownloadFileEntry.DownloadFileEntryStatus.ERROR,
+                                Instant.now()
+                        )
+                );
                 log.info("Exception occurred during download process {}", exception.getMessage(), exception);
                 throw new RuntimeException(exception);
             } finally {
+                SafeUtil.execute(() -> downloadProcedures.remove(operationId));
                 SafeUtil.execute(() -> downloadProcedureExecutorService.close());
                 SafeUtil.execute(() -> downloadingSemaphore.release());
             }
@@ -103,11 +137,12 @@ public class FileDownloadOrchestrator {
         return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());
     }
 
-    public List<DownloadProgress> getDownloadProgressList() {
-        return downloadProcedures.values()
-                .stream()
-                .map(it -> it.getProgress())
-                .toList();
+    public Map<String, DownloadProgress> getDownloadProcedures() {
+        Map<String, DownloadProgress> result = new LinkedHashMap<>();
+        for (Map.Entry<String, DownloadProcedure> entry : downloadProcedures.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().getProgress());
+        }
+        return result;
     }
 
     public class DownloadProcedure {
@@ -146,31 +181,31 @@ public class FileDownloadOrchestrator {
         public void run() {
             try {
                 ExecutionProfiling.run(
-                        String.format("file-download-orchestrator operation %s file id %s", operationId, request.id()),
+                        String.format("file-download-orchestrator operation %s file fileId %s", operationId, request.id()),
                         () -> {
 
                             ExecutionProfiling.run(
-                                    String.format("download-manifest operation %s file id %s", operationId, request.id()),
+                                    String.format("download-manifest operation %s file fileId %s", operationId, request.id()),
                                     () -> downloadManifest()
                             );
 
                             ExecutionProfiling.run(
-                                    String.format("download-chunks operation %s file id %s chunks %s",
+                                    String.format("download-chunks operation %s file fileId %s chunks %s",
                                             operationId, request.id(), manifest.chunkManifests().size()
                                     ),
                                     () -> downloadAndWriteChunks()
                             );
 
                             String actualSha256 = ExecutionProfiling.run(
-                                    String.format("digest-calculation operation %s file id %s", operationId, request.id()),
+                                    String.format("digest-calculation operation %s file fileId %s", operationId, request.id()),
                                     () -> fileHelper.sha256(temporaryFile)
                             );
 
-                            log.info("Actual sha256. operation {} sha256 {} file id {}", operationId, actualSha256, request.id());
+                            log.info("Actual sha256. operation {} sha256 {} file fileId {}", operationId, actualSha256, request.id());
 
                             if (!manifest.hash().equals(actualSha256)) {
                                 throw new RuntimeException(String.format(
-                                        "Mismatch sha256. Operation %s actual %s expected %s file id %s", operationId, actualSha256, manifest.hash(), request.id()
+                                        "Mismatch sha256. Operation %s actual %s expected %s file fileId %s", operationId, actualSha256, manifest.hash(), request.id()
                                 ));
                             }
 
@@ -230,7 +265,7 @@ public class FileDownloadOrchestrator {
                 );
             }
             long downloaded = chunksHaveDownloaded.sum();
-            String percent = percent(downloaded, manifest.size());
+            String percent = fileHelper.percent(downloaded, manifest.size());
             return new DownloadProgress(
                     operationId,
                     request.id(),
@@ -239,15 +274,6 @@ public class FileDownloadOrchestrator {
                     manifest.size(),
                     percent
             );
-        }
-
-        private String percent(long downloaded, long total) {
-            if (total <= 0) {
-                return "0.0 %";
-            }
-
-            double value = (double) downloaded * 100.0 / total;
-            return String.format(Locale.US, "%.2f %%", value);
         }
 
         private void downloadManifest() {
@@ -353,7 +379,7 @@ public class FileDownloadOrchestrator {
     }
 
     public record DownloadProgress(String operationId,
-                                   String id,
+                                   String fileId,
                                    String filename,
                                    long downloaded,
                                    long total,

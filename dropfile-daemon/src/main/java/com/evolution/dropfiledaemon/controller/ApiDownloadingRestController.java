@@ -1,0 +1,78 @@
+package com.evolution.dropfiledaemon.controller;
+
+import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
+import com.evolution.dropfile.store.download.DownloadFileEntry;
+import com.evolution.dropfile.store.download.DownloadFileEntryStore;
+import com.evolution.dropfiledaemon.file.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.util.FileHelper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/downloading")
+@RequiredArgsConstructor
+public class ApiDownloadingRestController {
+
+    private final FileDownloadOrchestrator fileDownloadOrchestrator;
+
+    private final DownloadFileEntryStore downloadFileEntryStore;
+
+    private final FileHelper fileHelper;
+
+    @GetMapping("/ls")
+    public List<ApiDownloadFileResponse> ls() {
+        List<ApiDownloadFileResponse> responses = new ArrayList<>();
+        Map<String, DownloadFileEntry> entryMap = downloadFileEntryStore.getAll();
+        for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
+            FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
+                    .getDownloadProcedures()
+                    .get(entry.getKey());
+            if (downloadProgress != null) {
+                responses.add(new ApiDownloadFileResponse(
+                        downloadProgress.operationId(),
+                        downloadProgress.fileId(),
+                        entry.getValue().destinationFile(),
+                        downloadProgress.downloaded(),
+                        downloadProgress.total(),
+                        downloadProgress.percentage(),
+                        ApiDownloadFileResponse.Status.DOWNLOADING,
+                        entry.getValue().updated()
+                ));
+            } else {
+                String operation = entry.getKey();
+                DownloadFileEntry downloadFileEntry = entry.getValue();
+                responses.add(new ApiDownloadFileResponse(
+                        operation,
+                        downloadFileEntry.fileId(),
+                        downloadFileEntry.destinationFile(),
+                        downloadFileEntry.downloaded(),
+                        downloadFileEntry.total(),
+                        fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
+                        ApiDownloadFileResponse.Status.valueOf(downloadFileEntry.status().name()),
+                        downloadFileEntry.updated()
+                ));
+            }
+        }
+        return responses;
+    }
+
+    @PostMapping("/stop/{operationId}")
+    public ResponseEntity<Void> stop(@PathVariable String operationId) {
+        throw new UnsupportedOperationException("Unsupported yet");
+    }
+
+    @DeleteMapping("/rm/{operationId}")
+    public ResponseEntity<Void> rm(@PathVariable String operationId) {
+        throw new UnsupportedOperationException("Unsupported yet");
+    }
+
+    @DeleteMapping("/rm-all")
+    public ResponseEntity<Void> rmAll() {
+        throw new UnsupportedOperationException("Unsupported yet");
+    }
+}

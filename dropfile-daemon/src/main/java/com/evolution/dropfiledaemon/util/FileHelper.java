@@ -15,6 +15,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 @Component
@@ -119,6 +120,15 @@ public class FileHelper {
         fileChannel.position(skip);
         fileChannel.read(buffer);
         return buffer.array();
+    }
+
+    public String percent(long downloaded, long total) {
+        if (total <= 0) {
+            return "0.0 %";
+        }
+
+        double value = (double) downloaded * 100.0 / total;
+        return String.format(Locale.US, "%.2f %%", value);
     }
 
     @Data

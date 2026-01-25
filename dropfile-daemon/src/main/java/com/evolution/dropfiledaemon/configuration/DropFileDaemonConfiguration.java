@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.store.json.DefaultJsonFileKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
@@ -27,6 +28,11 @@ public class DropFileDaemonConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         return objectMapper;
+    }
+
+    @Bean
+    public DefaultJsonFileKeyValueStoreInitializationProcedure defaultJsonFileKeyValueStoreInitializationProcedure() {
+        return new DefaultJsonFileKeyValueStoreInitializationProcedure();
     }
 
     @Bean
