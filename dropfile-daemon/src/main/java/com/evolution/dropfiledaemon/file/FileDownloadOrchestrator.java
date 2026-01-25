@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.file;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileHelper;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
@@ -7,7 +8,7 @@ import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelReq
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.Trying;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,15 +65,15 @@ public class FileDownloadOrchestrator {
         }
 
         downloadingSemaphore.acquire();
-        File file = Trying
-                .call(() -> getFile(request))
-                .doOnError(exception -> {
-                    downloadingSemaphore.release();
-                    log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
-                })
-                .build()
-                .getOrElseThrow();
-        String operationId = UUID.randomUUID().toString();
+        File file;
+        try {
+            file = getFile(request);
+        } catch (Exception exception) {
+            downloadingSemaphore.release();
+            log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
+            throw exception;
+        }
+        String operationId = CommonUtils.random();
         ExecutorService downloadProcedureExecutorService = Executors.newVirtualThreadPerTaskExecutor();
         DownloadProcedure downloadProcedure = new DownloadProcedure(
                 new Semaphore(MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT), downloadProcedureExecutorService,
@@ -80,18 +81,17 @@ public class FileDownloadOrchestrator {
         );
         downloadProcedures.put(operationId, downloadProcedure);
         // TODO create a temp file, download data to the temp file, check hash, move temp file to real file
-        fileDownloadingExecutorService.execute(() ->
-                Trying.call(() -> downloadProcedure.run())
-                        .doOnError(exception -> {
-                            log.info("Exception occurred during download process {}", exception.getMessage(), exception);
-                        })
-                        .doFinally(() -> {
-                            downloadingSemaphore.release();
-                            downloadProcedureExecutorService.shutdown();
-                        })
-                        .build()
-                        .getOrElseThrow()
-        );
+        fileDownloadingExecutorService.execute(() -> {
+            try {
+                downloadProcedure.run();
+            } catch (Exception exception) {
+                log.info("Exception occurred during download process {}", exception.getMessage(), exception);
+                throw new RuntimeException(exception);
+            } finally {
+                downloadingSemaphore.release();
+                downloadProcedureExecutorService.shutdown();
+            }
+        });
         return new FileDownloadResponse(operationId, file.getAbsolutePath());
     }
 
@@ -130,7 +130,6 @@ public class FileDownloadOrchestrator {
             this.file = file;
         }
 
-        @SneakyThrows
         public void run() {
             ExecutionProfiling.run(
                     String.format("file-download-orchestrator %s %s", id, file.getAbsolutePath()),
@@ -155,7 +154,7 @@ public class FileDownloadOrchestrator {
 
                         if (!manifest.hash().equals(actualSha256)) {
                             throw new RuntimeException(String.format(
-                                    "File sha256 mismatch. Actual %s expected %s file id %s", actualSha256, manifest.hash(), id
+                                    "Mismatch sha256 %s expected %s file id %s", actualSha256, manifest.hash(), id
                             ));
                         }
                     }
@@ -179,15 +178,14 @@ public class FileDownloadOrchestrator {
                                 if (exceptionAtomicReference.get() != null) {
                                     return;
                                 }
-                                Trying.call(() -> {
-                                            try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
-                                                writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
-                                            }
-                                        })
-                                        .doOnError(exception -> exceptionAtomicReference.set(exception))
-                                        .doFinally(() -> chunkDownloadingSemaphore.release())
-                                        .build()
-                                        .getOrElseThrow();
+                                try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
+                                    writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
+                                } catch (Exception exception) {
+                                    exceptionAtomicReference.set(exception);
+                                    throw new RuntimeException(exception);
+                                } finally {
+                                    chunkDownloadingSemaphore.release();
+                                }
                             },
                             executorService
                     );
@@ -229,59 +227,57 @@ public class FileDownloadOrchestrator {
             return String.format(Locale.US, "%.2f %%", value);
         }
 
-        @SneakyThrows
         private ShareDownloadManifestResponse downloadManifest() {
-            return Trying.call(() ->
-                            RetryExecutor.call(
-                                            () -> tunnelClient.send(
-                                                    TunnelClient.Request.builder()
-                                                            .command("share-download-manifest")
-                                                            .body(id)
-                                                            .build(),
-                                                    ShareDownloadManifestResponse.class
-                                            )
-                                    )
-                                    .doOnError((attempt, exception) -> {
-                                        log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
-                                    })
-                                    .doOnSuccessful((attempt, manifest) -> {
-                                        log.info(
-                                                "Manifest downloaded 'share-download-manifest'. Attempt: {} Hash {} Chunk size {}",
-                                                attempt, manifest.hash(), manifest.chunkManifests().size()
-                                        );
-                                    })
-                                    .build()
-                                    .run()
-                    )
-                    .build()
-                    .getOrElseThrow(exception -> new RuntimeException(String.format("Unable to download manifest %s", id)));
+            try {
+                return RetryExecutor.call(
+                                () -> tunnelClient.send(
+                                        TunnelClient.Request.builder()
+                                                .command("share-download-manifest")
+                                                .body(id)
+                                                .build(),
+                                        ShareDownloadManifestResponse.class
+                                )
+                        )
+                        .doOnError((attempt, exception) -> {
+                            log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
+                        })
+                        .doOnSuccessful((attempt, manifest) -> {
+                            log.info(
+                                    "Manifest downloaded 'share-download-manifest'. Attempt: {} Hash {} Chunk size {}",
+                                    attempt, manifest.hash(), manifest.chunkManifests().size()
+                            );
+                        })
+                        .build()
+                        .run();
+            } catch (Exception e) {
+                throw new RuntimeException(String.format("Unable to download manifest %s", id), e);
+            }
         }
 
-        @SneakyThrows
         private InputStream chunkDownloadStream(long start, long end) {
-            return Trying.call(() ->
-                            RetryExecutor.call(
-                                            () -> tunnelClient.stream(
-                                                    TunnelClient.Request.builder()
-                                                            .command("share-download-chunk-stream")
-                                                            .body(new ShareDownloadChunkTunnelRequest(
-                                                                    id,
-                                                                    start,
-                                                                    end
-                                                            ))
-                                                            .build()
-                                            )
-                                    )
-                                    .doOnError((attempt, exception) -> {
-                                        log.info("Retry 'share-download-chunk-stream'. Attempt: {} {}", attempt, exception.getMessage());
-                                    })
-                                    .build()
-                                    .run()
-                    )
-                    .build()
-                    .getOrElseThrow(exception -> new RuntimeException(String.format(
-                            "Unable to download chunk %s [%s, %s]", id, start, end
-                    )));
+            try {
+                return RetryExecutor.call(
+                                () -> tunnelClient.stream(
+                                        TunnelClient.Request.builder()
+                                                .command("share-download-chunk-stream")
+                                                .body(new ShareDownloadChunkTunnelRequest(
+                                                        id,
+                                                        start,
+                                                        end
+                                                ))
+                                                .build()
+                                )
+                        )
+                        .doOnError((attempt, exception) -> {
+                            log.info("Retry 'share-download-chunk-stream'. Attempt: {} {}", attempt, exception.getMessage());
+                        })
+                        .build()
+                        .run();
+            } catch (Exception e) {
+                throw new RuntimeException(String.format(
+                        "Unable to download chunk %s [%s, %s]", id, start, end
+                ), e);
+            }
         }
 
         @SneakyThrows

@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 public class RetryExecutorTest {
 
     @Test
-    public void returnNull() {
+    public void throwsExceptionIfRetryFailed() {
         AtomicBoolean called = new AtomicBoolean(false);
         try {
             RetryExecutor
@@ -140,7 +140,7 @@ public class RetryExecutorTest {
 
         Integer attempts = 100;
         Integer stopRetry = attempts - 1;
-        Duration delay = Duration.ofMillis(5);
+        Duration delay = Duration.ofMillis(10);
 
         Boolean run = RetryExecutor
                 .call(() -> {
