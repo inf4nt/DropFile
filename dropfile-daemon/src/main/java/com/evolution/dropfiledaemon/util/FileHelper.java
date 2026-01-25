@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 @Component
 public class FileHelper {
 
-    private static final int BUFFER_SIZE = 64 * 1024;
+    private static final int BUFFER_SIZE = 64 * 1_024;
 
     private static final String SHA256 = "SHA-256";
 
