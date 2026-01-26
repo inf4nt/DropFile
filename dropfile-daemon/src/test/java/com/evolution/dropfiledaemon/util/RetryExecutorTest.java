@@ -14,11 +14,109 @@ import static org.assertj.core.api.Fail.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RetryExecutorTest {
 
     @Test
-    public void throwsExceptionIfRetryFailed() {
+    public void retryIfNotNullValue() {
+        AtomicInteger called = new AtomicInteger(0);
+
+        Boolean result = RetryExecutor
+                .call(() -> {
+                    called.incrementAndGet();
+                    if (called.get() == 2) {
+                        return true;
+                    }
+                    return null;
+                })
+                .attempts(2)
+                .delay(Duration.ofSeconds(0))
+                .retryIf(it -> it.result() == null)
+                .build()
+                .run();
+        assertThat(called.get(), is(2));
+        assertThat(result, is(true));
+    }
+
+    @Test
+    public void retryIfException() {
+        AtomicInteger called = new AtomicInteger(0);
+
+        Object result = RetryExecutor
+                .call(() -> {
+                    called.incrementAndGet();
+                    if (called.get() == 2) {
+                        return null;
+                    }
+                    throw new RuntimeException();
+                })
+                .attempts(2)
+                .delay(Duration.ofSeconds(0))
+                .retryIf(it -> it.exception() != null)
+                .build()
+                .run();
+        assertThat(called.get(), is(2));
+        assertNull(result);
+    }
+
+    @Test
+    public void retryIfHasCalled() {
+        AtomicInteger called = new AtomicInteger(0);
+        AtomicInteger retryIf = new AtomicInteger(0);
+        AtomicReference<List<Integer>> attemptsRetryIf = new AtomicReference<>(new ArrayList<>());
+        AtomicReference<List<Exception>> exceptionRetryIf = new AtomicReference<>(new ArrayList<>());
+        try {
+            RetryExecutor
+                    .call(() -> {
+                        int i = called.incrementAndGet();
+                        throw new RuntimeException("test message " + i);
+                    })
+                    .retryIf(it -> {
+                        attemptsRetryIf.updateAndGet(integers -> {
+                            integers.add(it.attempt());
+                            return integers;
+                        });
+                        exceptionRetryIf.updateAndGet(exceptions -> {
+                            exceptions.add(it.exception());
+                            return exceptions;
+                        });
+                        retryIf.incrementAndGet();
+                        return true;
+                    })
+                    .attempts(3)
+                    .delay(Duration.ofMillis(0))
+                    .build()
+                    .run();
+            fail("Exception not thrown");
+        } catch (RetryExecutor.RetryExecutorException e) {
+            assertThat(
+                    e.getExceptions().size(),
+                    is(3)
+            );
+            assertThat(called.get(), is(3));
+            assertThat(retryIf.get(), is(3));
+            assertThat(attemptsRetryIf.get(), hasItems(1, 2, 3));
+            assertThat(exceptionRetryIf.get().size(), is(3));
+
+            assertThat(
+                    exceptionRetryIf.get().stream().map(it -> it.getClass()).distinct().toList().size(),
+                    is(1)
+            );
+
+            assertThat(
+                    exceptionRetryIf.get().stream().map(it -> it.getMessage()).toList(),
+                    hasItems(
+                            "test message 1",
+                            "test message 2",
+                            "test message 3"
+                    )
+            );
+        }
+    }
+
+    @Test
+    public void failsIfResultIsNull() {
         AtomicBoolean called = new AtomicBoolean(false);
         try {
             RetryExecutor
@@ -35,6 +133,29 @@ public class RetryExecutorTest {
             assertThat(
                     e.getExceptions().size(),
                     is(0)
+            );
+            assertThat(called.get(), is(true));
+        }
+    }
+
+    @Test
+    public void failsIfExceptionIsThrown() {
+        AtomicBoolean called = new AtomicBoolean(false);
+        try {
+            RetryExecutor
+                    .call(() -> {
+                        called.set(true);
+                        throw new RuntimeException();
+                    })
+                    .attempts(1)
+                    .delay(Duration.ofMillis(0))
+                    .build()
+                    .run();
+            fail("Exception not thrown");
+        } catch (RetryExecutor.RetryExecutorException e) {
+            assertThat(
+                    e.getExceptions().size(),
+                    is(1)
             );
             assertThat(called.get(), is(true));
         }

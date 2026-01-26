@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @AllArgsConstructor
 public class RetryExecutor<T> {
@@ -24,6 +25,8 @@ public class RetryExecutor<T> {
 
     private final BiConsumer<Integer, T> doOnSuccessful;
 
+    private final Predicate<RetryIfContainer<T>> retryIf;
+
     private final int attempts;
 
     private final Duration delay;
@@ -35,7 +38,8 @@ public class RetryExecutor<T> {
         while (currentAttempt <= attempts) {
             try {
                 T call = callable.call();
-                if (call != null) {
+                boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
+                if (!continueRetry) {
                     if (doOnSuccessful != null) {
                         try {
                             doOnSuccessful.accept(currentAttempt, call);
@@ -46,6 +50,11 @@ public class RetryExecutor<T> {
                     return call;
                 }
             } catch (Exception e) {
+                boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
+                if (!continueRetry) {
+                    return null;
+                }
+
                 exceptions.add(e);
                 if (doOnError != null) {
                     try {
@@ -79,6 +88,8 @@ public class RetryExecutor<T> {
 
         private BiConsumer<Integer, T> doOnSuccessful;
 
+        private Predicate<RetryIfContainer<T>> retryIf = it -> it.result() == null || it.exception() != null;
+
         private int attempts = 10;
 
         private Duration delay = Duration.ofSeconds(1);
@@ -111,12 +122,18 @@ public class RetryExecutor<T> {
             return this;
         }
 
+        public RetryExecutorBuilder<T> retryIf(Predicate<RetryIfContainer<T>> retryIf) {
+            this.retryIf = Objects.requireNonNull(retryIf);
+            return this;
+        }
+
         public RetryExecutor<T> build() {
             return new RetryExecutor<>(
                     callable,
                     fallbackMapper,
                     doOnError,
                     doOnSuccessful,
+                    retryIf,
                     attempts,
                     delay
             );
@@ -127,5 +144,8 @@ public class RetryExecutor<T> {
     public static class RetryExecutorException extends RuntimeException {
         @Getter
         private final List<Exception> exceptions;
+    }
+
+    public record RetryIfContainer<T>(Integer attempt, T result, Exception exception) {
     }
 }
