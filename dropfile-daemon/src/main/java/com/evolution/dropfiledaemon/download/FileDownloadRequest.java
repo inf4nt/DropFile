@@ -1,5 +1,5 @@
 package com.evolution.dropfiledaemon.download;
 
-public record FileDownloadRequest(String id,
+public record FileDownloadRequest(String fileId,
                                   String filename) {
 }

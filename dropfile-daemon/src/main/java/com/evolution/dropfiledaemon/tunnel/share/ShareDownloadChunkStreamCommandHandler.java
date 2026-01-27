@@ -47,9 +47,6 @@ public class ShareDownloadChunkStreamCommandHandler
         long skip = request.startPosition();
         int take = toInt(request.endPosition() - request.startPosition());
 
-        System.out.println("throttling 3 sec");
-        Thread.sleep(3000);
-
         return fileHelper.readStream(file, skip, take);
     }
 

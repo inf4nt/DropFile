@@ -4,6 +4,10 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfiledaemon.download.exception.ChecksumMismatchException;
+import com.evolution.dropfiledaemon.download.exception.ChunkDownloadingFailedException;
+import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
+import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
@@ -90,7 +94,7 @@ public class FileDownloadOrchestrator {
         fileDownloadEntryStore.save(
                 operationId,
                 new DownloadFileEntry(
-                        request.id(),
+                        request.fileId(),
                         destinationFile.getAbsolutePath(),
                         temporaryFile.getAbsolutePath(),
                         null,
@@ -106,7 +110,7 @@ public class FileDownloadOrchestrator {
                 fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
-                                request.id(),
+                                request.fileId(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
                                 downloadProcedure.getProgress().hash(),
@@ -124,7 +128,7 @@ public class FileDownloadOrchestrator {
                 fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
-                                request.id(),
+                                request.fileId(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
                                 downloadProcedure.getProgress().hash(),
@@ -206,33 +210,31 @@ public class FileDownloadOrchestrator {
         public void run() {
             try {
                 ExecutionProfiling.run(
-                        String.format("file-download-orchestrator operation %s file fileId %s", operationId, request.id()),
+                        String.format("file-download-orchestrator operation: %s fileId: %s", operationId, request.fileId()),
                         () -> {
 
                             ExecutionProfiling.run(
-                                    String.format("download-manifest operation %s file fileId %s", operationId, request.id()),
+                                    String.format("download-manifest operation: %s fileId: %s", operationId, request.fileId()),
                                     () -> downloadManifest()
                             );
 
                             ExecutionProfiling.run(
-                                    String.format("download-chunks operation %s file fileId %s chunks %s",
-                                            operationId, request.id(), manifest.chunkManifests().size()
+                                    String.format("download-chunks operation: %s fileId: %s: chunks %s",
+                                            operationId, request.fileId(), manifest.chunkManifests().size()
                                     ),
                                     () -> downloadAndWriteChunks()
                             );
 
                             String actualSha256 = ExecutionProfiling.run(
-                                    String.format("digest-calculation operation %s file fileId %s", operationId, request.id()),
+                                    String.format("digest-calculation operation: %s fileId: %s", operationId, request.fileId()),
                                     () -> fileHelper.sha256(temporaryFile)
                             );
 
-                            log.info("Actual sha256. operation {} sha256 {} file fileId {}", operationId, actualSha256, request.id());
-
                             if (!manifest.hash().equals(actualSha256)) {
-                                throw new RuntimeException(String.format(
-                                        "Mismatch sha256. Operation %s actual %s expected %s file fileId %s", operationId, actualSha256, manifest.hash(), request.id()
-                                ));
+                                throw new ChecksumMismatchException(operationId, manifest.hash(), actualSha256);
                             }
+
+                            checkIfProcessHasStopped();
 
                             Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
                         }
@@ -261,11 +263,8 @@ public class FileDownloadOrchestrator {
                                 if (exceptionAtomicReference.get() != null) {
                                     return;
                                 }
-                                try (InputStream inputStream = chunkDownloadStream(chunkManifest.startPosition(), chunkManifest.endPosition())) {
-                                    if (stop.get()) {
-                                        throw new DownloadingStoppedException("Downloading has been stopped: " + operationId);
-                                    }
-                                    writeChunkToFile(fileChannel, inputStream, chunkManifest.startPosition(), chunkManifest.size());
+                                try (InputStream inputStream = chunkDownloadStream(chunkManifest)) {
+                                    writeChunkToFile(fileChannel, inputStream, chunkManifest);
                                 } catch (Exception exception) {
                                     exceptionAtomicReference.set(exception);
                                 } finally {
@@ -288,7 +287,7 @@ public class FileDownloadOrchestrator {
             if (manifest == null) {
                 return new DownloadProgress(
                         operationId,
-                        request.id(),
+                        request.fileId(),
                         destinationFile.getAbsolutePath(),
                         null,
                         0,
@@ -300,7 +299,7 @@ public class FileDownloadOrchestrator {
             String percent = fileHelper.percent(downloaded, manifest.size());
             return new DownloadProgress(
                     operationId,
-                    request.id(),
+                    request.fileId(),
                     destinationFile.getAbsolutePath(),
                     manifest.hash(),
                     downloaded,
@@ -312,63 +311,87 @@ public class FileDownloadOrchestrator {
         private void downloadManifest() {
             try {
                 this.manifest = RetryExecutor.call(
-                                () -> tunnelClient.send(
-                                        TunnelClient.Request.builder()
-                                                .command("share-download-manifest")
-                                                .body(request.id())
-                                                .build(),
-                                        ShareDownloadManifestResponse.class
-                                )
+                                () -> {
+                                    checkIfProcessHasStopped();
+                                    return tunnelClient.send(
+                                            TunnelClient.Request.builder()
+                                                    .command("share-download-manifest")
+                                                    .body(request.fileId())
+                                                    .build(),
+                                            ShareDownloadManifestResponse.class);
+                                }
                         )
                         .doOnError((attempt, exception) -> {
-                            log.info("Retry 'share-download-manifest'. Attempt: {} {}", attempt, exception.getMessage());
+                            log.info("Retry 'share-download-manifest'. Operation: {} fileId: {} filename: {} attempt: {} exception: {}",
+                                    operationId, request.fileId(), request.filename(), attempt, exception.getMessage()
+                            );
                         })
                         .doOnSuccessful((attempt, manifest) -> {
                             log.info(
-                                    "Manifest downloaded 'share-download-manifest'. Attempt: {} Hash {} Chunk size {}",
-                                    attempt, manifest.hash(), manifest.chunkManifests().size()
+                                    "Manifest downloaded 'share-download-manifest'. Operation: {} fileId: {} filename: {} Attempt: {} Hash {} Chunk size {}",
+                                    operationId, request.fileId(), request.filename(), attempt, manifest.hash(), manifest.chunkManifests().size()
                             );
+                        })
+                        .retryIf(it -> {
+                            if (it.exception() instanceof DownloadingStoppedException) {
+                                return false;
+                            }
+                            return it.exception() != null || it.result() == null;
                         })
                         .build()
                         .run();
             } catch (Exception e) {
-                throw new RuntimeException(String.format("Unable to download manifest %s", request.id()), e);
+                throw new ManifestDownloadingFailedException(operationId, request.fileId(), request.filename(), e);
             }
         }
 
-        private InputStream chunkDownloadStream(long start, long end) {
+        private InputStream chunkDownloadStream(ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
             try {
                 return RetryExecutor.call(
-                                () -> tunnelClient.stream(
-                                        TunnelClient.Request.builder()
-                                                .command("share-download-chunk-stream")
-                                                .body(new ShareDownloadChunkTunnelRequest(
-                                                        request.id(),
-                                                        start,
-                                                        end
-                                                ))
-                                                .build()
-                                )
+                                () -> {
+                                    checkIfProcessHasStopped();
+                                    return tunnelClient.stream(
+                                            TunnelClient.Request.builder()
+                                                    .command("share-download-chunk-stream")
+                                                    .body(new ShareDownloadChunkTunnelRequest(
+                                                            request.fileId(),
+                                                            chunkManifest.startPosition(),
+                                                            chunkManifest.endPosition()
+                                                    ))
+                                                    .build());
+                                }
                         )
                         .doOnError((attempt, exception) -> {
-                            log.info("Retry 'share-download-chunk-stream'. Attempt: {} {}", attempt, exception.getMessage());
+                            log.info("Retry 'share-download-chunk-stream'. Attempt: {} start {} end {} exception {}",
+                                    attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
+                        })
+                        .retryIf(it -> {
+                            if (it.exception() instanceof DownloadingStoppedException) {
+                                return false;
+                            }
+                            //noinspection resource
+                            return it.exception() != null || it.result() == null;
                         })
                         .build()
                         .run();
             } catch (Exception e) {
-                throw new RuntimeException(String.format(
-                        "Unable to download chunk %s [%s, %s]", request.id(), start, end
-                ), e);
+                throw new ChunkDownloadingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
             }
         }
 
         @SneakyThrows
         private void writeChunkToFile(FileChannel writeToFileChannel,
                                       InputStream inputStreamChunk,
-                                      long position,
-                                      int size) {
-            fileHelper.write(writeToFileChannel, inputStreamChunk, position);
-            chunksHaveDownloaded.add(size);
+                                      ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
+            checkIfProcessHasStopped();
+            fileHelper.write(writeToFileChannel, inputStreamChunk, chunkManifest.startPosition());
+            chunksHaveDownloaded.add(chunkManifest.size());
+        }
+
+        public void checkIfProcessHasStopped() {
+            if (stop.get()) {
+                throw new DownloadingStoppedException(operationId);
+            }
         }
     }
 
@@ -419,11 +442,5 @@ public class FileDownloadOrchestrator {
                                    long total,
                                    String percentage) {
 
-    }
-
-    public static class DownloadingStoppedException extends IOException {
-        public DownloadingStoppedException(String message) {
-            super(message);
-        }
     }
 }
