@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.HandshakeResponseDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

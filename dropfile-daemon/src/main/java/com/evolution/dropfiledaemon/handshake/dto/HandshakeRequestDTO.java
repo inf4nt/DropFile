@@ -1,4 +1,4 @@
-package com.evolution.dropfile.common.dto;
+package com.evolution.dropfiledaemon.handshake.dto;
 
 public record HandshakeRequestDTO(String id,
                                   String payload,

@@ -1,6 +1,6 @@
-package com.evolution.dropfiledaemon.client;
+package com.evolution.dropfiledaemon.handshake.client;
 
-import com.evolution.dropfile.common.dto.HandshakeRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
