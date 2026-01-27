@@ -1,8 +1,7 @@
 package com.evolution.dropfilecli.command.download;
 
 import com.evolution.dropfile.common.PrintReflection;
-import com.evolution.dropfile.common.dto.ApiDownloadLsRequest;
-import com.evolution.dropfile.common.dto.ApiDownloadLsResponse;
+import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -52,26 +51,26 @@ public class DownloadLsCommand implements CommandHttpHandler<byte[]> {
         return daemonClient.downloadLs(getStatus(), limit);
     }
 
-    private ApiDownloadLsRequest.Status getStatus() {
+    private ApiDownloadLsDTO.Status getStatus() {
         if (status == null) {
             return null;
         }
 
         if (status.downloading) {
-            return ApiDownloadLsRequest.Status.DOWNLOADING;
+            return ApiDownloadLsDTO.Status.DOWNLOADING;
         }
         if (status.completed) {
-            return ApiDownloadLsRequest.Status.COMPLETED;
+            return ApiDownloadLsDTO.Status.COMPLETED;
         }
         if (status.stopped) {
-            return ApiDownloadLsRequest.Status.STOPPED;
+            return ApiDownloadLsDTO.Status.STOPPED;
         }
-        return ApiDownloadLsRequest.Status.ERROR;
+        return ApiDownloadLsDTO.Status.ERROR;
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<ApiDownloadLsResponse> values = objectMapper.readValue(response.body(), new TypeReference<List<ApiDownloadLsResponse>>() {
+        List<ApiDownloadLsDTO.Response> values = objectMapper.readValue(response.body(), new TypeReference<List<ApiDownloadLsDTO.Response>>() {
         });
         if (!values.isEmpty()) {
             PrintReflection.print(values);

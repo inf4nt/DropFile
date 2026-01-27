@@ -467,7 +467,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> downloadLs(ApiDownloadLsRequest.Status status, Integer limit) {
+    public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -480,7 +480,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new ApiDownloadLsRequest(
+                        objectMapper.writeValueAsBytes(new ApiDownloadLsDTO.Request(
                                 status,
                                 limit
                         ))
