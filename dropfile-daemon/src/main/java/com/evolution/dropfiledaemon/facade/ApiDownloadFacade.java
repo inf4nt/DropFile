@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
+import com.evolution.dropfile.common.dto.ApiDownloadLsRequest;
+import com.evolution.dropfile.common.dto.ApiDownloadLsResponse;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
@@ -23,15 +24,15 @@ public class ApiDownloadFacade {
 
     private final FileHelper fileHelper;
 
-    public List<ApiDownloadFileResponse> ls() {
-        List<ApiDownloadFileResponse> responses = new ArrayList<>();
+    public List<ApiDownloadLsResponse> ls(ApiDownloadLsRequest request) {
+        List<ApiDownloadLsResponse> responses = new ArrayList<>();
         Map<String, DownloadFileEntry> entryMap = fileDownloadEntryStore.getAll();
         for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
             FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
                     .getDownloadProcedures()
                     .get(entry.getKey());
             if (downloadProgress != null) {
-                responses.add(new ApiDownloadFileResponse(
+                responses.add(new ApiDownloadLsResponse(
                         downloadProgress.operationId(),
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
@@ -39,18 +40,18 @@ public class ApiDownloadFacade {
                         downloadProgress.downloaded(),
                         downloadProgress.total(),
                         downloadProgress.percentage(),
-                        ApiDownloadFileResponse.Status.DOWNLOADING,
+                        ApiDownloadLsResponse.Status.DOWNLOADING,
                         entry.getValue().updated()
                 ));
             } else {
                 String operation = entry.getKey();
                 DownloadFileEntry downloadFileEntry = entry.getValue();
-                ApiDownloadFileResponse.Status status = ApiDownloadFileResponse.Status.valueOf(downloadFileEntry.status().name());
-                responses.add(new ApiDownloadFileResponse(
+                ApiDownloadLsResponse.Status status = ApiDownloadLsResponse.Status.valueOf(downloadFileEntry.status().name());
+                responses.add(new ApiDownloadLsResponse(
                         operation,
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
-                        status == ApiDownloadFileResponse.Status.COMPLETED ? downloadFileEntry.hash() : null,
+                        status == ApiDownloadLsResponse.Status.COMPLETED ? downloadFileEntry.hash() : null,
                         downloadFileEntry.downloaded(),
                         downloadFileEntry.total(),
                         fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
@@ -61,17 +62,24 @@ public class ApiDownloadFacade {
         }
 
         return new ArrayList<>() {{
-            addAll(getByStatus(responses, ApiDownloadFileResponse.Status.ERROR));
-            addAll(getByStatus(responses, ApiDownloadFileResponse.Status.STOPPED));
-            addAll(getByStatus(responses, ApiDownloadFileResponse.Status.COMPLETED));
-            addAll(getByStatus(responses, ApiDownloadFileResponse.Status.DOWNLOADING));
+            int limit = request.limit() == null ? Integer.MAX_VALUE : request.limit();
+            if (request.status() == null) {
+                addAll(getByStatus(responses, ApiDownloadLsResponse.Status.ERROR, limit));
+                addAll(getByStatus(responses, ApiDownloadLsResponse.Status.STOPPED, limit));
+                addAll(getByStatus(responses, ApiDownloadLsResponse.Status.COMPLETED, limit));
+                addAll(getByStatus(responses, ApiDownloadLsResponse.Status.DOWNLOADING, limit));
+            } else {
+                ApiDownloadLsResponse.Status status = ApiDownloadLsResponse.Status.valueOf(request.status().name());
+                addAll(getByStatus(responses, status, limit));
+            }
         }};
     }
 
-    private List<ApiDownloadFileResponse> getByStatus(List<ApiDownloadFileResponse> source, ApiDownloadFileResponse.Status status) {
+    private List<ApiDownloadLsResponse> getByStatus(List<ApiDownloadLsResponse> source, ApiDownloadLsResponse.Status status, int limit) {
         return source.stream()
                 .filter(it -> it.status() == status)
-                .sorted(Comparator.comparing(ApiDownloadFileResponse::updated))
+                .sorted(Comparator.comparing(ApiDownloadLsResponse::updated))
+                .limit(limit)
                 .toList();
     }
 

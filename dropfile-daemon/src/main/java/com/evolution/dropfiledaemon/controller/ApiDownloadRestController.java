@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
+import com.evolution.dropfile.common.dto.ApiDownloadLsRequest;
+import com.evolution.dropfile.common.dto.ApiDownloadLsResponse;
 import com.evolution.dropfiledaemon.facade.ApiDownloadFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,9 @@ public class ApiDownloadRestController {
 
     private final ApiDownloadFacade downloadFacade;
 
-    @GetMapping("/ls")
-    public List<ApiDownloadFileResponse> ls() {
-        return downloadFacade.ls();
+    @PostMapping("/ls")
+    public List<ApiDownloadLsResponse> ls(@RequestBody ApiDownloadLsRequest request) {
+        return downloadFacade.ls(request);
     }
 
     @PostMapping("/stop/{operationId}")
