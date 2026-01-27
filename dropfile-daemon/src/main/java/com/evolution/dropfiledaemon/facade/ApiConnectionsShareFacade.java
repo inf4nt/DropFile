@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
-import com.evolution.dropfile.common.dto.FileEntryTunnelResponse;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
@@ -31,11 +31,11 @@ public class ApiConnectionsShareFacade {
     }
 
     public List<ApiConnectionsShareLsResponseDTO> ls() {
-        List<FileEntryTunnelResponse> files = tunnelClient.send(
+        List<ShareLsTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .command("share-ls")
                         .build(),
-                new TypeReference<List<FileEntryTunnelResponse>>() {
+                new TypeReference<List<ShareLsTunnelResponse>>() {
                 }
         );
         return files.stream()

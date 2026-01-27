@@ -18,7 +18,7 @@ public class FileManifestBuilder {
 
     private static final String SHA256 = "SHA-256";
 
-    private static final Integer CHUNK_SIZE = 7 * 1024 * 1024;
+    private static final Integer CHUNK_SIZE = 2 * 1024 * 1024;
 
     private final FileHelper fileHelper;
 

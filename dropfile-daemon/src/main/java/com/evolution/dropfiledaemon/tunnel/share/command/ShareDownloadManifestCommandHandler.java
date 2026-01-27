@@ -1,11 +1,11 @@
-package com.evolution.dropfiledaemon.tunnel.share;
+package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +13,7 @@ import java.io.File;
 
 @Component
 public class ShareDownloadManifestCommandHandler
-        implements CommandHandler<String, ShareDownloadManifestResponse> {
+        implements CommandHandler<String, ShareDownloadManifestTunnelResponse> {
 
     private final ShareFileEntryStore shareFileEntryStore;
 
@@ -37,17 +37,17 @@ public class ShareDownloadManifestCommandHandler
     }
 
     @Override
-    public ShareDownloadManifestResponse handle(String id) {
+    public ShareDownloadManifestTunnelResponse handle(String id) {
         ShareFileEntry fileEntry = shareFileEntryStore.getRequired(id).getValue();
         FileManifest fileManifest = fileManifestBuilder.build(new File(fileEntry.absolutePath()));
 
-        return new ShareDownloadManifestResponse(
+        return new ShareDownloadManifestTunnelResponse(
                 id,
                 fileManifest.hash(),
                 fileManifest.size(),
                 fileManifest.chunkManifests()
                         .stream()
-                        .map(it -> new ShareDownloadManifestResponse.ChunkManifest(
+                        .map(it -> new ShareDownloadManifestTunnelResponse.ChunkManifest(
                                 it.hash(),
                                 it.size(),
                                 it.startPosition(),

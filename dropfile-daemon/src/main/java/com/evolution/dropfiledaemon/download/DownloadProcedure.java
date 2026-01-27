@@ -5,8 +5,8 @@ import com.evolution.dropfiledaemon.download.exception.DigestMismatchException;
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
 import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
@@ -54,7 +54,7 @@ public class DownloadProcedure {
 
     private final File temporaryFile;
 
-    private ShareDownloadManifestResponse manifest;
+    private ShareDownloadManifestTunnelResponse manifest;
 
     public void stop() {
         stop.set(true);
@@ -134,7 +134,7 @@ public class DownloadProcedure {
                                                 .command("share-download-manifest")
                                                 .body(request.fileId())
                                                 .build(),
-                                        ShareDownloadManifestResponse.class);
+                                        ShareDownloadManifestTunnelResponse.class);
                             }
                     )
                     .doOnError((attempt, exception) -> {
@@ -168,7 +168,7 @@ public class DownloadProcedure {
                 temporaryFile.toPath(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE)) {
-            for (ShareDownloadManifestResponse.ChunkManifest chunkManifest : manifest.chunkManifests()) {
+            for (ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest : manifest.chunkManifests()) {
                 chunkDownloadingSemaphore.acquire();
                 if (exceptionAtomicReference.get() != null) {
                     throw exceptionAtomicReference.get();
@@ -194,7 +194,7 @@ public class DownloadProcedure {
         }
     }
 
-    private InputStream chunkDownloadStream(ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
+    private InputStream chunkDownloadStream(ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
         try {
             return RetryExecutor.call(
                             () -> {
@@ -202,7 +202,7 @@ public class DownloadProcedure {
                                 return tunnelClient.stream(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-chunk-stream")
-                                                .body(new ShareDownloadChunkTunnelRequest(
+                                                .body(new ShareDownloadChunkStreamTunnelRequest(
                                                         request.fileId(),
                                                         chunkManifest.startPosition(),
                                                         chunkManifest.endPosition()
@@ -231,7 +231,7 @@ public class DownloadProcedure {
     @SneakyThrows
     private void writeChunkToFile(FileChannel writeToFileChannel,
                                   InputStream inputStreamChunk,
-                                  ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
+                                  ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
         checkIfProcessHasStopped();
         fileHelper.write(writeToFileChannel, inputStreamChunk, chunkManifest.startPosition());
         chunksHaveDownloaded.add(chunkManifest.size());

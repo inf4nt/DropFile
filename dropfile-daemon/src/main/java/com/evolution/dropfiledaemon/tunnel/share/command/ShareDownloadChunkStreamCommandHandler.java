@@ -1,9 +1,9 @@
-package com.evolution.dropfiledaemon.tunnel.share;
+package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import java.io.InputStream;
 
 @Component
 public class ShareDownloadChunkStreamCommandHandler
-        implements CommandHandler<ShareDownloadChunkTunnelRequest, InputStream> {
+        implements CommandHandler<ShareDownloadChunkStreamTunnelRequest, InputStream> {
 
     private final ShareFileEntryStore shareFileEntryStore;
 
@@ -33,13 +33,13 @@ public class ShareDownloadChunkStreamCommandHandler
     }
 
     @Override
-    public Class<ShareDownloadChunkTunnelRequest> getPayloadType() {
-        return ShareDownloadChunkTunnelRequest.class;
+    public Class<ShareDownloadChunkStreamTunnelRequest> getPayloadType() {
+        return ShareDownloadChunkStreamTunnelRequest.class;
     }
 
     @SneakyThrows
     @Override
-    public InputStream handle(ShareDownloadChunkTunnelRequest request) {
+    public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
         ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(request.id())
                 .getValue();
 

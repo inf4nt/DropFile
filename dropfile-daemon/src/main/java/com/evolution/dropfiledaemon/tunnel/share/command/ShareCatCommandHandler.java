@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.share;
+package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
