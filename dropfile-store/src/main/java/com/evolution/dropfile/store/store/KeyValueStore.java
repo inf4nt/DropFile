@@ -3,10 +3,13 @@ package com.evolution.dropfile.store.store;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public interface KeyValueStore<K, V> {
 
     V save(K key, V value);
+
+    V save(K key, Function<V, V> updateFunction);
 
     V remove(K key);
 

@@ -4,16 +4,9 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfiledaemon.download.exception.ChecksumMismatchException;
-import com.evolution.dropfiledaemon.download.exception.ChunkDownloadingFailedException;
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
-import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestResponse;
-import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.FileHelper;
-import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.SafeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,21 +16,15 @@ import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
 
 @Slf4j
 @Component
@@ -85,6 +72,8 @@ public class FileDownloadOrchestrator {
         DownloadProcedure downloadProcedure = new DownloadProcedure(
                 new Semaphore(MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT),
                 downloadProcedureExecutorService,
+                tunnelClient,
+                fileHelper,
                 operationId,
                 request,
                 destinationFile,
@@ -172,229 +161,6 @@ public class FileDownloadOrchestrator {
         return false;
     }
 
-    public class DownloadProcedure {
-
-        private final AtomicBoolean stop = new AtomicBoolean(false);
-
-        private final LongAdder chunksHaveDownloaded = new LongAdder();
-
-        private final Semaphore chunkDownloadingSemaphore;
-
-        private final ExecutorService executorService;
-
-        private final String operationId;
-
-        private final FileDownloadRequest request;
-
-        private final File destinationFile;
-
-        private final File temporaryFile;
-
-        private ShareDownloadManifestResponse manifest;
-
-        public DownloadProcedure(Semaphore chunkDownloadingSemaphore,
-                                 ExecutorService executorService,
-                                 String operationId,
-                                 FileDownloadRequest request,
-                                 File destinationFile,
-                                 File temporaryFile) {
-            this.chunkDownloadingSemaphore = chunkDownloadingSemaphore;
-            this.executorService = executorService;
-            this.operationId = operationId;
-            this.request = request;
-            this.destinationFile = destinationFile;
-            this.temporaryFile = temporaryFile;
-        }
-
-        @SneakyThrows
-        public void run() {
-            try {
-                ExecutionProfiling.run(
-                        String.format("file-download-orchestrator operation: %s fileId: %s", operationId, request.fileId()),
-                        () -> {
-
-                            ExecutionProfiling.run(
-                                    String.format("download-manifest operation: %s fileId: %s", operationId, request.fileId()),
-                                    () -> downloadManifest()
-                            );
-
-                            ExecutionProfiling.run(
-                                    String.format("download-chunks operation: %s fileId: %s: chunks %s",
-                                            operationId, request.fileId(), manifest.chunkManifests().size()
-                                    ),
-                                    () -> downloadAndWriteChunks()
-                            );
-
-                            String actualSha256 = ExecutionProfiling.run(
-                                    String.format("digest-calculation operation: %s fileId: %s", operationId, request.fileId()),
-                                    () -> fileHelper.sha256(temporaryFile)
-                            );
-
-                            if (!manifest.hash().equals(actualSha256)) {
-                                throw new ChecksumMismatchException(operationId, manifest.hash(), actualSha256);
-                            }
-
-                            checkIfProcessHasStopped();
-
-                            Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-                        }
-                );
-            } finally {
-                if (temporaryFile != null && Files.exists(temporaryFile.toPath())) {
-                    SafeUtil.execute(() -> Files.delete(temporaryFile.toPath()));
-                }
-            }
-        }
-
-        private void downloadAndWriteChunks() throws Exception {
-            AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
-            List<CompletableFuture<Void>> futures = new ArrayList<>();
-            try (FileChannel fileChannel = FileChannel.open(
-                    temporaryFile.toPath(),
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.WRITE)) {
-                for (ShareDownloadManifestResponse.ChunkManifest chunkManifest : manifest.chunkManifests()) {
-                    chunkDownloadingSemaphore.acquire();
-                    if (exceptionAtomicReference.get() != null) {
-                        throw exceptionAtomicReference.get();
-                    }
-                    CompletableFuture<Void> future = CompletableFuture.runAsync(
-                            () -> {
-                                if (exceptionAtomicReference.get() != null) {
-                                    return;
-                                }
-                                try (InputStream inputStream = chunkDownloadStream(chunkManifest)) {
-                                    writeChunkToFile(fileChannel, inputStream, chunkManifest);
-                                } catch (Exception exception) {
-                                    exceptionAtomicReference.set(exception);
-                                } finally {
-                                    SafeUtil.execute(() -> chunkDownloadingSemaphore.release());
-                                }
-                            },
-                            executorService
-                    );
-                    futures.add(future);
-                }
-                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-            }
-        }
-
-        public void stop() {
-            stop.set(true);
-        }
-
-        public DownloadProgress getProgress() {
-            if (manifest == null) {
-                return new DownloadProgress(
-                        operationId,
-                        request.fileId(),
-                        destinationFile.getAbsolutePath(),
-                        null,
-                        0,
-                        0,
-                        "0.00 %"
-                );
-            }
-            long downloaded = chunksHaveDownloaded.sum();
-            String percent = fileHelper.percent(downloaded, manifest.size());
-            return new DownloadProgress(
-                    operationId,
-                    request.fileId(),
-                    destinationFile.getAbsolutePath(),
-                    manifest.hash(),
-                    downloaded,
-                    manifest.size(),
-                    percent
-            );
-        }
-
-        private void downloadManifest() {
-            try {
-                this.manifest = RetryExecutor.call(
-                                () -> {
-                                    checkIfProcessHasStopped();
-                                    return tunnelClient.send(
-                                            TunnelClient.Request.builder()
-                                                    .command("share-download-manifest")
-                                                    .body(request.fileId())
-                                                    .build(),
-                                            ShareDownloadManifestResponse.class);
-                                }
-                        )
-                        .doOnError((attempt, exception) -> {
-                            log.info("Retry 'share-download-manifest'. Operation: {} fileId: {} filename: {} attempt: {} exception: {}",
-                                    operationId, request.fileId(), request.filename(), attempt, exception.getMessage()
-                            );
-                        })
-                        .doOnSuccessful((attempt, manifest) -> {
-                            log.info(
-                                    "Manifest downloaded 'share-download-manifest'. Operation: {} fileId: {} filename: {} Attempt: {} Hash {} Chunk size {}",
-                                    operationId, request.fileId(), request.filename(), attempt, manifest.hash(), manifest.chunkManifests().size()
-                            );
-                        })
-                        .retryIf(it -> {
-                            if (it.exception() instanceof DownloadingStoppedException) {
-                                return false;
-                            }
-                            return it.exception() != null || it.result() == null;
-                        })
-                        .build()
-                        .run();
-            } catch (Exception e) {
-                throw new ManifestDownloadingFailedException(operationId, request.fileId(), request.filename(), e);
-            }
-        }
-
-        private InputStream chunkDownloadStream(ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
-            try {
-                return RetryExecutor.call(
-                                () -> {
-                                    checkIfProcessHasStopped();
-                                    return tunnelClient.stream(
-                                            TunnelClient.Request.builder()
-                                                    .command("share-download-chunk-stream")
-                                                    .body(new ShareDownloadChunkTunnelRequest(
-                                                            request.fileId(),
-                                                            chunkManifest.startPosition(),
-                                                            chunkManifest.endPosition()
-                                                    ))
-                                                    .build());
-                                }
-                        )
-                        .doOnError((attempt, exception) -> {
-                            log.info("Retry 'share-download-chunk-stream'. Attempt: {} start {} end {} exception {}",
-                                    attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
-                        })
-                        .retryIf(it -> {
-                            if (it.exception() instanceof DownloadingStoppedException) {
-                                return false;
-                            }
-                            //noinspection resource
-                            return it.exception() != null || it.result() == null;
-                        })
-                        .build()
-                        .run();
-            } catch (Exception e) {
-                throw new ChunkDownloadingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
-            }
-        }
-
-        @SneakyThrows
-        private void writeChunkToFile(FileChannel writeToFileChannel,
-                                      InputStream inputStreamChunk,
-                                      ShareDownloadManifestResponse.ChunkManifest chunkManifest) {
-            checkIfProcessHasStopped();
-            fileHelper.write(writeToFileChannel, inputStreamChunk, chunkManifest.startPosition());
-            chunksHaveDownloaded.add(chunkManifest.size());
-        }
-
-        public void checkIfProcessHasStopped() {
-            if (stop.get()) {
-                throw new DownloadingStoppedException(operationId);
-            }
-        }
-    }
-
     private File getDestinationFile(FileDownloadRequest request) throws IOException {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
@@ -422,8 +188,7 @@ public class FileDownloadOrchestrator {
             throw new UnsupportedOperationException("filename must not be absolute. Unsupported yet: " + request.filename());
         }
 
-        String filenamePrefix = CommonUtils.random();
-        String filename = String.format("Unconfirmed-%s-%s.crdownload", filenamePrefix, request.filename());
+        String filename = String.format("Unconfirmed-%s-%s.crdownload", CommonUtils.random(), request.filename());
         String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
         File downloadFile = new File(downloadDirectory, filename).getCanonicalFile();
 
