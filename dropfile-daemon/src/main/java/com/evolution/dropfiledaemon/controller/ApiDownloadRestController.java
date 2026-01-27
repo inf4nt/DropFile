@@ -1,95 +1,29 @@
 package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.ApiDownloadFileResponse;
-import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.util.FileHelper;
+import com.evolution.dropfiledaemon.facade.ApiDownloadFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/download")
-@RequiredArgsConstructor
 public class ApiDownloadRestController {
 
-    private final FileDownloadOrchestrator fileDownloadOrchestrator;
-
-    private final FileDownloadEntryStore fileDownloadEntryStore;
-
-    private final FileHelper fileHelper;
+    private final ApiDownloadFacade downloadFacade;
 
     @GetMapping("/ls")
     public List<ApiDownloadFileResponse> ls() {
-        List<ApiDownloadFileResponse> responses = new ArrayList<>();
-        Map<String, DownloadFileEntry> entryMap = fileDownloadEntryStore.getAll();
-        for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
-            FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
-                    .getDownloadProcedures()
-                    .get(entry.getKey());
-            if (downloadProgress != null) {
-                responses.add(new ApiDownloadFileResponse(
-                        downloadProgress.operationId(),
-                        downloadProgress.fileId(),
-                        entry.getValue().destinationFile(),
-                        null,
-                        downloadProgress.downloaded(),
-                        downloadProgress.total(),
-                        downloadProgress.percentage(),
-                        ApiDownloadFileResponse.Status.DOWNLOADING,
-                        entry.getValue().updated()
-                ));
-            } else {
-                String operation = entry.getKey();
-                DownloadFileEntry downloadFileEntry = entry.getValue();
-                ApiDownloadFileResponse.Status status = ApiDownloadFileResponse.Status.valueOf(downloadFileEntry.status().name());
-                responses.add(new ApiDownloadFileResponse(
-                        operation,
-                        downloadFileEntry.fileId(),
-                        downloadFileEntry.destinationFile(),
-                        status == ApiDownloadFileResponse.Status.COMPLETED ? downloadFileEntry.hash() : null,
-                        downloadFileEntry.downloaded(),
-                        downloadFileEntry.total(),
-                        fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
-                        status,
-                        downloadFileEntry.updated()
-                ));
-            }
-        }
-
-        return new ArrayList<>() {{
-            List<ApiDownloadFileResponse> downloading = responses.stream()
-                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.DOWNLOADING)
-                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
-                    .toList();
-            List<ApiDownloadFileResponse> completed = responses.stream()
-                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.COMPLETED)
-                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
-                    .toList();
-            List<ApiDownloadFileResponse> stopped = responses.stream()
-                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.STOPPED)
-                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
-                    .toList();
-            List<ApiDownloadFileResponse> error = responses.stream()
-                    .filter(it -> it.status() == ApiDownloadFileResponse.Status.ERROR)
-                    .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
-                    .toList();
-            addAll(downloading);
-            addAll(completed);
-            addAll(stopped);
-            addAll(error);
-        }};
+        return downloadFacade.ls();
     }
 
     @PostMapping("/stop/{operationId}")
     public ResponseEntity<String> stop(@PathVariable String operationId) {
-        boolean stop = fileDownloadOrchestrator.stop(operationId);
-        if (stop) {
+        boolean stopped = downloadFacade.stop(operationId);
+        if (stopped) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.status(404)
@@ -98,19 +32,19 @@ public class ApiDownloadRestController {
 
     @PostMapping("/stop-all")
     public ResponseEntity<Void> stopAll() {
-        fileDownloadOrchestrator.stopAll();
+        downloadFacade.stopAll();
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/rm/{operationId}")
     public ResponseEntity<String> rm(@PathVariable String operationId) {
-        DownloadFileEntry remove = fileDownloadEntryStore.remove(operationId);
-        return remove != null ? ResponseEntity.ok().build() : ResponseEntity.status(404).body("No operation found");
+        boolean removed = downloadFacade.rm(operationId);
+        return removed ? ResponseEntity.ok().build() : ResponseEntity.status(404).body("No operation found");
     }
 
     @DeleteMapping("/rm-all")
     public ResponseEntity<Void> rmAll() {
-        fileDownloadEntryStore.removeAll();
+        downloadFacade.rmAll();
         return ResponseEntity.ok().build();
     }
 }
