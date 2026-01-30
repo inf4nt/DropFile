@@ -15,18 +15,18 @@ import java.nio.file.Paths;
 )
 public class StartCommand implements Runnable {
 
-    private static final String DROPFILE_DAEMON_HOME = "DROPFILE_DAEMON_HOME";
+    private static final String DROPFILE_HOME = "DROPFILE_HOME";
 
-    private static final String DROPFILE_DAEMON_EXECUTABLE = "dropfiled.exe";
+    private static final String DROPFILE_DAEMON_EXECUTABLE = "dropfile-daemon.bat";
 
     @Override
     public void run() {
-        String appHome = System.getenv(DROPFILE_DAEMON_HOME);
+        String appHome = System.getenv(DROPFILE_HOME);
 
         if (appHome == null || appHome.isBlank()) {
-            throw new IllegalStateException("ENV DROPFILE_DAEMON_HOME is not set");
+            throw new IllegalStateException("ENV DROPFILE_HOME is not set");
         }
-        Path executablePath = Paths.get(appHome, DROPFILE_DAEMON_EXECUTABLE);
+        Path executablePath = Paths.get(appHome, "bin", DROPFILE_DAEMON_EXECUTABLE);
         if (Files.notExists(executablePath)) {
             throw new IllegalStateException("No executable file found: " + executablePath);
         }

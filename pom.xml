@@ -11,7 +11,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>dropfile-installer</module>
         <module>dropfile-common</module>
         <module>dropfile-store</module>
         <module>dropfile-cli</module>
