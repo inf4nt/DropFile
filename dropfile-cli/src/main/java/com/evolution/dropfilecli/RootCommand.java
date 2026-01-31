@@ -5,6 +5,7 @@ import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.download.DownloadCommand;
+import com.evolution.dropfilecli.command.link.LinkCommand;
 import com.evolution.dropfilecli.command.share.ShareCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,8 @@ import picocli.CommandLine;
                 ConnectionsCommand.class,
                 DaemonCommand.class,
                 ShareCommand.class,
-                DownloadCommand.class
+                DownloadCommand.class,
+                LinkCommand.class
         }
 )
 public class RootCommand implements Runnable {
