@@ -4,7 +4,6 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -15,27 +14,29 @@ import java.nio.file.Paths;
 )
 public class StartCommand implements Runnable {
 
-    private static final String DROPFILE_HOME = "DROPFILE_HOME";
-
-    private static final String DROPFILE_DAEMON_EXECUTABLE = "dropfile-daemon.bat";
-
     @Override
     public void run() {
-        String appHome = System.getenv(DROPFILE_HOME);
+        Path binPath = getBinPath();
+        Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
+                : binPath.resolve("dropfile-daemon");
+        execute(executable);
+    }
 
-        if (appHome == null || appHome.isBlank()) {
-            throw new IllegalStateException("ENV DROPFILE_HOME is not set");
-        }
-        Path executablePath = Paths.get(appHome, "bin", DROPFILE_DAEMON_EXECUTABLE);
-        if (Files.notExists(executablePath)) {
-            throw new IllegalStateException("No executable file found: " + executablePath);
-        }
+    private boolean isWindows() {
+        String os = System.getProperty("os.name");
+        return os.toLowerCase().contains("windows");
+    }
 
-        startProcess(executablePath);
+    private Path getBinPath() {
+        String cmd = System.getProperty("sun.java.command");
+        String jar = cmd.split(" ")[0];
+        Path jarPath = Paths.get(jar);
+        Path parent = jarPath.getParent().getParent();
+        return parent.resolve("bin");
     }
 
     @SneakyThrows
-    private void startProcess(Path executablePath) {
+    private void execute(Path executablePath) {
         ProcessBuilder processBuilder = new ProcessBuilder(executablePath.toString());
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);

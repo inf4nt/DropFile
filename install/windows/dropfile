@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -e
+
+DROPFILE_HOME_WINDOWS=$(cmd.exe /c "echo %DROPFILE_HOME%" | tr -d '\r')
+DROPFILE_HOME_WINDOWS_WSL=$(wslpath $DROPFILE_HOME_WINDOWS)
+
+exec $DROPFILE_HOME_WINDOWS_WSL/runtime/bin/java.exe -jar "$DROPFILE_HOME_WINDOWS\dropfile-cli\dropfile-cli.jar" "$@"
