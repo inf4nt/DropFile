@@ -1,15 +1,15 @@
 FROM alpine:3.19 AS archive_content
 
-RUN apk add --no-cache curl unzip
+RUN apk add --no-cache curl unzip tar
 
 ARG JDK_MAJOR_VERION=21
 ARG JDK_VERSION=21.0.9
-ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/$JDK_MAJOR_VERION/archive/jdk-"$JDK_VERSION"_windows-x64_bin.zip"
-ARG JDK_ARCHIVE="jdk.zip"
-ARG JAVA_HOME=/opt/jdk-$JDK_VERSION
+ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/21/archive/jdk-21.0.9_macos-x64_bin.tar.gz"
+ARG JDK_ARCHIVE="jdk.tar.gz"
+ARG JAVA_HOME=/opt/jdk-21.0.9.jdk/Contents/Home
 
 RUN curl -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
-    && unzip $JDK_ARCHIVE -d /opt \
+    && tar -zxvf $JDK_ARCHIVE -C /opt \
     && rm $JDK_ARCHIVE
 
 WORKDIR /dropfile
@@ -19,7 +19,7 @@ RUN mkdir /dropfile/bin \
 
 RUN cp -r $JAVA_HOME/. "/dropfile/runtime"
 
-COPY /release/windows /dropfile/bin
+COPY /release/unix /dropfile/bin
 
 FROM maven:3.9.12-eclipse-temurin-21 AS build
 
@@ -47,10 +47,10 @@ COPY --from=archive_content /dropfile/runtime /dropfile/runtime
 COPY --from=build /workdir/dropfile-cli/target/*.jar dropfile/dropfile-cli/dropfile-cli.jar
 COPY --from=build /workdir/dropfile-daemon/target/*.jar dropfile/dropfile-daemon/dropfile-daemon.jar
 
-RUN tar -czf dropfile-windows.tar.gz dropfile
+RUN tar -czf dropfile-macos.tar.gz dropfile
 
 RUN rm -rf /dropfile
 
 RUN mkdir out
 
-ENTRYPOINT ["cp", "/dropfile-windows.tar.gz", "/out/dropfile-windows.tar.gz"]
+ENTRYPOINT ["cp", "/dropfile-macos.tar.gz", "/out/dropfile-macos.tar.gz"]

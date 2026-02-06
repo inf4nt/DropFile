@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -e
+
+"$DROPFILE_HOME/runtime/bin/java" -jar "$DROPFILE_HOME/dropfile-cli/dropfile-cli.jar" %*
