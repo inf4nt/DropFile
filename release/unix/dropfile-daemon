@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -e
 
-"$DROPFILE_HOME/runtime/bin/java" -jar "$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar" %*
+"$DROPFILE_HOME/runtime/bin/java" -jar "$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar" $*
