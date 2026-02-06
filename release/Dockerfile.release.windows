@@ -1,0 +1,81 @@
+FROM alpine:3.19 AS archive_content
+
+RUN apk add --no-cache curl unzip
+
+ARG JDK_MAJOR_VERION=21
+ARG JDK_VERSION=21.0.9
+ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/$JDK_MAJOR_VERION/archive/jdk-"$JDK_VERSION"_windows-x64_bin.zip"
+ARG JDK_ARCHIVE="jdk.tar.gz"
+ARG JAVA_HOME=/opt/jdk-$JDK_VERSION
+
+RUN curl -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
+    && unzip $JDK_ARCHIVE -d /opt \
+    && rm $JDK_ARCHIVE
+
+WORKDIR /dropfile
+
+RUN mkdir /dropfile/bin \
+    && mkdir /dropfile/runtime
+
+RUN cp -r $JAVA_HOME/. "/dropfile/runtime"
+
+COPY /release/windows /dropfile/bin
+
+FROM ubuntu:24.04 AS jar_build
+
+RUN apt update -y && apt upgrade -y \
+    && apt install curl unzip tar -y
+
+ARG JDK_MAJOR_VERION=21
+ARG JDK_VERSION=21.0.9
+ARG JDK_LINUX_DOWNLOAD_URL="https://download.oracle.com/java/"$JDK_MAJOR_VERION"/archive/jdk-"$JDK_VERSION"_linux-x64_bin.tar.gz"
+ARG JDK_ARCHIVE="jdk.tar.gz"
+ARG JAVA_HOME=/opt/jdk-$JDK_VERSION
+
+ARG M2_MAJOR_VERSION=3
+ARG M2_VERSION=3.9.12
+ARG M2_DOWNLOAD_URL="https://dlcdn.apache.org/maven/maven-"$M2_MAJOR_VERSION"/"$M2_VERSION"/binaries/apache-maven-"$M2_VERSION"-bin.tar.gz"
+ARG M2_ARCHIVE="apache-maven.tar.gz"
+ARG M2_HOME=/opt/apache-maven-$M2_VERSION
+
+RUN curl -o $JDK_ARCHIVE $JDK_LINUX_DOWNLOAD_URL \
+    && tar -xzf $JDK_ARCHIVE -C /opt \
+    && rm $JDK_ARCHIVE \
+    && ln -s $JAVA_HOME/bin/java /usr/bin/java
+
+RUN curl -o $M2_ARCHIVE $M2_DOWNLOAD_URL \
+    && tar -xzf $M2_ARCHIVE -C /opt \
+    && rm $M2_ARCHIVE \
+    && ln -s $M2_HOME/bin/mvn /usr/bin/mvn
+
+WORKDIR /workdir
+
+COPY pom.xml /workdir/pom.xml
+COPY /dropfile-common/pom.xml /workdir/dropfile-common/pom.xml
+COPY /dropfile-store/pom.xml /workdir/dropfile-store/pom.xml
+COPY /dropfile-cli/pom.xml /workdir/dropfile-cli/pom.xml
+COPY /dropfile-daemon/pom.xml /workdir/dropfile-daemon/pom.xml
+
+RUN mvn clean verify --fail-never -f /workdir
+
+COPY /dropfile-common/src /workdir/dropfile-common/src
+COPY /dropfile-store/src /workdir/dropfile-store/src
+COPY /dropfile-cli/src /workdir/dropfile-cli/src
+COPY /dropfile-daemon/src /workdir/dropfile-daemon/src
+
+RUN mvn package -Dmaven.test.skip=true -f /workdir
+
+FROM busybox AS archive_build
+
+COPY --from=archive_content /dropfile/bin /dropfile/bin
+COPY --from=archive_content /dropfile/runtime /dropfile/runtime
+COPY --from=jar_build /workdir/dropfile-cli/target/*.jar dropfile/dropfile-cli/dropfile-cli.jar
+COPY --from=jar_build /workdir/dropfile-daemon/target/*.jar dropfile/dropfile-daemon/dropfile-daemon.jar
+
+RUN tar -czf dropfile-windows.tar.gz dropfile
+
+RUN rm -rf /dropfile
+
+RUN mkdir out
+
+ENTRYPOINT ["cp", "/dropfile-windows.tar.gz", "/out/dropfile-windows.tar.gz"]
