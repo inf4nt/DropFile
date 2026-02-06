@@ -13,11 +13,11 @@ FINAL_ARCHIVE_NAME=dropfile-windows.tar.gz
 echo "Cleaning $PROJECT_DIRECTORY"
 rm -rf $PROJECT_DIRECTORY
 
-echo "Building project"
-M2_HOME_WINDOWS=$(cmd.exe /c "echo %M2_HOME%" | tr -d '\r')
-M2_HOME_WINDOWS_WSL=$(wslpath $M2_HOME_WINDOWS)
-echo "Maven is calling $M2_HOME_WINDOWS_WSL"
-$M2_HOME_WINDOWS_WSL/bin/mvn clean install -f ../
+#echo "Building project"
+#M2_HOME_WINDOWS=$(cmd.exe /c "echo %M2_HOME%" | tr -d '\r')
+#M2_HOME_WINDOWS_WSL=$(wslpath $M2_HOME_WINDOWS)
+#echo "Maven is calling $M2_HOME_WINDOWS_WSL"
+#$M2_HOME_WINDOWS_WSL/bin/mvn clean install -f ../
 
 echo "Preparing $PROJECT_DIRECTORY"
 mkdir $PROJECT_DIRECTORY
