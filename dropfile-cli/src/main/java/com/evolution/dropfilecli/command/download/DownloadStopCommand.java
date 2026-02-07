@@ -30,20 +30,9 @@ public class DownloadStopCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (exclusive.id != null) {
-            return daemonClient.downloadStop(exclusive.id);
-        } else if (exclusive.all) {
+        if (exclusive.all) {
             return daemonClient.downloadStopAll();
         }
-        throw new RuntimeException();
-    }
-
-    @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        if (exclusive.id != null) {
-            System.out.println("Stopped: " + exclusive.id);
-        } else {
-            System.out.println("Stopped all");
-        }
+        return daemonClient.downloadStop(exclusive.id);
     }
 }

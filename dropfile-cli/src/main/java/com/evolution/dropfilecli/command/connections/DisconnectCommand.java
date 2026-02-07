@@ -4,7 +4,6 @@ import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -39,18 +38,11 @@ public class DisconnectCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
-            return daemonClient.connectionsDisconnect(exclusive.fingerprint);
-        } else if (exclusive.all) {
+        if (exclusive.all) {
             return daemonClient.connectionsDisconnectAll();
         } else if (exclusive.current) {
             return daemonClient.connectionsDisconnectCurrent();
         }
-        throw new IllegalArgumentException("Command cannot be executed. Check its variables");
-    }
-
-    @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Completed");
+        return daemonClient.connectionsDisconnect(exclusive.fingerprint);
     }
 }

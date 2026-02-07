@@ -40,22 +40,4 @@ public class AccessRmCommand implements CommandHttpHandler<Void> {
         }
         return daemonClient.connectionsAccessRm(exclusive.id);
     }
-
-    @Override
-    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
-        if (exclusive.all) {
-            System.out.println("Revoke all successful");
-        } else {
-            System.out.println("Revoke access key successful: " + exclusive.id);
-        }
-    }
-
-    @Override
-    public void handleUnsuccessful(HttpResponse<Void> response) throws Exception {
-        if (response.statusCode() == 404) {
-            System.out.println("Revoke access key not found: " + exclusive.id);
-        } else {
-            System.out.println("Unknown http status code: " + response.statusCode());
-        }
-    }
 }

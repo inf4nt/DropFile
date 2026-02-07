@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
-import java.util.List;
 
 @Component
 @CommandLine.Command(
@@ -39,10 +38,5 @@ public class CurrentConnectionCommand implements CommandHttpHandler<byte[]> {
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         HandshakeApiTrustOutResponseDTO responseDTO = objectMapper.readValue(response.body(), HandshakeApiTrustOutResponseDTO.class);
         PrintReflection.print(responseDTO);
-    }
-
-    @Override
-    public void handleUnsuccessful(HttpResponse<byte[]> response) {
-        System.out.println("No current connection found");
     }
 }

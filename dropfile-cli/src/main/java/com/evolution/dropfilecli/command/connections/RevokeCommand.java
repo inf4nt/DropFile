@@ -38,14 +38,7 @@ public class RevokeCommand implements CommandHttpHandler<byte[]> {
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
             return daemonClient.connectionsRevokeAll();
-        } else if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
-            return daemonClient.connectionsRevoke(exclusive.fingerprint);
         }
-        throw new IllegalArgumentException("Command cannot be executed. Check its variables");
-    }
-
-    @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Completed");
+        return daemonClient.connectionsRevoke(exclusive.fingerprint);
     }
 }

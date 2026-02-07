@@ -19,10 +19,10 @@ import java.net.http.HttpResponse;
 )
 public class ConnectionsShareDownloadCommand implements CommandHttpHandler<byte[]> {
 
-    @CommandLine.Parameters(index = "0", description = "File id")
+    @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;
 
-    @CommandLine.Parameters(index = "1", description = "File name")
+    @CommandLine.Option(names = {"-filename", "--filename"}, required = true)
     private String filename;
 
     private final DaemonClient daemonClient;

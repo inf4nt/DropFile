@@ -30,20 +30,9 @@ public class DownloadRmCommand implements CommandHttpHandler<byte[]> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (exclusive.id != null) {
-            return daemonClient.downloadRm(exclusive.id);
-        } else if (exclusive.all) {
+        if (exclusive.all) {
             return daemonClient.downloadRmAll();
         }
-        throw new RuntimeException();
-    }
-
-    @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        if (exclusive.id != null) {
-            System.out.println("Removed: " + exclusive.id);
-        } else {
-            System.out.println("Removed all");
-        }
+        return daemonClient.downloadRm(exclusive.id);
     }
 }

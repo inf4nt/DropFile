@@ -26,8 +26,4 @@ public class ShutdownCommand implements CommandHttpHandler<Void> {
     public HttpResponse<Void> execute() throws Exception {
         return daemonClient.daemonShutdown();
     }
-
-    @Override
-    public void handleSuccessful(HttpResponse<Void> response) {
-    }
 }
