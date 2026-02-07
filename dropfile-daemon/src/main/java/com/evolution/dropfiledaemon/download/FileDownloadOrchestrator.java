@@ -7,7 +7,7 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.FileHelper;
-import com.evolution.dropfiledaemon.util.SafeUtil;
+import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public class FileDownloadOrchestrator {
             destinationFile = getDestinationFile(request);
             temporaryFile = getTemporaryFile(request);
         } catch (Exception exception) {
-            SafeUtil.execute(() -> downloadingSemaphore.release());
+            SafeUtils.execute(() -> downloadingSemaphore.release());
             log.info("Exception occurred during getting file {}", exception.getMessage(), exception);
             throw exception;
         }
@@ -130,9 +130,9 @@ public class FileDownloadOrchestrator {
                 log.info("Exception occurred during download process {}", exception.getMessage(), exception);
                 throw new RuntimeException(exception);
             } finally {
-                SafeUtil.execute(() -> downloadProcedures.remove(operationId));
-                SafeUtil.execute(() -> downloadProcedureExecutorService.close());
-                SafeUtil.execute(() -> downloadingSemaphore.release());
+                SafeUtils.execute(() -> downloadProcedures.remove(operationId));
+                SafeUtils.execute(() -> downloadProcedureExecutorService.close());
+                SafeUtils.execute(() -> downloadingSemaphore.release());
             }
         });
         return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());

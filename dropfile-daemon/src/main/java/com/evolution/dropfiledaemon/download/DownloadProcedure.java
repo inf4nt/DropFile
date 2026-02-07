@@ -10,7 +10,7 @@ import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnel
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.SafeUtil;
+import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -94,7 +94,7 @@ public class DownloadProcedure {
             );
         } finally {
             if (temporaryFile != null && Files.exists(temporaryFile.toPath())) {
-                SafeUtil.execute(() -> Files.delete(temporaryFile.toPath()));
+                SafeUtils.execute(() -> Files.delete(temporaryFile.toPath()));
             }
         }
     }
@@ -183,7 +183,7 @@ public class DownloadProcedure {
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             } finally {
-                                SafeUtil.execute(() -> chunkDownloadingSemaphore.release());
+                                SafeUtils.execute(() -> chunkDownloadingSemaphore.release());
                             }
                         },
                         executorService
