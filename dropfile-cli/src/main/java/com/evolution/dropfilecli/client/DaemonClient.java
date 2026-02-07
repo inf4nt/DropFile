@@ -80,6 +80,25 @@ public class DaemonClient {
     }
 
     @SneakyThrows
+    public HttpResponse<Void> connectionsRevokeAll() {
+        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+
+        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+                .resolve("/api/connections/revoke/all");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    @SneakyThrows
     public HttpResponse<byte[]> connectionShareLs() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
