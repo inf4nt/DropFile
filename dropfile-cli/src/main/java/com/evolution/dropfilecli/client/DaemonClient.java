@@ -44,7 +44,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/disconnect/")
+                .resolve("/api/connections/disconnect/fingerprint/")
                 .resolve(fingerprint);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -64,7 +64,7 @@ public class DaemonClient {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
-                .resolve("/api/connections/revoke/")
+                .resolve("/api/connections/revoke/fingerprint/")
                 .resolve(fingerprint);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
