@@ -25,12 +25,6 @@ public class ApiConnectionsRestController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/revoke/current")
-    public ResponseEntity<Void> revokeCurrent() {
-        apiFacade.revokeCurrent();
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/revoke/all")
     public ResponseEntity<Void> revokeAll() {
         apiFacade.revokeAll();

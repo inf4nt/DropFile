@@ -18,11 +18,6 @@ public class ApiConnectionsFacade {
         handshakeStore.trustedInStore().remove(key);
     }
 
-    public void revokeCurrent() {
-        String key = handshakeStore.trustedInStore().getRequiredLatestUpdated().getKey();
-        handshakeStore.trustedInStore().remove(key);
-    }
-
     public void revokeAll() {
         handshakeStore.trustedInStore().removeAll();
     }
