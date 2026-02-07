@@ -41,7 +41,7 @@ public class RevokeCommand implements CommandHttpHandler<Void> {
         } else if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
             return daemonClient.connectionsRevoke(exclusive.fingerprint);
         }
-        throw new RuntimeException("Cannot be revoked");
+        throw new RuntimeException("Revoke command cannot be executed. Check its variables");
     }
 
     @Override
