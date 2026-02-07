@@ -18,7 +18,7 @@ public interface TrustedOutKeyValueStore
                 .entrySet()
                 .stream()
                 .max(Comparator.comparing(o -> o.getValue().updated()))
-                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
+                .orElseThrow(() -> new RuntimeException("No trusted-out found"));
     }
 
     @Override

@@ -25,6 +25,18 @@ public class ApiConnectionsRestController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/revoke/current")
+    public ResponseEntity<Void> revokeCurrent() {
+        apiFacade.revokeCurrent();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/revoke/all")
+    public ResponseEntity<Void> revokeAll() {
+        apiFacade.revokeAll();
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/disconnect/fingerprint/{fingerprint}")
     public ResponseEntity<Void> disconnect(@PathVariable String fingerprint) {
         apiFacade.disconnect(fingerprint);
