@@ -36,4 +36,16 @@ public class ApiConnectionsRestController {
         apiFacade.disconnect(fingerprint);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/disconnect/current")
+    public ResponseEntity<Void> disconnectCurrent() {
+        apiFacade.disconnectCurrent();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/disconnect/all")
+    public ResponseEntity<Void> disconnectAll() {
+        apiFacade.disconnectAll();
+        return ResponseEntity.ok().build();
+    }
 }

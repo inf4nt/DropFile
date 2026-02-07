@@ -26,4 +26,13 @@ public class ApiConnectionsFacade {
         String key = handshakeStore.trustedOutStore().getRequired(fingerprint).getKey();
         handshakeStore.trustedOutStore().remove(key);
     }
+
+    public void disconnectCurrent() {
+        String key = handshakeStore.trustedOutStore().getRequiredLatestUpdated().getKey();
+        handshakeStore.trustedOutStore().remove(key);
+    }
+
+    public void disconnectAll() {
+        handshakeStore.trustedOutStore().removeAll();
+    }
 }
