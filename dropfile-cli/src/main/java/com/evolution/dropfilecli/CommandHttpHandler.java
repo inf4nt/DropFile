@@ -10,7 +10,7 @@ public interface CommandHttpHandler<T> extends Runnable {
 
     default void handleSuccessful(HttpResponse<T> response) throws Exception {
         System.out.println("Completed");
-    };
+    }
 
     default void handleUnsuccessful(HttpResponse<T> response) throws Exception {
         System.out.println("Unaccepted. HTTP response code: " + response.statusCode());
