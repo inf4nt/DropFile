@@ -23,10 +23,8 @@ import javax.crypto.SecretKey;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -75,10 +73,9 @@ public class ApiHandshakeFacade {
     }
 
     public ApiHandshakeStatusResponseDTO handshakeStatus() {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getLatestTrustOut()
-                .flatMap(it -> handshakeStore.trustedOutStore().get(it.fingerprint()))
-                .map(it -> it.getValue())
-                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                .getRequiredLatestUpdated()
+                .getValue();
         return pingHandshake(trustedOutValue);
     }
 
@@ -246,16 +243,6 @@ public class ApiHandshakeFacade {
         );
     }
 
-    private String extractSecretId(String key) {
-        String[] split = key.split("\\+");
-        return split[0];
-    }
-
-    private String extractSecret(String key) {
-        String[] split = key.split("\\+");
-        return split[1];
-    }
-
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
         return handshakeStore
                 .trustedInStore()
@@ -281,13 +268,10 @@ public class ApiHandshakeFacade {
                 .toList();
     }
 
-    public Optional<HandshakeApiTrustOutResponseDTO> getLatestTrustOut() {
-        return handshakeStore.trustedOutStore()
-                .getAll()
-                .entrySet()
-                .stream()
-                .max(Comparator.comparing(o -> o.getValue().updated()))
-                .map(it -> toHandshakeApiTrustOutResponseDTO(it));
+    public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
+        Map.Entry<String, TrustedOutKeyValueStore.TrustedOutValue> trustedOutEntry = handshakeStore.trustedOutStore()
+                .getRequiredLatestUpdated();
+        return toHandshakeApiTrustOutResponseDTO(trustedOutEntry);
     }
 
     private HandshakeApiTrustOutResponseDTO toHandshakeApiTrustOutResponseDTO(Map.Entry<String, TrustedOutKeyValueStore.TrustedOutValue> entry) {

@@ -4,12 +4,21 @@ import com.evolution.dropfile.store.store.KeyValueStore;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 
 public interface TrustedOutKeyValueStore
         extends KeyValueStore<String, TrustedOutKeyValueStore.TrustedOutValue> {
 
     record TrustedOutValue(URI addressURI, byte[] publicKeyRSA, byte[] publicKeyDH, Instant updated) {
+    }
+
+    default Map.Entry<String, TrustedOutValue> getRequiredLatestUpdated() {
+        return getAll()
+                .entrySet()
+                .stream()
+                .max(Comparator.comparing(o -> o.getValue().updated()))
+                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
     }
 
     @Override
