@@ -40,7 +40,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsDisconnect(String fingerprint) {
+    public HttpResponse<byte[]> connectionsDisconnect(String fingerprint) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -56,11 +56,11 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsDisconnectCurrent() {
+    public HttpResponse<byte[]> connectionsDisconnectCurrent() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -75,11 +75,11 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsDisconnectAll() {
+    public HttpResponse<byte[]> connectionsDisconnectAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -94,11 +94,11 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsRevoke(String fingerprint) {
+    public HttpResponse<byte[]> connectionsRevoke(String fingerprint) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -114,11 +114,11 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsRevokeAll() {
+    public HttpResponse<byte[]> connectionsRevokeAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -133,7 +133,7 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows

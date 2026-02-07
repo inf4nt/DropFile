@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         name = "disconnect",
         description = "Disconnect trusted-out connection"
 )
-public class DisconnectCommand implements CommandHttpHandler<Void> {
+public class DisconnectCommand implements CommandHttpHandler<byte[]> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -38,7 +38,7 @@ public class DisconnectCommand implements CommandHttpHandler<Void> {
     }
 
     @Override
-    public HttpResponse<Void> execute() throws Exception {
+    public HttpResponse<byte[]> execute() throws Exception {
         if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
             return daemonClient.connectionsDisconnect(exclusive.fingerprint);
         } else if (exclusive.all) {
@@ -50,7 +50,7 @@ public class DisconnectCommand implements CommandHttpHandler<Void> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
+    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         System.out.println("Disconnected completed");
     }
 }

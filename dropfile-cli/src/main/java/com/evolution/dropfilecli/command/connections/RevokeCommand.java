@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         name = "revoke",
         description = "Drop trusted-in connection"
 )
-public class RevokeCommand implements CommandHttpHandler<Void> {
+public class RevokeCommand implements CommandHttpHandler<byte[]> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -35,7 +35,7 @@ public class RevokeCommand implements CommandHttpHandler<Void> {
     }
 
     @Override
-    public HttpResponse<Void> execute() throws Exception {
+    public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
             return daemonClient.connectionsRevokeAll();
         } else if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
@@ -45,7 +45,7 @@ public class RevokeCommand implements CommandHttpHandler<Void> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
+    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         System.out.println("Revoked completed");
     }
 }
