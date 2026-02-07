@@ -12,11 +12,14 @@ public class ApiConnectionsFacade {
         this.handshakeStore = handshakeStore;
     }
 
-    public boolean revoke(String fingerprint) {
-        return handshakeStore.trustedInStore().remove(fingerprint) != null;
+    public void revoke(String fingerprint) {
+        String key = handshakeStore.trustedInStore().getRequired(fingerprint)
+                .getKey();
+        handshakeStore.trustedInStore().remove(key);
     }
 
-    public boolean disconnect(String fingerprint) {
-        return handshakeStore.trustedOutStore().remove(fingerprint) != null;
+    public void disconnect(String fingerprint) {
+        String key = handshakeStore.trustedOutStore().getRequired(fingerprint).getKey();
+        handshakeStore.trustedOutStore().remove(key);
     }
 }

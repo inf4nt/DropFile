@@ -21,19 +21,13 @@ public class ApiConnectionsRestController {
 
     @PostMapping("/revoke/{fingerprint}")
     public ResponseEntity<Void> revoke(@PathVariable String fingerprint) {
-        boolean result = apiFacade.revoke(fingerprint);
-        if (result) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+        apiFacade.revoke(fingerprint);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/disconnect/{fingerprint}")
     public ResponseEntity<Void> disconnect(@PathVariable String fingerprint) {
-        boolean result = apiFacade.disconnect(fingerprint);
-        if (result) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+        apiFacade.disconnect(fingerprint);
+        return ResponseEntity.ok().build();
     }
 }
