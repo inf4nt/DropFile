@@ -12,6 +12,7 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
+import com.evolution.dropfiledaemon.util.AccessKeyUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -163,8 +164,7 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
-        String key = new String(CommonUtils.decodeBase64(requestDTO.key()));
-        String secret = extractSecret(key);
+        String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
 
         HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
@@ -179,7 +179,7 @@ public class ApiHandshakeFacade {
                 secretKey
         );
 
-        String requestId = extractSecretId(key);
+        String requestId = AccessKeyUtils.getId(secret);
         byte[] signature = CryptoRSA.sign(
                 requestPayloadByteArray,
                 CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())

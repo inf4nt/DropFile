@@ -22,7 +22,7 @@ public class HandshakeRestControllerExceptionHandler {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> exception(Exception e) {
         e.printStackTrace();
-        byte[] payload = CommonUtils.nonce16();
+        byte[] payload = CommonUtils.nonce12();
         byte[] signature = CryptoRSA.sign(
                 payload,
                 CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())

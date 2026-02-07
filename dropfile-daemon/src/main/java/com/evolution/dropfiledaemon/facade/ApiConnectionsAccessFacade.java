@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfiledaemon.util.AccessKeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,15 +23,14 @@ public class ApiConnectionsAccessFacade {
     }
 
     public ApiConnectionsAccessInfoResponseDTO generate(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
-        String id = CommonUtils.random();
-        String key = CommonUtils.generateSecretNonce16();
+        AccessKeyUtils.AccessKeyEnvelope accessKeyEnvelope = AccessKeyUtils.generate();
 
         AccessKey accessKey = accessKeyStore.save(
-                id,
-                new AccessKey(key, Instant.now())
+                accessKeyEnvelope.id(),
+                new AccessKey(accessKeyEnvelope.key(), Instant.now())
         );
 
-        return toAccessKeyInfoResponseDTO(id, accessKey);
+        return toAccessKeyInfoResponseDTO(accessKeyEnvelope.id(), accessKey);
     }
 
     public List<ApiConnectionsAccessInfoResponseDTO> ls() {
@@ -51,10 +51,9 @@ public class ApiConnectionsAccessFacade {
     }
 
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
-        String idAndSecret = id + "+" + accessKey.key();
         return new ApiConnectionsAccessInfoResponseDTO(
                 id,
-                CommonUtils.encodeBase64(idAndSecret.getBytes()),
+                CommonUtils.encodeBase64(accessKey.key().getBytes()),
                 accessKey.created()
         );
     }

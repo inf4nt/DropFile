@@ -14,12 +14,6 @@ public class CommonUtils {
 
     private static final String SHA256_ALGORITHM = "SHA-256";
 
-    public static byte[] nonce16() {
-        byte[] bytes = new byte[16];
-        new SecureRandom().nextBytes(bytes);
-        return bytes;
-    }
-
     public static byte[] nonce12() {
         byte[] bytes = new byte[12];
         new SecureRandom().nextBytes(bytes);
@@ -32,8 +26,8 @@ public class CommonUtils {
                 .substring(0, 10);
     }
 
-    public static String generateSecretNonce16() {
-        byte[] bytes = nonce16();
+    public static String generateSecretNonce12() {
+        byte[] bytes = nonce12();
         return Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(bytes);
