@@ -242,7 +242,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> shareRm(String id) {
+    public HttpResponse<byte[]> shareRm(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -258,11 +258,11 @@ public class DaemonClient {
                 .DELETE()
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> shareRmAll() {
+    public HttpResponse<byte[]> shareRmAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -277,7 +277,7 @@ public class DaemonClient {
                 .DELETE()
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows

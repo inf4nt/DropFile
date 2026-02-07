@@ -2,9 +2,9 @@ package com.evolution.dropfilecli.command.share;
 
 import com.evolution.dropfilecli.CommandHttpHandler;
 import com.evolution.dropfilecli.client.DaemonClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -14,46 +14,38 @@ import java.net.http.HttpResponse;
         name = "rm",
         description = "Remove file"
 )
-public class ShareRmCommand implements CommandHttpHandler<Void> {
+public class ShareRmCommand implements CommandHttpHandler<byte[]> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "Id")
+        @CommandLine.Option(names = {"-id", "--id"}, description = "Remove by id")
         private String id;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all files")
+        @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")
         private boolean all;
     }
 
     private final DaemonClient daemonClient;
 
-    private final ObjectMapper objectMapper;
-
     @Autowired
-    public ShareRmCommand(DaemonClient daemonClient,
-                          ObjectMapper objectMapper) {
+    public ShareRmCommand(DaemonClient daemonClient) {
         this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
     }
 
     @Override
-    public HttpResponse<Void> execute() throws Exception {
-        if (exclusive.id != null) {
+    public HttpResponse<byte[]> execute() throws Exception {
+        if (!ObjectUtils.isEmpty(exclusive.id)) {
             return daemonClient.shareRm(exclusive.id);
         } else if (exclusive.all) {
             return daemonClient.shareRmAll();
         }
-        throw new RuntimeException();
+        throw new IllegalArgumentException("Command cannot be executed. Check its variables");
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<Void> response) throws Exception {
-        if (exclusive.id != null) {
-            System.out.println("Removed: " + exclusive.id);
-        } else {
-            System.out.println("Removed all files");
-        }
+    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
+        System.out.println("Completed");
     }
 }

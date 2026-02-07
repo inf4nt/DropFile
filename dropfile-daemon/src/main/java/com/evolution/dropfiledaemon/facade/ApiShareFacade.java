@@ -8,7 +8,6 @@ import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -56,12 +55,9 @@ public class ApiShareFacade {
                 .toList();
     }
 
-    public boolean rm(String id) {
-        if (ObjectUtils.isEmpty(id)) {
-            return false;
-        }
-        ShareFileEntry entry = shareFileEntryStore.remove(id);
-        return entry != null;
+    public void rm(String id) {
+        String key = shareFileEntryStore.getRequired(id).getKey();
+        shareFileEntryStore.remove(key);
     }
 
     public void rmAll() {

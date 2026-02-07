@@ -46,11 +46,11 @@ public class DisconnectCommand implements CommandHttpHandler<byte[]> {
         } else if (exclusive.current) {
             return daemonClient.connectionsDisconnectCurrent();
         }
-        throw new RuntimeException("Disconnect command cannot be executed. Check its variables");
+        throw new IllegalArgumentException("Command cannot be executed. Check its variables");
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Disconnected completed");
+        System.out.println("Completed");
     }
 }

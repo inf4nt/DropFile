@@ -41,11 +41,11 @@ public class RevokeCommand implements CommandHttpHandler<byte[]> {
         } else if (!ObjectUtils.isEmpty(exclusive.fingerprint)) {
             return daemonClient.connectionsRevoke(exclusive.fingerprint);
         }
-        throw new RuntimeException("Revoke command cannot be executed. Check its variables");
+        throw new IllegalArgumentException("Command cannot be executed. Check its variables");
     }
 
     @Override
     public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Revoked completed");
+        System.out.println("Completed");
     }
 }
