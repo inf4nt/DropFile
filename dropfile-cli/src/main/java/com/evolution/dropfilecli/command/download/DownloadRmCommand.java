@@ -1,8 +1,6 @@
 package com.evolution.dropfilecli.command.download;
 
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import lombok.RequiredArgsConstructor;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -12,8 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "rm"
 )
-@RequiredArgsConstructor
-public class DownloadRmCommand implements CommandHttpHandler<byte[]> {
+public class DownloadRmCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -25,8 +22,6 @@ public class DownloadRmCommand implements CommandHttpHandler<byte[]> {
         @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")
         private boolean all;
     }
-
-    private final DaemonClient daemonClient;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

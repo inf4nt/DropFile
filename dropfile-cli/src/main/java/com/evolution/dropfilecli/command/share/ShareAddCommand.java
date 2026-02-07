@@ -1,11 +1,8 @@
 package com.evolution.dropfilecli.command.share;
 
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,24 +14,13 @@ import java.net.http.HttpResponse;
         name = "add",
         description = "Add file command"
 )
-public class ShareAddCommand implements CommandHttpHandler<byte[]> {
+public class ShareAddCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
 
     @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")
     private String alias;
-
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
-
-    @Autowired
-    public ShareAddCommand(DaemonClient daemonClient,
-                           ObjectMapper objectMapper) {
-        this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -43,12 +29,9 @@ public class ShareAddCommand implements CommandHttpHandler<byte[]> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        ApiShareInfoResponseDTO responseDTO = objectMapper.readValue(
-                response.body(),
-                ApiShareInfoResponseDTO.class
-        );
-        PrintReflection.print(responseDTO);
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<ApiShareInfoResponseDTO>() {
+        };
     }
 
     private String getFilename() {

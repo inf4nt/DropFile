@@ -1,10 +1,8 @@
 package com.evolution.dropfilecli.command.daemon;
 
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -15,17 +13,7 @@ import java.net.http.HttpResponse;
         name = "status",
         description = "Daemon status"
 )
-public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
-
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
-
-    public RetrieveInfoCommand(DaemonClient daemonClient,
-                               ObjectMapper objectMapper) {
-        this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
-    }
+public class RetrieveInfoCommand extends AbstractCommandHttpHandler {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -33,11 +21,8 @@ public class RetrieveInfoCommand implements CommandHttpHandler<byte[]> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        DaemonInfoResponseDTO responseDTO = objectMapper.readValue(
-                response.body(),
-                DaemonInfoResponseDTO.class
-        );
-        PrintReflection.print(responseDTO);
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<DaemonInfoResponseDTO>() {
+        };
     }
 }

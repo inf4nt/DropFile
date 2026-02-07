@@ -1,12 +1,9 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
-import com.evolution.dropfilecli.client.DaemonClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
@@ -19,7 +16,7 @@ import java.net.http.HttpResponse;
         aliases = {"-c", "--c"},
         description = "Connect"
 )
-public class ConnectCommand implements Runnable {
+public class ConnectCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
@@ -27,44 +24,19 @@ public class ConnectCommand implements Runnable {
     @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
-
-    @Autowired
-    public ConnectCommand(DaemonClient daemonClient,
-                          ObjectMapper objectMapper) {
-        this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
-    }
-
-    @SneakyThrows
     @Override
-    public void run() {
+    public HttpResponse<byte[]> execute() {
         if (!ObjectUtils.isEmpty(key)) {
             System.out.println("Connecting...");
-            HttpResponse<byte[]> handshakeResponse = daemonClient.handshake(CommonUtils.toURI(address), key);
-            if (handshakeResponse.statusCode() == 200) {
-                ApiHandshakeStatusResponseDTO responseDTO = objectMapper.readValue(
-                        handshakeResponse.body(),
-                        ApiHandshakeStatusResponseDTO.class
-                );
-                PrintReflection.print(responseDTO);
-                return;
-            }
-        } else {
-            System.out.println("Reconnecting...");
-            HttpResponse<byte[]> handshakeResponse = daemonClient.handshakeReconnect(CommonUtils.toURI(address));
-            if (handshakeResponse.statusCode() == 200) {
-                ApiHandshakeStatusResponseDTO responseDTO = objectMapper.readValue(
-                        handshakeResponse.body(),
-                        ApiHandshakeStatusResponseDTO.class
-                );
-                PrintReflection.print(responseDTO);
-                return;
-            }
+            return daemonClient.handshake(CommonUtils.toURI(address), key);
         }
+        System.out.println("Reconnecting...");
+        return daemonClient.handshakeReconnect(CommonUtils.toURI(address));
+    }
 
-        System.out.println("Failed");
+    @Override
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<ApiHandshakeStatusResponseDTO>() {
+        };
     }
 }

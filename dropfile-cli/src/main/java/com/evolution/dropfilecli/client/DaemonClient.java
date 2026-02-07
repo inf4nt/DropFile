@@ -324,7 +324,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsAccessRm(String id) {
+    public HttpResponse<byte[]> connectionsAccessRm(String id) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -340,11 +340,11 @@ public class DaemonClient {
                 .DELETE()
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
-    public HttpResponse<Void> connectionsAccessRmAll() {
+    public HttpResponse<byte[]> connectionsAccessRmAll() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -359,7 +359,7 @@ public class DaemonClient {
                 .DELETE()
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows
@@ -436,7 +436,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<Void> daemonShutdown() {
+    public HttpResponse<byte[]> daemonShutdown() {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -451,7 +451,7 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
     @SneakyThrows

@@ -1,12 +1,8 @@
 package com.evolution.dropfilecli.command.connections.access;
 
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -18,35 +14,16 @@ import java.util.List;
         name = "ls",
         description = "Retrieve access keys"
 )
-public class AccessLsCommand implements CommandHttpHandler<byte[]> {
-
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
-
-    @Autowired
-    public AccessLsCommand(DaemonClient daemonClient, ObjectMapper objectMapper) {
-        this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
-    }
+public class AccessLsCommand extends AbstractCommandHttpHandler {
 
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<byte[]> execute() {
         return daemonClient.connectionsAccessLs();
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<ApiConnectionsAccessInfoResponseDTO> values = objectMapper
-                .readValue(
-                        response.body(),
-                        new TypeReference<List<ApiConnectionsAccessInfoResponseDTO>>() {
-                        }
-                );
-        if (!values.isEmpty()) {
-            PrintReflection.print(values);
-        } else {
-            System.out.println("No access keys found");
-        }
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<List<ApiConnectionsAccessInfoResponseDTO>>() {
+        };
     }
 }

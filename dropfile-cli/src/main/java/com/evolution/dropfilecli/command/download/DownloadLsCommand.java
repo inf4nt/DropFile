@@ -1,12 +1,8 @@
 package com.evolution.dropfilecli.command.download;
 
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,12 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-@RequiredArgsConstructor
-public class DownloadLsCommand implements CommandHttpHandler<byte[]> {
-
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
+public class DownloadLsCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "0..1")
     private Exclusive status;
@@ -47,7 +38,6 @@ public class DownloadLsCommand implements CommandHttpHandler<byte[]> {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         int limit = this.limit <= 0 ? Integer.MAX_VALUE : this.limit;
-
         return daemonClient.downloadLs(getStatus(), limit);
     }
 
@@ -69,13 +59,8 @@ public class DownloadLsCommand implements CommandHttpHandler<byte[]> {
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        List<ApiDownloadLsDTO.Response> values = objectMapper.readValue(response.body(), new TypeReference<List<ApiDownloadLsDTO.Response>>() {
-        });
-        if (!values.isEmpty()) {
-            PrintReflection.print(values);
-        } else {
-            System.out.println("No found");
-        }
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<List<ApiDownloadLsDTO.Response>>() {
+        };
     }
 }

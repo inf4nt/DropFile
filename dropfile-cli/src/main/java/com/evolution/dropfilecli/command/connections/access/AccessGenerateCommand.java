@@ -1,11 +1,8 @@
 package com.evolution.dropfilecli.command.connections.access;
 
-import com.evolution.dropfile.common.PrintReflection;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,30 +14,16 @@ import java.net.http.HttpResponse;
         aliases = {"-g", "--g"},
         description = "Generate access key command"
 )
-public class AccessGenerateCommand implements CommandHttpHandler<byte[]> {
-
-    private final DaemonClient daemonClient;
-
-    private final ObjectMapper objectMapper;
-
-    @Autowired
-    public AccessGenerateCommand(DaemonClient daemonClient, ObjectMapper objectMapper) {
-        this.daemonClient = daemonClient;
-        this.objectMapper = objectMapper;
-    }
+public class AccessGenerateCommand extends AbstractCommandHttpHandler {
 
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<byte[]> execute() {
         return daemonClient.connectionsAccessGenerate(false);
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        ApiConnectionsAccessInfoResponseDTO value = objectMapper
-                .readValue(
-                        response.body(),
-                        ApiConnectionsAccessInfoResponseDTO.class
-                );
-        PrintReflection.print(value);
+    protected TypeReference<?> getTypeReference() {
+        return new TypeReference<ApiConnectionsAccessInfoResponseDTO>() {
+        };
     }
 }

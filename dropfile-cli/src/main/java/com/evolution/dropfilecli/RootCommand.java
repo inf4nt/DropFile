@@ -7,10 +7,11 @@ import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.download.DownloadCommand;
 import com.evolution.dropfilecli.command.link.LinkCommand;
 import com.evolution.dropfilecli.command.share.ShareCommand;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+@RequiredArgsConstructor
 @Component
 @CommandLine.Command(
         mixinStandardHelpOptions = true,
@@ -29,11 +30,6 @@ public class RootCommand implements Runnable {
     private CommandLine.Model.CommandSpec spec;
 
     private final AppConfigStore appConfigStore;
-
-    @Autowired
-    public RootCommand(AppConfigStore appConfigStore) {
-        this.appConfigStore = appConfigStore;
-    }
 
     @Override
     public void run() {

@@ -1,8 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -13,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "disconnect",
         description = "Disconnect trusted-out connection"
 )
-public class DisconnectCommand implements CommandHttpHandler<byte[]> {
+public class DisconnectCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -29,15 +27,8 @@ public class DisconnectCommand implements CommandHttpHandler<byte[]> {
         private boolean all;
     }
 
-    private final DaemonClient daemonClient;
-
-    @Autowired
-    public DisconnectCommand(DaemonClient daemonClient) {
-        this.daemonClient = daemonClient;
-    }
-
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<byte[]> execute() {
         if (exclusive.all) {
             return daemonClient.connectionsDisconnectAll();
         } else if (exclusive.current) {

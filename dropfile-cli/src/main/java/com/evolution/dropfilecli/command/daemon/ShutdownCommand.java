@@ -1,8 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -13,17 +11,10 @@ import java.net.http.HttpResponse;
         name = "shutdown",
         description = "Daemon shutdown"
 )
-public class ShutdownCommand implements CommandHttpHandler<Void> {
-
-    private final DaemonClient daemonClient;
-
-    @Autowired
-    public ShutdownCommand(DaemonClient daemonClient) {
-        this.daemonClient = daemonClient;
-    }
+public class ShutdownCommand extends AbstractCommandHttpHandler {
 
     @Override
-    public HttpResponse<Void> execute() throws Exception {
+    public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.daemonShutdown();
     }
 }

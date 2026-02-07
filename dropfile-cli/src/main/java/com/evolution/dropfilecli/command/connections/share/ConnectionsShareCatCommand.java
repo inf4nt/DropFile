@@ -1,7 +1,6 @@
 package com.evolution.dropfilecli.command.connections.share;
 
-import com.evolution.dropfilecli.CommandHttpHandler;
-import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -12,24 +11,18 @@ import java.net.http.HttpResponse;
         name = "cat",
         description = "Cat file"
 )
-public class ConnectionsShareCatCommand implements CommandHttpHandler<byte[]> {
+public class ConnectionsShareCatCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0", description = "File id")
     private String id;
 
-    private final DaemonClient daemonClient;
-
-    public ConnectionsShareCatCommand(DaemonClient daemonClient) {
-        this.daemonClient = daemonClient;
-    }
-
     @Override
-    public HttpResponse<byte[]> execute() throws Exception {
+    public HttpResponse<byte[]> execute() {
         return daemonClient.connectionsShareCat(id);
     }
 
     @Override
-    public void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
+    protected void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
         String responseBody = new String(response.body());
         System.out.println(responseBody);
     }
