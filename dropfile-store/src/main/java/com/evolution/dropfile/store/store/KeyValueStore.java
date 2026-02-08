@@ -31,16 +31,17 @@ public interface KeyValueStore<V> {
                 )));
     }
 
-    default V removeByKeyStartWith(String string) {
+    default V getRequiredByKeyStartWith(String stringKey) {
         List<Map.Entry<String, V>> list = getAll().entrySet().stream()
-                .filter(it -> it.getKey().startsWith(string)).toList();
+                .filter(it -> it.getKey().startsWith(stringKey)).toList();
         if (list.isEmpty()) {
-            return null;
+            throw new RuntimeException(String.format(
+                    "Store %s. No found by criteria(key.startWith(%s))", getClass().getName(), stringKey
+            ));
         }
         if (list.size() != 1) {
             throw new RuntimeException(String.format("More than one item was found for removal. Please provide more detailed criteria. Found: %s", list.size()));
         }
-        Map.Entry<String, V> first = list.getFirst();
-        return remove(first.getKey());
+        return list.getFirst().getValue();
     }
 }
