@@ -8,9 +8,9 @@ public class ApiDownloadLsDTO {
                            String fileId,
                            String file,
                            String hash,
-                           long downloaded,
-                           long total,
-                           String percentage,
+                           String total,
+                           String downloaded,
+                           String percent,
                            ApiDownloadLsDTO.Status status,
                            Instant updated) {
 

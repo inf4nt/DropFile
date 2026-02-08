@@ -10,9 +10,9 @@ import java.util.List;
 
 public class TablePrinter {
 
-    private static final int MAX_COL_WIDTH = 40;
+    private static final int MAX_VALUE_LENGTH = 24;
 
-    private static final int MAX_VALUE_LENGTH = 30;
+    private static final int MAX_COL_WIDTH = MAX_VALUE_LENGTH + 2;
 
     public static void print(List<?> rows) {
         if (rows == null || rows.isEmpty()) {

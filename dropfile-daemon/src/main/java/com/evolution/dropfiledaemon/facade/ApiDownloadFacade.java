@@ -6,6 +6,7 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -36,8 +37,8 @@ public class ApiDownloadFacade {
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
                         null,
-                        downloadProgress.downloaded(),
-                        downloadProgress.total(),
+                        byteCountToDisplaySize(downloadProgress.total()),
+                        byteCountToDisplaySize(downloadProgress.downloaded()),
                         downloadProgress.percentage(),
                         ApiDownloadLsDTO.Status.DOWNLOADING,
                         entry.getValue().updated()
@@ -51,8 +52,8 @@ public class ApiDownloadFacade {
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
                         status == ApiDownloadLsDTO.Status.COMPLETED ? downloadFileEntry.hash() : null,
-                        downloadFileEntry.downloaded(),
-                        downloadFileEntry.total(),
+                        byteCountToDisplaySize(downloadFileEntry.total()),
+                        byteCountToDisplaySize(downloadFileEntry.downloaded()),
                         fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
                         status,
                         downloadFileEntry.updated()
@@ -80,6 +81,13 @@ public class ApiDownloadFacade {
                 .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
                 .limit(limit)
                 .toList();
+    }
+
+    private String byteCountToDisplaySize(Long bytes) {
+        if (bytes == null || bytes <= 0) {
+            return "0";
+        }
+        return FileUtils.byteCountToDisplaySize(bytes);
     }
 
     public boolean stop(String operationId) {
