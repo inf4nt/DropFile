@@ -22,7 +22,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler {
     private Integer limit;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-downloading", "--downloading"}, description = "Find by downloading")
+        @CommandLine.Option(names = {"-downloading", "--downloading", "-d", "--d"}, description = "Find by downloading")
         private boolean downloading;
 
         @CommandLine.Option(names = {"-completed", "--completed", "-c", "--c"}, description = "Find by completed")
