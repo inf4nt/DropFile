@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Component
@@ -61,18 +62,21 @@ public class ApiDownloadFacade {
             }
         }
 
-        return new ArrayList<>() {{
-            int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
-            if (request.status() == null) {
-                addAll(getByStatus(responses, ApiDownloadLsDTO.Status.ERROR, limit));
-                addAll(getByStatus(responses, ApiDownloadLsDTO.Status.STOPPED, limit));
-                addAll(getByStatus(responses, ApiDownloadLsDTO.Status.COMPLETED, limit));
-                addAll(getByStatus(responses, ApiDownloadLsDTO.Status.DOWNLOADING, limit));
-            } else {
-                ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(request.status().name());
-                addAll(getByStatus(responses, status, limit));
-            }
-        }};
+        int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
+        if (request.status() == null) {
+            return Stream.of(
+                            getByStatus(responses, ApiDownloadLsDTO.Status.ERROR, limit),
+                            getByStatus(responses, ApiDownloadLsDTO.Status.STOPPED, limit),
+                            getByStatus(responses, ApiDownloadLsDTO.Status.COMPLETED, limit),
+                            getByStatus(responses, ApiDownloadLsDTO.Status.DOWNLOADING, limit)
+                    )
+                    .flatMap(it -> it.stream())
+                    .toList();
+        }
+        ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(request.status().name());
+        return getByStatus(responses, status, limit)
+                .stream()
+                .toList();
     }
 
     private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
