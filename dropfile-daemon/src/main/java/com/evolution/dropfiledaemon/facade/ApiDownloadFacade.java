@@ -62,7 +62,7 @@ public class ApiDownloadFacade {
         }
 
         return new ArrayList<>() {{
-            int limit = request.limit() == null ? Integer.MAX_VALUE : request.limit();
+            int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
             if (request.status() == null) {
                 addAll(getByStatus(responses, ApiDownloadLsDTO.Status.ERROR, limit));
                 addAll(getByStatus(responses, ApiDownloadLsDTO.Status.STOPPED, limit));
