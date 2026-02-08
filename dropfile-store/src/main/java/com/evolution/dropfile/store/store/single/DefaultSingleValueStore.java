@@ -9,10 +9,10 @@ public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
 
     private final String storeName;
 
-    private final KeyValueStore<String, V> store;
+    private final KeyValueStore<V> store;
 
     public DefaultSingleValueStore(String storeName,
-                                   KeyValueStore<String, V> store) {
+                                   KeyValueStore<V> store) {
         this.storeName = storeName;
         this.store = store;
     }

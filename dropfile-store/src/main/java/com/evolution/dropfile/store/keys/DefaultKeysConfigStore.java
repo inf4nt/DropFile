@@ -7,7 +7,7 @@ public class DefaultKeysConfigStore
         extends DefaultSingleValueStore<KeysConfig>
         implements KeysConfigStore {
 
-    public DefaultKeysConfigStore(KeyValueStore<String, KeysConfig> store) {
+    public DefaultKeysConfigStore(KeyValueStore<KeysConfig> store) {
         super("keysConfig", store);
     }
 }

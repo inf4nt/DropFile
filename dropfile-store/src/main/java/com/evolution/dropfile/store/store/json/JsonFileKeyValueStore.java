@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class JsonFileKeyValueStore<V> implements KeyValueStore<String, V> {
+public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
 
     private static final Integer READ_BUFFER_SIZE = 8 * 1024;
 

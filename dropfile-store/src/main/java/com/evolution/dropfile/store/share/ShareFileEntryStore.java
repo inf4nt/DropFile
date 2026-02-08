@@ -4,7 +4,7 @@ import com.evolution.dropfile.store.store.KeyValueStore;
 
 import java.util.Map;
 
-public interface ShareFileEntryStore extends KeyValueStore<String, ShareFileEntry> {
+public interface ShareFileEntryStore extends KeyValueStore<ShareFileEntry> {
 
     @Override
     default void validate(String key, ShareFileEntry value) {

@@ -4,6 +4,6 @@ import com.evolution.dropfile.store.store.RuntimeKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 
 public class RuntimeTrustedOutKeyValueStore
-        extends RuntimeKeyValueStore<String, TrustedOutKeyValueStore.TrustedOutValue>
+        extends RuntimeKeyValueStore<TrustedOutKeyValueStore.TrustedOutValue>
         implements TrustedOutKeyValueStore {
 }

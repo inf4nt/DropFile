@@ -5,7 +5,7 @@ import com.evolution.dropfile.store.store.KeyValueStore;
 import java.time.Instant;
 
 public interface TrustedInKeyValueStore
-        extends KeyValueStore<String, TrustedInKeyValueStore.TrustedInValue> {
+        extends KeyValueStore<TrustedInKeyValueStore.TrustedInValue> {
 
     record TrustedInValue(byte[] publicKeyRSA, byte[] publicKeyDH, Instant updated) {
     }

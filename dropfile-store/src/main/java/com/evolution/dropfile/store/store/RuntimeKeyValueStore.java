@@ -4,12 +4,12 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class RuntimeKeyValueStore<K, V> implements KeyValueStore<K, V> {
+public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
-    private final Map<K, V> store = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, V> store = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Override
-    public V save(K key, V value) {
+    public V save(String key, V value) {
         return store.compute(key, (k, v) -> {
             validate(key, value);
             return value;
@@ -17,7 +17,7 @@ public class RuntimeKeyValueStore<K, V> implements KeyValueStore<K, V> {
     }
 
     @Override
-    public V remove(K key) {
+    public V remove(String key) {
         return store.remove(key);
     }
 
@@ -27,7 +27,7 @@ public class RuntimeKeyValueStore<K, V> implements KeyValueStore<K, V> {
     }
 
     @Override
-    public Map<K, V> getAll() {
+    public Map<String, V> getAll() {
         return Map.copyOf(store);
     }
 }

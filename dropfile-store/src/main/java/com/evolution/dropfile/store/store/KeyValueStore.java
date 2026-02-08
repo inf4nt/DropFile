@@ -4,26 +4,26 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-public interface KeyValueStore<K, V> {
+public interface KeyValueStore<V> {
 
-    V save(K key, V value);
+    V save(String key, V value);
 
-    V remove(K key);
+    V remove(String key);
 
     void removeAll();
 
-    Map<K, V> getAll();
+    Map<String, V> getAll();
 
-    default void validate(K key, V value) {
+    default void validate(String key, V value) {
 
     }
 
-    default Optional<Map.Entry<K, V>> get(K key) {
+    default Optional<Map.Entry<String, V>> get(String key) {
         return Optional.ofNullable(getAll().get(key))
                 .map(it -> new AbstractMap.SimpleEntry<>(key, it));
     }
 
-    default Map.Entry<K, V> getRequired(K key) {
+    default Map.Entry<String, V> getRequired(String key) {
         return get(key)
                 .orElseThrow(() -> new RuntimeException(String.format(
                     "Store %s. No key %s found", getClass().getName(), key
