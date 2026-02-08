@@ -41,9 +41,9 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public boolean rm(String id) {
-        AccessKey remove = accessKeyStore.remove(id);
-        return remove != null;
+    public void rm(String id) {
+        String key = accessKeyStore.getRequiredByKeyStartWith(id).getKey();
+        accessKeyStore.remove(key);
     }
 
     public void rmAll() {

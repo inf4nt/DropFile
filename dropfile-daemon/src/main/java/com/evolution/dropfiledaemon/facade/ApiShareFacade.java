@@ -56,7 +56,7 @@ public class ApiShareFacade {
     }
 
     public void rm(String id) {
-        String key = shareFileEntryStore.getRequired(id).getKey();
+        String key = shareFileEntryStore.getRequiredByKeyStartWith(id).getKey();
         shareFileEntryStore.remove(key);
     }
 

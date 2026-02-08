@@ -32,11 +32,8 @@ public class ApiConnectionsAccessRestController {
 
     @DeleteMapping("/rm/{id}")
     public ResponseEntity<Void> rm(@PathVariable String id) {
-        boolean result = apiFacade.rm(id);
-        if (result) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+        apiFacade.rm(id);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/rm-all")

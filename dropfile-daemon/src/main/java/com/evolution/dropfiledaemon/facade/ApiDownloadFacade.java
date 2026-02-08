@@ -90,8 +90,9 @@ public class ApiDownloadFacade {
         fileDownloadOrchestrator.stopAll();
     }
 
-    public boolean rm(String operationId) {
-        return fileDownloadEntryStore.remove(operationId) != null;
+    public void rm(String operationId) {
+        String key = fileDownloadEntryStore.getRequiredByKeyStartWith(operationId).getKey();
+        fileDownloadEntryStore.remove(key);
     }
 
     public void rmAll() {

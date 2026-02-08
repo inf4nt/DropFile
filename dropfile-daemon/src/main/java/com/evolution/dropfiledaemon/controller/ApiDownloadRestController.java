@@ -38,8 +38,8 @@ public class ApiDownloadRestController {
 
     @DeleteMapping("/rm/{operationId}")
     public ResponseEntity<String> rm(@PathVariable String operationId) {
-        boolean removed = downloadFacade.rm(operationId);
-        return removed ? ResponseEntity.ok().build() : ResponseEntity.status(404).body("No operation found");
+        downloadFacade.rm(operationId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/rm-all")

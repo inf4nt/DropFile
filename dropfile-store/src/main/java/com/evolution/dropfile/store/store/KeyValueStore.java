@@ -31,7 +31,7 @@ public interface KeyValueStore<V> {
                 )));
     }
 
-    default V getRequiredByKeyStartWith(String stringKey) {
+    default Map.Entry<String, V> getRequiredByKeyStartWith(String stringKey) {
         List<Map.Entry<String, V>> list = getAll().entrySet().stream()
                 .filter(it -> it.getKey().startsWith(stringKey)).toList();
         if (list.isEmpty()) {
@@ -40,8 +40,8 @@ public interface KeyValueStore<V> {
             ));
         }
         if (list.size() != 1) {
-            throw new RuntimeException(String.format("More than one item was found for removal. Please provide more detailed criteria. Found: %s", list.size()));
+            throw new RuntimeException(String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", list.size()));
         }
-        return list.getFirst().getValue();
+        return list.getFirst();
     }
 }
