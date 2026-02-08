@@ -108,7 +108,7 @@ public class DownloadProcedure {
                     null,
                     0,
                     0,
-                    "0.00%"
+                    fileHelper.percent(0, 0)
             );
         }
         long downloaded = chunksHaveDownloaded.sum();
