@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
 
-import com.evolution.dropfiledaemon.util.FileHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +15,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FileHelperTest {
 
@@ -198,6 +198,66 @@ class FileHelperTest {
         assertThat(
                 fileHelper.sha256(file),
                 is(expected)
+        );
+    }
+
+    @Test
+    public void toDisplaySize() {
+        assertThrows(IllegalArgumentException.class, () -> fileHelper.toDisplaySize(-1));
+
+        assertThat(
+                fileHelper.toDisplaySize(0),
+                is("0B")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(12 * 1024),
+                is("12KB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(123 * 1024),
+                is("123KB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(1023 * 1024),
+                is("1023KB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(1 * 1024 * 1024),
+                is("1MB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(13 * 1024 * 1024),
+                is("13MB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(1023 * 1024 * 1024),
+                is("1023MB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(1 * (1024 * 1024 * 1024L)),
+                is("1GB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(14 * (1024 * 1024 * 1024L)),
+                is("14GB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(1023 * (1024 * 1024 * 1024L)),
+                is("1023GB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(5000 * (1024 * 1024 * 1024L)),
+                is("5000GB")
         );
     }
 }

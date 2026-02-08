@@ -37,8 +37,8 @@ public class ApiDownloadFacade {
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
                         null,
-                        byteCountToDisplaySize(downloadProgress.total()),
-                        byteCountToDisplaySize(downloadProgress.downloaded()),
+                        fileHelper.toDisplaySize(downloadProgress.total()),
+                        fileHelper.toDisplaySize(downloadProgress.downloaded()),
                         downloadProgress.percentage(),
                         ApiDownloadLsDTO.Status.DOWNLOADING,
                         entry.getValue().updated()
@@ -52,8 +52,8 @@ public class ApiDownloadFacade {
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
                         status == ApiDownloadLsDTO.Status.COMPLETED ? downloadFileEntry.hash() : null,
-                        byteCountToDisplaySize(downloadFileEntry.total()),
-                        byteCountToDisplaySize(downloadFileEntry.downloaded()),
+                        fileHelper.toDisplaySize(downloadFileEntry.total()),
+                        fileHelper.toDisplaySize(downloadFileEntry.downloaded()),
                         fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
                         status,
                         downloadFileEntry.updated()

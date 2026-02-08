@@ -1,13 +1,18 @@
 package com.evolution.dropfiledaemon.system;
 
+import com.evolution.dropfiledaemon.util.FileHelper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Component
 public class SystemInfoProvider {
+
+    private final FileHelper fileHelper;
 
     public Map<String, Object> getSystemInfo() {
         return new LinkedHashMap<>() {{
@@ -16,15 +21,11 @@ public class SystemInfoProvider {
             put("ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage()", ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage());
 
             long maxMemory = Runtime.getRuntime().maxMemory();
-            put("Runtime.getRuntime().maxMemory()", maxMemory + " bytes (" + toMb(maxMemory) + " MB)");
+            put("Runtime.getRuntime().maxMemory()", maxMemory + " bytes (" + fileHelper.toDisplaySize(maxMemory) + ")");
             long totalMemory = Runtime.getRuntime().totalMemory();
-            put("Runtime.getRuntime().totalMemory()", totalMemory + " bytes (" + toMb(totalMemory) + " MB)");
+            put("Runtime.getRuntime().totalMemory()", totalMemory + " bytes (" + fileHelper.toDisplaySize(totalMemory) + ")");
             long freeMemory = Runtime.getRuntime().freeMemory();
-            put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + toMb(freeMemory) + " MB)");
+            put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + fileHelper.toDisplaySize(freeMemory) + ")");
         }};
-    }
-
-    private long toMb(long value) {
-        return value / 1_024 / 1_024;
     }
 }

@@ -131,6 +131,28 @@ public class FileHelper {
         return String.format(Locale.US, "%.2f%%", value);
     }
 
+    public String toDisplaySize(long size) {
+        if (size < 0) {
+            throw new IllegalArgumentException("Size cannot be negative");
+        }
+        if (size == 0) {
+            return "0B";
+        }
+        if (size < 1024) {
+            return String.format("%sB", size);
+        }
+        if (size < 1024 * 1024) {
+            long kb =  size / 1024;
+            return String.format("%sKB", kb);
+        }
+        if (size < 1024 * 1024 * 1024) {
+            long mb =  size / (1024 * 1024);
+            return String.format("%sMB", mb);
+        }
+        long gb =  size / (1024 * 1024 * 1024);
+        return String.format("%sGB", gb);
+    }
+
     @Data
     @RequiredArgsConstructor
     public static class ChunkContainer {
