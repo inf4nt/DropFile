@@ -47,8 +47,8 @@ public class ApiDaemonFacade {
                 CommonUtils.getFingerprint(CryptoRSA.getPublicKey(keysConfigStore.getRequired().rsa().publicKey())),
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
-                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(systemInfoProvider.getSystemInfo()),
-                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(appConfigStore.getRequired().daemonAppConfig())
+                systemInfoProvider.getSystemInfo(),
+                appConfigStore.getRequired().daemonAppConfig()
         );
     }
 }

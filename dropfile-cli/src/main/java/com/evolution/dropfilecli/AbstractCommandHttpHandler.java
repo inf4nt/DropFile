@@ -88,9 +88,10 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
         if (typeReference == null) {
             return PrintModeEnum.LIST;
         }
-        ParameterizedType type = (ParameterizedType) typeReference.getType();
-        if (Iterable.class.isAssignableFrom((Class<?>) type.getRawType())) {
-            return PrintModeEnum.TABLE;
+        if (typeReference.getType() instanceof ParameterizedType parameterizedType) {
+            if (Iterable.class.isAssignableFrom((Class<?>) parameterizedType.getRawType())) {
+                return PrintModeEnum.TABLE;
+            }
         }
         return PrintModeEnum.LIST;
     }
