@@ -1,15 +1,26 @@
 package com.evolution.dropfilecli;
 
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.util.TablePrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ObjectUtils;
+import picocli.CommandLine;
 
+import java.lang.reflect.ParameterizedType;
 import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 public abstract class AbstractCommandHttpHandler implements Runnable {
+
+    @CommandLine.Option(names = {"-table", "--table"}, description = "Print table", defaultValue = "false")
+    protected boolean table;
+
+    @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false")
+    protected boolean list;
 
     protected DaemonClient daemonClient;
 
@@ -72,8 +83,35 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
         }
     }
 
-    @SneakyThrows
+    protected PrintModeEnum getPrintMode() {
+        TypeReference<?> typeReference = getTypeReference();
+        if (typeReference == null) {
+            return PrintModeEnum.LIST;
+        }
+        ParameterizedType type = (ParameterizedType) typeReference.getType();
+        if (Iterable.class.isAssignableFrom((Class<?>) type.getRawType())) {
+            return PrintModeEnum.TABLE;
+        }
+        return PrintModeEnum.LIST;
+    }
+
     protected void print(Object object) {
+        if (table) {
+            printTable(object);
+        } else if (list) {
+            printList(object);
+        } else {
+            PrintModeEnum printMode = getPrintMode();
+            if (printMode == PrintModeEnum.TABLE) {
+                printTable(object);
+            } else {
+                printList(object);
+            }
+        }
+    }
+
+    @SneakyThrows
+    protected void printList(Object object) {
         if (ObjectUtils.isEmpty(object)) {
             System.out.println("No values present");
             return;
@@ -81,5 +119,18 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
         System.out.println(json);
+    }
+
+    protected void printTable(Object object) {
+        if (!(object instanceof Iterable<?> iterable)) {
+            throw new UnsupportedOperationException("Print table supports only Iterable.class");
+        }
+        List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
+        TablePrinter.print(data);
+    }
+
+    protected enum PrintModeEnum {
+        TABLE,
+        LIST
     }
 }
