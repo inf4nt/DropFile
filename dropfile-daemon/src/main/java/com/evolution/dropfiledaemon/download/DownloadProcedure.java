@@ -1,9 +1,11 @@
 package com.evolution.dropfiledaemon.download;
 
+import com.evolution.dropfiledaemon.download.exception.ChunkDigestMismatchException;
 import com.evolution.dropfiledaemon.download.exception.ChunkDownloadingFailedException;
-import com.evolution.dropfiledaemon.download.exception.DigestMismatchException;
+import com.evolution.dropfiledaemon.download.exception.ChunkWritingFailedException;
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
 import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
+import com.evolution.dropfiledaemon.download.exception.TotalDigestMismatchException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
@@ -12,7 +14,6 @@ import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -84,7 +85,7 @@ public class DownloadProcedure {
                         );
 
                         if (!manifest.hash().equals(actualSha256)) {
-                            throw new DigestMismatchException(operationId, manifest.hash(), actualSha256);
+                            throw new TotalDigestMismatchException(operationId, manifest.hash(), actualSha256);
                         }
 
                         checkIfProcessHasStopped();
@@ -178,8 +179,10 @@ public class DownloadProcedure {
                             if (exceptionAtomicReference.get() != null) {
                                 return;
                             }
-                            try (InputStream inputStream = chunkDownloadStream(chunkManifest)) {
-                                writeChunkToFile(fileChannel, inputStream, chunkManifest);
+                            try {
+                                byte[] chunkBytes = chunkDownload(chunkManifest);
+                                writeChunkToFile(fileChannel, chunkBytes, chunkManifest);
+                                chunksHaveDownloaded.add(chunkManifest.size());
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             } finally {
@@ -194,12 +197,12 @@ public class DownloadProcedure {
         }
     }
 
-    private InputStream chunkDownloadStream(ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
+    private byte[] chunkDownload(ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
         try {
             return RetryExecutor.call(
                             () -> {
                                 checkIfProcessHasStopped();
-                                return tunnelClient.stream(
+                                try (InputStream inputStream = tunnelClient.stream(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-chunk-stream")
                                                 .body(new ShareDownloadChunkStreamTunnelRequest(
@@ -207,7 +210,16 @@ public class DownloadProcedure {
                                                         chunkManifest.startPosition(),
                                                         chunkManifest.endPosition()
                                                 ))
-                                                .build());
+                                                .build())) {
+                                    byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
+                                    String sha256 = fileHelper.sha256(allBytes);
+                                    if (!chunkManifest.hash().equals(sha256)) {
+                                        throw new ChunkDigestMismatchException(operationId, chunkManifest.hash(),
+                                                sha256, chunkManifest.startPosition(), chunkManifest.endPosition()
+                                        );
+                                    }
+                                    return allBytes;
+                                }
                             }
                     )
                     .doOnError((attempt, exception) -> {
@@ -228,13 +240,32 @@ public class DownloadProcedure {
         }
     }
 
-    @SneakyThrows
     private void writeChunkToFile(FileChannel writeToFileChannel,
-                                  InputStream inputStreamChunk,
+                                  byte[] chunkBytes,
                                   ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
-        checkIfProcessHasStopped();
-        fileHelper.write(writeToFileChannel, inputStreamChunk, chunkManifest.startPosition());
-        chunksHaveDownloaded.add(chunkManifest.size());
+        try {
+            RetryExecutor.call(
+                            () -> {
+                                checkIfProcessHasStopped();
+                                fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.startPosition());
+                                return null;
+                            }
+                    )
+                    .doOnError((attempt, exception) -> {
+                        log.info("Retry 'write-chunk'. Attempt: {} start {} end {} exception {}",
+                                attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
+                    })
+                    .retryIf(it -> {
+                        if (it.exception() instanceof DownloadingStoppedException) {
+                            return false;
+                        }
+                        return it.exception() != null;
+                    })
+                    .build()
+                    .run();
+        } catch (Exception exception) {
+            throw new ChunkWritingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);
+        }
     }
 
     private void checkIfProcessHasStopped() {

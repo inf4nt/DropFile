@@ -9,8 +9,10 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.UUID;
 
 @Component
 public class ShareDownloadChunkStreamCommandHandler
@@ -37,9 +39,19 @@ public class ShareDownloadChunkStreamCommandHandler
         return ShareDownloadChunkStreamTunnelRequest.class;
     }
 
+    int count = 0;
+
+    int error = 0;
+
     @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
+        count++;
+        if (count > 100 && error <= 5) {
+            error++;
+            return new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
+        }
+
         ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(request.id())
                 .getValue();
 

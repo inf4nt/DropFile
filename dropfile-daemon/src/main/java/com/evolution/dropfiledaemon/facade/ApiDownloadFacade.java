@@ -74,16 +74,15 @@ public class ApiDownloadFacade {
                     .toList();
         }
         ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(request.status().name());
-        return getByStatus(responses, status, limit)
-                .stream()
-                .toList();
+        return getByStatus(responses, status, limit);
     }
 
     private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
         return source.stream()
                 .filter(it -> it.status() == status)
-                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
+                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
                 .limit(limit)
+                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
                 .toList();
     }
 

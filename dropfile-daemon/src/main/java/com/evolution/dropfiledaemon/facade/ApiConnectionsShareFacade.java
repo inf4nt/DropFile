@@ -54,6 +54,7 @@ public class ApiConnectionsShareFacade {
     }
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
+        // TODO remove it
         if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {
             int index = requestDTO.filename().indexOf("big");
             Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));

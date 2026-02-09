@@ -107,7 +107,21 @@ public class FileHelper {
         }
     }
 
-    public static String bytesToHex(byte[] bytes) {
+    public void write(FileChannel fileChannel,
+                      byte[] bytes,
+                      long position) throws IOException {
+        ByteBuffer wrap = ByteBuffer.wrap(bytes);
+        long offset = position;
+        while (wrap.hasRemaining()) {
+            int written = fileChannel.write(wrap, offset);
+            if (written <= 0) {
+                throw new IOException("FileChannel.write wrote zero or negative numbers of bytes");
+            }
+            offset += written;
+        }
+    }
+
+    public String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b));
@@ -142,14 +156,14 @@ public class FileHelper {
             return String.format("%sB", size);
         }
         if (size < 1024 * 1024) {
-            long kb =  size / 1024;
+            long kb = size / 1024;
             return String.format("%sKB", kb);
         }
         if (size < 1024 * 1024 * 1024) {
-            long mb =  size / (1024 * 1024);
+            long mb = size / (1024 * 1024);
             return String.format("%sMB", mb);
         }
-        long gb =  size / (1024 * 1024 * 1024);
+        long gb = size / (1024 * 1024 * 1024);
         return String.format("%sGB", gb);
     }
 
