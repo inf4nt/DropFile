@@ -86,13 +86,6 @@ public class ApiDownloadFacade {
                 .toList();
     }
 
-    private String byteCountToDisplaySize(Long bytes) {
-        if (bytes == null || bytes <= 0) {
-            return "0";
-        }
-        return FileUtils.byteCountToDisplaySize(bytes);
-    }
-
     public boolean stop(String operationId) {
         return fileDownloadOrchestrator.stop(operationId);
     }
