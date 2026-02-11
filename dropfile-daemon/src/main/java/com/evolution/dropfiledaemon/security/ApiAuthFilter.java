@@ -30,7 +30,7 @@ public class ApiAuthFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
@@ -38,10 +38,13 @@ public class ApiAuthFilter extends OncePerRequestFilter {
     }
 
     private boolean isApiRequest(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/api");
+        return request != null && request.getServletPath().startsWith("/api");
     }
 
     private String extractToken(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             return null;
