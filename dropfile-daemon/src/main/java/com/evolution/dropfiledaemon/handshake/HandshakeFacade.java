@@ -52,6 +52,7 @@ public class HandshakeFacade {
         String accessKeyId = requestDTO.id();
         Map.Entry<String, AccessKey> accessKey = accessKeyStore.get(accessKeyId).orElse(null);
         if (accessKey != null) {
+            accessKeyStore.remove(requestDTO.id());
             return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
         }
         Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore.trustedInStore()
@@ -143,15 +144,6 @@ public class HandshakeFacade {
 
         byte[] publicKeyRSA = CommonUtils.decodeBase64(requestPayload.publicKeyRSA());
         byte[] publicKeyDH = CommonUtils.decodeBase64(requestPayload.publicKeyDH());
-        handshakeStore.trustedInStore()
-                .save(
-                        CommonUtils.getFingerprint(publicKeyRSA),
-                        new TrustedInKeyValueStore.TrustedInValue(
-                                publicKeyRSA,
-                                publicKeyDH,
-                                Instant.now()
-                        )
-                );
 
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
                 CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
@@ -168,12 +160,22 @@ public class HandshakeFacade {
 
         byte[] signature = CryptoRSA.sign(responsePayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
 
-        accessKeyStore.remove(requestDTO.id());
-
-        return new HandshakeResponseDTO(
+        HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
                 CommonUtils.encodeBase64(secureEnvelope.payload()),
                 CommonUtils.encodeBase64(secureEnvelope.nonce()),
                 CommonUtils.encodeBase64(signature)
         );
+
+        handshakeStore.trustedInStore()
+                .save(
+                        CommonUtils.getFingerprint(publicKeyRSA),
+                        new TrustedInKeyValueStore.TrustedInValue(
+                                publicKeyRSA,
+                                publicKeyDH,
+                                Instant.now()
+                        )
+                );
+
+        return handshakeResponseDTO;
     }
 }

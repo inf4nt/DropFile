@@ -20,7 +20,7 @@ public class HandshakeRestController {
     }
 
     @PostMapping
-    public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
+    public synchronized HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
 }
