@@ -4,11 +4,13 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Slf4j
 @ControllerAdvice(assignableTypes = HandshakeRestController.class)
 public class HandshakeRestControllerExceptionHandler {
 
@@ -20,8 +22,8 @@ public class HandshakeRestControllerExceptionHandler {
     }
 
     @ExceptionHandler({Exception.class})
-    public ResponseEntity<?> exception(Exception e) {
-        e.printStackTrace();
+    public ResponseEntity<HandshakeResponseDTO> exception(Exception exception) {
+        log.info("Handshake error: {}", exception.getMessage(), exception);
         byte[] payload = CommonUtils.nonce12();
         byte[] signature = CryptoRSA.sign(
                 payload,
