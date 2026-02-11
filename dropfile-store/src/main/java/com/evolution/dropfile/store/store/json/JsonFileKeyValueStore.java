@@ -3,20 +3,16 @@ package com.evolution.dropfile.store.store.json;
 import com.evolution.dropfile.store.store.KeyValueStore;
 import lombok.SneakyThrows;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
-
-    private static final Integer READ_BUFFER_SIZE = Integer.MAX_VALUE;
 
     private final FileProvider fileProvider;
 
@@ -33,7 +29,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
         Objects.requireNonNull(key, "key cannot be null");
         Objects.requireNonNull(value, "value cannot be null");
         validate(key, value);
-        return writeKeyValue(key, value);
+        return saveKeyValue(key, value);
     }
 
     @Override
@@ -44,127 +40,66 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
 
     @Override
     public synchronized void removeAll() {
-        removeAllStore();
+        removeAllMethod();
     }
 
     @Override
     public synchronized Map<String, V> getAll() {
-        return readAll();
+        return getAllMap();
     }
 
-    @SneakyThrows
-    private Map<String, V> readAll() {
-        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-            FileLock lock = channel.lock();
-            Map<String, V> stringVMap = readChannel(channel);
-            lock.release();
-            return stringVMap;
+    private V saveKeyValue(String key, V value) {
+        Map<String, V> all = new LinkedHashMap<>(getAll());
+        all.put(key, value);
+        byte[] allBytes = jsonSerde.serialize(all);
+        writeData(allBytes);
+        return value;
+    }
+
+    private V removeByKey(String key) {
+        Map<String, V> all = new LinkedHashMap<>(getAll());
+        V remove = all.remove(key);
+        if (remove == null) {
+            return null;
         }
+        byte[] allBytes = jsonSerde.serialize(all);
+        writeData(allBytes);
+        return remove;
     }
 
     @SneakyThrows
-    private Map<String, V> readChannel(FileChannel channel) {
-        if (channel.size() == 0) {
+    private void removeAllMethod() {
+        File file = fileProvider.getOrCreateFile();
+        if (Files.size(file.toPath()) == 0) {
+            return;
+        }
+        writeData("{}".getBytes());
+    }
+
+    @SneakyThrows
+    private Map<String, V> getAllMap() {
+        File file = fileProvider.getOrCreateFile();
+        
+        if (Files.size(file.toPath()) == 0) {
             return Collections.emptyMap();
         }
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            int bufferSize = READ_BUFFER_SIZE;
-            if (bufferSize > channel.size()) {
-                bufferSize = (int) channel.size();
-            }
-            ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-
-            while (channel.read(buffer) != -1) {
-                buffer.flip();
-
-                while (buffer.hasRemaining()) {
-                    out.write(buffer.get());
-                }
-
-                buffer.clear();
-            }
-
-            byte[] allBytes = out.toByteArray();
-            Map<String, V> deserialize = jsonSerde.deserialize(allBytes);
-            return deserialize;
-        }
+        byte[] allBytes = Files.readAllBytes(file.toPath());
+        return jsonSerde.deserialize(allBytes);
     }
 
     @SneakyThrows
-    private V writeKeyValue(String key, V value) {
-        try (FileChannel channel = FileChannel.open(fileProvider.getFile().toPath(),
-                StandardOpenOption.READ,
-                StandardOpenOption.WRITE)) {
-            FileLock lock = channel.lock();
-
-            Map<String, V> values = readChannel(channel);
-            values = new LinkedHashMap<>(values);
-
-            values.put(key, value);
-            byte[] byteArray = jsonSerde.serialize(values);
-            writeData(channel, byteArray);
-
-            lock.release();
-            return value;
-        }
-    }
-
-    @SneakyThrows
-    private V removeByKey(String key) {
-        try (FileChannel channel = FileChannel.open(
-                fileProvider.getFile().toPath(),
-                StandardOpenOption.READ,
-                StandardOpenOption.WRITE)) {
-            FileLock lock = channel.lock();
-
-            Map<String, V> values = readChannel(channel);
-            if (values.isEmpty()) {
-                lock.release();
-                return null;
+    private void writeData(byte[] data) {
+        File tmp = null;
+        try {
+            tmp = fileProvider.getOrCreateTempFile();
+            Files.write(tmp.toPath(), data);
+            Path filePath = fileProvider.getFilePath();
+            Files.move(tmp.toPath(), filePath, StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            if (tmp != null && Files.exists(tmp.toPath())) {
+                Files.delete(tmp.toPath());
             }
-
-            values = new LinkedHashMap<>(values);
-            V removedValue = values.remove(key);
-            if (removedValue == null) {
-                lock.release();
-                return null;
-            }
-            byte[] byteArray = jsonSerde.serialize(values);
-            writeData(channel, byteArray);
-
-            lock.release();
-
-            return removedValue;
         }
-    }
-
-    @SneakyThrows
-    private void removeAllStore() {
-        Path filePath = fileProvider.getFile().toPath();
-        try (FileChannel channel = FileChannel.open(filePath,
-                StandardOpenOption.READ,
-                StandardOpenOption.WRITE)) {
-            FileLock lock = channel.lock();
-
-            byte[] byteArray = jsonSerde.serialize(new LinkedHashMap<>());
-            writeData(channel, byteArray);
-
-            lock.release();
-        }
-    }
-
-    @SneakyThrows
-    private void writeData(FileChannel fileChannel, byte[] array) {
-        ByteBuffer buffer = ByteBuffer.wrap(array);
-
-        fileChannel.truncate(0);
-        fileChannel.position(0);
-
-        while (buffer.hasRemaining()) {
-            fileChannel.write(buffer);
-        }
-
-        fileChannel.force(true);
     }
 }

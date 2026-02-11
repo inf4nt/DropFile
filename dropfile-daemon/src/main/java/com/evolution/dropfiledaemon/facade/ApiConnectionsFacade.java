@@ -13,7 +13,7 @@ public class ApiConnectionsFacade {
     }
 
     public void revoke(String fingerprint) {
-        String key = handshakeStore.trustedInStore().getRequired(fingerprint)
+        String key = handshakeStore.trustedInStore().getRequiredByKeyStartWith(fingerprint)
                 .getKey();
         handshakeStore.trustedInStore().remove(key);
     }
@@ -23,7 +23,7 @@ public class ApiConnectionsFacade {
     }
 
     public void disconnect(String fingerprint) {
-        String key = handshakeStore.trustedOutStore().getRequired(fingerprint).getKey();
+        String key = handshakeStore.trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
         handshakeStore.trustedOutStore().remove(key);
     }
 

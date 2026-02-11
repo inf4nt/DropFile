@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.download;
 
+import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
@@ -188,15 +189,15 @@ public class FileDownloadOrchestrator {
             throw new UnsupportedOperationException("filename must not be absolute. Unsupported yet: " + request.filename());
         }
 
-        String filename = String.format("Unconfirmed-%s-%s.crdownload", CommonUtils.random(), request.filename());
+        String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
         String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
-        File downloadFile = new File(downloadDirectory, filename).getCanonicalFile();
+        File tmpDownloadFile = new File(downloadDirectory, temporaryFileName).getCanonicalFile();
 
-        if (Files.notExists(downloadFile.toPath())) {
-            Files.createFile(downloadFile.toPath());
+        if (Files.notExists(tmpDownloadFile.toPath())) {
+            Files.createFile(tmpDownloadFile.toPath());
         }
 
-        return downloadFile;
+        return tmpDownloadFile;
     }
 
     public record DownloadProgress(String operationId,
