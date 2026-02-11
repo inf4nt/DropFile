@@ -5,9 +5,6 @@ import com.evolution.dropfile.store.store.json.FileProvider;
 import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class JsonFileFileDownloadEntryStore
         extends JsonFileKeyValueStore<DownloadFileEntry>
         implements FileDownloadEntryStore {
@@ -15,8 +12,8 @@ public class JsonFileFileDownloadEntryStore
         super(
                 new FileProvider() {
                     @Override
-                    public Path getFilePath() {
-                        return Paths.get("download.file.entries.json");
+                    public String getFileName() {
+                        return "download.file.entries.json";
                     }
                 },
                 new DefaultJsonSerde<>(

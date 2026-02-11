@@ -6,9 +6,6 @@ import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
 import com.evolution.dropfile.store.store.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class JsonFileSecretsConfigStore
         extends DefaultSingleValueStore<SecretsConfig>
         implements SecretsConfigStore {
@@ -19,8 +16,8 @@ public class JsonFileSecretsConfigStore
                 new JsonFileKeyValueStore<>(
                         new FileProtectedProvider() {
                             @Override
-                            public Path getFilePath() {
-                                return Paths.get("secrets.config.json");
+                            public String getFileName() {
+                                return "secrets.config.json";
                             }
                         },
                         new DefaultJsonSerde<>(

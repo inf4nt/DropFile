@@ -7,7 +7,6 @@ import com.evolution.dropfile.store.store.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class JsonFileAppConfigStore
         extends DefaultSingleValueStore<AppConfig>
@@ -19,8 +18,8 @@ public class JsonFileAppConfigStore
                 new JsonFileKeyValueStore<>(
                         new FileProvider() {
                             @Override
-                            public Path getFilePath() {
-                                return Paths.get("app.config.json");
+                            public String getFileName() {
+                                return "app.config.json";
                             }
                         },
                         new DefaultJsonSerde<>(

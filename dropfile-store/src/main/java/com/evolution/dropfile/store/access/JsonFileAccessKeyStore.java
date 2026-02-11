@@ -1,10 +1,9 @@
 package com.evolution.dropfile.store.access;
 
-import com.evolution.dropfile.store.store.json.*;
+import com.evolution.dropfile.store.store.json.DefaultJsonSerde;
+import com.evolution.dropfile.store.store.json.FileProtectedProvider;
+import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class JsonFileAccessKeyStore
         extends JsonFileKeyValueStore<AccessKey>
@@ -14,8 +13,8 @@ public class JsonFileAccessKeyStore
         super(
                 new FileProtectedProvider() {
                     @Override
-                    public Path getFilePath() {
-                        return Paths.get("access.keys.config.json");
+                    public String getFileName() {
+                        return "access.keys.config.json";
                     }
                 },
                 new DefaultJsonSerde<>(

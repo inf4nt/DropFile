@@ -5,9 +5,6 @@ import com.evolution.dropfile.store.store.json.FileProtectedProvider;
 import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class JsonFileKeysConfigStore
         extends DefaultKeysConfigStore {
 
@@ -16,8 +13,8 @@ public class JsonFileKeysConfigStore
                 new JsonFileKeyValueStore<>(
                         new FileProtectedProvider() {
                             @Override
-                            public Path getFilePath() {
-                                return Paths.get("keys.config.json");
+                            public String getFileName() {
+                                return "keys.config.json";
                             }
                         },
                         new DefaultJsonSerde<>(

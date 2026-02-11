@@ -9,12 +9,12 @@ import java.nio.file.Paths;
 
 public interface FileProvider {
 
-    Path getFilePath();
+    String getFileName();
 
     @SneakyThrows
     default File getFile() {
         Path homePath = resolveHomePath();
-        Path configFilePath = homePath.resolve(getFilePath());
+        Path configFilePath = homePath.resolve(getFileName());
 
         if (Files.notExists(configFilePath)) {
             Path parent = configFilePath.getParent();
