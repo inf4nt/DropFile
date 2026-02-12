@@ -132,9 +132,8 @@ public class HttpTunnelClient implements TunnelClient {
         }
         return handshakeStore
                 .trustedOutStore()
-                .get(request.getFingerprint())
-                .map(it -> it.getValue())
-                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + request.getFingerprint()));
+                .getRequired(request.getFingerprint())
+                .getValue();
     }
 
     private SecretKey getSecretKey(byte[] publicKeyDH) {
