@@ -87,7 +87,7 @@ public class ApiHandshakeFacade {
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
-        HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
+        HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
                 System.currentTimeMillis()
@@ -124,9 +124,9 @@ public class ApiHandshakeFacade {
                 handshakeResponseDTO.nonce(),
                 secretKey
         );
-        HandshakeResponseDTO.HandshakePayload responsePayload = objectMapper.readValue(
+        HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
                 decryptResponsePayload,
-                HandshakeResponseDTO.HandshakePayload.class
+                HandshakeResponseDTO.Payload.class
         );
 
         boolean verify = CryptoRSA.verify(
@@ -159,7 +159,7 @@ public class ApiHandshakeFacade {
     public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
         String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
 
-        HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
+        HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
                 System.currentTimeMillis()
@@ -200,9 +200,9 @@ public class ApiHandshakeFacade {
                 secretKey
         );
 
-        HandshakeResponseDTO.HandshakePayload responsePayload = objectMapper.readValue(
+        HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
                 decryptResponsePayload,
-                HandshakeResponseDTO.HandshakePayload.class
+                HandshakeResponseDTO.Payload.class
         );
         boolean verify = CryptoRSA.verify(
                 decryptResponsePayload,

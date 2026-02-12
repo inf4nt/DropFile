@@ -5,9 +5,9 @@ public record HandshakeRequestDTO(String id,
                                   byte[] nonce,
                                   byte[] signature) {
 
-    public record HandshakePayload(byte[] publicKeyRSA,
-                                   byte[] publicKeyDH,
-                                   long timestamp) {
+    public record Payload(byte[] publicKeyRSA,
+                          byte[] publicKeyDH,
+                          long timestamp) {
 
     }
 }

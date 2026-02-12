@@ -25,6 +25,8 @@ import java.util.Map;
 @Component
 public class HandshakeFacade {
 
+    private static final int MAX_HANDSHAKE_TIMEOUT = 30_000;
+
     private final HandshakeStore handshakeStore;
 
     private final KeysConfigStore keysConfigStore;
@@ -75,8 +77,12 @@ public class HandshakeFacade {
                 requestDTO.nonce(),
                 secretKey
         );
-        HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
-                .readValue(decryptMessage, HandshakeRequestDTO.HandshakePayload.class);
+        HandshakeRequestDTO.Payload requestPayload = objectMapper
+                .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
+
+        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > MAX_HANDSHAKE_TIMEOUT) {
+            throw new RuntimeException("Timed out");
+        }
 
         boolean verify = CryptoRSA.verify(
                 decryptMessage,
@@ -92,11 +98,7 @@ public class HandshakeFacade {
             throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
         }
 
-        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
-        }
-
-        HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
+        HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
                 cryptoTunnel.getAlgorithm(),
@@ -107,7 +109,10 @@ public class HandshakeFacade {
                 responsePayloadByteArray,
                 secretKey
         );
-        byte[] signature = CryptoRSA.sign(responsePayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
+        byte[] signature = CryptoRSA.sign(
+                responsePayloadByteArray,
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+        );
 
         return new HandshakeResponseDTO(
                 secureEnvelope.payload(),
@@ -126,10 +131,10 @@ public class HandshakeFacade {
                 requestDTO.nonce(),
                 secretKey
         );
-        HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
-                .readValue(decryptMessage, HandshakeRequestDTO.HandshakePayload.class);
+        HandshakeRequestDTO.Payload requestPayload = objectMapper
+                .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
 
-        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > 30_000) {
+        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > MAX_HANDSHAKE_TIMEOUT) {
             throw new RuntimeException("Timed out");
         }
 
@@ -145,7 +150,7 @@ public class HandshakeFacade {
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
         byte[] publicKeyDH = requestPayload.publicKeyDH();
 
-        HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
+        HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
                 cryptoTunnel.getAlgorithm(),
@@ -157,7 +162,10 @@ public class HandshakeFacade {
                 secretKey
         );
 
-        byte[] signature = CryptoRSA.sign(responsePayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
+        byte[] signature = CryptoRSA.sign(
+                responsePayloadByteArray,
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+        );
 
         HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
                 secureEnvelope.payload(),
