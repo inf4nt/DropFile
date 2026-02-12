@@ -6,14 +6,12 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.ChaCha20ParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
@@ -24,6 +22,8 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
 
     private static final int NONCE_LENGTH = 12;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public String getAlgorithm() {
@@ -85,9 +85,9 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         return new CipherInputStream(inputStream, cipher);
     }
 
-    private static byte[] generateNonce() {
+    private byte[] generateNonce() {
         byte[] nonce = new byte[NONCE_LENGTH];
-        new SecureRandom().nextBytes(nonce);
+        secureRandom.nextBytes(nonce);
         return nonce;
     }
 }
