@@ -55,10 +55,9 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore().getAll().values().stream()
-                .filter(it -> it.addressURI().equals(CommonUtils.toURI(requestDTO.address())))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No trusted-out found: " + requestDTO.address()));
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
+                .getValue();
         ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
         handshakeStore.trustedOutStore().save(
                 CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()),
@@ -128,6 +127,9 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.Payload.class
         );
+        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
 
         boolean verify = CryptoRSA.verify(
                 decryptResponsePayload,
@@ -141,10 +143,6 @@ public class ApiHandshakeFacade {
         String fingerprintResponse = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         if (!CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()).equals(fingerprintResponse)) {
             throw new RuntimeException("Fingerprint mismatch: " + fingerprintResponse);
-        }
-
-        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
         }
 
         return new ApiHandshakeStatusResponseDTO(
@@ -204,6 +202,10 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.Payload.class
         );
+        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
         boolean verify = CryptoRSA.verify(
                 decryptResponsePayload,
                 handshakeResponseDTO.signature(),
@@ -211,10 +213,6 @@ public class ApiHandshakeFacade {
         );
         if (!verify) {
             throw new RuntimeException("Signature verification failed");
-        }
-
-        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
         }
 
         String fingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
