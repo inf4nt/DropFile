@@ -54,106 +54,6 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
-    public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
-                .getValue();
-        ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
-        handshakeStore.trustedOutStore().save(
-                CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()),
-                new TrustedOutKeyValueStore.TrustedOutValue(
-                        trustedOutValue.addressURI(),
-                        trustedOutValue.publicKeyRSA(),
-                        trustedOutValue.publicKeyDH(),
-                        Instant.now()
-                )
-        );
-        return apiHandshakeStatusResponseDTO;
-    }
-
-    public ApiHandshakeStatusResponseDTO handshakeStatus() {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
-                .getRequiredLatestUpdated()
-                .getValue();
-        return pingHandshake(trustedOutValue);
-    }
-
-    @SneakyThrows
-    public ApiHandshakeStatusResponseDTO pingHandshake(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {
-        byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(trustedOutValue.publicKeyDH())
-        );
-        SecretKey secretKey = cryptoTunnel.secretKey(secret);
-
-        HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
-                keysConfigStore.getRequired().rsa().publicKey(),
-                keysConfigStore.getRequired().dh().publicKey(),
-                System.currentTimeMillis()
-        );
-        byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
-        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
-                requestPayloadByteArray,
-                secretKey
-        );
-
-        byte[] signature = CryptoRSA.sign(
-                requestPayloadByteArray,
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
-        );
-        HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
-                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                secureEnvelope.payload(),
-                secureEnvelope.nonce(),
-                signature
-        );
-
-        URI addressURI = trustedOutValue.addressURI();
-
-        HttpResponse<byte[]> handshakeResponse = handshakeClient
-                .handshake(addressURI, handshakeRequestDTO);
-        if (handshakeResponse.statusCode() != 200) {
-            throw new RuntimeException("Unexpected handshake response: " + handshakeResponse.statusCode());
-        }
-
-        HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
-
-        byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                handshakeResponseDTO.payload(),
-                handshakeResponseDTO.nonce(),
-                secretKey
-        );
-        HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
-                decryptResponsePayload,
-                HandshakeResponseDTO.Payload.class
-        );
-        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
-            throw new RuntimeException("Timed out");
-        }
-
-        boolean verify = CryptoRSA.verify(
-                decryptResponsePayload,
-                handshakeResponseDTO.signature(),
-                CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
-        );
-        if (!verify) {
-            throw new RuntimeException("Signature verification failed");
-        }
-
-        String fingerprintResponse = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
-        if (!CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()).equals(fingerprintResponse)) {
-            throw new RuntimeException("Fingerprint mismatch: " + fingerprintResponse);
-        }
-
-        return new ApiHandshakeStatusResponseDTO(
-                fingerprintResponse,
-                addressURI.toString(),
-                "Online",
-                responsePayload.tunnelAlgorithm()
-        );
-    }
-
-    @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
         String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
 
@@ -227,6 +127,106 @@ public class ApiHandshakeFacade {
         );
         return new ApiHandshakeStatusResponseDTO(
                 fingerprint,
+                addressURI.toString(),
+                "Online",
+                responsePayload.tunnelAlgorithm()
+        );
+    }
+
+    @SneakyThrows
+    public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
+                .getValue();
+        ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
+        handshakeStore.trustedOutStore().save(
+                CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()),
+                new TrustedOutKeyValueStore.TrustedOutValue(
+                        trustedOutValue.addressURI(),
+                        trustedOutValue.publicKeyRSA(),
+                        trustedOutValue.publicKeyDH(),
+                        Instant.now()
+                )
+        );
+        return apiHandshakeStatusResponseDTO;
+    }
+
+    public ApiHandshakeStatusResponseDTO handshakeStatus() {
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+                .getRequiredLatestUpdated()
+                .getValue();
+        return pingHandshake(trustedOutValue);
+    }
+
+    @SneakyThrows
+    private ApiHandshakeStatusResponseDTO pingHandshake(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {
+        byte[] secret = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPublicKey(trustedOutValue.publicKeyDH())
+        );
+        SecretKey secretKey = cryptoTunnel.secretKey(secret);
+
+        HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
+                keysConfigStore.getRequired().rsa().publicKey(),
+                keysConfigStore.getRequired().dh().publicKey(),
+                System.currentTimeMillis()
+        );
+        byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
+        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                requestPayloadByteArray,
+                secretKey
+        );
+
+        byte[] signature = CryptoRSA.sign(
+                requestPayloadByteArray,
+                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+        );
+        HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
+                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                secureEnvelope.payload(),
+                secureEnvelope.nonce(),
+                signature
+        );
+
+        URI addressURI = trustedOutValue.addressURI();
+
+        HttpResponse<byte[]> handshakeResponse = handshakeClient
+                .handshake(addressURI, handshakeRequestDTO);
+        if (handshakeResponse.statusCode() != 200) {
+            throw new RuntimeException("Unexpected handshake response: " + handshakeResponse.statusCode());
+        }
+
+        HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
+
+        byte[] decryptResponsePayload = cryptoTunnel.decrypt(
+                handshakeResponseDTO.payload(),
+                handshakeResponseDTO.nonce(),
+                secretKey
+        );
+        HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
+                decryptResponsePayload,
+                HandshakeResponseDTO.Payload.class
+        );
+        if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
+            throw new RuntimeException("Timed out");
+        }
+
+        boolean verify = CryptoRSA.verify(
+                decryptResponsePayload,
+                handshakeResponseDTO.signature(),
+                CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
+        );
+        if (!verify) {
+            throw new RuntimeException("Signature verification failed");
+        }
+
+        String fingerprintResponse = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
+        if (!CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()).equals(fingerprintResponse)) {
+            throw new RuntimeException("Fingerprint mismatch: " + fingerprintResponse);
+        }
+
+        return new ApiHandshakeStatusResponseDTO(
+                fingerprintResponse,
                 addressURI.toString(),
                 "Online",
                 responsePayload.tunnelAlgorithm()
