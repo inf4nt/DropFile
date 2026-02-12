@@ -42,6 +42,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         this.objectMapper = objectMapper;
     }
 
+    @SneakyThrows
     @Override
     public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream) {
         SecretKey secretKey = getSecretKey(requestDTO.fingerprint());
@@ -60,9 +61,9 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         Object handlerResult = commandHandlerExecutor.handle(payload);
 
-        InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
-
-        cryptoTunnel.encrypt(inputStreamResult, outputStream, secretKey);
+        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult)) {
+            cryptoTunnel.encrypt(inputStreamResult, outputStream, secretKey);
+        }
     }
 
     @SneakyThrows

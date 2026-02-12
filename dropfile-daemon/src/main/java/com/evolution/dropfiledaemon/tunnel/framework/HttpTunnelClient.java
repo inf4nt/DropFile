@@ -27,7 +27,7 @@ import java.util.Comparator;
 @Component
 public class HttpTunnelClient implements TunnelClient {
 
-    private static final Duration HTTP_REQUEST_TIME = Duration.ofSeconds(60);
+    private static final Duration HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
     private final HandshakeStore handshakeStore;
 
@@ -75,7 +75,7 @@ public class HttpTunnelClient implements TunnelClient {
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
                     .header("Content-Type", "application/json")
-                    .timeout(HTTP_REQUEST_TIME)
+                    .timeout(HTTP_REQUEST_TIMEOUT)
                     .build();
 
             httpResponse = httpClient
