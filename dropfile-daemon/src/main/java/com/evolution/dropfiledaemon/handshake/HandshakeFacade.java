@@ -3,15 +3,15 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
+import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,6 @@ public class HandshakeFacade {
         String accessKeyId = requestDTO.id();
         Map.Entry<String, AccessKey> accessKey = accessKeyStore.get(accessKeyId).orElse(null);
         if (accessKey != null) {
-            accessKeyStore.remove(requestDTO.id());
             return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
         }
         Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore.trustedInStore()
@@ -72,8 +71,8 @@ public class HandshakeFacade {
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
         byte[] decryptMessage = cryptoTunnel.decrypt(
-                CommonUtils.decodeBase64(requestDTO.payload()),
-                CommonUtils.decodeBase64(requestDTO.nonce()),
+                requestDTO.payload(),
+                requestDTO.nonce(),
                 secretKey
         );
         HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
@@ -81,7 +80,7 @@ public class HandshakeFacade {
 
         boolean verify = CryptoRSA.verify(
                 decryptMessage,
-                CommonUtils.decodeBase64(requestDTO.signature()),
+                requestDTO.signature(),
                 CryptoRSA.getPublicKey(trustedIn.publicKeyRSA())
         );
         if (!verify) {
@@ -98,8 +97,8 @@ public class HandshakeFacade {
         }
 
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                keysConfigStore.getRequired().rsa().publicKey(),
+                keysConfigStore.getRequired().dh().publicKey(),
                 HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
@@ -112,18 +111,20 @@ public class HandshakeFacade {
         byte[] signature = CryptoRSA.sign(responsePayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
 
         return new HandshakeResponseDTO(
-                CommonUtils.encodeBase64(secureEnvelope.payload()),
-                CommonUtils.encodeBase64(secureEnvelope.nonce()),
-                CommonUtils.encodeBase64(signature)
+                secureEnvelope.payload(),
+                secureEnvelope.nonce(),
+                signature
         );
     }
 
     @SneakyThrows
     private HandshakeResponseDTO handshakeBasedOnSecret(HandshakeRequestDTO requestDTO, AccessKey accessKey) {
+        accessKeyStore.remove(requestDTO.id());
+
         SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
-                CommonUtils.decodeBase64(requestDTO.payload()),
-                CommonUtils.decodeBase64(requestDTO.nonce()),
+                requestDTO.payload(),
+                requestDTO.nonce(),
                 secretKey
         );
         HandshakeRequestDTO.HandshakePayload requestPayload = objectMapper
@@ -135,19 +136,19 @@ public class HandshakeFacade {
 
         boolean verify = CryptoRSA.verify(
                 decryptMessage,
-                CommonUtils.decodeBase64(requestDTO.signature()),
-                CryptoRSA.getPublicKey(CommonUtils.decodeBase64(requestPayload.publicKeyRSA()))
+                requestDTO.signature(),
+                CryptoRSA.getPublicKey(requestPayload.publicKeyRSA())
         );
         if (!verify) {
             throw new RuntimeException("Signature verification failed");
         }
 
-        byte[] publicKeyRSA = CommonUtils.decodeBase64(requestPayload.publicKeyRSA());
-        byte[] publicKeyDH = CommonUtils.decodeBase64(requestPayload.publicKeyDH());
+        byte[] publicKeyRSA = requestPayload.publicKeyRSA();
+        byte[] publicKeyDH = requestPayload.publicKeyDH();
 
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                keysConfigStore.getRequired().rsa().publicKey(),
+                keysConfigStore.getRequired().dh().publicKey(),
                 HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
@@ -161,9 +162,9 @@ public class HandshakeFacade {
         byte[] signature = CryptoRSA.sign(responsePayloadByteArray, CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey()));
 
         HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
-                CommonUtils.encodeBase64(secureEnvelope.payload()),
-                CommonUtils.encodeBase64(secureEnvelope.nonce()),
-                CommonUtils.encodeBase64(signature)
+                secureEnvelope.payload(),
+                secureEnvelope.nonce(),
+                signature
         );
 
         handshakeStore.trustedInStore()

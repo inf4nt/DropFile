@@ -88,8 +88,8 @@ public class ApiHandshakeFacade {
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
         HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                keysConfigStore.getRequired().rsa().publicKey(),
+                keysConfigStore.getRequired().dh().publicKey(),
                 System.currentTimeMillis()
         );
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
@@ -104,9 +104,9 @@ public class ApiHandshakeFacade {
         );
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(secureEnvelope.payload()),
-                CommonUtils.encodeBase64(secureEnvelope.nonce()),
-                CommonUtils.encodeBase64(signature)
+                secureEnvelope.payload(),
+                secureEnvelope.nonce(),
+                signature
         );
 
         URI addressURI = trustedOutValue.addressURI();
@@ -120,8 +120,8 @@ public class ApiHandshakeFacade {
         HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
 
         byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                CommonUtils.decodeBase64(handshakeResponseDTO.payload()),
-                CommonUtils.decodeBase64(handshakeResponseDTO.nonce()),
+                handshakeResponseDTO.payload(),
+                handshakeResponseDTO.nonce(),
                 secretKey
         );
         HandshakeResponseDTO.HandshakePayload responsePayload = objectMapper.readValue(
@@ -131,14 +131,14 @@ public class ApiHandshakeFacade {
 
         boolean verify = CryptoRSA.verify(
                 decryptResponsePayload,
-                CommonUtils.decodeBase64(handshakeResponseDTO.signature()),
-                CryptoRSA.getPublicKey(CommonUtils.decodeBase64(responsePayload.publicKeyRSA()))
+                handshakeResponseDTO.signature(),
+                CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
         if (!verify) {
             throw new RuntimeException("Signature verification failed");
         }
 
-        String fingerprintResponse = CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyRSA()));
+        String fingerprintResponse = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         if (!CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()).equals(fingerprintResponse)) {
             throw new RuntimeException("Fingerprint mismatch: " + fingerprintResponse);
         }
@@ -164,8 +164,8 @@ public class ApiHandshakeFacade {
         String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
 
         HandshakeRequestDTO.HandshakePayload requestPayload = new HandshakeRequestDTO.HandshakePayload(
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(keysConfigStore.getRequired().dh().publicKey()),
+                keysConfigStore.getRequired().rsa().publicKey(),
+                keysConfigStore.getRequired().dh().publicKey(),
                 System.currentTimeMillis()
         );
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
@@ -183,9 +183,9 @@ public class ApiHandshakeFacade {
         );
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
-                CommonUtils.encodeBase64(secureEnvelope.payload()),
-                CommonUtils.encodeBase64(secureEnvelope.nonce()),
-                CommonUtils.encodeBase64(signature)
+                secureEnvelope.payload(),
+                secureEnvelope.nonce(),
+                signature
         );
 
         URI addressURI = CommonUtils.toURI(requestDTO.address());
@@ -199,8 +199,8 @@ public class ApiHandshakeFacade {
         HandshakeResponseDTO handshakeResponseDTO = objectMapper.readValue(handshakeResponse.body(), HandshakeResponseDTO.class);
 
         byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                CommonUtils.decodeBase64(handshakeResponseDTO.payload()),
-                CommonUtils.decodeBase64(handshakeResponseDTO.nonce()),
+                handshakeResponseDTO.payload(),
+                handshakeResponseDTO.nonce(),
                 secretKey
         );
 
@@ -210,8 +210,8 @@ public class ApiHandshakeFacade {
         );
         boolean verify = CryptoRSA.verify(
                 decryptResponsePayload,
-                CommonUtils.decodeBase64(handshakeResponseDTO.signature()),
-                CryptoRSA.getPublicKey(CommonUtils.decodeBase64(responsePayload.publicKeyRSA()))
+                handshakeResponseDTO.signature(),
+                CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
         if (!verify) {
             throw new RuntimeException("Signature verification failed");
@@ -225,13 +225,13 @@ public class ApiHandshakeFacade {
             throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
         }
 
-        String fingerprint = CommonUtils.getFingerprint(CommonUtils.decodeBase64(responsePayload.publicKeyRSA()));
+        String fingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         handshakeStore.trustedOutStore().save(
                 fingerprint,
                 new TrustedOutKeyValueStore.TrustedOutValue(
                         addressURI,
-                        CommonUtils.decodeBase64(responsePayload.publicKeyRSA()),
-                        CommonUtils.decodeBase64(responsePayload.publicKeyDH()),
+                        responsePayload.publicKeyRSA(),
+                        responsePayload.publicKeyDH(),
                         Instant.now()
                 )
         );

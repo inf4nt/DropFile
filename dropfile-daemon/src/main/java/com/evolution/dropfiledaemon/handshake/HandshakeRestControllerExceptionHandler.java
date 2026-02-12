@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfile.store.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +31,9 @@ public class HandshakeRestControllerExceptionHandler {
         );
         return ResponseEntity.ok(
                 new HandshakeResponseDTO(
-                        CommonUtils.encodeBase64(payload),
-                        CommonUtils.encodeBase64(CommonUtils.nonce12()),
-                        CommonUtils.encodeBase64(signature)
+                        payload,
+                        CommonUtils.nonce12(),
+                        signature
                 )
         );
     }

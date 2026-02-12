@@ -1,12 +1,12 @@
 package com.evolution.dropfiledaemon.handshake.dto;
 
 public record HandshakeRequestDTO(String id,
-                                  String payload,
-                                  String nonce,
-                                  String signature) {
+                                  byte[] payload,
+                                  byte[] nonce,
+                                  byte[] signature) {
 
-    public record HandshakePayload(String publicKeyRSA,
-                                   String publicKeyDH,
+    public record HandshakePayload(byte[] publicKeyRSA,
+                                   byte[] publicKeyDH,
                                    long timestamp) {
 
     }
