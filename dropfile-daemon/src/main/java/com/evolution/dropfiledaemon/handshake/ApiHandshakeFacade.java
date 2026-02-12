@@ -147,10 +147,6 @@ public class ApiHandshakeFacade {
             throw new RuntimeException("Timed out");
         }
 
-        if (responsePayload.status() != HandshakeResponseDTO.HandshakeStatus.OK) {
-            throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
-        }
-
         return new ApiHandshakeStatusResponseDTO(
                 fingerprintResponse,
                 addressURI.toString(),
@@ -219,10 +215,6 @@ public class ApiHandshakeFacade {
 
         if (Math.abs(System.currentTimeMillis() - responsePayload.timestamp()) > 30_000) {
             throw new RuntimeException("Timed out");
-        }
-
-        if (responsePayload.status() != HandshakeResponseDTO.HandshakeStatus.OK) {
-            throw new RuntimeException("Unexpected handshake response: " + responsePayload.status());
         }
 
         String fingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());

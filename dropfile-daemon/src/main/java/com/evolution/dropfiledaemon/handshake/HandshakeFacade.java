@@ -99,7 +99,6 @@ public class HandshakeFacade {
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
-                HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
@@ -149,7 +148,6 @@ public class HandshakeFacade {
         HandshakeResponseDTO.HandshakePayload responsePayload = new HandshakeResponseDTO.HandshakePayload(
                 keysConfigStore.getRequired().rsa().publicKey(),
                 keysConfigStore.getRequired().dh().publicKey(),
-                HandshakeResponseDTO.HandshakeStatus.OK,
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );

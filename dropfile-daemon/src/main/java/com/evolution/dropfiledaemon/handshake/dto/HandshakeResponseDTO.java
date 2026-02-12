@@ -6,13 +6,8 @@ public record HandshakeResponseDTO(byte[] payload,
 
     public record HandshakePayload(byte[] publicKeyRSA,
                                    byte[] publicKeyDH,
-                                   HandshakeStatus status,
                                    String tunnelAlgorithm,
                                    long timestamp) {
 
-    }
-
-    public enum HandshakeStatus {
-        OK
     }
 }
