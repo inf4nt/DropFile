@@ -61,6 +61,7 @@ class ApplicationConfigStoreProd
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
         this.eventPublisher = eventPublisher;
+
         defaultJsonFileKeyValueStoreInitializationProcedure = new DefaultJsonFileKeyValueStoreInitializationProcedure();
 
         appConfigStore = new JsonFileAppConfigStore(objectMapper);

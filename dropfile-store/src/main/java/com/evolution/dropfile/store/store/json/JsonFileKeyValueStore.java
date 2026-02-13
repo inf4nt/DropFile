@@ -25,7 +25,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public void init() {
+    public synchronized void init() {
         fileProvider.getOrCreateFile();
     }
 
