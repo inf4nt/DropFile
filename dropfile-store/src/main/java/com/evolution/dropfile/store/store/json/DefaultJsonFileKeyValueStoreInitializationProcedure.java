@@ -9,6 +9,6 @@ public class DefaultJsonFileKeyValueStoreInitializationProcedure
 
     @Override
     public void init(KeyValueStore keyValueStore) {
-        keyValueStore.getAll();
+        keyValueStore.init();
     }
 }

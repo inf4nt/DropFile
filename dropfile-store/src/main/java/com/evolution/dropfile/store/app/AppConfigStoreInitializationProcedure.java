@@ -15,6 +15,8 @@ public class AppConfigStoreInitializationProcedure
     @SneakyThrows
     @Override
     public void init(AppConfigStore store) {
+        store.init();
+
         Optional<AppConfig> configOptional = store.get();
         if (configOptional.isPresent()) {
             String downloadDirectory = configOptional.get().daemonAppConfig().downloadDirectory();

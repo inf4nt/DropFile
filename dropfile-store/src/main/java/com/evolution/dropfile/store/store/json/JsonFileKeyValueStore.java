@@ -25,6 +25,11 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
+    public void init() {
+        fileProvider.getOrCreateFile();
+    }
+
+    @Override
     public synchronized V save(String key, V value) {
         Objects.requireNonNull(key, "key cannot be null");
         Objects.requireNonNull(value, "value cannot be null");
@@ -79,7 +84,7 @@ public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
     @SneakyThrows
     private Map<String, V> getAllMap() {
         File file = fileProvider.getOrCreateFile();
-        
+
         if (Files.size(file.toPath()) == 0) {
             return Collections.emptyMap();
         }

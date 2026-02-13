@@ -18,6 +18,11 @@ public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
     }
 
     @Override
+    public void init() {
+        store.init();
+    }
+
+    @Override
     public Optional<V> get() {
         return store.get(storeName).map(Map.Entry::getValue);
     }

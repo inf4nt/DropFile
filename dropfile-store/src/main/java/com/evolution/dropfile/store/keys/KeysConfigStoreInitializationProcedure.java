@@ -11,6 +11,8 @@ public class KeysConfigStoreInitializationProcedure
         implements StoreInitializationProcedure<KeysConfigStore> {
     @Override
     public void init(KeysConfigStore store) {
+        store.init();
+
         Optional<KeysConfig> configOptional = store.get();
         if (configOptional.isPresent()) {
             return;

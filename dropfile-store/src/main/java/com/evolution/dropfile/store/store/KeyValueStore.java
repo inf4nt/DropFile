@@ -15,6 +15,10 @@ public interface KeyValueStore<V> {
 
     Map<String, V> getAll();
 
+    default void init() {
+
+    }
+
     default void validate(String key, V value) {
 
     }

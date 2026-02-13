@@ -9,6 +9,8 @@ public class SecretsConfigStoreInitializationProcedure
 
     @Override
     public void init(SecretsConfigStore store) {
+        store.init();
+
         SecretsConfig config = new SecretsConfig(UUID.randomUUID().toString());
         store.save(config);
     }
