@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.app.AppConfigStore;
 
-public interface AppConfigStoreUninitialized {
+interface AppConfigStoreUninitialized {
 
     AppConfigStore getUninitializedAppConfigStore();
 }

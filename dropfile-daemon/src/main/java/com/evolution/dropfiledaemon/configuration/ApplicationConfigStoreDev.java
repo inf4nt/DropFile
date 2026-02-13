@@ -41,7 +41,7 @@ import java.security.KeyPair;
 @Profile("dev")
 @Slf4j
 @Configuration
-public class ApplicationConfigStoreDev
+class ApplicationConfigStoreDev
         implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
 
     private boolean initialized = false;

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Profile;
 
 @Profile("prod")
 @Configuration
-public class ApplicationConfigStoreProd
+class ApplicationConfigStoreProd
         implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
 
     private final ApplicationEventPublisher eventPublisher;
