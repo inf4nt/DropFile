@@ -32,6 +32,8 @@ import org.springframework.context.annotation.Profile;
 class ApplicationConfigStoreProd
         implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
 
+    private boolean initialized = false;
+
     private final ApplicationEventPublisher eventPublisher;
 
     private final DefaultJsonFileKeyValueStoreInitializationProcedure defaultJsonFileKeyValueStoreInitializationProcedure;
@@ -56,8 +58,6 @@ class ApplicationConfigStoreProd
 
     private final HandshakeStore handshakeStore;
 
-    private boolean initialized = false;
-
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
         this.eventPublisher = eventPublisher;
@@ -73,9 +73,11 @@ class ApplicationConfigStoreProd
         keysConfigStore = new RuntimeKeysConfigStore();
         keysConfigStoreInitializationProcedure = new KeysConfigStoreInitializationProcedure();
 
-        accessKeyStore = new RuntimeAccessKeyStore();
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
+
+        accessKeyStore = new RuntimeAccessKeyStore();
         shareFileEntryStore = new RuntimeShareFileEntryStore();
+
         handshakeStore = new HandshakeStore(
                 new RuntimeTrustedInKeyValueStore(),
                 new RuntimeTrustedOutKeyValueStore()
@@ -137,6 +139,7 @@ class ApplicationConfigStoreProd
 
         defaultJsonFileKeyValueStoreInitializationProcedure.init(accessKeyStore);
         defaultJsonFileKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
+        defaultJsonFileKeyValueStoreInitializationProcedure.init(shareFileEntryStore);
 
         initialized = true;
 

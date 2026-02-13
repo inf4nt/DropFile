@@ -172,6 +172,13 @@ class ApplicationConfigStoreDev
         return handshakeStore;
     }
 
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        initialized = true;
+
+        eventPublisher.publishEvent(new ApplicationConfigStoreInitialized());
+    }
+
     @SneakyThrows
     private File getDaemonDownloadDirectory(String daemonDownloadDirectory) {
         if (daemonDownloadDirectory != null && !daemonDownloadDirectory.isBlank()) {
@@ -196,12 +203,5 @@ class ApplicationConfigStoreDev
         if (!initialized) {
             throw new IllegalStateException("Application has not been initialized yet");
         }
-    }
-
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        initialized = true;
-
-        eventPublisher.publishEvent(new ApplicationConfigStoreInitialized());
     }
 }
