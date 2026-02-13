@@ -1,22 +1,18 @@
 package com.evolution.dropfiledaemon.tunnel.share.command;
 
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class ShareLsCommandHandler implements CommandHandler<Void, List<ShareLsTunnelResponse>> {
 
-    private final ShareFileEntryStore shareFileEntryStore;
-
-    @Autowired
-    public ShareLsCommandHandler(ShareFileEntryStore shareFileEntryStore) {
-        this.shareFileEntryStore = shareFileEntryStore;
-    }
+    private final ApplicationConfigStore applicationConfigStore;
 
     @Override
     public String getCommandName() {
@@ -30,7 +26,8 @@ public class ShareLsCommandHandler implements CommandHandler<Void, List<ShareLsT
 
     @Override
     public List<ShareLsTunnelResponse> handle(Void unused) {
-        return shareFileEntryStore
+        return applicationConfigStore
+                .getShareFileEntryStore()
                 .getAll()
                 .entrySet()
                 .stream()

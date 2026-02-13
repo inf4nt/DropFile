@@ -4,9 +4,9 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
@@ -15,15 +15,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class ApiShareFacade {
 
-    private final ShareFileEntryStore shareFileEntryStore;
-
-    @Autowired
-    public ApiShareFacade(ShareFileEntryStore shareFileEntryStore) {
-        this.shareFileEntryStore = shareFileEntryStore;
-    }
+    private final ApplicationConfigStore applicationConfigStore;
 
     @SneakyThrows
     public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
@@ -37,7 +33,7 @@ public class ApiShareFacade {
         }
 
         String id = CommonUtils.random();
-        ShareFileEntry entry = shareFileEntryStore.save(
+        ShareFileEntry entry = applicationConfigStore.getShareFileEntryStore().save(
                 id,
                 new ShareFileEntry(
                         alias,
@@ -48,7 +44,7 @@ public class ApiShareFacade {
     }
 
     public List<ApiShareInfoResponseDTO> ls() {
-        return shareFileEntryStore.getAll()
+        return applicationConfigStore.getShareFileEntryStore().getAll()
                 .entrySet()
                 .stream()
                 .map(it -> toApiFileInfoResponseDTO(it.getKey(), it.getValue()))
@@ -56,12 +52,12 @@ public class ApiShareFacade {
     }
 
     public void rm(String id) {
-        String key = shareFileEntryStore.getRequiredByKeyStartWith(id).getKey();
-        shareFileEntryStore.remove(key);
+        String key = applicationConfigStore.getShareFileEntryStore().getRequiredByKeyStartWith(id).getKey();
+        applicationConfigStore.getShareFileEntryStore().remove(key);
     }
 
     public void rmAll() {
-        shareFileEntryStore.removeAll();
+        applicationConfigStore.getShareFileEntryStore().removeAll();
     }
 
     private ApiShareInfoResponseDTO toApiFileInfoResponseDTO(String id, ShareFileEntry shareFileEntry) {

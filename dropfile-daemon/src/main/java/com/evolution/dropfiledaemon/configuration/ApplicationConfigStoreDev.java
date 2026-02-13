@@ -16,9 +16,17 @@ import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.secret.ImmutableSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfig;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
@@ -30,14 +38,35 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
 
-@Slf4j
 @Profile("dev")
+@Slf4j
 @Configuration
-public class DropFileDaemonConfigurationDev {
+public class ApplicationConfigStoreDev
+        implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
 
-    @Bean
-    public AppConfigStore appConfigStore(Environment environment) {
-        return new ImmutableAppConfigStore(() -> {
+    private boolean initialized = false;
+
+    private final AppConfigStore appConfigStore;
+
+    private final SecretsConfigStore secretsConfigStore;
+
+    private final KeysConfigStore keysConfigStore;
+
+    private final AccessKeyStore accessKeyStore;
+
+    private final FileDownloadEntryStore fileDownloadEntryStore;
+
+    private final ShareFileEntryStore shareFileEntryStore;
+
+    private final HandshakeStore handshakeStore;
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    public ApplicationConfigStoreDev(Environment environment, ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+
+        appConfigStore = new ImmutableAppConfigStore(() -> {
             Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
             String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
 
@@ -55,20 +84,14 @@ public class DropFileDaemonConfigurationDev {
                     )
             );
         });
-    }
 
-    @Bean
-    public SecretsConfigStore secretsConfigStore(Environment environment) {
-        return new ImmutableSecretsConfigStore(() -> {
+        secretsConfigStore = new ImmutableSecretsConfigStore(() -> {
             String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
             log.info("Provided daemon token: {}", daemonToken);
             return new SecretsConfig(daemonToken);
         });
-    }
 
-    @Bean
-    public KeysConfigStore keysConfigStore() {
-        return new ImmutableKeysConfigStore(() -> {
+        keysConfigStore = new ImmutableKeysConfigStore(() -> {
             KeyPair keyPairRSA = CryptoRSA.generateKeyPair();
             KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
@@ -92,16 +115,61 @@ public class DropFileDaemonConfigurationDev {
                     )
             );
         });
+
+        accessKeyStore = new RuntimeAccessKeyStore();
+        fileDownloadEntryStore = new RuntimeFileDownloadEntryStore();
+        shareFileEntryStore = new RuntimeShareFileEntryStore();
+        handshakeStore = new HandshakeStore(
+                new RuntimeTrustedInKeyValueStore(),
+                new RuntimeTrustedOutKeyValueStore()
+        );
     }
 
-    @Bean
-    public AccessKeyStore accessKeyStore() {
-        return new RuntimeAccessKeyStore();
+    @Override
+    public AppConfigStore getAppConfigStore() {
+        checkInitialized();
+        return appConfigStore;
     }
 
-    @Bean
-    public FileDownloadEntryStore downloadFileEntryStore() {
-        return new RuntimeFileDownloadEntryStore();
+    @Override
+    public AppConfigStore getUninitializedAppConfigStore() {
+        return appConfigStore;
+    }
+
+    @Override
+    public KeysConfigStore getKeysConfigStore() {
+        checkInitialized();
+        return keysConfigStore;
+    }
+
+    @Override
+    public AccessKeyStore getAccessKeyStore() {
+        checkInitialized();
+        return accessKeyStore;
+    }
+
+    @Override
+    public FileDownloadEntryStore getFileDownloadEntryStore() {
+        checkInitialized();
+        return fileDownloadEntryStore;
+    }
+
+    @Override
+    public SecretsConfigStore getSecretsConfigStore() {
+        checkInitialized();
+        return secretsConfigStore;
+    }
+
+    @Override
+    public ShareFileEntryStore getShareFileEntryStore() {
+        checkInitialized();
+        return shareFileEntryStore;
+    }
+
+    @Override
+    public HandshakeStore getHandshakeStore() {
+        checkInitialized();
+        return handshakeStore;
     }
 
     @SneakyThrows
@@ -122,5 +190,18 @@ public class DropFileDaemonConfigurationDev {
             Files.createDirectory(downloadDirectoryPath);
         }
         return downloadDirectoryPath.toFile();
+    }
+
+    private void checkInitialized() {
+        if (!initialized) {
+            throw new IllegalStateException("Application has not been initialized yet");
+        }
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        initialized = true;
+
+        eventPublisher.publishEvent(new ApplicationConfigStoreInitialized());
     }
 }

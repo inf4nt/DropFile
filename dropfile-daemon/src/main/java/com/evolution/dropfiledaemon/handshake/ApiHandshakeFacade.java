@@ -4,19 +4,18 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.evolution.dropfiledaemon.util.AccessKeyUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -26,40 +25,26 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class ApiHandshakeFacade {
 
-    private final HandshakeStore handshakeStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final HandshakeClient handshakeClient;
-
-    private final KeysConfigStore keysConfigStore;
 
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
-
-    @Autowired
-    public ApiHandshakeFacade(HandshakeStore handshakeStore,
-                              HandshakeClient handshakeClient,
-                              KeysConfigStore keysConfigStore,
-                              CryptoTunnel cryptoTunnel,
-                              ObjectMapper objectMapper) {
-        this.handshakeStore = handshakeStore;
-        this.handshakeClient = handshakeClient;
-        this.keysConfigStore = keysConfigStore;
-        this.cryptoTunnel = cryptoTunnel;
-        this.objectMapper = objectMapper;
-    }
 
     @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
         String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
 
         HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
-                keysConfigStore.getRequired().rsa().publicKey(),
-                keysConfigStore.getRequired().dh().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
                 System.currentTimeMillis()
         );
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
@@ -73,7 +58,7 @@ public class ApiHandshakeFacade {
         String requestId = AccessKeyUtils.getId(secret);
         byte[] signature = CryptoRSA.sign(
                 requestPayloadByteArray,
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
         );
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
@@ -116,7 +101,7 @@ public class ApiHandshakeFacade {
         }
 
         String fingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
-        handshakeStore.trustedOutStore().save(
+        applicationConfigStore.getHandshakeStore().trustedOutStore().save(
                 fingerprint,
                 new TrustedOutKeyValueStore.TrustedOutValue(
                         addressURI,
@@ -135,11 +120,11 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = applicationConfigStore.getHandshakeStore().trustedOutStore()
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
                 .getValue();
         ApiHandshakeStatusResponseDTO apiHandshakeStatusResponseDTO = pingHandshake(trustedOutValue);
-        handshakeStore.trustedOutStore().save(
+        applicationConfigStore.getHandshakeStore().trustedOutStore().save(
                 CommonUtils.getFingerprint(trustedOutValue.publicKeyRSA()),
                 new TrustedOutKeyValueStore.TrustedOutValue(
                         trustedOutValue.addressURI(),
@@ -152,7 +137,7 @@ public class ApiHandshakeFacade {
     }
 
     public ApiHandshakeStatusResponseDTO handshakeStatus() {
-        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = handshakeStore.trustedOutStore()
+        TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = applicationConfigStore.getHandshakeStore().trustedOutStore()
                 .getRequiredLatestUpdated()
                 .getValue();
         return pingHandshake(trustedOutValue);
@@ -161,14 +146,14 @@ public class ApiHandshakeFacade {
     @SneakyThrows
     private ApiHandshakeStatusResponseDTO pingHandshake(TrustedOutKeyValueStore.TrustedOutValue trustedOutValue) {
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(trustedOutValue.publicKeyDH())
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
 
         HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
-                keysConfigStore.getRequired().rsa().publicKey(),
-                keysConfigStore.getRequired().dh().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
                 System.currentTimeMillis()
         );
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
@@ -179,10 +164,10 @@ public class ApiHandshakeFacade {
 
         byte[] signature = CryptoRSA.sign(
                 requestPayloadByteArray,
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
         );
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
-                CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                CommonUtils.getFingerprint(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
                 secureEnvelope.payload(),
                 secureEnvelope.nonce(),
                 signature
@@ -234,7 +219,7 @@ public class ApiHandshakeFacade {
     }
 
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
-        return handshakeStore
+        return applicationConfigStore.getHandshakeStore()
                 .trustedInStore()
                 .getAll()
                 .entrySet()
@@ -249,7 +234,7 @@ public class ApiHandshakeFacade {
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
-        return handshakeStore
+        return applicationConfigStore.getHandshakeStore()
                 .trustedOutStore()
                 .getAll()
                 .entrySet()
@@ -259,7 +244,7 @@ public class ApiHandshakeFacade {
     }
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
-        Map.Entry<String, TrustedOutKeyValueStore.TrustedOutValue> trustedOutEntry = handshakeStore.trustedOutStore()
+        Map.Entry<String, TrustedOutKeyValueStore.TrustedOutValue> trustedOutEntry = applicationConfigStore.getHandshakeStore().trustedOutStore()
                 .getRequiredLatestUpdated();
         return toHandshakeApiTrustOutResponseDTO(trustedOutEntry);
     }

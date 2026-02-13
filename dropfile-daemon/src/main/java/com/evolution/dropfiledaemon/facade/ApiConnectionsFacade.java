@@ -1,38 +1,36 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+@RequiredArgsConstructor
 @Component
 public class ApiConnectionsFacade {
 
-    private final HandshakeStore handshakeStore;
-
-    public ApiConnectionsFacade(HandshakeStore handshakeStore) {
-        this.handshakeStore = handshakeStore;
-    }
+    private final ApplicationConfigStore applicationConfigStore;
 
     public void revoke(String fingerprint) {
-        String key = handshakeStore.trustedInStore().getRequiredByKeyStartWith(fingerprint)
+        String key = applicationConfigStore.getHandshakeStore().trustedInStore().getRequiredByKeyStartWith(fingerprint)
                 .getKey();
-        handshakeStore.trustedInStore().remove(key);
+        applicationConfigStore.getHandshakeStore().trustedInStore().remove(key);
     }
 
     public void revokeAll() {
-        handshakeStore.trustedInStore().removeAll();
+        applicationConfigStore.getHandshakeStore().trustedInStore().removeAll();
     }
 
     public void disconnect(String fingerprint) {
-        String key = handshakeStore.trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
-        handshakeStore.trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeStore().trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
     }
 
     public void disconnectCurrent() {
-        String key = handshakeStore.trustedOutStore().getRequiredLatestUpdated().getKey();
-        handshakeStore.trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeStore().trustedOutStore().getRequiredLatestUpdated().getKey();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
     }
 
     public void disconnectAll() {
-        handshakeStore.trustedOutStore().removeAll();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().removeAll();
     }
 }

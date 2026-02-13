@@ -4,15 +4,14 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.store.access.AccessKey;
-import com.evolution.dropfile.store.access.AccessKeyStore;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,42 +20,27 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class HandshakeFacade {
 
     private static final int MAX_HANDSHAKE_TIMEOUT = 30_000;
 
-    private final HandshakeStore handshakeStore;
-
-    private final KeysConfigStore keysConfigStore;
-
-    private final AccessKeyStore accessKeyStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
 
-    public HandshakeFacade(HandshakeStore handshakeStore,
-                           KeysConfigStore keysConfigStore,
-                           AccessKeyStore accessKeyStore,
-                           CryptoTunnel cryptoTunnel,
-                           ObjectMapper objectMapper) {
-        this.handshakeStore = handshakeStore;
-        this.keysConfigStore = keysConfigStore;
-        this.accessKeyStore = accessKeyStore;
-        this.cryptoTunnel = cryptoTunnel;
-        this.objectMapper = objectMapper;
-    }
-
     @SneakyThrows
     public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
-        Map.Entry<String, AccessKey> accessKey = accessKeyStore.get(accessKeyId).orElse(null);
+        Map.Entry<String, AccessKey> accessKey = applicationConfigStore.getAccessKeyStore().get(accessKeyId).orElse(null);
         if (accessKey != null) {
             return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
         }
-        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore.trustedInStore()
+        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore.getHandshakeStore().trustedInStore()
                 .get(accessKeyId)
                 .orElse(null);
         if (trustedInValue != null) {
@@ -68,7 +52,7 @@ public class HandshakeFacade {
     @SneakyThrows
     private HandshakeResponseDTO handshakeBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(trustedIn.publicKeyDH())
         );
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
@@ -99,8 +83,8 @@ public class HandshakeFacade {
         }
 
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                keysConfigStore.getRequired().rsa().publicKey(),
-                keysConfigStore.getRequired().dh().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
@@ -111,7 +95,7 @@ public class HandshakeFacade {
         );
         byte[] signature = CryptoRSA.sign(
                 responsePayloadByteArray,
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
         );
 
         return new HandshakeResponseDTO(
@@ -123,7 +107,7 @@ public class HandshakeFacade {
 
     @SneakyThrows
     private HandshakeResponseDTO handshakeBasedOnSecret(HandshakeRequestDTO requestDTO, AccessKey accessKey) {
-        accessKeyStore.remove(requestDTO.id());
+        applicationConfigStore.getAccessKeyStore().remove(requestDTO.id());
 
         SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
@@ -151,8 +135,8 @@ public class HandshakeFacade {
         byte[] publicKeyDH = requestPayload.publicKeyDH();
 
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                keysConfigStore.getRequired().rsa().publicKey(),
-                keysConfigStore.getRequired().dh().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
+                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
@@ -164,7 +148,7 @@ public class HandshakeFacade {
 
         byte[] signature = CryptoRSA.sign(
                 responsePayloadByteArray,
-                CryptoRSA.getPrivateKey(keysConfigStore.getRequired().rsa().privateKey())
+                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
         );
 
         HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
@@ -173,7 +157,7 @@ public class HandshakeFacade {
                 signature
         );
 
-        handshakeStore.trustedInStore()
+        applicationConfigStore.getHandshakeStore().trustedInStore()
                 .save(
                         CommonUtils.getFingerprint(publicKeyRSA),
                         new TrustedInKeyValueStore.TrustedInValue(

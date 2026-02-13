@@ -1,11 +1,5 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.store.json.DefaultJsonFileKeyValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnelChaCha20Poly1305;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,25 +25,7 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public DefaultJsonFileKeyValueStoreInitializationProcedure defaultJsonFileKeyValueStoreInitializationProcedure() {
-        return new DefaultJsonFileKeyValueStoreInitializationProcedure();
-    }
-
-    @Bean
     public CryptoTunnel cryptoTunnel() {
         return new CryptoTunnelChaCha20Poly1305();
-    }
-
-    @Bean
-    public HandshakeStore handshakeStore() {
-        return new HandshakeStore(
-                new RuntimeTrustedInKeyValueStore(),
-                new RuntimeTrustedOutKeyValueStore()
-        );
-    }
-
-    @Bean
-    public ShareFileEntryStore shareFileEntryStore() {
-        return new RuntimeShareFileEntryStore();
     }
 }

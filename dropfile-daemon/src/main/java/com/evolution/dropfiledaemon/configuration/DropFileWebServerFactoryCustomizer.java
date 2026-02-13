@@ -1,25 +1,26 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.store.app.AppConfigStore;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Configuration;
 
+@RequiredArgsConstructor
 @Configuration
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private final AppConfigStore appConfigStore;
+    private static final Integer DEFAULT_PORT = 18181;
 
-    @Autowired
-    public DropFileWebServerFactoryCustomizer(AppConfigStore appConfigStore) {
-        this.appConfigStore = appConfigStore;
-    }
+    private final AppConfigStoreUninitialized appConfigStoreUninitialized;
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        Integer daemonPort = appConfigStore.getRequired().daemonAppConfig().daemonPort();
+        Integer daemonPort = appConfigStoreUninitialized.getUninitializedAppConfigStore()
+                .get()
+                .map(it -> it.daemonAppConfig())
+                .map(it -> it.daemonPort())
+                .orElse(DEFAULT_PORT);
         factory.setPort(daemonPort);
     }
 }

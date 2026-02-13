@@ -1,11 +1,11 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
@@ -15,32 +15,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private static final int MAX_PAYLOAD_LIFETIME = 30_000;
 
+    private final ApplicationConfigStore applicationConfigStore;
+
     private final CommandHandlerExecutor commandHandlerExecutor;
 
     private final CryptoTunnel cryptoTunnel;
 
-    private final HandshakeStore handshakeStore;
-
-    private final KeysConfigStore keysConfigStore;
-
     private final ObjectMapper objectMapper;
-
-    public DefaultTunnelDispatcher(CommandHandlerExecutor commandHandlerExecutor,
-                                   CryptoTunnel cryptoTunnel,
-                                   HandshakeStore handshakeStore,
-                                   KeysConfigStore keysConfigStore,
-                                   ObjectMapper objectMapper) {
-        this.commandHandlerExecutor = commandHandlerExecutor;
-        this.cryptoTunnel = cryptoTunnel;
-        this.handshakeStore = handshakeStore;
-        this.keysConfigStore = keysConfigStore;
-        this.objectMapper = objectMapper;
-    }
 
     @SneakyThrows
     @Override
@@ -83,11 +70,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = handshakeStore
+        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore
+                .getHandshakeStore()
                 .trustedInStore()
                 .getRequired(fingerprint);
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
         );
         return cryptoTunnel.secretKey(secret);

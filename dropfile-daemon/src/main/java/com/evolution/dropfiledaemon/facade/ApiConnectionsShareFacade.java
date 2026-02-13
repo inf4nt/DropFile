@@ -3,10 +3,10 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,7 +21,7 @@ import java.util.List;
 @Component
 public class ApiConnectionsShareFacade {
 
-    private final HandshakeStore handshakeStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final TunnelClient tunnelClient;
 
@@ -51,7 +51,8 @@ public class ApiConnectionsShareFacade {
     }
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeStore.trustedOutStore().getRequiredLatestUpdated().getKey();
+        String fingerprintConnection = applicationConfigStore.getHandshakeStore()
+                .trustedOutStore().getRequiredLatestUpdated().getKey();
 
         // TODO remove it
         if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {

@@ -1,12 +1,12 @@
 package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.util.FileHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -14,20 +14,14 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Component
 public class ShareDownloadChunkStreamCommandHandler
         implements CommandHandler<ShareDownloadChunkStreamTunnelRequest, InputStream> {
 
-    private final ShareFileEntryStore shareFileEntryStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final FileHelper fileHelper;
-
-    @Autowired
-    public ShareDownloadChunkStreamCommandHandler(ShareFileEntryStore shareFileEntryStore,
-                                                  FileHelper fileHelper) {
-        this.shareFileEntryStore = shareFileEntryStore;
-        this.fileHelper = fileHelper;
-    }
 
     @Override
     public String getCommandName() {
@@ -52,7 +46,8 @@ public class ShareDownloadChunkStreamCommandHandler
             return new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
         }
 
-        ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(request.id())
+        ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore()
+                .getRequired(request.id())
                 .getValue();
 
         File file = new File(shareFileEntry.absolutePath());

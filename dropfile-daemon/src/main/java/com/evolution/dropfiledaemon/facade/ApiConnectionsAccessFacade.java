@@ -4,28 +4,24 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
-import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.util.AccessKeyUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class ApiConnectionsAccessFacade {
 
-    private final AccessKeyStore accessKeyStore;
-
-    @Autowired
-    public ApiConnectionsAccessFacade(AccessKeyStore accessKeyStore) {
-        this.accessKeyStore = accessKeyStore;
-    }
+    private final ApplicationConfigStore applicationConfigStore;
 
     public ApiConnectionsAccessInfoResponseDTO generate(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
         AccessKeyUtils.AccessKeyEnvelope accessKeyEnvelope = AccessKeyUtils.generate();
 
-        AccessKey accessKey = accessKeyStore.save(
+        AccessKey accessKey = applicationConfigStore.getAccessKeyStore().save(
                 accessKeyEnvelope.id(),
                 new AccessKey(accessKeyEnvelope.key(), Instant.now())
         );
@@ -34,7 +30,7 @@ public class ApiConnectionsAccessFacade {
     }
 
     public List<ApiConnectionsAccessInfoResponseDTO> ls() {
-        return accessKeyStore.getAll()
+        return applicationConfigStore.getAccessKeyStore().getAll()
                 .entrySet()
                 .stream()
                 .map(it -> toAccessKeyInfoResponseDTO(it.getKey(), it.getValue()))
@@ -42,12 +38,12 @@ public class ApiConnectionsAccessFacade {
     }
 
     public void rm(String id) {
-        String key = accessKeyStore.getRequiredByKeyStartWith(id).getKey();
-        accessKeyStore.remove(key);
+        String key = applicationConfigStore.getAccessKeyStore().getRequiredByKeyStartWith(id).getKey();
+        applicationConfigStore.getAccessKeyStore().remove(key);
     }
 
     public void rmAll() {
-        accessKeyStore.removeAll();
+        applicationConfigStore.getAccessKeyStore().removeAll();
     }
 
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {

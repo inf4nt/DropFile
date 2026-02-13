@@ -2,9 +2,8 @@ package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.FileHelper;
@@ -44,11 +43,9 @@ public class FileDownloadOrchestrator {
 
     private final TunnelClient tunnelClient;
 
-    private final AppConfigStore appConfigStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final FileHelper fileHelper;
-
-    private final FileDownloadEntryStore fileDownloadEntryStore;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -81,7 +78,7 @@ public class FileDownloadOrchestrator {
                 temporaryFile
         );
         downloadProcedures.put(operationId, downloadProcedure);
-        fileDownloadEntryStore.save(
+        applicationConfigStore.getFileDownloadEntryStore().save(
                 operationId,
                 new DownloadFileEntry(
                         request.fingerprintConnection(),
@@ -98,7 +95,7 @@ public class FileDownloadOrchestrator {
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run();
-                fileDownloadEntryStore.save(
+                applicationConfigStore.getFileDownloadEntryStore().save(
                         operationId,
                         new DownloadFileEntry(
                                 request.fingerprintConnection(),
@@ -117,7 +114,7 @@ public class FileDownloadOrchestrator {
                         DownloadFileEntry.DownloadFileEntryStatus.STOPPED :
                         DownloadFileEntry.DownloadFileEntryStatus.ERROR;
 
-                fileDownloadEntryStore.save(
+                applicationConfigStore.getFileDownloadEntryStore().save(
                         operationId,
                         new DownloadFileEntry(
                                 request.fingerprintConnection(),
@@ -175,7 +172,7 @@ public class FileDownloadOrchestrator {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
 
-        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        String downloadDirectory = applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig().downloadDirectory();
         File downloadFile = new File(downloadDirectory, request.filename()).getCanonicalFile();
 
         if (Files.exists(downloadFile.toPath())) {
@@ -194,7 +191,7 @@ public class FileDownloadOrchestrator {
         }
 
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
-        String downloadDirectory = appConfigStore.getRequired().daemonAppConfig().downloadDirectory();
+        String downloadDirectory = applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig().downloadDirectory();
         File tmpDownloadFile = new File(downloadDirectory, temporaryFileName).getCanonicalFile();
 
         if (Files.notExists(tmpDownloadFile.toPath())) {

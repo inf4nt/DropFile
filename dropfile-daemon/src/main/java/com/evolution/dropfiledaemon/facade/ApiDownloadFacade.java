@@ -2,11 +2,10 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -21,13 +20,13 @@ public class ApiDownloadFacade {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
-    private final FileDownloadEntryStore fileDownloadEntryStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final FileHelper fileHelper;
 
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
         List<ApiDownloadLsDTO.Response> responses = new ArrayList<>();
-        Map<String, DownloadFileEntry> entryMap = fileDownloadEntryStore.getAll();
+        Map<String, DownloadFileEntry> entryMap = applicationConfigStore.getFileDownloadEntryStore().getAll();
         for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
             FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
                     .getDownloadProcedures()
@@ -97,11 +96,11 @@ public class ApiDownloadFacade {
     }
 
     public void rm(String operationId) {
-        String key = fileDownloadEntryStore.getRequiredByKeyStartWith(operationId).getKey();
-        fileDownloadEntryStore.remove(key);
+        String key = applicationConfigStore.getFileDownloadEntryStore().getRequiredByKeyStartWith(operationId).getKey();
+        applicationConfigStore.getFileDownloadEntryStore().remove(key);
     }
 
     public void rmAll() {
-        fileDownloadEntryStore.removeAll();
+        applicationConfigStore.getFileDownloadEntryStore().removeAll();
     }
 }

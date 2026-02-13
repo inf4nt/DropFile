@@ -2,16 +2,15 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -24,33 +23,19 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Comparator;
 
+@RequiredArgsConstructor
 @Component
 public class HttpTunnelClient implements TunnelClient {
 
     private static final Duration HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
-    private final HandshakeStore handshakeStore;
-
-    private final KeysConfigStore keysConfigStore;
+    private final ApplicationConfigStore applicationConfigStore;
 
     private final CryptoTunnel cryptoTunnel;
 
     private final HttpClient httpClient;
 
     private final ObjectMapper objectMapper;
-
-    @Autowired
-    public HttpTunnelClient(HandshakeStore handshakeStore,
-                            KeysConfigStore keysConfigStore,
-                            CryptoTunnel cryptoTunnel,
-                            HttpClient httpClient,
-                            ObjectMapper objectMapper) {
-        this.handshakeStore = handshakeStore;
-        this.keysConfigStore = keysConfigStore;
-        this.cryptoTunnel = cryptoTunnel;
-        this.httpClient = httpClient;
-        this.objectMapper = objectMapper;
-    }
 
     @SneakyThrows
     @Override
@@ -64,7 +49,7 @@ public class HttpTunnelClient implements TunnelClient {
             SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(keysConfigStore.getRequired().rsa().publicKey()),
+                    CommonUtils.getFingerprint(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
                     secureEnvelope.payload(),
                     secureEnvelope.nonce()
             );
@@ -130,7 +115,7 @@ public class HttpTunnelClient implements TunnelClient {
         if (request.getFingerprint() == null) {
             return getLatestConnection();
         }
-        return handshakeStore
+        return applicationConfigStore.getHandshakeStore()
                 .trustedOutStore()
                 .getRequired(request.getFingerprint())
                 .getValue();
@@ -138,14 +123,14 @@ public class HttpTunnelClient implements TunnelClient {
 
     private SecretKey getSecretKey(byte[] publicKeyDH) {
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keysConfigStore.getRequired().dh().privateKey()),
+                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
                 CryptoECDH.getPublicKey(publicKeyDH)
         );
         return cryptoTunnel.secretKey(secret);
     }
 
     private TrustedOutKeyValueStore.TrustedOutValue getLatestConnection() {
-        return handshakeStore.trustedOutStore().getAll().values()
+        return applicationConfigStore.getHandshakeStore().trustedOutStore().getAll().values()
                 .stream()
                 .max(Comparator.comparing(TrustedOutKeyValueStore.TrustedOutValue::updated))
                 .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
