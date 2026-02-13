@@ -84,6 +84,7 @@ public class FileDownloadOrchestrator {
         fileDownloadEntryStore.save(
                 operationId,
                 new DownloadFileEntry(
+                        request.fingerprintConnection(),
                         request.fileId(),
                         destinationFile.getAbsolutePath(),
                         temporaryFile.getAbsolutePath(),
@@ -100,6 +101,7 @@ public class FileDownloadOrchestrator {
                 fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
+                                request.fingerprintConnection(),
                                 request.fileId(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
@@ -118,6 +120,7 @@ public class FileDownloadOrchestrator {
                 fileDownloadEntryStore.save(
                         operationId,
                         new DownloadFileEntry(
+                                request.fingerprintConnection(),
                                 request.fileId(),
                                 destinationFile.getAbsolutePath(),
                                 temporaryFile.getAbsolutePath(),
@@ -128,7 +131,8 @@ public class FileDownloadOrchestrator {
                                 Instant.now()
                         )
                 );
-                log.info("Exception occurred during download process {}", exception.getMessage(), exception);
+                log.info("Exception occurred during download process operation {} fingerprint {} {}",
+                        operationId, request.fingerprintConnection(), exception.getMessage(), exception);
                 throw new RuntimeException(exception);
             } finally {
                 SafeUtils.execute(() -> downloadProcedures.remove(operationId));
@@ -201,6 +205,7 @@ public class FileDownloadOrchestrator {
     }
 
     public record DownloadProgress(String operationId,
+                                   String fingerprint,
                                    String fileId,
                                    String filename,
                                    String hash,

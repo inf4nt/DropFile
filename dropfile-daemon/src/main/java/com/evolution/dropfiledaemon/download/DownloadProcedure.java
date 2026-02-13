@@ -64,23 +64,26 @@ public class DownloadProcedure {
     public void run() {
         try {
             ExecutionProfiling.run(
-                    String.format("file-download-prodecure operation: %s fileId: %s", operationId, request.fileId()),
+                    String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s", operationId,
+                            request.fingerprintConnection(), request.fileId()),
                     () -> {
 
                         ExecutionProfiling.run(
-                                String.format("download-manifest operation: %s fileId: %s", operationId, request.fileId()),
+                                String.format("download-manifest operation: %s fingerprint %s fileId: %s",
+                                        operationId, request.fingerprintConnection(), request.fileId()),
                                 () -> downloadManifest()
                         );
 
                         ExecutionProfiling.run(
-                                String.format("download-chunks operation: %s fileId: %s: chunks %s",
-                                        operationId, request.fileId(), manifest.chunkManifests().size()
+                                String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
+                                        operationId, request.fingerprintConnection(), request.fileId(), manifest.chunkManifests().size()
                                 ),
                                 () -> downloadAndWriteChunks()
                         );
 
                         String actualSha256 = ExecutionProfiling.run(
-                                String.format("digest-calculation operation: %s fileId: %s", operationId, request.fileId()),
+                                String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
+                                        operationId, request.fingerprintConnection(), request.fileId()),
                                 () -> fileHelper.sha256(temporaryFile)
                         );
 
@@ -104,6 +107,7 @@ public class DownloadProcedure {
         if (manifest == null) {
             return new FileDownloadOrchestrator.DownloadProgress(
                     operationId,
+                    request.fingerprintConnection(),
                     request.fileId(),
                     destinationFile.getAbsolutePath(),
                     null,
@@ -116,6 +120,7 @@ public class DownloadProcedure {
         String percent = fileHelper.percent(downloaded, manifest.size());
         return new FileDownloadOrchestrator.DownloadProgress(
                 operationId,
+                request.fingerprintConnection(),
                 request.fileId(),
                 destinationFile.getAbsolutePath(),
                 manifest.hash(),
@@ -134,19 +139,20 @@ public class DownloadProcedure {
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
                                                 .body(request.fileId())
+                                                .fingerprint(request.fingerprintConnection())
                                                 .build(),
                                         ShareDownloadManifestTunnelResponse.class);
                             }
                     )
                     .doOnError((attempt, exception) -> {
-                        log.info("Retry 'share-download-manifest'. Operation: {} fileId: {} filename: {} attempt: {} exception: {}",
-                                operationId, request.fileId(), request.filename(), attempt, exception.getMessage()
+                        log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
+                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt, exception.getMessage()
                         );
                     })
                     .doOnSuccessful((attempt, manifest) -> {
                         log.info(
-                                "Manifest downloaded 'share-download-manifest'. Operation: {} fileId: {} filename: {} Attempt: {} Hash {} Chunk size {}",
-                                operationId, request.fileId(), request.filename(), attempt, manifest.hash(), manifest.chunkManifests().size()
+                                "Manifest downloaded 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} Attempt: {} Hash {} Chunk size {}",
+                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt, manifest.hash(), manifest.chunkManifests().size()
                         );
                     })
                     .retryIf(it -> {
@@ -210,6 +216,7 @@ public class DownloadProcedure {
                                                         chunkManifest.startPosition(),
                                                         chunkManifest.endPosition()
                                                 ))
+                                                .fingerprint(request.fingerprintConnection())
                                                 .build())) {
                                     byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
                                     String sha256 = fileHelper.sha256(allBytes);
@@ -223,8 +230,10 @@ public class DownloadProcedure {
                             }
                     )
                     .doOnError((attempt, exception) -> {
-                        log.info("Retry 'share-download-chunk-stream'. Attempt: {} start {} end {} exception {}",
-                                attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
+                        log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} start {} end {} exception: {}",
+                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt,
+                                chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage()
+                        );
                     })
                     .retryIf(it -> {
                         if (it.exception() instanceof DownloadingStoppedException) {

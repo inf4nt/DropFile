@@ -1,5 +1,5 @@
 package com.evolution.dropfile.common.dto;
 
-public record ApiConnectionsShareDownloadRequestDTO(String id,
+public record ApiConnectionsShareDownloadRequestDTO(String fileId,
                                                     String filename) {
 }

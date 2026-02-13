@@ -2,7 +2,8 @@ package com.evolution.dropfile.store.download;
 
 import java.time.Instant;
 
-public record DownloadFileEntry(String fileId,
+public record DownloadFileEntry(String fingerprintConnection,
+                                String fileId,
                                 String destinationFile,
                                 String temporaryFile,
                                 String hash,

@@ -35,6 +35,7 @@ public class ApiDownloadFacade {
             if (downloadProgress != null) {
                 responses.add(new ApiDownloadLsDTO.Response(
                         downloadProgress.operationId(),
+                        downloadProgress.fingerprint(),
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
                         null,
@@ -50,6 +51,7 @@ public class ApiDownloadFacade {
                 ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFileEntry.status().name());
                 responses.add(new ApiDownloadLsDTO.Response(
                         operation,
+                        downloadFileEntry.fingerprintConnection(),
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
                         status == ApiDownloadLsDTO.Status.COMPLETED ? downloadFileEntry.hash() : null,
