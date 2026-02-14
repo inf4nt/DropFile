@@ -23,7 +23,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private static final int NONCE_LENGTH = 12;
 
-    private final SecureRandom secureRandom = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Override
     public String getAlgorithm() {
@@ -87,7 +87,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private byte[] generateNonce() {
         byte[] nonce = new byte[NONCE_LENGTH];
-        secureRandom.nextBytes(nonce);
+        SECURE_RANDOM.nextBytes(nonce);
         return nonce;
     }
 }
