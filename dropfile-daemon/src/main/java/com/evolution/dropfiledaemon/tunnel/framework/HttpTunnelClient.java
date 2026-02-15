@@ -124,8 +124,7 @@ public class HttpTunnelClient implements TunnelClient {
                     .getRequiredLatestUpdated();
         }
         return applicationConfigStore.getHandshakeContextStore().sessionStore()
-                .getRequired(request.getFingerprint())
-;
+                .getRequired(request.getFingerprint());
     }
 
     private SecretKey getSecretKey(HandshakeSessionStore.SessionValue session) {
