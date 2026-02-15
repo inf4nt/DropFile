@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
@@ -43,13 +44,16 @@ public class HttpTunnelClient implements TunnelClient {
     public <T> T send(Request request, TypeReference<T> responseType) {
         HttpResponse<InputStream> httpResponse = null;
         try {
-            HandshakeSessionStore.SessionValue session = getSession(request);
+            Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = getSession(request);
+
+            HandshakeSessionStore.SessionValue session = sessionEntry.getValue();
+            String fingerprint = sessionEntry.getKey();
 
             SecretKey secretKey = getSecretKey(session);
 
             SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
-            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(request);
+            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
                     CommonUtils.getFingerprint(trustedOut.publicRSA()),
@@ -114,15 +118,14 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
-    private HandshakeSessionStore.SessionValue getSession(Request request) {
+    private Map.Entry<String, HandshakeSessionStore.SessionValue> getSession(Request request) {
         if (ObjectUtils.isEmpty(request.getFingerprint())) {
             return applicationConfigStore.getHandshakeContextStore().sessionStore()
-                    .getRequiredLatestUpdated()
-                    .getValue();
+                    .getRequiredLatestUpdated();
         }
         return applicationConfigStore.getHandshakeContextStore().sessionStore()
                 .getRequired(request.getFingerprint())
-                .getValue();
+;
     }
 
     private SecretKey getSecretKey(HandshakeSessionStore.SessionValue session) {
@@ -133,9 +136,9 @@ public class HttpTunnelClient implements TunnelClient {
         return cryptoTunnel.secretKey(secret);
     }
 
-    private HandshakeTrustedOutStore.TrustedOut getTrustedOut(Request request) {
+    private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
         return applicationConfigStore.getHandshakeContextStore()
-                .trustedOutStore().getRequired(request.getFingerprint())
+                .trustedOutStore().getRequired(fingerprint)
                 .getValue();
     }
 
