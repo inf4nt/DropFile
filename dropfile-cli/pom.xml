@@ -16,7 +16,6 @@
     <properties>
         <java.version>25</java.version>
         <picocli.version>4.7.7</picocli.version>
-        <maven.compiler.plugin.version>3.14.1</maven.compiler.plugin.version>
         <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
         <dropfile.store.version>0.0.1-SNAPSHOT</dropfile.store.version>
     </properties>
@@ -71,7 +70,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
