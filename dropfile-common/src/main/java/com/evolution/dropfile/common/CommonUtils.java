@@ -12,11 +12,13 @@ import java.util.UUID;
 
 public class CommonUtils {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private static final String SHA256_ALGORITHM = "SHA-256";
 
     public static byte[] nonce12() {
         byte[] bytes = new byte[12];
-        new SecureRandom().nextBytes(bytes);
+        SECURE_RANDOM.nextBytes(bytes);
         return bytes;
     }
 

@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel;
 
+import com.evolution.dropfile.common.CommonUtils;
 import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
@@ -11,7 +12,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
@@ -22,8 +22,6 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
 
     private static final int NONCE_LENGTH = 12;
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Override
     public String getAlgorithm() {
@@ -42,7 +40,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @SneakyThrows
     @Override
     public SecureEnvelope encrypt(byte[] data, SecretKey key) {
-        byte[] nonce = generateNonce();
+        byte[] nonce = CommonUtils.nonce12();
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
@@ -63,7 +61,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @SneakyThrows
     @Override
     public void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key) {
-        byte[] nonce = generateNonce();
+        byte[] nonce = CommonUtils.nonce12();
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
 
@@ -83,12 +81,6 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 
         return new CipherInputStream(inputStream, cipher);
-    }
-
-    private byte[] generateNonce() {
-        byte[] nonce = new byte[NONCE_LENGTH];
-        SECURE_RANDOM.nextBytes(nonce);
-        return nonce;
     }
 }
 
