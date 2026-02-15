@@ -7,6 +7,7 @@ import com.evolution.dropfile.store.store.single.StoreInitializationProcedure;
 import java.security.KeyPair;
 import java.util.Optional;
 
+@Deprecated
 public class KeysConfigStoreInitializationProcedure
         implements StoreInitializationProcedure<KeysConfigStore> {
     @Override

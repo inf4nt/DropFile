@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.store.single.ImmutableSingleValueStore;
 
 import java.util.function.Supplier;
 
+@Deprecated
 public class ImmutableKeysConfigStore
         extends ImmutableSingleValueStore<KeysConfig>
         implements KeysConfigStore {

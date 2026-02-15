@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -11,8 +10,6 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 public interface ApplicationConfigStore {
 
     AppConfigStore getAppConfigStore();
-
-    KeysConfigStore getKeysConfigStore();
 
     AccessKeyStore getAccessKeyStore();
 
@@ -22,7 +19,7 @@ public interface ApplicationConfigStore {
 
     ShareFileEntryStore getShareFileEntryStore();
 
-    HandshakeStore getHandshakeStore();
+    HandshakeStore getHandshakeContextStore();
 
     class ApplicationConfigStoreInitialized {
 

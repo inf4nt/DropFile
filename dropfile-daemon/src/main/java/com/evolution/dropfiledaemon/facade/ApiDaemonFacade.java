@@ -27,12 +27,13 @@ public class ApiDaemonFacade {
 
     @SneakyThrows
     public DaemonInfoResponseDTO info() {
-        return new DaemonInfoResponseDTO(
-                CommonUtils.getFingerprint(CryptoRSA.getPublicKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey())),
-                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
-                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey()),
-                systemInfoProvider.getSystemInfo(),
-                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
-        );
+//        return new DaemonInfoResponseDTO(
+//                CommonUtils.getFingerprint(CryptoRSA.getPublicKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey())),
+//                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
+//                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey()),
+//                systemInfoProvider.getSystemInfo(),
+//                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
+//        );
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

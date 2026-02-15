@@ -7,9 +7,6 @@ import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
-import com.evolution.dropfile.store.keys.KeysConfigStore;
-import com.evolution.dropfile.store.keys.KeysConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.keys.RuntimeKeysConfigStore;
 import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
@@ -17,8 +14,9 @@ import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.store.json.DefaultJsonFileKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedInKeyValueStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeTrustedOutKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -46,10 +44,6 @@ class ApplicationConfigStoreProd
 
     private final SecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure;
 
-    private final KeysConfigStore keysConfigStore;
-
-    private final KeysConfigStoreInitializationProcedure keysConfigStoreInitializationProcedure;
-
     private final AccessKeyStore accessKeyStore;
 
     private final FileDownloadEntryStore fileDownloadEntryStore;
@@ -70,17 +64,15 @@ class ApplicationConfigStoreProd
         secretsConfigStore = new JsonFileSecretsConfigStore(objectMapper);
         secretsConfigStoreInitializationProcedure = new SecretsConfigStoreInitializationProcedure();
 
-        keysConfigStore = new RuntimeKeysConfigStore();
-        keysConfigStoreInitializationProcedure = new KeysConfigStoreInitializationProcedure();
-
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
 
         accessKeyStore = new RuntimeAccessKeyStore();
         shareFileEntryStore = new RuntimeShareFileEntryStore();
 
         handshakeStore = new HandshakeStore(
-                new RuntimeTrustedInKeyValueStore(),
-                new RuntimeTrustedOutKeyValueStore()
+                new RuntimeHandshakeTrustedOutStore(),
+                new RuntimeHandshakeTrustedInStore(),
+                new RuntimeHandshakeSessionStore()
         );
     }
 
@@ -93,12 +85,6 @@ class ApplicationConfigStoreProd
     @Override
     public AppConfigStore getUninitializedAppConfigStore() {
         return appConfigStore;
-    }
-
-    @Override
-    public KeysConfigStore getKeysConfigStore() {
-        checkInitialized();
-        return keysConfigStore;
     }
 
     @Override
@@ -126,7 +112,7 @@ class ApplicationConfigStoreProd
     }
 
     @Override
-    public HandshakeStore getHandshakeStore() {
+    public HandshakeStore getHandshakeContextStore() {
         checkInitialized();
         return handshakeStore;
     }
@@ -135,7 +121,6 @@ class ApplicationConfigStoreProd
     public void onApplicationEvent(ApplicationReadyEvent event) {
         appConfigStoreInitializationProcedure.init(appConfigStore);
         secretsConfigStoreInitializationProcedure.init(secretsConfigStore);
-        keysConfigStoreInitializationProcedure.init(keysConfigStore);
 
         defaultJsonFileKeyValueStoreInitializationProcedure.init(accessKeyStore);
         defaultJsonFileKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);

@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
@@ -70,21 +69,30 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore
-                .getHandshakeStore()
-                .trustedInStore()
-                .getRequired(fingerprint);
+        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeContextStore().sessionStore()
+                .getRequired(fingerprint)
+                .getValue();
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
+                CryptoECDH.getPrivateKey(session.privateDH()),
+                CryptoECDH.getPublicKey(session.remotePublicDH())
         );
         return cryptoTunnel.secretKey(secret);
+
+//        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore
+//                .getHandshakeStore()
+//                .trustedInStore()
+//                .getRequired(fingerprint);
+//        byte[] secret = CryptoECDH.getSecretKey(
+//                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
+//                CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
+//        );
+//        return cryptoTunnel.secretKey(secret);
     }
 
     @SneakyThrows
     private TunnelRequestDTO.TunnelRequestPayload decrypt(TunnelRequestDTO requestDTO, SecretKey secretKey) {
         byte[] decrypt = cryptoTunnel.decrypt(
-                requestDTO.requestPayload(),
+                requestDTO.payload(),
                 requestDTO.nonce(),
                 secretKey
         );

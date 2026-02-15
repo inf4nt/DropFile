@@ -1,8 +1,10 @@
 package com.evolution.dropfile.store.keys;
 
-public record KeysConfig(Keys rsa, Keys dh) {
+@Deprecated
+public record KeysConfig(@Deprecated Keys rsa, @Deprecated Keys dh) {
 
-    public record Keys(byte[] publicKey, byte[] privateKey) {
+    @Deprecated
+    public record Keys(@Deprecated byte[] publicKey, @Deprecated byte[] privateKey) {
 
     }
 }

@@ -7,7 +7,8 @@ import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.store.TrustedInKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.security.KeyPair;
 import java.time.Instant;
 import java.util.Map;
 
@@ -40,70 +42,72 @@ public class HandshakeFacade {
         if (accessKey != null) {
             return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
         }
-        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore.getHandshakeStore().trustedInStore()
-                .get(accessKeyId)
-                .orElse(null);
-        if (trustedInValue != null) {
-            return handshakeBasedOnFingerprint(requestDTO, trustedInValue.getValue());
-        }
+//        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore.getHandshakeStore().trustedInStore()
+//                .get(accessKeyId)
+//                .orElse(null);
+//        if (trustedInValue != null) {
+//            return handshakeBasedOnFingerprint(requestDTO, trustedInValue.getValue());
+//        }
+
         throw new RuntimeException("No access key or trusted-in connections found: " + accessKeyId);
     }
 
-    @SneakyThrows
-    private HandshakeResponseDTO handshakeBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
-        byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(trustedIn.publicKeyDH())
-        );
-        SecretKey secretKey = cryptoTunnel.secretKey(secret);
-        byte[] decryptMessage = cryptoTunnel.decrypt(
-                requestDTO.payload(),
-                requestDTO.nonce(),
-                secretKey
-        );
-        HandshakeRequestDTO.Payload requestPayload = objectMapper
-                .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
-
-        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > MAX_HANDSHAKE_TIMEOUT) {
-            throw new RuntimeException("Timed out");
-        }
-
-        boolean verify = CryptoRSA.verify(
-                decryptMessage,
-                requestDTO.signature(),
-                CryptoRSA.getPublicKey(trustedIn.publicKeyRSA())
-        );
-        if (!verify) {
-            throw new RuntimeException("Signature verification failed");
-        }
-
-        String fingerprint = requestDTO.id();
-        if (!CommonUtils.getFingerprint(trustedIn.publicKeyRSA()).equals(fingerprint)) {
-            throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
-        }
-
-        HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
-                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
-                cryptoTunnel.getAlgorithm(),
-                System.currentTimeMillis()
-        );
-        byte[] responsePayloadByteArray = objectMapper.writeValueAsBytes(responsePayload);
-        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
-                responsePayloadByteArray,
-                secretKey
-        );
-        byte[] signature = CryptoRSA.sign(
-                responsePayloadByteArray,
-                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
-        );
-
-        return new HandshakeResponseDTO(
-                secureEnvelope.payload(),
-                secureEnvelope.nonce(),
-                signature
-        );
-    }
+//    @Deprecated
+//    @SneakyThrows
+//    private HandshakeResponseDTO handshakeBasedOnFingerprint(HandshakeRequestDTO requestDTO, TrustedInKeyValueStore.TrustedInValue trustedIn) {
+//        byte[] secret = CryptoECDH.getSecretKey(
+//                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
+//                CryptoECDH.getPublicKey(trustedIn.publicKeyDH())
+//        );
+//        SecretKey secretKey = cryptoTunnel.secretKey(secret);
+//        byte[] decryptMessage = cryptoTunnel.decrypt(
+//                requestDTO.payload(),
+//                requestDTO.nonce(),
+//                secretKey
+//        );
+//        HandshakeRequestDTO.Payload requestPayload = objectMapper
+//                .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
+//
+//        if (Math.abs(System.currentTimeMillis() - requestPayload.timestamp()) > MAX_HANDSHAKE_TIMEOUT) {
+//            throw new RuntimeException("Timed out");
+//        }
+//
+//        boolean verify = CryptoRSA.verify(
+//                decryptMessage,
+//                requestDTO.signature(),
+//                CryptoRSA.getPublicKey(trustedIn.publicKeyRSA())
+//        );
+//        if (!verify) {
+//            throw new RuntimeException("Signature verification failed");
+//        }
+//
+//        String fingerprint = requestDTO.id();
+//        if (!CommonUtils.getFingerprint(trustedIn.publicKeyRSA()).equals(fingerprint)) {
+//            throw new RuntimeException("Fingerprint mismatch: " + fingerprint);
+//        }
+//
+//        HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
+//                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
+//                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
+//                cryptoTunnel.getAlgorithm(),
+//                System.currentTimeMillis()
+//        );
+//        byte[] responsePayloadByteArray = objectMapper.writeValueAsBytes(responsePayload);
+//        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+//                responsePayloadByteArray,
+//                secretKey
+//        );
+//        byte[] signature = CryptoRSA.sign(
+//                responsePayloadByteArray,
+//                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
+//        );
+//
+//        return new HandshakeResponseDTO(
+//                secureEnvelope.payload(),
+//                secureEnvelope.nonce(),
+//                signature
+//        );
+//    }
 
     @SneakyThrows
     private HandshakeResponseDTO handshakeBasedOnSecret(HandshakeRequestDTO requestDTO, AccessKey accessKey) {
@@ -131,41 +135,65 @@ public class HandshakeFacade {
             throw new RuntimeException("Signature verification failed");
         }
 
-        byte[] publicKeyRSA = requestPayload.publicKeyRSA();
-        byte[] publicKeyDH = requestPayload.publicKeyDH();
+        KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
+        KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey(),
-                applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey(),
+                rsaKeyPair.getPublic().getEncoded(),
+                dhKeyPair.getPublic().getEncoded(),
                 cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
         byte[] responsePayloadByteArray = objectMapper.writeValueAsBytes(responsePayload);
+
+        byte[] signature = CryptoRSA.sign(
+                responsePayloadByteArray,
+                CryptoRSA.getPrivateKey(rsaKeyPair.getPrivate().getEncoded())
+        );
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 responsePayloadByteArray,
                 secretKey
         );
-
-        byte[] signature = CryptoRSA.sign(
-                responsePayloadByteArray,
-                CryptoRSA.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().privateKey())
-        );
-
         HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
                 secureEnvelope.payload(),
                 secureEnvelope.nonce(),
                 signature
         );
 
-        applicationConfigStore.getHandshakeStore().trustedInStore()
+        byte[] publicKeyRSA = requestPayload.publicKeyRSA();
+        String fingerprint = CommonUtils.getFingerprint(publicKeyRSA);
+        applicationConfigStore.getHandshakeContextStore().trustedInStore()
                 .save(
-                        CommonUtils.getFingerprint(publicKeyRSA),
-                        new TrustedInKeyValueStore.TrustedInValue(
+                        fingerprint,
+                        new HandshakeTrustedInStore.TrustedIn(
+                                rsaKeyPair.getPublic().getEncoded(),
+                                rsaKeyPair.getPrivate().getEncoded(),
                                 publicKeyRSA,
+                                Instant.now()
+                        )
+                );
+
+        byte[] publicKeyDH = requestPayload.publicKeyDH();
+        applicationConfigStore.getHandshakeContextStore().sessionStore()
+                .save(
+                        fingerprint,
+                        new HandshakeSessionStore.SessionValue(
+                                dhKeyPair.getPublic().getEncoded(),
+                                dhKeyPair.getPrivate().getEncoded(),
                                 publicKeyDH,
                                 Instant.now()
                         )
                 );
+
+//        applicationConfigStore.getHandshakeStore().trustedInStore()
+//                .save(
+//                        CommonUtils.getFingerprint(publicKeyRSA),
+//                        new TrustedInKeyValueStore.TrustedInValue(
+//                                publicKeyRSA,
+//                                publicKeyDH,
+//                                Instant.now()
+//                        )
+//                );
 
         return handshakeResponseDTO;
     }

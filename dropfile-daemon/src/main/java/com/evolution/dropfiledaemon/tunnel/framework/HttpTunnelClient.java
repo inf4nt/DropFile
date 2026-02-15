@@ -3,7 +3,8 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.handshake.store.TrustedOutKeyValueStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import javax.crypto.SecretKey;
 import java.io.InputStream;
@@ -21,7 +23,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Comparator;
 
 @RequiredArgsConstructor
 @Component
@@ -42,20 +43,22 @@ public class HttpTunnelClient implements TunnelClient {
     public <T> T send(Request request, TypeReference<T> responseType) {
         HttpResponse<InputStream> httpResponse = null;
         try {
-            TrustedOutKeyValueStore.TrustedOutValue trustedOutValue = getTrustedOutValue(request);
+            HandshakeSessionStore.SessionValue session = getSession(request);
 
-            SecretKey secretKey = getSecretKey(trustedOutValue.publicKeyDH());
+            SecretKey secretKey = getSecretKey(session);
 
             SecureEnvelope secureEnvelope = encrypt(request, secretKey);
 
+            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(request);
+
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
+                    CommonUtils.getFingerprint(trustedOut.publicRSA()),
                     secureEnvelope.payload(),
                     secureEnvelope.nonce()
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(trustedOutValue.addressURI().resolve("/tunnel"))
+                    .uri(trustedOut.addressURI().resolve("/tunnel"))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
@@ -111,29 +114,29 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
-    private TrustedOutKeyValueStore.TrustedOutValue getTrustedOutValue(Request request) {
-        if (request.getFingerprint() == null) {
-            return getLatestConnection();
+    private HandshakeSessionStore.SessionValue getSession(Request request) {
+        if (ObjectUtils.isEmpty(request.getFingerprint())) {
+            return applicationConfigStore.getHandshakeContextStore().sessionStore()
+                    .getRequiredLatestUpdated()
+                    .getValue();
         }
-        return applicationConfigStore.getHandshakeStore()
-                .trustedOutStore()
+        return applicationConfigStore.getHandshakeContextStore().sessionStore()
                 .getRequired(request.getFingerprint())
                 .getValue();
     }
 
-    private SecretKey getSecretKey(byte[] publicKeyDH) {
+    private SecretKey getSecretKey(HandshakeSessionStore.SessionValue session) {
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
-                CryptoECDH.getPublicKey(publicKeyDH)
+                CryptoECDH.getPrivateKey(session.privateDH()),
+                CryptoECDH.getPublicKey(session.remotePublicDH())
         );
         return cryptoTunnel.secretKey(secret);
     }
 
-    private TrustedOutKeyValueStore.TrustedOutValue getLatestConnection() {
-        return applicationConfigStore.getHandshakeStore().trustedOutStore().getAll().values()
-                .stream()
-                .max(Comparator.comparing(TrustedOutKeyValueStore.TrustedOutValue::updated))
-                .orElseThrow(() -> new RuntimeException("No trusted-out connections found"));
+    private HandshakeTrustedOutStore.TrustedOut getTrustedOut(Request request) {
+        return applicationConfigStore.getHandshakeContextStore()
+                .trustedOutStore().getRequired(request.getFingerprint())
+                .getValue();
     }
 
     private boolean isInputStream(TypeReference<?> reference) {
