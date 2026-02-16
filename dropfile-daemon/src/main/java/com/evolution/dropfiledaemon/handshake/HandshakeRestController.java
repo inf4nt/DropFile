@@ -21,12 +21,12 @@ public class HandshakeRestController {
     }
 
     @PostMapping
-    public synchronized HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
+    public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
 
     @PostMapping("/session")
-    public synchronized HandshakeSessionDTO.Session sessionHandshake(@RequestBody HandshakeSessionDTO.Session sessionDTO) {
+    public HandshakeSessionDTO.Session sessionHandshake(@RequestBody HandshakeSessionDTO.Session sessionDTO) {
         return handshakeFacade.handshakeSession(sessionDTO);
     }
 }

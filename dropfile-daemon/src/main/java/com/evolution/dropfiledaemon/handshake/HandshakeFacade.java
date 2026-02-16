@@ -37,71 +37,13 @@ public class HandshakeFacade {
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
+    public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
         Map.Entry<String, AccessKey> accessKey = applicationConfigStore.getAccessKeyStore()
                 .getRequired(accessKeyId);
-        return handshakeBasedOnSecret(requestDTO, accessKey.getValue());
-    }
-
-    @SneakyThrows
-    public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
-        HandshakeTrustedInStore.TrustedIn trustedIn = applicationConfigStore.getHandshakeContextStore()
-                .trustedInStore()
-                .getRequired(sessionDTO.fingerprint())
-                .getValue();
-        String fingerprint = CommonUtils.getFingerprint(trustedIn.remoteRSA());
-        if (!sessionDTO.fingerprint().equals(fingerprint)) {
-            throw new RuntimeException("Fingerprint mismatch");
-        }
-
-        byte[] sessionPayloadDTOBytes = sessionDTO.payload();
-
-        CryptoRSA.verify(
-                sessionPayloadDTOBytes,
-                sessionDTO.signature(),
-                CryptoRSA.getPublicKey(trustedIn.remoteRSA())
-        );
-
-        HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(
-                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
-        );
-        validatePayloadLiveTimeout(sessionPayload.timestamp());
-
-        KeyPair keyPairDH = CryptoECDH.generateKeyPair();
-
-        HandshakeSessionDTO.SessionPayload sessionPayloadResponse = new HandshakeSessionDTO.SessionPayload(
-                keyPairDH.getPublic().getEncoded(),
-                System.currentTimeMillis()
-        );
-        byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
-        byte[] signature = CryptoRSA.sign(sessionPayloadResponseBytes, CryptoRSA.getPrivateKey(trustedIn.privateRSA()));
-        HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
-                CommonUtils.getFingerprint(trustedIn.publicRSA()),
-                sessionPayloadResponseBytes,
-                signature
-        );
-
-        applicationConfigStore.getHandshakeContextStore()
-                .sessionStore()
-                .save(
-                        fingerprint,
-                        new HandshakeSessionStore.SessionValue(
-                                keyPairDH.getPublic().getEncoded(),
-                                keyPairDH.getPrivate().getEncoded(),
-                                sessionPayload.publicKey(),
-                                Instant.now()
-                        )
-                );
-
-        return sessionResponse;
-    }
-
-    @SneakyThrows
-    private HandshakeResponseDTO handshakeBasedOnSecret(HandshakeRequestDTO requestDTO, AccessKey accessKey) {
         applicationConfigStore.getAccessKeyStore().remove(requestDTO.id());
 
-        SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
+        SecretKey secretKey = cryptoTunnel.secretKey(accessKey.getValue().key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 requestDTO.payload(),
                 requestDTO.nonce(),
@@ -165,6 +107,59 @@ public class HandshakeFacade {
                         )
                 );
         return handshakeResponseDTO;
+    }
+
+    @SneakyThrows
+    public synchronized HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
+        HandshakeTrustedInStore.TrustedIn trustedIn = applicationConfigStore.getHandshakeContextStore()
+                .trustedInStore()
+                .getRequired(sessionDTO.fingerprint())
+                .getValue();
+        String fingerprint = CommonUtils.getFingerprint(trustedIn.remoteRSA());
+        if (!sessionDTO.fingerprint().equals(fingerprint)) {
+            throw new RuntimeException("Fingerprint mismatch");
+        }
+
+        byte[] sessionPayloadDTOBytes = sessionDTO.payload();
+
+        CryptoRSA.verify(
+                sessionPayloadDTOBytes,
+                sessionDTO.signature(),
+                CryptoRSA.getPublicKey(trustedIn.remoteRSA())
+        );
+
+        HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(
+                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
+        );
+        validatePayloadLiveTimeout(sessionPayload.timestamp());
+
+        KeyPair keyPairDH = CryptoECDH.generateKeyPair();
+
+        HandshakeSessionDTO.SessionPayload sessionPayloadResponse = new HandshakeSessionDTO.SessionPayload(
+                keyPairDH.getPublic().getEncoded(),
+                System.currentTimeMillis()
+        );
+        byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
+        byte[] signature = CryptoRSA.sign(sessionPayloadResponseBytes, CryptoRSA.getPrivateKey(trustedIn.privateRSA()));
+        HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
+                CommonUtils.getFingerprint(trustedIn.publicRSA()),
+                sessionPayloadResponseBytes,
+                signature
+        );
+
+        applicationConfigStore.getHandshakeContextStore()
+                .sessionStore()
+                .save(
+                        fingerprint,
+                        new HandshakeSessionStore.SessionValue(
+                                keyPairDH.getPublic().getEncoded(),
+                                keyPairDH.getPrivate().getEncoded(),
+                                sessionPayload.publicKey(),
+                                Instant.now()
+                        )
+                );
+
+        return sessionResponse;
     }
 
     private void validatePayloadLiveTimeout(long timestamp) {
