@@ -1,7 +1,5 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.system.SystemInfoProvider;
@@ -27,13 +25,9 @@ public class ApiDaemonFacade {
 
     @SneakyThrows
     public DaemonInfoResponseDTO info() {
-//        return new DaemonInfoResponseDTO(
-//                CommonUtils.getFingerprint(CryptoRSA.getPublicKey(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey())),
-//                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().rsa().publicKey()),
-//                CommonUtils.encodeBase64(applicationConfigStore.getKeysConfigStore().getRequired().dh().publicKey()),
-//                systemInfoProvider.getSystemInfo(),
-//                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
-//        );
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new DaemonInfoResponseDTO(
+                systemInfoProvider.getSystemInfo(),
+                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
+        );
     }
 }
