@@ -2,7 +2,7 @@ package com.evolution.dropfile.common.dto;
 
 public record ApiHandshakeStatusResponseDTO(String fingerprint,
                                             String connection,
-                                            String tunnel,
-                                            String algorithm) {
+                                            @Deprecated String tunnel,
+                                            @Deprecated String algorithm) {
 
 }

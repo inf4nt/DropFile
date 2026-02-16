@@ -5,6 +5,7 @@ import com.evolution.dropfile.store.store.KeyValueStore;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
 
@@ -16,10 +17,14 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
 
     }
 
-    default Map.Entry<String, TrustedOut> getRequiredByAddressURI(URI addressURI) {
+    default Optional<Map.Entry<String, TrustedOut>> getByAddressURI(URI addressURI) {
         return getAll().entrySet().stream()
                 .filter(entry -> entry.getValue().addressURI.equals(addressURI))
-                .findAny()
+                .findAny();
+    }
+
+    default Map.Entry<String, TrustedOut> getRequiredByAddressURI(URI addressURI) {
+        return getByAddressURI(addressURI)
                 .orElseThrow(() -> new RuntimeException("No trusted out value found for address: " + addressURI));
     }
 

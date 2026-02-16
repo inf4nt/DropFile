@@ -40,10 +40,13 @@ public class CryptoRSA {
     }
 
     @SneakyThrows
-    public static boolean verify(byte[] data, byte[] signature, PublicKey publicKey) {
+    public static void verify(byte[] data, byte[] signature, PublicKey publicKey) {
         Signature sig = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         sig.initVerify(publicKey);
         sig.update(data);
-        return sig.verify(signature);
+        boolean verify = sig.verify(signature);
+        if (!verify) {
+            throw new RuntimeException("Signature verification failed");
+        }
     }
 }

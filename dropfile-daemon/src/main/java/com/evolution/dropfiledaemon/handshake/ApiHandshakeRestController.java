@@ -3,24 +3,21 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/handshake")
 public class ApiHandshakeRestController {
 
     private final ApiHandshakeFacade apiHandshakeFacade;
 
-    public ApiHandshakeRestController(ApiHandshakeFacade apiHandshakeFacade) {
-        this.apiHandshakeFacade = apiHandshakeFacade;
-    }
-
     @PostMapping
-    public ApiHandshakeStatusResponseDTO handshake(
-            @RequestBody ApiHandshakeRequestDTO requestDTO) {
+    public ApiHandshakeStatusResponseDTO handshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
         return apiHandshakeFacade.handshake(requestDTO);
     }
 
