@@ -21,14 +21,11 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.time.Instant;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
 @Component
 public class HandshakeFacade {
-
-    private static final int MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT = 30_000;
 
     private final ApplicationConfigStore applicationConfigStore;
 
@@ -57,7 +54,7 @@ public class HandshakeFacade {
                 requestDTO.signature(),
                 CryptoRSA.getPublicKey(requestPayload.publicKeyRSA())
         );
-        validatePayloadLiveTimeout(requestPayload.timestamp());
+        HandshakeUtils.validateHandshakeLiveTimeout(requestPayload.timestamp());
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -84,10 +81,10 @@ public class HandshakeFacade {
         );
 
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
-        String fingerprint = CommonUtils.getFingerprint(publicKeyRSA);
+        String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
         applicationConfigStore.getHandshakeContextStore().trustedInStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeTrustedInStore.TrustedIn(
                                 rsaKeyPair.getPublic().getEncoded(),
                                 rsaKeyPair.getPrivate().getEncoded(),
@@ -99,7 +96,7 @@ public class HandshakeFacade {
         byte[] publicKeyDH = requestPayload.publicKeyDH();
         applicationConfigStore.getHandshakeContextStore().sessionStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
                                 dhKeyPair.getPublic().getEncoded(),
                                 dhKeyPair.getPrivate().getEncoded(),
@@ -116,10 +113,8 @@ public class HandshakeFacade {
                 .trustedInStore()
                 .getRequired(sessionDTO.fingerprint())
                 .getValue();
-        String fingerprint = CommonUtils.getFingerprint(trustedIn.remoteRSA());
-        if (!sessionDTO.fingerprint().equals(fingerprint)) {
-            throw new RuntimeException("Fingerprint mismatch");
-        }
+        String remoteFingerprint = sessionDTO.fingerprint();
+        HandshakeUtils.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedIn.remoteRSA()));
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
 
@@ -132,7 +127,7 @@ public class HandshakeFacade {
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(
                 sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
         );
-        validatePayloadLiveTimeout(sessionPayload.timestamp());
+        HandshakeUtils.validateHandshakeLiveTimeout(sessionPayload.timestamp());
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
@@ -151,7 +146,7 @@ public class HandshakeFacade {
         applicationConfigStore.getHandshakeContextStore()
                 .sessionStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
@@ -161,14 +156,5 @@ public class HandshakeFacade {
                 );
 
         return sessionResponse;
-    }
-
-    private void validatePayloadLiveTimeout(long timestamp) {
-        if (timestamp <= 0) {
-            throw new RuntimeException("Invalid timestamp");
-        }
-        if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT) {
-            throw new RuntimeException("Timed out");
-        }
     }
 }

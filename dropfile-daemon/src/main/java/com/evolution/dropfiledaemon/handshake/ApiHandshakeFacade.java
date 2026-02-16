@@ -33,8 +33,6 @@ import java.util.Map;
 @Component
 public class ApiHandshakeFacade {
 
-    private static final int MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT = 30_000;
-
     private final ApplicationConfigStore applicationConfigStore;
 
     private final HandshakeClient handshakeClient;
@@ -100,7 +98,7 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.Payload.class
         );
-        validatePayloadLiveTimeout(responsePayload.timestamp());
+        HandshakeUtils.validateHandshakeLiveTimeout(responsePayload.timestamp());
 
         CryptoRSA.verify(
                 decryptResponsePayload,
@@ -108,12 +106,12 @@ public class ApiHandshakeFacade {
                 CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
 
-        String fingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
+        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
 
         applicationConfigStore.getHandshakeContextStore()
                 .trustedOutStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeTrustedOutStore.TrustedOut(
                                 addressURI,
                                 rsaKeyPair.getPublic().getEncoded(),
@@ -125,7 +123,7 @@ public class ApiHandshakeFacade {
         applicationConfigStore.getHandshakeContextStore()
                 .sessionStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
                                 dhKeyPair.getPublic().getEncoded(),
                                 dhKeyPair.getPrivate().getEncoded(),
@@ -134,7 +132,7 @@ public class ApiHandshakeFacade {
                         )
                 );
         return new ApiHandshakeStatusResponseDTO(
-                fingerprint,
+                remoteFingerprint,
                 addressURI.toString()
         );
     }
@@ -165,16 +163,14 @@ public class ApiHandshakeFacade {
         );
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionPayload.class);
 
-        validatePayloadLiveTimeout(sessionPayload.timestamp());
+        HandshakeUtils.validateHandshakeLiveTimeout(sessionPayload.timestamp());
 
-        String fingerprint = sessionResponse.fingerprint();
-        if (!CommonUtils.getFingerprint(trustedOutEntry.getValue().remoteRSA()).equals(fingerprint)) {
-            throw new RuntimeException("Fingerprint mismatch");
-        }
+        String remoteFingerprint = sessionResponse.fingerprint();
+        HandshakeUtils.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOutEntry.getValue().remoteRSA()));
 
         applicationConfigStore.getHandshakeContextStore().sessionStore()
                 .save(
-                        fingerprint,
+                        remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
@@ -184,7 +180,7 @@ public class ApiHandshakeFacade {
                 );
 
         return new ApiHandshakeStatusResponseDTO(
-                fingerprint,
+                remoteFingerprint,
                 addressURI.toString()
         );
     }
@@ -197,14 +193,5 @@ public class ApiHandshakeFacade {
                 .getValue()
                 .addressURI();
         return handshakeReconnect(new ApiHandshakeReconnectRequestDTO(addressURI.toString()));
-    }
-
-    private void validatePayloadLiveTimeout(long timestamp) {
-        if (timestamp <= 0) {
-            throw new RuntimeException("Invalid timestamp");
-        }
-        if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT) {
-            throw new RuntimeException("Timed out");
-        }
     }
 }
