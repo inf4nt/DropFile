@@ -39,11 +39,12 @@ public class HandshakeFacade {
     @SneakyThrows
     public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
-        Map.Entry<String, AccessKey> accessKey = applicationConfigStore.getAccessKeyStore()
-                .getRequired(accessKeyId);
+        AccessKey accessKey = applicationConfigStore.getAccessKeyStore()
+                .getRequired(accessKeyId)
+                .getValue();
         applicationConfigStore.getAccessKeyStore().remove(requestDTO.id());
 
-        SecretKey secretKey = cryptoTunnel.secretKey(accessKey.getValue().key().getBytes());
+        SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 requestDTO.payload(),
                 requestDTO.nonce(),
