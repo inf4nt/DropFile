@@ -11,26 +11,26 @@ public class ApiConnectionsFacade {
     private final ApplicationConfigStore applicationConfigStore;
 
     public void revoke(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeContextStore().trustedInStore().getRequiredByKeyStartWith(fingerprint)
+        String key = applicationConfigStore.getHandshakeStore().trustedInStore().getRequiredByKeyStartWith(fingerprint)
                 .getKey();
-        applicationConfigStore.getHandshakeContextStore().trustedInStore().remove(key);
+        applicationConfigStore.getHandshakeStore().trustedInStore().remove(key);
     }
 
     public void revokeAll() {
-        applicationConfigStore.getHandshakeContextStore().trustedInStore().removeAll();
+        applicationConfigStore.getHandshakeStore().trustedInStore().removeAll();
     }
 
     public void disconnect(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeContextStore().trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
-        applicationConfigStore.getHandshakeContextStore().trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeStore().trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
     }
 
     public void disconnectCurrent() {
-        String key = applicationConfigStore.getHandshakeContextStore().sessionStore().getRequiredLatestUpdated().getKey();
-        applicationConfigStore.getHandshakeContextStore().trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeStore().sessionStore().getRequiredLatestUpdated().getKey();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
     }
 
     public void disconnectAll() {
-        applicationConfigStore.getHandshakeContextStore().trustedOutStore().removeAll();
+        applicationConfigStore.getHandshakeStore().trustedOutStore().removeAll();
     }
 }

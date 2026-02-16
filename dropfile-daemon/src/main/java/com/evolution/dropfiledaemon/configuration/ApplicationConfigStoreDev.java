@@ -130,7 +130,7 @@ class ApplicationConfigStoreDev
     }
 
     @Override
-    public HandshakeStore getHandshakeContextStore() {
+    public HandshakeStore getHandshakeStore() {
         checkInitialized();
         return handshakeStore;
     }

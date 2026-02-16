@@ -69,7 +69,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeContextStore().sessionStore()
+        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeStore().sessionStore()
                 .getRequired(fingerprint)
                 .getValue();
         byte[] secret = CryptoECDH.getSecretKey(

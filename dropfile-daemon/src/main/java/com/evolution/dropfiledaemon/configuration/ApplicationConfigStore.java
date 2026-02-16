@@ -19,7 +19,7 @@ public interface ApplicationConfigStore {
 
     ShareFileEntryStore getShareFileEntryStore();
 
-    HandshakeStore getHandshakeContextStore();
+    HandshakeStore getHandshakeStore();
 
     class ApplicationConfigStoreInitialized {
 

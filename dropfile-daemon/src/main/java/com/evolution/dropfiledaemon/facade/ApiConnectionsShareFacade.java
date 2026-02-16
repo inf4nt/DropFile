@@ -7,7 +7,6 @@ import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -52,7 +51,7 @@ public class ApiConnectionsShareFacade {
     }
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        String fingerprintConnection = applicationConfigStore.getHandshakeContextStore()
+        String fingerprintConnection = applicationConfigStore.getHandshakeStore()
                 .sessionStore().getRequiredLatestUpdated()
                 .getKey();
 
