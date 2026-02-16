@@ -122,7 +122,6 @@ public class HandshakeFacade {
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
                 rsaKeyPair.getPublic().getEncoded(),
                 dhKeyPair.getPublic().getEncoded(),
-                cryptoTunnel.getAlgorithm(),
                 System.currentTimeMillis()
         );
         byte[] responsePayloadByteArray = objectMapper.writeValueAsBytes(responsePayload);

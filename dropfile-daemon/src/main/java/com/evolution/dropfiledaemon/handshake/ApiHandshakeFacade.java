@@ -135,9 +135,7 @@ public class ApiHandshakeFacade {
                 );
         return new ApiHandshakeStatusResponseDTO(
                 fingerprint,
-                addressURI.toString(),
-                "Online",
-                responsePayload.tunnelAlgorithm()
+                addressURI.toString()
         );
     }
 
@@ -187,9 +185,7 @@ public class ApiHandshakeFacade {
 
         return new ApiHandshakeStatusResponseDTO(
                 fingerprint,
-                addressURI.toString(),
-                null,
-                null
+                addressURI.toString()
         );
     }
 

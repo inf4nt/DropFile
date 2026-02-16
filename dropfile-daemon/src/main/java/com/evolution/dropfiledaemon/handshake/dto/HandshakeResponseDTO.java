@@ -6,7 +6,6 @@ public record HandshakeResponseDTO(byte[] payload,
 
     public record Payload(byte[] publicKeyRSA,
                           byte[] publicKeyDH,
-                          String tunnelAlgorithm,
                           long timestamp) {
 
     }
