@@ -2,8 +2,8 @@ FROM alpine:3.19 AS archive_content
 
 RUN apk add --no-cache curl unzip tar
 
-ARG JDK_MAJOR_VERION=21
-ARG JDK_VERSION=21.0.9
+ARG JDK_MAJOR_VERION=25
+ARG JDK_VERSION=25.0.1
 ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/$JDK_MAJOR_VERION/archive/jdk-"$JDK_VERSION"_linux-x64_bin.tar.gz"
 ARG JDK_ARCHIVE="jdk.tar.gz"
 ARG JAVA_HOME=/opt/jdk-$JDK_VERSION
@@ -21,7 +21,7 @@ RUN cp -r $JAVA_HOME/. "/dropfile/runtime"
 
 COPY /release/unix /dropfile/bin
 
-FROM maven:3.9.12-eclipse-temurin-21 AS build
+FROM maven:3.9.12-eclipse-temurin-25 AS build
 
 WORKDIR /workdir
 
