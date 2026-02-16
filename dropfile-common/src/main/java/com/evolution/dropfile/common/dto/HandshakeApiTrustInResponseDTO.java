@@ -2,10 +2,11 @@ package com.evolution.dropfile.common.dto;
 
 import java.time.Instant;
 
-@Deprecated
-public record HandshakeApiTrustInResponseDTO(String fingerprint,
+public record HandshakeApiTrustInResponseDTO(String remoteFingerprint,
                                              String publicKeyRSA,
+                                             String remotePublicRSA,
                                              String publicKeyDH,
+                                             String remotePublicKeyDH,
+                                             Instant created,
                                              Instant updated) {
-
 }

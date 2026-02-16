@@ -3,15 +3,14 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
 import com.evolution.dropfiledaemon.tunnel.SecureEnvelope;
@@ -26,6 +25,7 @@ import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.KeyPair;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -193,5 +193,25 @@ public class ApiHandshakeFacade {
                 .getValue()
                 .addressURI();
         return handshakeReconnect(new ApiHandshakeReconnectRequestDTO(addressURI.toString()));
+    }
+
+    public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
+        Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = applicationConfigStore.getHandshakeContextStore().trustedOutStore().getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeContextStore().sessionStore().getAll();
+        return HandshakeUtils.mapToHandshakeApiTrustOutResponseDTOList(trusts, sessions);
+    }
+
+    public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
+        Map<String, HandshakeTrustedInStore.TrustedIn> trusts = applicationConfigStore.getHandshakeContextStore().trustedInStore().getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeContextStore().sessionStore().getAll();
+        return HandshakeUtils.mapToHandshakeApiTrustInResponseDTOList(trusts, sessions);
+    }
+
+    public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
+        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = applicationConfigStore.getHandshakeContextStore().sessionStore()
+                .getRequiredLatestUpdated();
+        HandshakeTrustedOutStore.TrustedOut trustedOut = applicationConfigStore.getHandshakeContextStore().trustedOutStore().getRequired(sessionEntry.getKey())
+                .getValue();
+        return HandshakeUtils.mapToHandshakeApiTrustOutResponseDTO(sessionEntry.getKey(), trustedOut, sessionEntry.getValue());
     }
 }

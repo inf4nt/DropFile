@@ -1,13 +1,10 @@
 package com.evolution.dropfiledaemon.handshake;
 
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
+import com.evolution.dropfile.common.dto.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -31,18 +28,18 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.handshakeStatus();
     }
 
-//    @GetMapping("/trust/in")
-//    public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
-//        return apiHandshakeFacade.getTrustIt();
-//    }
-//
-//    @GetMapping("/trust/out")
-//    public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
-//        return apiHandshakeFacade.getTrustOut();
-//    }
-//
-//    @GetMapping("/trust/out/latest")
-//    public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
-//        return apiHandshakeFacade.getLatestTrustOut();
-//    }
+    @GetMapping("/trust/in")
+    public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
+        return apiHandshakeFacade.getTrustIt();
+    }
+
+    @GetMapping("/trust/out")
+    public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
+        return apiHandshakeFacade.getTrustOut();
+    }
+
+    @GetMapping("/trust/out/latest")
+    public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
+        return apiHandshakeFacade.getLatestTrustOut();
+    }
 }
