@@ -53,4 +53,4 @@ RUN rm -rf /dropfile
 
 RUN mkdir out
 
-ENTRYPOINT ["cp", "/dropfile-linux.tar.gz", "/out/dropfile-linux.tar.gz"]
+ENTRYPOINT ["cp", "/dropfile-linux.tar.gz", "/out/dropfile-linux-x64.tar.gz"]

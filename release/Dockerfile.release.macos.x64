@@ -53,4 +53,4 @@ RUN rm -rf /dropfile
 
 RUN mkdir out
 
-ENTRYPOINT ["cp", "/dropfile-macos.tar.gz", "/out/dropfile-macos.tar.gz"]
+ENTRYPOINT ["cp", "/dropfile-macos.tar.gz", "/out/dropfile-macos-x64.tar.gz"]

@@ -53,4 +53,4 @@ RUN rm -rf /dropfile
 
 RUN mkdir out
 
-ENTRYPOINT ["cp", "/dropfile-windows.tar.gz", "/out/dropfile-windows.tar.gz"]
+ENTRYPOINT ["cp", "/dropfile-windows.tar.gz", "/out/dropfile-windows-x64.tar.gz"]
