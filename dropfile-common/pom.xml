@@ -11,7 +11,7 @@
 
     <groupId>com.evolution</groupId>
     <artifactId>dropfile-common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>dropfile-common</name>
     <description>dropfile-common</description>
     <properties>
