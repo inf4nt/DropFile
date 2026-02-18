@@ -19,16 +19,13 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,7 +33,7 @@ public class DownloadProcedure {
 
     private final AtomicBoolean stop = new AtomicBoolean(false);
 
-    private final AtomicReference<List<Map.Entry<Long, Integer>>> chunksHaveDownloaded = new AtomicReference<>(new ArrayList<>());
+    private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
 
     private final Semaphore chunkDownloadingSemaphore;
 
@@ -119,20 +116,10 @@ public class DownloadProcedure {
             );
         }
 
-        List<Map.Entry<Long, Integer>> entries = new ArrayList<>(chunksHaveDownloaded.get());
-
-        long timeNow = System.currentTimeMillis();
-        long timeWindow = timeNow - 5_000; // 5 sec
-        long chunksTimeWindow = entries.stream().filter(entry -> entry.getKey() >= timeWindow)
-                .map(it -> it.getValue())
-                .collect(Collectors.summarizingLong(value -> value))
-                .getSum();
-        String speedTimeWindow = fileHelper.toDisplaySize(chunksTimeWindow);
-
-        long downloaded = entries.stream()
-                .map(it -> it.getValue()).collect(Collectors.summarizingLong(value -> value))
-                .getSum();
-        String percent = fileHelper.percent(downloaded, manifest.size());
+        long totalDownloaded = downloadSpeedMeter.getTotalDownloaded();
+        long speedBytesPerSec = downloadSpeedMeter.getSpeedBytesPerSec();
+        String speedPerSec = fileHelper.toDisplaySize(speedBytesPerSec);
+        String percent = fileHelper.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
                 operationId,
@@ -140,9 +127,9 @@ public class DownloadProcedure {
                 request.fileId(),
                 destinationFile.getAbsolutePath(),
                 manifest.hash(),
-                downloaded,
+                totalDownloaded,
                 manifest.size(),
-                speedTimeWindow,
+                speedPerSec,
                 percent
         );
     }
@@ -219,10 +206,7 @@ public class DownloadProcedure {
                             try {
                                 byte[] chunkBytes = chunkDownload(chunkManifest);
                                 writeChunkToFile(fileChannel, chunkBytes, chunkManifest);
-                                chunksHaveDownloaded.updateAndGet(entries -> {
-                                    entries.add(new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), chunkManifest.size()));
-                                    return entries;
-                                });
+                                downloadSpeedMeter.addChunk(chunkManifest.size());
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             } finally {

@@ -33,7 +33,7 @@ public class FileDownloadOrchestrator {
 
     private static final int MAX_PARALLEL_DOWNLOADING_COUNT = 10;
 
-    private static final int MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT = 1;
+    private static final int MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT = 2;
 
     private final Semaphore downloadingSemaphore = new Semaphore(MAX_PARALLEL_DOWNLOADING_COUNT);
 
