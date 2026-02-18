@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -e
 
-"$DROPFILE_HOME/runtime/bin/java" -jar "$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar" $*
+"$DROPFILE_HOME/runtime/bin/java" -XX:ActiveProcessorCount=1 -Xmx256m -Xms256m -jar "$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar" $*
