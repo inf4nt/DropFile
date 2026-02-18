@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel;
+package com.evolution.dropfile.common.crypto;
 
 import javax.crypto.SecretKey;
 import java.io.InputStream;

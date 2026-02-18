@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

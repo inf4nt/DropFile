@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
