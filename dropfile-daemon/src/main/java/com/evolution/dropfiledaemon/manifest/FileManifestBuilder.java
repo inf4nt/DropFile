@@ -16,9 +16,9 @@ import java.util.List;
 @Component
 public class FileManifestBuilder {
 
-    private static final String SHA256 = "SHA-256";
+    public static final Integer CHUNK_SIZE = 2 * 1024 * 1024;
 
-    private static final Integer CHUNK_SIZE = 2 * 1024 * 1024;
+    private static final String SHA256 = "SHA-256";
 
     private final FileHelper fileHelper;
 

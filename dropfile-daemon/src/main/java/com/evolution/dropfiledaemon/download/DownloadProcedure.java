@@ -6,6 +6,7 @@ import com.evolution.dropfiledaemon.download.exception.ChunkWritingFailedExcepti
 import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
 import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
 import com.evolution.dropfiledaemon.download.exception.TotalDigestMismatchException;
+import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
@@ -15,6 +16,7 @@ import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -73,6 +75,8 @@ public class DownloadProcedure {
                                         operationId, request.fingerprintConnection(), request.fileId()),
                                 () -> downloadManifest()
                         );
+
+                        validateManifest(manifest);
 
                         ExecutionProfiling.run(
                                 String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
@@ -165,6 +169,20 @@ public class DownloadProcedure {
                     .run();
         } catch (Exception e) {
             throw new ManifestDownloadingFailedException(operationId, request.fileId(), request.filename(), e);
+        }
+    }
+
+    private void validateManifest(ShareDownloadManifestTunnelResponse manifest) {
+        if (ObjectUtils.isEmpty(manifest.chunkManifests())) {
+            throw new RuntimeException("No chunks in manifest found");
+        }
+        List<ShareDownloadManifestTunnelResponse.ChunkManifest> list = manifest.chunkManifests().stream()
+                .filter(it -> it.size() > FileManifestBuilder.CHUNK_SIZE)
+                .toList();
+        if (!list.isEmpty()) {
+            throw new RuntimeException(String.format(
+                    "Found %s unacceptable chunk size", list.size()
+            ));
         }
     }
 
