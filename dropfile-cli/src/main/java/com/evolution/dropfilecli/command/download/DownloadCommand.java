@@ -6,7 +6,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "download",
-        description = "Download command",
+        description = "Download commands",
         aliases = {"-d", "--d"},
         subcommands = {
                 DownloadLsCommand.class,
