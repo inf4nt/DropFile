@@ -16,8 +16,8 @@
     <properties>
         <java.version>25</java.version>
         <commons.io.version>2.21.0</commons.io.version>
-        <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
-        <dropfile.store.version>0.0.1-SNAPSHOT</dropfile.store.version>
+        <dropfile.common.version>1.0.0</dropfile.common.version>
+        <dropfile.store.version>1.0.0</dropfile.store.version>
     </properties>
 
     <dependencies>

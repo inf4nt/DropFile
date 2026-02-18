@@ -16,7 +16,7 @@
     <description>dropfile-store</description>
     <properties>
         <java.version>25</java.version>
-        <dropfile.common.version>0.0.1-SNAPSHOT</dropfile.common.version>
+        <dropfile.common.version>1.0.0</dropfile.common.version>
     </properties>
     <dependencies>
         <dependency>
