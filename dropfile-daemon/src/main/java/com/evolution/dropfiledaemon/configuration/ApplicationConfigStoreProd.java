@@ -14,10 +14,10 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStoreInitializationProce
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.store.DefaultKeyValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -73,8 +73,8 @@ class ApplicationConfigStoreProd
         shareFileEntryStore = new RuntimeShareFileEntryStore();
 
         handshakeStore = new HandshakeStore(
-                new RuntimeHandshakeTrustedOutStore(),
-                new RuntimeHandshakeTrustedInStore(),
+                new CryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel),
+                new CryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel),
                 new RuntimeHandshakeSessionStore()
         );
     }
@@ -128,6 +128,10 @@ class ApplicationConfigStoreProd
         defaultKeyValueStoreInitializationProcedure.init(accessKeyStore);
         defaultKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
         defaultKeyValueStoreInitializationProcedure.init(shareFileEntryStore);
+
+        defaultKeyValueStoreInitializationProcedure.init(handshakeStore.sessionStore());
+        defaultKeyValueStoreInitializationProcedure.init(handshakeStore.trustedInStore());
+        defaultKeyValueStoreInitializationProcedure.init(handshakeStore.trustedOutStore());
 
         initialized = true;
 
