@@ -1,11 +1,6 @@
 package com.evolution.dropfiledaemon.download;
 
-import com.evolution.dropfiledaemon.download.exception.ChunkDigestMismatchException;
-import com.evolution.dropfiledaemon.download.exception.ChunkDownloadingFailedException;
-import com.evolution.dropfiledaemon.download.exception.ChunkWritingFailedException;
-import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
-import com.evolution.dropfiledaemon.download.exception.ManifestDownloadingFailedException;
-import com.evolution.dropfiledaemon.download.exception.TotalDigestMismatchException;
+import com.evolution.dropfiledaemon.download.exception.*;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
@@ -24,14 +19,16 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,7 +36,7 @@ public class DownloadProcedure {
 
     private final AtomicBoolean stop = new AtomicBoolean(false);
 
-    private final LongAdder chunksHaveDownloaded = new LongAdder();
+    private final AtomicReference<List<Map.Entry<Long, Integer>>> chunksHaveDownloaded = new AtomicReference<>(new ArrayList<>());
 
     private final Semaphore chunkDownloadingSemaphore;
 
@@ -117,11 +114,26 @@ public class DownloadProcedure {
                     null,
                     0,
                     0,
+                    null,
                     fileHelper.percent(0, 0)
             );
         }
-        long downloaded = chunksHaveDownloaded.sum();
+
+        List<Map.Entry<Long, Integer>> entries = new ArrayList<>(chunksHaveDownloaded.get());
+
+        long timeNow = System.currentTimeMillis();
+        long timeWindow = timeNow - 5_000; // 5 sec
+        long chunksTimeWindow = entries.stream().filter(entry -> entry.getKey() >= timeWindow)
+                .map(it -> it.getValue())
+                .collect(Collectors.summarizingLong(value -> value))
+                .getSum();
+        String speedTimeWindow = fileHelper.toDisplaySize(chunksTimeWindow);
+
+        long downloaded = entries.stream()
+                .map(it -> it.getValue()).collect(Collectors.summarizingLong(value -> value))
+                .getSum();
         String percent = fileHelper.percent(downloaded, manifest.size());
+
         return new FileDownloadOrchestrator.DownloadProgress(
                 operationId,
                 request.fingerprintConnection(),
@@ -130,6 +142,7 @@ public class DownloadProcedure {
                 manifest.hash(),
                 downloaded,
                 manifest.size(),
+                speedTimeWindow,
                 percent
         );
     }
@@ -206,7 +219,10 @@ public class DownloadProcedure {
                             try {
                                 byte[] chunkBytes = chunkDownload(chunkManifest);
                                 writeChunkToFile(fileChannel, chunkBytes, chunkManifest);
-                                chunksHaveDownloaded.add(chunkManifest.size());
+                                chunksHaveDownloaded.updateAndGet(entries -> {
+                                    entries.add(new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), chunkManifest.size()));
+                                    return entries;
+                                });
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             } finally {
@@ -257,7 +273,6 @@ public class DownloadProcedure {
                         if (it.exception() instanceof DownloadingStoppedException) {
                             return false;
                         }
-                        //noinspection resource
                         return it.exception() != null || it.result() == null;
                     })
                     .build()

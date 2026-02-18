@@ -208,6 +208,7 @@ public class FileDownloadOrchestrator {
                                    String hash,
                                    long downloaded,
                                    long total,
+                                   String speed,
                                    String percentage) {
 
     }

@@ -12,6 +12,7 @@ public class ApiDownloadLsDTO {
                            String total,
                            String downloaded,
                            String percent,
+                           String speed,
                            ApiDownloadLsDTO.Status status,
                            Instant updated) {
 

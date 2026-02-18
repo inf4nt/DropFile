@@ -41,6 +41,7 @@ public class ApiDownloadFacade {
                         fileHelper.toDisplaySize(downloadProgress.total()),
                         fileHelper.toDisplaySize(downloadProgress.downloaded()),
                         downloadProgress.percentage(),
+                        downloadProgress.speed(),
                         ApiDownloadLsDTO.Status.DOWNLOADING,
                         entry.getValue().updated()
                 ));
@@ -57,6 +58,7 @@ public class ApiDownloadFacade {
                         fileHelper.toDisplaySize(downloadFileEntry.total()),
                         fileHelper.toDisplaySize(downloadFileEntry.downloaded()),
                         fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
+                        null,
                         status,
                         downloadFileEntry.updated()
                 ));

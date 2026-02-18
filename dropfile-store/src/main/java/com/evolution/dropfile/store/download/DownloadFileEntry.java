@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.download;
 
 import java.time.Instant;
 
+// TODO added Create and Finish date
 public record DownloadFileEntry(String fingerprintConnection,
                                 String fileId,
                                 String destinationFile,
