@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.store.json;
 
 import java.util.Map;
 
+@Deprecated
 public interface JsonSerde<V> {
 
     byte[] serialize(Map<String, V> values);

@@ -1,11 +1,12 @@
 package com.evolution.dropfilecli.config;
 
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.secret.CryptoSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,8 +36,9 @@ public class DropFileCliConfigurationProd {
 
     @Bean
     public SecretsConfigStore secretsConfigStore(ObjectMapper objectMapper,
-                                                 SecretsConfigStoreInitializationProcedure initializationProcedure) {
-        SecretsConfigStore store = new JsonFileSecretsConfigStore(objectMapper);
+                                                 SecretsConfigStoreInitializationProcedure initializationProcedure,
+                                                 CryptoTunnel cryptoTunnel) {
+        SecretsConfigStore store = new CryptoSecretsConfigStore(objectMapper, cryptoTunnel);
         initializationProcedure.init(store);
         return store;
     }

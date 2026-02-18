@@ -6,6 +6,7 @@ import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
 import com.evolution.dropfile.store.store.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Deprecated
 public class JsonFileSecretsConfigStore
         extends DefaultSingleValueStore<SecretsConfig>
         implements SecretsConfigStore {

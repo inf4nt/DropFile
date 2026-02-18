@@ -3,6 +3,7 @@ package com.evolution.dropfile.store.store.json;
 import java.nio.file.Path;
 import java.util.Objects;
 
+@Deprecated
 public interface FileProtectedProvider extends FileProvider {
 
     @Override

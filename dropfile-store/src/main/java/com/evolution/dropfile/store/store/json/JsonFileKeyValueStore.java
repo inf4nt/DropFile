@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Deprecated
 public class JsonFileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final FileProvider fileProvider;

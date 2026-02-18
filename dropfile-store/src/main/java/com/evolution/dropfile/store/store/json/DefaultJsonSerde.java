@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public class DefaultJsonSerde<V> implements JsonSerde<V> {
 
     private final TypeReference<Map<String, V>> typeReference;

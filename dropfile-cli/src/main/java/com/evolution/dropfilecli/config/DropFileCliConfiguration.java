@@ -1,5 +1,7 @@
 package com.evolution.dropfilecli.config;
 
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfilecli.util.DateUtils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -39,5 +41,10 @@ public class DropFileCliConfiguration {
         });
         objectMapper.registerModule(module);
         return objectMapper;
+    }
+
+    @Bean
+    public CryptoTunnel cryptoTunnel() {
+        return new CryptoTunnelChaCha20Poly1305();
     }
 }

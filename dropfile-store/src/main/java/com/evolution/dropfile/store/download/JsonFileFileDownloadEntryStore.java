@@ -1,24 +1,20 @@
 package com.evolution.dropfile.store.download;
 
-import com.evolution.dropfile.store.store.json.DefaultJsonSerde;
-import com.evolution.dropfile.store.store.json.FileProvider;
-import com.evolution.dropfile.store.store.json.JsonFileKeyValueStore;
+import com.evolution.dropfile.store.store.file.FileProviderImpl;
+import com.evolution.dropfile.store.store.file.JsonFileOperations;
+import com.evolution.dropfile.store.store.file.SynchronizedFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonFileFileDownloadEntryStore
-        extends JsonFileKeyValueStore<DownloadFileEntry>
+        extends SynchronizedFileKeyValueStore<DownloadFileEntry>
         implements FileDownloadEntryStore {
+
     public JsonFileFileDownloadEntryStore(ObjectMapper objectMapper) {
         super(
-                new FileProvider() {
-                    @Override
-                    public String getFileName() {
-                        return "download.file.entries.json";
-                    }
-                },
-                new DefaultJsonSerde<>(
-                        DownloadFileEntry.class,
-                        objectMapper
+                new FileProviderImpl("download.file.entries.json"),
+                new JsonFileOperations<>(
+                        objectMapper,
+                        DownloadFileEntry.class
                 )
         );
     }

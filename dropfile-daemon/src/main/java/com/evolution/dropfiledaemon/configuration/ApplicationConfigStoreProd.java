@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
@@ -7,12 +8,12 @@ import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
-import com.evolution.dropfile.store.secret.JsonFileSecretsConfigStore;
+import com.evolution.dropfile.store.secret.CryptoSecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStore;
 import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.store.json.DefaultJsonFileKeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.store.DefaultKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
@@ -34,7 +35,7 @@ class ApplicationConfigStoreProd
 
     private final ApplicationEventPublisher eventPublisher;
 
-    private final DefaultJsonFileKeyValueStoreInitializationProcedure defaultJsonFileKeyValueStoreInitializationProcedure;
+    private final DefaultKeyValueStoreInitializationProcedure defaultKeyValueStoreInitializationProcedure;
 
     private final AppConfigStore appConfigStore;
 
@@ -53,15 +54,17 @@ class ApplicationConfigStoreProd
     private final HandshakeStore handshakeStore;
 
     @Autowired
-    public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
+    public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher,
+                                      ObjectMapper objectMapper,
+                                      CryptoTunnel cryptoTunnel) {
         this.eventPublisher = eventPublisher;
 
-        defaultJsonFileKeyValueStoreInitializationProcedure = new DefaultJsonFileKeyValueStoreInitializationProcedure();
+        defaultKeyValueStoreInitializationProcedure = new DefaultKeyValueStoreInitializationProcedure();
 
         appConfigStore = new JsonFileAppConfigStore(objectMapper);
         appConfigStoreInitializationProcedure = new AppConfigStoreInitializationProcedure();
 
-        secretsConfigStore = new JsonFileSecretsConfigStore(objectMapper);
+        secretsConfigStore = new CryptoSecretsConfigStore(objectMapper, cryptoTunnel);
         secretsConfigStoreInitializationProcedure = new SecretsConfigStoreInitializationProcedure();
 
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
@@ -122,9 +125,9 @@ class ApplicationConfigStoreProd
         appConfigStoreInitializationProcedure.init(appConfigStore);
         secretsConfigStoreInitializationProcedure.init(secretsConfigStore);
 
-        defaultJsonFileKeyValueStoreInitializationProcedure.init(accessKeyStore);
-        defaultJsonFileKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
-        defaultJsonFileKeyValueStoreInitializationProcedure.init(shareFileEntryStore);
+        defaultKeyValueStoreInitializationProcedure.init(accessKeyStore);
+        defaultKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
+        defaultKeyValueStoreInitializationProcedure.init(shareFileEntryStore);
 
         initialized = true;
 
