@@ -33,6 +33,17 @@ public class RootCommand implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("░███████                                      ░████ ░██░██            \n" +
+                "░██   ░██                                    ░██       ░██            \n" +
+                "░██    ░██ ░██░████  ░███████  ░████████  ░████████ ░██░██  ░███████  \n" +
+                "░██    ░██ ░███     ░██    ░██ ░██    ░██    ░██    ░██░██ ░██    ░██ \n" +
+                "░██    ░██ ░██      ░██    ░██ ░██    ░██    ░██    ░██░██ ░█████████ \n" +
+                "░██   ░██  ░██      ░██    ░██ ░███   ░██    ░██    ░██░██ ░██        \n" +
+                "░███████   ░██       ░███████  ░██░█████     ░██    ░██░██  ░███████  \n" +
+                "                               ░██                                    \n" +
+                "                               ░██                                    \n" +
+                "                                                                      ");
+
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         System.out.println("Daemon host: " + cliAppConfig.daemonHost());
