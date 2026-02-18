@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
@@ -39,6 +40,23 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     @SneakyThrows
     @Override
+    public byte[] encryptInline(byte[] data, SecretKey key) {
+        byte[] nonce = CommonUtils.nonce12();
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
+
+        byte[] encrypted = cipher.doFinal(data);
+
+        byte[] finalArray = new byte[nonce.length + encrypted.length];
+        System.arraycopy(nonce, 0, finalArray, 0, nonce.length);
+        System.arraycopy(encrypted, 0, finalArray, nonce.length, encrypted.length);
+
+        return finalArray;
+    }
+
+    @SneakyThrows
+    @Override
     public SecureEnvelope encrypt(byte[] data, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
 
@@ -56,6 +74,13 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 
         return cipher.doFinal(payload);
+    }
+
+    @Override
+    public byte[] decryptInline(byte[] data, SecretKey key) {
+        byte[] nonce = Arrays.copyOfRange(data, 0, NONCE_LENGTH);
+        byte[] encrypt = Arrays.copyOfRange(data, NONCE_LENGTH, data.length);
+        return decrypt(encrypt, nonce, key);
     }
 
     @SneakyThrows
