@@ -33,18 +33,17 @@ public class ShareDownloadChunkStreamCommandHandler
         return ShareDownloadChunkStreamTunnelRequest.class;
     }
 
-    int count = 0;
-
-    int error = 0;
+//    int count = 0;
+//    int error = 0;
 
     @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
-        count++;
-        if (count > 100 && error <= 5) {
-            error++;
-            return new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
-        }
+//        count++;
+//        if (count > 100 && error <= 5) {
+//            error++;
+//            return new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
+//        }
 
         ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore()
                 .getRequired(request.id())
