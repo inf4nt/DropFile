@@ -50,8 +50,7 @@ public class CryptoFileOperations<V>
         Path homePath = fileProvider.getHomePath();
         long installTime = Files.readAttributes(homePath, BasicFileAttributes.class)
                 .creationTime().toInstant().toEpochMilli();
-        String string = CryptoFileOperations.class.getName() +
-                cryptoTunnel.getAlgorithm() +
+        String string = cryptoTunnel.getAlgorithm() +
                 homePath +
                 installTime;
         return CommonUtils.getFingerprint(string.getBytes()).getBytes();

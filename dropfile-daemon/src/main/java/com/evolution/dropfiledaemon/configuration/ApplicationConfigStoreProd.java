@@ -8,9 +8,9 @@ import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
-import com.evolution.dropfile.store.secret.CryptoSecretsConfigStore;
-import com.evolution.dropfile.store.secret.SecretsConfigStore;
-import com.evolution.dropfile.store.secret.SecretsConfigStoreInitializationProcedure;
+import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecretsStoreInitializationProcedure;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.store.DefaultKeyValueStoreInitializationProcedure;
@@ -41,9 +41,9 @@ class ApplicationConfigStoreProd
 
     private final AppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure;
 
-    private final SecretsConfigStore secretsConfigStore;
+    private final DaemonSecretsStore daemonSecretsStore;
 
-    private final SecretsConfigStoreInitializationProcedure secretsConfigStoreInitializationProcedure;
+    private final DaemonSecretsStoreInitializationProcedure daemonSecretsStoreInitializationProcedure;
 
     private final AccessKeyStore accessKeyStore;
 
@@ -64,8 +64,8 @@ class ApplicationConfigStoreProd
         appConfigStore = new JsonFileAppConfigStore(objectMapper);
         appConfigStoreInitializationProcedure = new AppConfigStoreInitializationProcedure();
 
-        secretsConfigStore = new CryptoSecretsConfigStore(objectMapper, cryptoTunnel);
-        secretsConfigStoreInitializationProcedure = new SecretsConfigStoreInitializationProcedure();
+        daemonSecretsStore = new CryptoDaemonSecretsStore(objectMapper, cryptoTunnel);
+        daemonSecretsStoreInitializationProcedure = new DaemonSecretsStoreInitializationProcedure();
 
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
 
@@ -103,9 +103,9 @@ class ApplicationConfigStoreProd
     }
 
     @Override
-    public SecretsConfigStore getSecretsConfigStore() {
+    public DaemonSecretsStore getSecretsConfigStore() {
         checkInitialized();
-        return secretsConfigStore;
+        return daemonSecretsStore;
     }
 
     @Override
@@ -123,7 +123,7 @@ class ApplicationConfigStoreProd
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         appConfigStoreInitializationProcedure.init(appConfigStore);
-        secretsConfigStoreInitializationProcedure.init(secretsConfigStore);
+        daemonSecretsStoreInitializationProcedure.init(daemonSecretsStore);
 
         defaultKeyValueStoreInitializationProcedure.init(accessKeyStore);
         defaultKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);

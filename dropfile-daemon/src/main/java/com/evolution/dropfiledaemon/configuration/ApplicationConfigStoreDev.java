@@ -7,9 +7,9 @@ import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
-import com.evolution.dropfile.store.secret.ImmutableSecretsConfigStore;
-import com.evolution.dropfile.store.secret.SecretsConfig;
-import com.evolution.dropfile.store.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.secret.DaemonSecrets;
+import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
@@ -44,7 +44,7 @@ class ApplicationConfigStoreDev
 
     private final AppConfigStore appConfigStore;
 
-    private final SecretsConfigStore secretsConfigStore;
+    private final DaemonSecretsStore daemonSecretsStore;
 
     private final AccessKeyStore accessKeyStore;
 
@@ -77,10 +77,10 @@ class ApplicationConfigStoreDev
             );
         });
 
-        secretsConfigStore = new ImmutableSecretsConfigStore(() -> {
+        daemonSecretsStore = new ImmutableDaemonSecretsStore(() -> {
             String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
             log.info("Provided daemon token: {}", daemonToken);
-            return new SecretsConfig(daemonToken);
+            return new DaemonSecrets(daemonToken);
         });
 
         accessKeyStore = new RuntimeAccessKeyStore();
@@ -118,9 +118,9 @@ class ApplicationConfigStoreDev
     }
 
     @Override
-    public SecretsConfigStore getSecretsConfigStore() {
+    public DaemonSecretsStore getSecretsConfigStore() {
         checkInitialized();
-        return secretsConfigStore;
+        return daemonSecretsStore;
     }
 
     @Override

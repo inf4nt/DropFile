@@ -8,20 +8,20 @@ import com.evolution.dropfile.store.store.file.SynchronizedFileKeyValueStore;
 import com.evolution.dropfile.store.store.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class CryptoSecretsConfigStore
-        extends DefaultSingleValueStore<SecretsConfig>
-        implements SecretsConfigStore {
+public class CryptoDaemonSecretsStore
+        extends DefaultSingleValueStore<DaemonSecrets>
+        implements DaemonSecretsStore {
 
-    public CryptoSecretsConfigStore(ObjectMapper objectMapper,
+    public CryptoDaemonSecretsStore(ObjectMapper objectMapper,
                                     CryptoTunnel cryptoTunnel) {
-        FileProvider fileProvider = new FileProviderImpl("secrets.config.json");
+        FileProvider fileProvider = new FileProviderImpl("daemon.secrets.bin");
         super(
-                "secretsConfig",
+                "daemonSecrets",
                 new SynchronizedFileKeyValueStore<>(
                         fileProvider,
                         new CryptoFileOperations<>(
                                 objectMapper,
-                                SecretsConfig.class,
+                                DaemonSecrets.class,
                                 fileProvider,
                                 cryptoTunnel
                         )

@@ -4,8 +4,8 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfile.store.secret.SecretsConfig;
-import com.evolution.dropfile.store.secret.SecretsConfigStore;
+import com.evolution.dropfile.store.secret.DaemonSecrets;
+import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,18 +24,18 @@ public class DaemonClient {
 
     private final AppConfigStore appConfigStore;
 
-    private final SecretsConfigStore secretsConfigStore;
+    private final DaemonSecretsStore daemonSecretsStore;
 
     private final ObjectMapper objectMapper;
 
     @Autowired
     public DaemonClient(HttpClient httpClient,
                         AppConfigStore appConfigStore,
-                        SecretsConfigStore secretsConfigStore,
+                        DaemonSecretsStore daemonSecretsStore,
                         ObjectMapper objectMapper) {
         this.httpClient = httpClient;
         this.appConfigStore = appConfigStore;
-        this.secretsConfigStore = secretsConfigStore;
+        this.daemonSecretsStore = daemonSecretsStore;
         this.objectMapper = objectMapper;
     }
 
@@ -627,10 +627,8 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        SecretsConfig secretsConfig = secretsConfigStore.getRequired();
-
-        String daemonToken = Objects.requireNonNull(secretsConfig.daemonToken());
+        DaemonSecrets daemonSecrets = daemonSecretsStore.getRequired();
+        String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());
         return "Bearer " + daemonToken;
-//        return "fake";
     }
 }
