@@ -11,6 +11,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
@@ -211,53 +212,53 @@ class FileHelperTest {
         );
 
         assertThat(
-                fileHelper.toDisplaySize(12 * 1024),
-                is("12KB")
+                fileHelper.toDisplaySize(1023),
+                is("1023B")
         );
 
         assertThat(
-                fileHelper.toDisplaySize(123 * 1024),
-                is("123KB")
+                fileHelper.toDisplaySize(12 * 1024),
+                is("12.00KB")
+        );
+
+        assertThat(
+                fileHelper.toDisplaySize(123 * 5_794),
+                is("695.96KB")
         );
 
         assertThat(
                 fileHelper.toDisplaySize(1023 * 1024),
-                is("1023KB")
+                is("1023.00KB")
         );
 
         assertThat(
                 fileHelper.toDisplaySize(1 * 1024 * 1024),
-                is("1MB")
+                is("1.00MB")
         );
 
         assertThat(
-                fileHelper.toDisplaySize(13 * 1024 * 1024),
-                is("13MB")
+                fileHelper.toDisplaySize(13 * 395_794),
+                is("4.91MB")
         );
 
         assertThat(
                 fileHelper.toDisplaySize(1023 * 1024 * 1024),
-                is("1023MB")
+                is("1023.00MB")
         );
 
         assertThat(
-                fileHelper.toDisplaySize(1 * (1024 * 1024 * 1024L)),
-                is("1GB")
+                fileHelper.toDisplaySize(5_418_395_794L),
+                is("5.05GB")
         );
 
         assertThat(
-                fileHelper.toDisplaySize(14 * (1024 * 1024 * 1024L)),
-                is("14GB")
+                fileHelper.toDisplaySize(14 * 5_418_395_794L),
+                is("70.65GB")
         );
 
         assertThat(
-                fileHelper.toDisplaySize(1023 * (1024 * 1024 * 1024L)),
-                is("1023GB")
-        );
-
-        assertThat(
-                fileHelper.toDisplaySize(5000 * (1024 * 1024 * 1024L)),
-                is("5000GB")
+                fileHelper.toDisplaySize(1023 * 5_418_395_794L),
+                is("5162.34GB")
         );
     }
 }

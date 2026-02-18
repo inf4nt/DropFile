@@ -156,15 +156,15 @@ public class FileHelper {
             return String.format("%sB", size);
         }
         if (size < 1024 * 1024) {
-            long kb = size / 1024;
-            return String.format("%sKB", kb);
+            double kb = size / 1024D;
+            return String.format(Locale.US, "%.2fKB", kb);
         }
         if (size < 1024 * 1024 * 1024) {
-            long mb = size / (1024 * 1024);
-            return String.format("%sMB", mb);
+            double mb = size / (1024 * 1024D);
+            return String.format(Locale.US, "%.2fMB", mb);
         }
-        long gb = size / (1024 * 1024 * 1024);
-        return String.format("%sGB", gb);
+        double gb = size / (1024 * 1024 * 1024D);
+        return String.format(Locale.US, "%.2fGB", gb);
     }
 
     @Data
