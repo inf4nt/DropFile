@@ -154,7 +154,7 @@ class ApplicationConfigStoreDev
             }
             return daemonDownloadDirectoryPath.toFile();
         }
-        Path downloadDirectoryPath = Paths.get(System.getProperty("user.home"), ".dropfile");
+        Path downloadDirectoryPath = Paths.get(System.getProperty("user.home"), "/DropfileDownloads");
         if (Files.notExists(downloadDirectoryPath)) {
             Files.createDirectory(downloadDirectoryPath);
         }

@@ -28,7 +28,7 @@ public class AppConfigStoreInitializationProcedure
             return;
         }
 
-        Path homeDir = Paths.get(System.getProperty("user.home"), ".dropfile");
+        Path homeDir = Paths.get(System.getProperty("user.home"), "/DropfileDownloads");
         if (Files.notExists(homeDir)) {
             Files.createDirectories(homeDir);
         }
