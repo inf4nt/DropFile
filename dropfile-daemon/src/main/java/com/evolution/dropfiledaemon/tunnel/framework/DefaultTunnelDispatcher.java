@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -69,7 +69,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeStore().sessionStore()
+        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeStore().sessionInStore()
                 .getRequired(fingerprint)
                 .getValue();
         byte[] secret = CryptoECDH.getSecretKey(
@@ -77,16 +77,6 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                 CryptoECDH.getPublicKey(session.remotePublicDH())
         );
         return cryptoTunnel.secretKey(secret);
-
-//        Map.Entry<String, TrustedInKeyValueStore.TrustedInValue> trustedInValue = applicationConfigStore
-//                .getHandshakeStore()
-//                .trustedInStore()
-//                .getRequired(fingerprint);
-//        byte[] secret = CryptoECDH.getSecretKey(
-//                CryptoECDH.getPrivateKey(applicationConfigStore.getKeysConfigStore().getRequired().dh().privateKey()),
-//                CryptoECDH.getPublicKey(trustedInValue.getValue().publicKeyDH())
-//        );
-//        return cryptoTunnel.secretKey(secret);
     }
 
     @SneakyThrows

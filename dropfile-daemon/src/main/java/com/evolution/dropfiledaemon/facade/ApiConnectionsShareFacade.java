@@ -52,7 +52,7 @@ public class ApiConnectionsShareFacade {
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
         String fingerprintConnection = applicationConfigStore.getHandshakeStore()
-                .sessionStore().getRequiredLatestUpdated()
+                .sessionOutStore().getRequiredLatestUpdated()
                 .getKey();
 
         // TODO remove it

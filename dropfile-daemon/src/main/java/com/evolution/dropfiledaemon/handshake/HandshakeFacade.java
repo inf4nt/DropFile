@@ -94,7 +94,7 @@ public class HandshakeFacade {
                 );
 
         byte[] publicKeyDH = requestPayload.publicKeyDH();
-        applicationConfigStore.getHandshakeStore().sessionStore()
+        applicationConfigStore.getHandshakeStore().sessionInStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -144,7 +144,7 @@ public class HandshakeFacade {
         );
 
         applicationConfigStore.getHandshakeStore()
-                .sessionStore()
+                .sessionInStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(

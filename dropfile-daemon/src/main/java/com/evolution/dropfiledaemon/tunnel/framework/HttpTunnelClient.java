@@ -120,10 +120,10 @@ public class HttpTunnelClient implements TunnelClient {
 
     private Map.Entry<String, HandshakeSessionStore.SessionValue> getSession(Request request) {
         if (ObjectUtils.isEmpty(request.getFingerprint())) {
-            return applicationConfigStore.getHandshakeStore().sessionStore()
+            return applicationConfigStore.getHandshakeStore().sessionOutStore()
                     .getRequiredLatestUpdated();
         }
-        return applicationConfigStore.getHandshakeStore().sessionStore()
+        return applicationConfigStore.getHandshakeStore().sessionOutStore()
                 .getRequired(request.getFingerprint());
     }
 

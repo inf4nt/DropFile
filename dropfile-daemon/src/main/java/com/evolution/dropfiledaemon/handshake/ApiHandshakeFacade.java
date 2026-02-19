@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
@@ -12,8 +14,6 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.util.AccessKeyUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -121,7 +121,7 @@ public class ApiHandshakeFacade {
                         )
                 );
         applicationConfigStore.getHandshakeStore()
-                .sessionStore()
+                .sessionOutStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -168,7 +168,8 @@ public class ApiHandshakeFacade {
         String remoteFingerprint = sessionResponse.fingerprint();
         HandshakeUtils.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOutEntry.getValue().remoteRSA()));
 
-        applicationConfigStore.getHandshakeStore().sessionStore()
+        applicationConfigStore.getHandshakeStore()
+                .sessionOutStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -186,7 +187,7 @@ public class ApiHandshakeFacade {
     }
 
     public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
-        String currentConnectionFingerprint = applicationConfigStore.getHandshakeStore().sessionStore()
+        String currentConnectionFingerprint = applicationConfigStore.getHandshakeStore().sessionOutStore()
                 .getRequiredLatestUpdated().getKey();
         URI addressURI = applicationConfigStore.getHandshakeStore().trustedOutStore()
                 .getRequired(currentConnectionFingerprint)
@@ -197,18 +198,18 @@ public class ApiHandshakeFacade {
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
         Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = applicationConfigStore.getHandshakeStore().trustedOutStore().getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeStore().sessionStore().getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeStore().sessionOutStore().getAll();
         return HandshakeUtils.mapToHandshakeApiTrustOutResponseDTOList(trusts, sessions);
     }
 
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
         Map<String, HandshakeTrustedInStore.TrustedIn> trusts = applicationConfigStore.getHandshakeStore().trustedInStore().getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeStore().sessionStore().getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeStore().sessionInStore().getAll();
         return HandshakeUtils.mapToHandshakeApiTrustInResponseDTOList(trusts, sessions);
     }
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
-        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = applicationConfigStore.getHandshakeStore().sessionStore()
+        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = applicationConfigStore.getHandshakeStore().sessionOutStore()
                 .getRequiredLatestUpdated();
         HandshakeTrustedOutStore.TrustedOut trustedOut = applicationConfigStore.getHandshakeStore().trustedOutStore().getRequired(sessionEntry.getKey())
                 .getValue();

@@ -13,9 +13,7 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +88,8 @@ class ApplicationConfigStoreDev
         handshakeStore = new HandshakeStore(
                 new RuntimeHandshakeTrustedOutStore(),
                 new RuntimeHandshakeTrustedInStore(),
-                new RuntimeHandshakeSessionStore()
+                new RuntimeHandshakeSessionOutStore(),
+                new RuntimeHandshakeSessionInStore()
         );
     }
 
