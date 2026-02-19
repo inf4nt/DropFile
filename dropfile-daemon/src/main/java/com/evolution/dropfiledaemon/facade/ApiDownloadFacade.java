@@ -89,8 +89,22 @@ public class ApiDownloadFacade {
                 .toList();
     }
 
-    public boolean stop(String operationId) {
-        return fileDownloadOrchestrator.stop(operationId);
+    // TODO add some Util class to do "one or nothing"
+    public void stop(String operationId) {
+        List<String> list = fileDownloadOrchestrator.getDownloadProcedures().keySet()
+                .stream()
+                .filter(it -> it.startsWith(operationId))
+                .toList();
+        if (list.isEmpty()) {
+            throw new RuntimeException("No operation found id: " + operationId);
+        }
+        if (list.size() > 1) {
+            throw new RuntimeException(String.format(
+                    "More than one item was found. Please provide more detailed criteria. Found: %s items", list.size()
+            ));
+        }
+        String id = list.getFirst();
+        fileDownloadOrchestrator.stop(id);
     }
 
     public void stopAll() {

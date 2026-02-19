@@ -374,4 +374,33 @@ public class RetryExecutorTest {
                 )
         );
     }
+
+    @Test
+    public void exceptionIfRetryReturnFalse() {
+        AtomicInteger counter = new AtomicInteger(0);
+
+        try {
+            RetryExecutor
+                    .call(() -> {
+                        counter.incrementAndGet();
+                        if (counter.get() == 2) {
+                            throw new IllegalArgumentException();
+                        }
+                        return null;
+                    })
+                    .retryIf(it -> {
+                        if (it.exception() instanceof IllegalArgumentException) {
+                            return false;
+                        }
+                        return it.exception() != null || it.result() == null;
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .build()
+                    .run();
+            fail("Exception not thrown");
+        } catch (Exception e) {
+            assertThat(e.getClass(), is(IllegalArgumentException.class));
+            assertThat(counter.get(), is(2));
+        }
+    }
 }

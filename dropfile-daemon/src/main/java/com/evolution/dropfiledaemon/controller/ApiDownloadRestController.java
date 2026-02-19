@@ -22,12 +22,8 @@ public class ApiDownloadRestController {
 
     @PostMapping("/stop/{operationId}")
     public ResponseEntity<String> stop(@PathVariable String operationId) {
-        boolean stopped = downloadFacade.stop(operationId);
-        if (stopped) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(404)
-                .body("No operation to stop");
+        downloadFacade.stop(operationId);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/stop-all")

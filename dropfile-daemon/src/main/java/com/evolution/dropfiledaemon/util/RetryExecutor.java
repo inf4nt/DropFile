@@ -52,7 +52,7 @@ public class RetryExecutor<T> {
             } catch (Exception e) {
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
                 if (!continueRetry) {
-                    return null;
+                    throw e;
                 }
 
                 exceptions.add(e);

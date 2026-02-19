@@ -110,7 +110,7 @@ public class FileDownloadOrchestrator {
                         )
                 );
             } catch (Exception exception) {
-                DownloadFileEntry.DownloadFileEntryStatus status = exception instanceof DownloadingStoppedException ?
+                DownloadFileEntry.DownloadFileEntryStatus status = isStopped(exception) ?
                         DownloadFileEntry.DownloadFileEntryStatus.STOPPED :
                         DownloadFileEntry.DownloadFileEntryStatus.ERROR;
 
@@ -140,6 +140,10 @@ public class FileDownloadOrchestrator {
         return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());
     }
 
+    private boolean isStopped(Exception exception) {
+        return exception instanceof DownloadingStoppedException || exception.getCause() instanceof DownloadingStoppedException;
+    }
+
     public Map<String, DownloadProgress> getDownloadProcedures() {
         Map<String, DownloadProgress> result = new LinkedHashMap<>();
         for (Map.Entry<String, DownloadProcedure> entry : downloadProcedures.entrySet()) {
@@ -154,13 +158,12 @@ public class FileDownloadOrchestrator {
         }
     }
 
-    public boolean stop(String operation) {
+    public void stop(String operation) {
         DownloadProcedure downloadProcedure = downloadProcedures.get(operation);
-        if (downloadProcedure != null) {
-            downloadProcedure.stop();
-            return true;
+        if (downloadProcedure == null) {
+            throw new RuntimeException("No operation found: " + operation);
         }
-        return false;
+        downloadProcedure.stop();
     }
 
     private File getDestinationFile(FileDownloadRequest request) throws IOException {
