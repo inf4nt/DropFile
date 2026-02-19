@@ -31,7 +31,12 @@ public class ShareLsCommandHandler implements CommandHandler<Void, List<ShareLsT
                 .getAll()
                 .entrySet()
                 .stream()
-                .map(it -> new ShareLsTunnelResponse(it.getKey(), it.getValue().alias()))
+                .map(it -> new ShareLsTunnelResponse(
+                        it.getKey(),
+                        it.getValue().alias(),
+                        it.getValue().size(),
+                        it.getValue().created()
+                ))
                 .toList();
     }
 }

@@ -9,6 +9,7 @@ import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
+import com.evolution.dropfiledaemon.util.FileHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,8 @@ public class ApiConnectionsShareFacade {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
+    private final FileHelper fileHelper;
+
     public List<ApiConnectionsShareLsResponseDTO> ls() {
         List<ShareLsTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
@@ -36,7 +39,12 @@ public class ApiConnectionsShareFacade {
                 }
         );
         return files.stream()
-                .map(it -> new ApiConnectionsShareLsResponseDTO(it.id(), it.alias()))
+                .map(it -> new ApiConnectionsShareLsResponseDTO(
+                        it.id(),
+                        it.alias(),
+                        fileHelper.toDisplaySize(it.size()),
+                        it.created()
+                ))
                 .toList();
     }
 

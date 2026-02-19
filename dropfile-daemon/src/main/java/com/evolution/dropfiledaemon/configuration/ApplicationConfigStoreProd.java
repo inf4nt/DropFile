@@ -71,6 +71,8 @@ class ApplicationConfigStoreProd
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
 
         accessKeyStore = new RuntimeAccessKeyStore();
+
+        // TODO make shareFileEntryStore as persistence
         shareFileEntryStore = new RuntimeShareFileEntryStore();
 
         handshakeStore = new HandshakeStore(

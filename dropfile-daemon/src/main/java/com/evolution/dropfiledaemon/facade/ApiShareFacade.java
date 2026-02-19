@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -20,6 +22,8 @@ import java.util.List;
 public class ApiShareFacade {
 
     private final ApplicationConfigStore applicationConfigStore;
+
+    private final FileHelper fileHelper;
 
     @SneakyThrows
     public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
@@ -37,7 +41,9 @@ public class ApiShareFacade {
                 id,
                 new ShareFileEntry(
                         alias,
-                        absoluteFilePathPath.toFile().getCanonicalPath()
+                        absoluteFilePathPath.toFile().getCanonicalPath(),
+                        absoluteFilePathPath.toFile().length(),
+                        Instant.now()
                 )
         );
         return toApiFileInfoResponseDTO(id, entry);
@@ -64,7 +70,9 @@ public class ApiShareFacade {
         return new ApiShareInfoResponseDTO(
                 id,
                 shareFileEntry.alias(),
-                shareFileEntry.absolutePath()
+                shareFileEntry.absolutePath(),
+                fileHelper.toDisplaySize(shareFileEntry.size()),
+                shareFileEntry.created()
         );
     }
 }

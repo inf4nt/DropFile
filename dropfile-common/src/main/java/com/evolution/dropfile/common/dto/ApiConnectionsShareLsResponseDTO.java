@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common.dto;
 
-// TODO add file size
-public record ApiConnectionsShareLsResponseDTO(String id, String alias) {
+import java.time.Instant;
+
+public record ApiConnectionsShareLsResponseDTO(String id, String alias, String size, Instant created) {
 }

@@ -1,7 +1,10 @@
 package com.evolution.dropfile.common.dto;
 
-// TODO add file size
+import java.time.Instant;
+
 public record ApiShareInfoResponseDTO(String id,
                                       String alias,
-                                      String absoluteFilePath) {
+                                      String absoluteFilePath,
+                                      String size,
+                                      Instant created) {
 }
