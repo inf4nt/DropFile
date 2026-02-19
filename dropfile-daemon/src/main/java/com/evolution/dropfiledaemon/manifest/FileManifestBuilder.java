@@ -41,6 +41,9 @@ public class FileManifestBuilder {
         int chunkSizeFactor = getChunkSizeFactor(file);
         MessageDigest manifestMessageDigest = MessageDigest.getInstance(SHA256);
 
+        // TODO method "read" returns the whole chunk into a memory. 4mb is right now .
+        //  Unnecessary to read the whole chunk into a memory to get its length, and sha256
+        //  It is possible to add a new one method that returns length and sha256
         fileHelper.read(file, chunkSizeFactor, chunkContainer -> {
             byte[] data = chunkContainer.getData();
             int chunkSize = data.length;

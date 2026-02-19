@@ -25,6 +25,26 @@ public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
 
+    // TODO finish me
+    public void sha256(File file, int chunkSizeFactor, Consumer<Sha256Container> consumer) throws IOException {
+        long fileLength = file.length();
+        long processed = 0;
+        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
+            while (processed < fileLength) {
+                int chunkToProcess = chunkSizeFactor;
+                long leftOver = fileLength - processed;
+                if (leftOver < chunkToProcess) {
+                    chunkToProcess = Math.toIntExact(leftOver);
+                }
+
+                byte[] sha256 = getSha256(fileChannel, processed, chunkToProcess);
+                consumer.accept(new Sha256Container(sha256, processed, processed + chunkToProcess, chunkToProcess));
+                int length = chunkToProcess;
+                processed = processed + length;
+            }
+        }
+    }
+
     public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) throws IOException {
         long fileLength = file.length();
         long processed = 0;
@@ -129,6 +149,11 @@ public class FileHelper {
         return sb.toString();
     }
 
+    public byte[] getSha256(FileChannel fileChannel, long skip, int take) throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        return null;
+    }
+
     public byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(take);
         fileChannel.position(skip);
@@ -173,5 +198,14 @@ public class FileHelper {
         private final byte[] data;
         private final long from;
         private final long to;
+    }
+
+    @Data
+    @RequiredArgsConstructor
+    public static class Sha256Container {
+        private final byte[] sha256;
+        private final long from;
+        private final long to;
+        private final int length;
     }
 }
