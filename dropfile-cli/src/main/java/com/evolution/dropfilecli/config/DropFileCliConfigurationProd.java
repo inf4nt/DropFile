@@ -27,11 +27,8 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public AppConfigStore appConfigStore(ObjectMapper objectMapper,
-                                         AppConfigStoreInitializationProcedure initializationProcedure) {
-        AppConfigStore store = new JsonFileAppConfigStore(objectMapper);
-        initializationProcedure.init(store);
-        return store;
+    public AppConfigStore appConfigStore(ObjectMapper objectMapper) {
+        return new JsonFileAppConfigStore(objectMapper);
     }
 
     @Bean
