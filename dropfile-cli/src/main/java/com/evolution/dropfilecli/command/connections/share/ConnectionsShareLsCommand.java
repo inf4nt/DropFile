@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -16,9 +17,13 @@ import java.util.List;
 )
 public class ConnectionsShareLsCommand extends AbstractCommandHttpHandler {
 
+    @CommandLine.Option(names = {"-id", "--id"}, split = ",", description = "List of ids")
+    private List<String> ids;
+
     @Override
     public HttpResponse<byte[]> execute() {
-        return daemonClient.connectionShareLs();
+        List<String> requestIds = ids == null ? Collections.emptyList() : ids;
+        return daemonClient.connectionShareLs(requestIds);
     }
 
     @Override

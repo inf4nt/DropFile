@@ -2,12 +2,14 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,10 +32,11 @@ public class ApiConnectionsShareFacade {
 
     private final FileHelper fileHelper;
 
-    public List<ApiConnectionsShareLsResponseDTO> ls() {
+    public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
         List<ShareLsTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .command("share-ls")
+                        .body(new ShareLsTunnelRequest(requestDTO.ids()))
                         .build(),
                 new TypeReference<List<ShareLsTunnelResponse>>() {
                 }

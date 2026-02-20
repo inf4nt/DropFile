@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsShareFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +22,9 @@ public class ApiConnectionsShareRestController {
         this.apiFacade = apiFacade;
     }
 
-    @GetMapping("/ls")
-    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> ls() {
-        List<ApiConnectionsShareLsResponseDTO> files = apiFacade.ls();
+    @PostMapping("/ls")
+    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> ls(@RequestBody ApiConnectionsShareLsRequestDTO requestDTO) {
+        List<ApiConnectionsShareLsResponseDTO> files = apiFacade.ls(requestDTO);
         return ResponseEntity.ok(files);
     }
 

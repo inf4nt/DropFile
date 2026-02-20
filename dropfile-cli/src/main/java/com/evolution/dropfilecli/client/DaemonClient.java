@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -137,7 +138,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionShareLs() {
+    public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
         AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
@@ -149,7 +150,11 @@ public class DaemonClient {
                 .newBuilder()
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
-                .GET()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                        objectMapper.writeValueAsBytes(
+                                new ApiConnectionsShareLsRequestDTO(ids)
+                        )
+                ))
                 .header("Content-Type", "application/json")
                 .build();
 
