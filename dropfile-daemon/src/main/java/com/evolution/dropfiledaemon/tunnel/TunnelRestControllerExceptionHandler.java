@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice(assignableTypes = TunnelRestController.class)
 public class TunnelRestControllerExceptionHandler {
 
+    // TODO If there a valid connection, and an error has happened
+    //  let the client know what has happened on the server side.
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleAsyncTimeoutException(Exception exception) {
         log.info("Tunnel exception: {}", exception.getMessage(), exception);

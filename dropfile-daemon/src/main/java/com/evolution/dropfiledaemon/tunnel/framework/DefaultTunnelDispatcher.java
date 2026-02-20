@@ -54,8 +54,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     @SneakyThrows
     private InputStream handlerResultToInputStream(Object handlerResult) {
-        if (handlerResult instanceof InputStream) {
-            return (InputStream) handlerResult;
+        if (handlerResult instanceof InputStream inputStream) {
+            return inputStream;
         }
         if (handlerResult instanceof byte[] arrayResult) {
             return new ByteArrayInputStream(arrayResult);
