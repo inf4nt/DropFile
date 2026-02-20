@@ -137,7 +137,7 @@ public class FileDownloadOrchestrator {
                 SafeUtils.execute(() -> downloadingSemaphore.release());
             }
         });
-        return new FileDownloadResponse(operationId, destinationFile.getAbsolutePath());
+        return new FileDownloadResponse(operationId, request.fileId(), destinationFile.getAbsolutePath());
     }
 
     private boolean isStopped(Exception exception) {

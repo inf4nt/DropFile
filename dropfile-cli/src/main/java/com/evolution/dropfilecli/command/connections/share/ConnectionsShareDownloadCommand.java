@@ -19,7 +19,7 @@ public class ConnectionsShareDownloadCommand extends AbstractCommandHttpHandler 
     @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;
 
-    @CommandLine.Option(names = {"-filename", "--filename"}, required = true)
+    @CommandLine.Option(names = {"-filename", "--filename", "-f", "--f"})
     private String filename;
 
     @Override

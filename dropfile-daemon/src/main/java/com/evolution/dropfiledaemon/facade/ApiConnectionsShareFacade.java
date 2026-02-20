@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 
@@ -33,10 +34,19 @@ public class ApiConnectionsShareFacade {
     private final FileHelper fileHelper;
 
     public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
+        String fingerprintConnection = applicationConfigStore.getHandshakeStore()
+                .sessionOutStore().getRequiredLatestUpdated()
+                .getKey();
+        return ls(fingerprintConnection, requestDTO);
+    }
+
+    private List<ApiConnectionsShareLsResponseDTO> ls(String fingerprint,
+                                                      ApiConnectionsShareLsRequestDTO requestDTO) {
         List<ShareLsTunnelResponse> files = tunnelClient.send(
                 TunnelClient.Request.builder()
                         .command("share-ls")
                         .body(new ShareLsTunnelRequest(requestDTO.ids()))
+                        .fingerprint(fingerprint)
                         .build(),
                 new TypeReference<List<ShareLsTunnelResponse>>() {
                 }
@@ -56,8 +66,34 @@ public class ApiConnectionsShareFacade {
                 TunnelClient.Request.builder()
                         .command("share-cat")
                         .body(id)
+                        .fingerprint(
+                                applicationConfigStore.getHandshakeStore()
+                                        .sessionOutStore().getRequiredLatestUpdated()
+                                        .getKey()
+                        )
                         .build(),
                 String.class
+        );
+    }
+
+    private FileDownloadRequest getRequestForDownloadRequest(String fingerprintConnection, ApiConnectionsShareDownloadRequestDTO requestDTO) {
+        List<ApiConnectionsShareLsResponseDTO> responses = ls(
+                fingerprintConnection, new ApiConnectionsShareLsRequestDTO(List.of(requestDTO.fileId()))
+        );
+        if (responses.isEmpty()) {
+            throw new RuntimeException("No files to download were found");
+        }
+        if (responses.size() > 1) {
+            List<String> ids = responses.stream().map(it -> it.id()).toList();
+            throw new RuntimeException(String.format(
+                    "Multiple files %s to download were found. Specify only one file to download", ids
+            ));
+        }
+        ApiConnectionsShareLsResponseDTO response = responses.getFirst();
+        return new FileDownloadRequest(
+                fingerprintConnection,
+                response.id(),
+                ObjectUtils.isEmpty(requestDTO.filename()) ? response.alias() : requestDTO.filename()
         );
     }
 
@@ -79,13 +115,14 @@ public class ApiConnectionsShareFacade {
             return null;
         }
 
-        FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(
-                new FileDownloadRequest(fingerprintConnection, requestDTO.fileId(), requestDTO.filename())
-        );
+        FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
+
+        FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(fileDownloadRequest);
+
         return new ApiConnectionsShareDownloadResponseDTO(
                 fileDownloadResponse.operationId(),
                 fingerprintConnection,
-                requestDTO.fileId(),
+                fileDownloadResponse.fileId(),
                 fileDownloadResponse.filename()
         );
     }
