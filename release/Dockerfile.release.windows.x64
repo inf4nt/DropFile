@@ -1,29 +1,27 @@
-FROM alpine:3.19 AS archive_content
+FROM alpine:3.19 AS runtime_container
 
-RUN apk add --no-cache curl unzip
-
+ARG WORKDIR_NAME=/runtime_container
+ARG RUNTIME_DIR_NAME=/$WORKDIR_NAME/runtime
 ARG JDK_MAJOR_VERION=25
 ARG JDK_VERSION=25.0.1
 ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/$JDK_MAJOR_VERION/archive/jdk-"$JDK_VERSION"_windows-x64_bin.zip"
 ARG JDK_ARCHIVE="jdk.zip"
-ARG JAVA_HOME=/opt/jdk-$JDK_VERSION
+ARG JAVA_HOME=/$WORKDIR_NAME/jdk-$JDK_VERSION
+
+RUN apk add --no-cache curl unzip
+
+WORKDIR $WORKDIR_NAME
 
 RUN curl -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
-    && unzip $JDK_ARCHIVE -d /opt \
-    && rm $JDK_ARCHIVE
-
-WORKDIR /dropfile
-
-RUN mkdir /dropfile/bin \
-    && mkdir /dropfile/runtime
-
-RUN cp -r $JAVA_HOME/. "/dropfile/runtime"
-
-COPY /release/windows /dropfile/bin
+    && unzip $JDK_ARCHIVE -d $WORKDIR_NAME \
+    && rm $JDK_ARCHIVE \
+    && mv $JAVA_HOME $RUNTIME_DIR_NAME
 
 FROM maven:3.9.12-eclipse-temurin-25 AS build
 
-WORKDIR /workdir
+ARG WORKDIR_NAME=/build
+
+WORKDIR $WORKDIR_NAME
 
 COPY pom.xml pom.xml
 COPY /dropfile-common/pom.xml dropfile-common/pom.xml
@@ -40,19 +38,20 @@ COPY /dropfile-daemon/src dropfile-daemon/src
 
 RUN mvn package -Dmaven.test.skip=true
 
-FROM busybox AS archive_build
+FROM busybox
 
-COPY --from=archive_content /dropfile/bin /dropfile/bin
-COPY --from=archive_content /dropfile/runtime /dropfile/runtime
-COPY --from=build /workdir/dropfile-cli/target/*.jar /dropfile/dropfile-cli/dropfile-cli.jar
-COPY --from=build /workdir/dropfile-daemon/target/*.jar /dropfile/dropfile-daemon/dropfile-daemon.jar
+RUN mkdir -p dropfile/bin dropfile/logs dropfile/runtime dropfile/dropfile-cli dropfile/dropfile-daemon
 
-RUN mkdir /dropfile/logs
+COPY /release/windows /dropfile/bin
 
-RUN tar -czf dropfile-windows.tar.gz dropfile
+COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
+COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/dropfile-cli/dropfile-cli.jar
+COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/dropfile-daemon/dropfile-daemon.jar
+
+RUN tar -czf dropfile-windows-x64.tar.gz dropfile
 
 RUN rm -rf /dropfile
 
 RUN mkdir out
 
-ENTRYPOINT ["cp", "/dropfile-windows.tar.gz", "/out/dropfile-windows-x64.tar.gz"]
+ENTRYPOINT ["cp", "/dropfile-windows-x64.tar.gz", "/out/dropfile-windows-x64.tar.gz"]
