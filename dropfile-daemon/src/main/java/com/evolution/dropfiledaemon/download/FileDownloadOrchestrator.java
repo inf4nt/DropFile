@@ -204,6 +204,7 @@ public class FileDownloadOrchestrator {
         return tmpDownloadFile;
     }
 
+    // TODO add ETA
     public record DownloadProgress(String operationId,
                                    String fingerprint,
                                    String fileId,
