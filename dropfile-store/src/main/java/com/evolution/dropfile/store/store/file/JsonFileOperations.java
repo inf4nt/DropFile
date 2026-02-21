@@ -92,7 +92,7 @@ public class JsonFileOperations<V> implements FileOperations<V> {
 
     @SneakyThrows
     protected byte[] serialize(Map<String, V> values) {
-        return objectMapper.writeValueAsBytes(values);
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(values);
     }
 
     @SneakyThrows
