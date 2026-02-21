@@ -1,8 +1,0 @@
-#!/usr/bin/env sh
-set -e
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WIN_BIN_DIR="$(wslpath -w "$SCRIPT_DIR")"
-WIN_APP_CMD="$WIN_BIN_DIR\\dropfile.cmd"
-
-cmd.exe /q /c "$WIN_APP_CMD $*"

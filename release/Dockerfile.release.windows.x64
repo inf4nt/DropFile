@@ -44,8 +44,10 @@ FROM busybox AS archive_build
 
 COPY --from=archive_content /dropfile/bin /dropfile/bin
 COPY --from=archive_content /dropfile/runtime /dropfile/runtime
-COPY --from=build /workdir/dropfile-cli/target/*.jar dropfile/dropfile-cli/dropfile-cli.jar
-COPY --from=build /workdir/dropfile-daemon/target/*.jar dropfile/dropfile-daemon/dropfile-daemon.jar
+COPY --from=build /workdir/dropfile-cli/target/*.jar /dropfile/dropfile-cli/dropfile-cli.jar
+COPY --from=build /workdir/dropfile-daemon/target/*.jar /dropfile/dropfile-daemon/dropfile-daemon.jar
+
+RUN mkdir /dropfile/logs
 
 RUN tar -czf dropfile-windows.tar.gz dropfile
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env sh
 set -e
 
-"$DROPFILE_HOME/runtime/bin/java" -XX:ActiveProcessorCount=1 -Xmx256m -Xms256m -jar "$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar" $*
+JAVA_PATH="$DROPFILE_HOME/runtime/bin/java"
+JAR_PATH="$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar"
+LOG_PATH=$DROPFILE_HOME/logs
+
+$JAVA_PATH "-Dlogging.path=$LOG_PATH" -XX:ActiveProcessorCount=1 -Xmx256m -Xms256m -jar $JAR_PATH $*
