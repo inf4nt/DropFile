@@ -32,32 +32,28 @@ public class ApiDownloadFacade {
                     .getDownloadProcedures()
                     .get(entry.getKey());
             if (downloadProgress != null) {
+                ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.DOWNLOADING;
+                String progress = getProgress(downloadProgress.total(), downloadProgress.downloaded());
+                String speedPerSecond = fileHelper.toDisplaySize(downloadProgress.speedBytesPerSec());
                 responses.add(new ApiDownloadLsDTO.Response(
                         downloadProgress.operationId(),
-                        downloadProgress.fingerprint(),
                         downloadProgress.fileId(),
                         entry.getValue().destinationFile(),
-                        null,
-                        fileHelper.toDisplaySize(downloadProgress.total()),
-                        fileHelper.toDisplaySize(downloadProgress.downloaded()),
-                        downloadProgress.percentage(),
-                        downloadProgress.speed(),
-                        ApiDownloadLsDTO.Status.DOWNLOADING,
+                        progress,
+                        speedPerSecond,
+                        status,
                         entry.getValue().updated()
                 ));
             } else {
                 String operation = entry.getKey();
                 DownloadFileEntry downloadFileEntry = entry.getValue();
                 ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFileEntry.status().name());
+                String progress = getProgress(downloadFileEntry.total(), downloadFileEntry.downloaded());
                 responses.add(new ApiDownloadLsDTO.Response(
                         operation,
-                        downloadFileEntry.fingerprintConnection(),
                         downloadFileEntry.fileId(),
                         downloadFileEntry.destinationFile(),
-                        status == ApiDownloadLsDTO.Status.COMPLETED ? downloadFileEntry.hash() : null,
-                        fileHelper.toDisplaySize(downloadFileEntry.total()),
-                        fileHelper.toDisplaySize(downloadFileEntry.downloaded()),
-                        fileHelper.percent(downloadFileEntry.downloaded(), downloadFileEntry.total()),
+                        progress,
                         null,
                         status,
                         downloadFileEntry.updated()
@@ -78,6 +74,19 @@ public class ApiDownloadFacade {
         }
         ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(request.status().name());
         return getByStatus(responses, status, limit);
+    }
+
+    private String getProgress(long total, long downloaded) {
+        if (total == 0) {
+            return "0%";
+        }
+        if (downloaded == 0) {
+            return String.format("%s/0 (%s)", fileHelper.toDisplaySize(total), "0%");
+        }
+        if (total == downloaded) {
+            return String.format("%s (%s)", fileHelper.toDisplaySize(total), "100%");
+        }
+        return String.format("%s/%s (%s)", fileHelper.toDisplaySize(total), fileHelper.toDisplaySize(downloaded), fileHelper.percent(total, downloaded));
     }
 
     private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {

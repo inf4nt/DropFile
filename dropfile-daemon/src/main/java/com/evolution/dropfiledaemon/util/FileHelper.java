@@ -161,12 +161,18 @@ public class FileHelper {
         return buffer.array();
     }
 
-    public String percent(long downloaded, long total) {
-        if (total <= 0) {
-            return "0.00%";
+    public String percent(long total, long downloaded) {
+        if (total == 0) {
+            return "0%";
+        }
+        if (downloaded == 0) {
+            return "0%";
+        }
+        if (total == downloaded) {
+            return "100%";
         }
 
-        double value = (double) downloaded * 100.0 / total;
+        double value = (double) (downloaded * 100) / total;
         return String.format(Locale.US, "%.2f%%", value);
     }
 

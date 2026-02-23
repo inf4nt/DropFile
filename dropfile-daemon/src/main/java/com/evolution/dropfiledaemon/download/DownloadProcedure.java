@@ -111,14 +111,13 @@ public class DownloadProcedure {
                     null,
                     0,
                     0,
-                    null,
+                    0,
                     fileHelper.percent(0, 0)
             );
         }
 
         long totalDownloaded = downloadSpeedMeter.getTotalDownloaded();
         long speedBytesPerSec = downloadSpeedMeter.getSpeedBytesPerSec();
-        String speedPerSec = fileHelper.toDisplaySize(speedBytesPerSec);
         String percent = fileHelper.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
@@ -129,7 +128,7 @@ public class DownloadProcedure {
                 manifest.hash(),
                 totalDownloaded,
                 manifest.size(),
-                speedPerSec,
+                speedBytesPerSec,
                 percent
         );
     }
