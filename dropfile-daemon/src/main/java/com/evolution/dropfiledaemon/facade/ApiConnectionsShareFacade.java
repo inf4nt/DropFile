@@ -102,20 +102,20 @@ public class ApiConnectionsShareFacade {
                 .sessionOutStore().getRequiredLatestUpdated()
                 .getKey();
 
+        FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
+
         // TODO remove it
         if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {
             int index = requestDTO.filename().indexOf("big");
             Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
             for (int i = 0; i < iterations; i++) {
+                String filename = i + "-" + fileDownloadRequest.filename();
                 fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(fingerprintConnection,
-                                requestDTO.fileId(), i + "-" + requestDTO.filename())
+                        new FileDownloadRequest(fileDownloadRequest.fingerprintConnection(), fileDownloadRequest.fileId(), filename)
                 );
             }
             return null;
         }
-
-        FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
 
         FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(fileDownloadRequest);
 
