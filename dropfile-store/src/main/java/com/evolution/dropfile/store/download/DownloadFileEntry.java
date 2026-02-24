@@ -4,7 +4,6 @@ import lombok.With;
 
 import java.time.Instant;
 
-// TODO added Create and Finish date
 @With
 public record DownloadFileEntry(String fingerprint,
                                 String fileId,
@@ -14,15 +13,17 @@ public record DownloadFileEntry(String fingerprint,
                                 long total,
                                 long downloaded,
                                 DownloadFileEntryStatus status,
+                                Instant created,
                                 Instant updated) {
 
-    public DownloadFileEntry(String fingerprintConnection,
+    public DownloadFileEntry(String fingerprint,
                              String fileId,
                              String destinationFile,
                              String temporaryFile,
                              DownloadFileEntryStatus status,
+                             Instant created,
                              Instant updated) {
-        this(fingerprintConnection, fileId, destinationFile, temporaryFile, null, 0, 0, status, updated);
+        this(fingerprint, fileId, destinationFile, temporaryFile, null, 0, 0, status, created, updated);
     }
 
     public enum DownloadFileEntryStatus {

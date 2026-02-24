@@ -79,6 +79,7 @@ public class FileDownloadOrchestrator {
                             destinationFile.getAbsolutePath(),
                             temporaryFile.getAbsolutePath(),
                             DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                            Instant.now(),
                             Instant.now()
                     )
             );
@@ -91,8 +92,8 @@ public class FileDownloadOrchestrator {
                                     currentValue -> currentValue.withHash(downloadProcedure.getProgress().hash())
                                             .withTotal(downloadProcedure.getProgress().total())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withUpdated(Instant.now())
                                             .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
+                                            .withUpdated(Instant.now())
                             );
                 } catch (Exception exception) {
                     DownloadFileEntry.DownloadFileEntryStatus status = getErrorStatus(exception);
@@ -102,8 +103,8 @@ public class FileDownloadOrchestrator {
                                     currentValue -> currentValue.withHash(downloadProcedure.getProgress().hash())
                                             .withTotal(downloadProcedure.getProgress().total())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withUpdated(Instant.now())
                                             .withStatus(status)
+                                            .withUpdated(Instant.now())
                             );
                     log.info("Exception occurred during download process operation {} fingerprint {} {}",
                             operationId, request.fingerprintConnection(), exception.getMessage(), exception);
