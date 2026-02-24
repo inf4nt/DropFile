@@ -152,14 +152,8 @@ public class DownloadProcedure {
                                 operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt, exception.getMessage()
                         );
                     })
-                    .doOnSuccessful((attempt, manifest) -> {
-                        log.info(
-                                "Manifest downloaded 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} Attempt: {} Hash {} Chunk size {}",
-                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt, manifest.hash(), manifest.chunkManifests().size()
-                        );
-                    })
                     .retryIf(it -> {
-                        if (it.exception() instanceof DownloadingStoppedException) {
+                        if (it.exception() instanceof DownloadingStoppedException || it.exception() instanceof InterruptedException) {
                             return false;
                         }
                         return it.exception() != null || it.result() == null;
@@ -251,7 +245,13 @@ public class DownloadProcedure {
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage()
                         );
                     })
-                    .retryIf(it -> retryIf(it))
+                    .retryIf(it -> {
+                        if (it.exception() instanceof DownloadingStoppedException
+                                || it.exception() instanceof InterruptedException) {
+                            return false;
+                        }
+                        return it.exception() != null;
+                    })
                     .run();
         } catch (Exception e) {
             throw new ChunkDownloadingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
@@ -273,19 +273,17 @@ public class DownloadProcedure {
                         log.info("Retry 'write-chunk'. Attempt: {} start {} end {} exception {}",
                                 attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
                     })
-                    .retryIf(it -> retryIf(it))
+                    .retryIf(it -> {
+                        if (it.exception() instanceof DownloadingStoppedException
+                                || it.exception() instanceof InterruptedException) {
+                            return false;
+                        }
+                        return it.exception() != null;
+                    })
                     .run();
         } catch (Exception exception) {
             throw new ChunkWritingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);
         }
-    }
-
-    private boolean retryIf(RetryExecutor.RetryIfContainer<?> retryIfContainer) {
-        if (retryIfContainer.exception() instanceof DownloadingStoppedException
-                || retryIfContainer.exception() instanceof InterruptedException) {
-            return false;
-        }
-        return retryIfContainer.exception() != null;
     }
 
     private void checkIfProcessHasStopped() {
