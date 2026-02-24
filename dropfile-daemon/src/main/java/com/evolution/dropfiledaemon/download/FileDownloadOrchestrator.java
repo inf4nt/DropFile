@@ -110,6 +110,7 @@ public class FileDownloadOrchestrator {
                             operationId, request.fingerprint(), exception.getMessage(), exception);
                     throw new RuntimeException(exception);
                 } finally {
+                    SafeUtils.execute(() -> Files.deleteIfExists(temporaryFile.toPath()));
                     SafeUtils.execute(() -> downloadProcedures.remove(operationId));
                     SafeUtils.execute(() -> downloadProcedureExecutorService.close());
                     SafeUtils.execute(() -> downloadingSemaphore.release());

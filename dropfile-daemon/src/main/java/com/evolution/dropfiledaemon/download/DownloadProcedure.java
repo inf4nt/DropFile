@@ -58,47 +58,41 @@ public class DownloadProcedure {
     }
 
     public void run() {
-        try {
-            ExecutionProfiling.run(
-                    String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s", operationId,
-                            request.fingerprint(), request.fileId()),
-                    () -> {
+        ExecutionProfiling.run(
+                String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s", operationId,
+                        request.fingerprint(), request.fileId()),
+                () -> {
 
-                        ExecutionProfiling.run(
-                                String.format("download-manifest operation: %s fingerprint %s fileId: %s",
-                                        operationId, request.fingerprint(), request.fileId()),
-                                () -> downloadManifest()
-                        );
+                    ExecutionProfiling.run(
+                            String.format("download-manifest operation: %s fingerprint %s fileId: %s",
+                                    operationId, request.fingerprint(), request.fileId()),
+                            () -> downloadManifest()
+                    );
 
-                        validateManifest(manifest);
+                    validateManifest(manifest);
 
-                        ExecutionProfiling.run(
-                                String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
-                                        operationId, request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
-                                ),
-                                () -> downloadAndWriteChunks()
-                        );
+                    ExecutionProfiling.run(
+                            String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
+                                    operationId, request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
+                            ),
+                            () -> downloadAndWriteChunks()
+                    );
 
-                        String actualSha256 = ExecutionProfiling.run(
-                                String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
-                                        operationId, request.fingerprint(), request.fileId()),
-                                () -> fileHelper.sha256(temporaryFile)
-                        );
+                    String actualSha256 = ExecutionProfiling.run(
+                            String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
+                                    operationId, request.fingerprint(), request.fileId()),
+                            () -> fileHelper.sha256(temporaryFile)
+                    );
 
-                        if (!manifest.hash().equals(actualSha256)) {
-                            throw new TotalDigestMismatchException(operationId, manifest.hash(), actualSha256);
-                        }
-
-                        checkIfProcessHasStopped();
-
-                        Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    if (!manifest.hash().equals(actualSha256)) {
+                        throw new TotalDigestMismatchException(operationId, manifest.hash(), actualSha256);
                     }
-            );
-        } finally {
-            if (temporaryFile != null && Files.exists(temporaryFile.toPath())) {
-                SafeUtils.execute(() -> Files.delete(temporaryFile.toPath()));
-            }
-        }
+
+                    checkIfProcessHasStopped();
+
+                    Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                }
+        );
     }
 
     public FileDownloadOrchestrator.DownloadProgress getProgress() {
