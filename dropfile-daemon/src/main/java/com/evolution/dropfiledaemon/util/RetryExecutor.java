@@ -113,8 +113,8 @@ public class RetryExecutor<T> {
             return this;
         }
 
-        public RetryExecutor<T> build() {
-            return new RetryExecutor<>(
+        public T run() {
+            RetryExecutor<T> retry = new RetryExecutor<>(
                     callable,
                     doOnError,
                     doOnSuccessful,
@@ -122,6 +122,7 @@ public class RetryExecutor<T> {
                     attempts,
                     delay
             );
+            return retry.run();
         }
     }
 

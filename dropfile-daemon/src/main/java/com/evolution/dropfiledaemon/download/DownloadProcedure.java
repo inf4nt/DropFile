@@ -164,7 +164,6 @@ public class DownloadProcedure {
                         }
                         return it.exception() != null || it.result() == null;
                     })
-                    .build()
                     .run();
         } catch (Exception e) {
             throw new ManifestDownloadingFailedException(operationId, request.fileId(), request.filename(), e);
@@ -253,7 +252,6 @@ public class DownloadProcedure {
                         );
                     })
                     .retryIf(it -> retryIf(it))
-                    .build()
                     .run();
         } catch (Exception e) {
             throw new ChunkDownloadingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
@@ -276,7 +274,6 @@ public class DownloadProcedure {
                                 attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
                     })
                     .retryIf(it -> retryIf(it))
-                    .build()
                     .run();
         } catch (Exception exception) {
             throw new ChunkWritingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);

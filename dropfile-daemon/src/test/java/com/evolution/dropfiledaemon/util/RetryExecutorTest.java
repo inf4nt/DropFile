@@ -33,7 +33,6 @@ public class RetryExecutorTest {
                 .attempts(2)
                 .delay(Duration.ofSeconds(0))
                 .retryIf(it -> it.result() == null)
-                .build()
                 .run();
         assertThat(called.get(), is(2));
         assertThat(result, is(true));
@@ -54,7 +53,6 @@ public class RetryExecutorTest {
                 .attempts(2)
                 .delay(Duration.ofSeconds(0))
                 .retryIf(it -> it.exception() != null)
-                .build()
                 .run();
         assertThat(called.get(), is(2));
         assertNull(result);
@@ -86,7 +84,6 @@ public class RetryExecutorTest {
                     })
                     .attempts(3)
                     .delay(Duration.ofMillis(0))
-                    .build()
                     .run();
             fail("Exception not thrown");
         } catch (RetryExecutor.RetryExecutorException e) {
@@ -126,7 +123,6 @@ public class RetryExecutorTest {
                     })
                     .attempts(1)
                     .delay(Duration.ofMillis(0))
-                    .build()
                     .run();
             fail("Exception not thrown");
         } catch (RetryExecutor.RetryExecutorException e) {
@@ -149,7 +145,6 @@ public class RetryExecutorTest {
                     })
                     .attempts(1)
                     .delay(Duration.ofMillis(0))
-                    .build()
                     .run();
             fail("Exception not thrown");
         } catch (RetryExecutor.RetryExecutorException e) {
@@ -172,7 +167,6 @@ public class RetryExecutorTest {
                     })
                     .attempts(1)
                     .delay(Duration.ofMillis(0))
-                    .build()
                     .run();
             fail("Exception not thrown");
         } catch (RetryExecutor.RetryExecutorException e) {
@@ -200,7 +194,6 @@ public class RetryExecutorTest {
                 })
                 .attempts(4)
                 .delay(Duration.ofMillis(0))
-                .build()
                 .run();
         assertThat(counter.get(), is(3));
         assertThat(result, is(true));
@@ -219,7 +212,6 @@ public class RetryExecutorTest {
                 })
                 .attempts(4)
                 .delay(Duration.ofMillis(0))
-                .build()
                 .run();
         assertThat(counter.get(), is(3));
         assertThat(result, is(true));
@@ -245,7 +237,6 @@ public class RetryExecutorTest {
                     resultReference.set(result);
                 })
                 .delay(Duration.ofMillis(0))
-                .build()
                 .run();
 
         assertThat(counter.get(), is(3));
@@ -282,7 +273,6 @@ public class RetryExecutorTest {
                 })
                 .attempts(attempts)
                 .delay(delay)
-                .build()
                 .run();
         assertThat(counter.get(), is(attempts));
         assertThat(run, is(true));
@@ -335,7 +325,6 @@ public class RetryExecutorTest {
                 })
                 .attempts(4)
                 .delay(Duration.ofMillis(0))
-                .build()
                 .run();
 
         assertThat(counter.get(), is(4));
@@ -395,7 +384,6 @@ public class RetryExecutorTest {
                         return it.exception() != null || it.result() == null;
                     })
                     .delay(Duration.ofMillis(0))
-                    .build()
                     .run();
             fail("Exception not thrown");
         } catch (Exception e) {
