@@ -252,12 +252,7 @@ public class DownloadProcedure {
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage()
                         );
                     })
-                    .retryIf(it -> {
-                        if (it.exception() instanceof DownloadingStoppedException) {
-                            return false;
-                        }
-                        return it.exception() != null || it.result() == null;
-                    })
+                    .retryIf(it -> retryIf(it))
                     .build()
                     .run();
         } catch (Exception e) {
@@ -273,24 +268,27 @@ public class DownloadProcedure {
                             () -> {
                                 checkIfProcessHasStopped();
                                 fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.startPosition());
-                                return null;
+                                return chunkBytes;
                             }
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'write-chunk'. Attempt: {} start {} end {} exception {}",
                                 attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage());
                     })
-                    .retryIf(it -> {
-                        if (it.exception() instanceof DownloadingStoppedException) {
-                            return false;
-                        }
-                        return it.exception() != null;
-                    })
+                    .retryIf(it -> retryIf(it))
                     .build()
                     .run();
         } catch (Exception exception) {
             throw new ChunkWritingFailedException(operationId, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);
         }
+    }
+
+    private boolean retryIf(RetryExecutor.RetryIfContainer<?> retryIfContainer) {
+        if (retryIfContainer.exception() instanceof DownloadingStoppedException
+                || retryIfContainer.exception() instanceof InterruptedException) {
+            return false;
+        }
+        return retryIfContainer.exception() != null;
     }
 
     private void checkIfProcessHasStopped() {
