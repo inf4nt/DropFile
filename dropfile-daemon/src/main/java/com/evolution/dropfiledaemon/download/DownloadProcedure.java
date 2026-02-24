@@ -126,8 +126,8 @@ public class DownloadProcedure {
                 request.fileId(),
                 destinationFile.getAbsolutePath(),
                 manifest.hash(),
-                totalDownloaded,
                 manifest.size(),
+                totalDownloaded,
                 speedBytesPerSec,
                 percent
         );
