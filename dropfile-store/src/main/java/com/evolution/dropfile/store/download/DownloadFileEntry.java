@@ -6,13 +6,13 @@ import java.time.Instant;
 
 // TODO added Create and Finish date
 @With
-public record DownloadFileEntry(String fingerprintConnection,
+public record DownloadFileEntry(String fingerprint,
                                 String fileId,
                                 String destinationFile,
                                 String temporaryFile,
                                 String hash,
-                                long downloaded,
                                 long total,
+                                long downloaded,
                                 DownloadFileEntryStatus status,
                                 Instant updated) {
 
