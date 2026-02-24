@@ -61,12 +61,12 @@ public class DownloadProcedure {
         try {
             ExecutionProfiling.run(
                     String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s", operationId,
-                            request.fingerprintConnection(), request.fileId()),
+                            request.fingerprint(), request.fileId()),
                     () -> {
 
                         ExecutionProfiling.run(
                                 String.format("download-manifest operation: %s fingerprint %s fileId: %s",
-                                        operationId, request.fingerprintConnection(), request.fileId()),
+                                        operationId, request.fingerprint(), request.fileId()),
                                 () -> downloadManifest()
                         );
 
@@ -74,14 +74,14 @@ public class DownloadProcedure {
 
                         ExecutionProfiling.run(
                                 String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
-                                        operationId, request.fingerprintConnection(), request.fileId(), manifest.chunkManifests().size()
+                                        operationId, request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
                                 ),
                                 () -> downloadAndWriteChunks()
                         );
 
                         String actualSha256 = ExecutionProfiling.run(
                                 String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
-                                        operationId, request.fingerprintConnection(), request.fileId()),
+                                        operationId, request.fingerprint(), request.fileId()),
                                 () -> fileHelper.sha256(temporaryFile)
                         );
 
@@ -105,7 +105,7 @@ public class DownloadProcedure {
         if (manifest == null) {
             return new FileDownloadOrchestrator.DownloadProgress(
                     operationId,
-                    request.fingerprintConnection(),
+                    request.fingerprint(),
                     request.fileId(),
                     destinationFile.getAbsolutePath(),
                     null,
@@ -122,7 +122,7 @@ public class DownloadProcedure {
 
         return new FileDownloadOrchestrator.DownloadProgress(
                 operationId,
-                request.fingerprintConnection(),
+                request.fingerprint(),
                 request.fileId(),
                 destinationFile.getAbsolutePath(),
                 manifest.hash(),
@@ -142,14 +142,14 @@ public class DownloadProcedure {
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
                                                 .body(request.fileId())
-                                                .fingerprint(request.fingerprintConnection())
+                                                .fingerprint(request.fingerprint())
                                                 .build(),
                                         ShareDownloadManifestTunnelResponse.class);
                             }
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
-                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt, exception.getMessage()
+                                operationId, request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage()
                         );
                     })
                     .retryIf(it -> {
@@ -226,7 +226,7 @@ public class DownloadProcedure {
                                                         chunkManifest.startPosition(),
                                                         chunkManifest.endPosition()
                                                 ))
-                                                .fingerprint(request.fingerprintConnection())
+                                                .fingerprint(request.fingerprint())
                                                 .build())) {
                                     byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
                                     String sha256 = fileHelper.sha256(allBytes);
@@ -241,7 +241,7 @@ public class DownloadProcedure {
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} start {} end {} exception: {}",
-                                operationId, request.fingerprintConnection(), request.fileId(), request.filename(), attempt,
+                                operationId, request.fingerprint(), request.fileId(), request.filename(), attempt,
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage()
                         );
                     })

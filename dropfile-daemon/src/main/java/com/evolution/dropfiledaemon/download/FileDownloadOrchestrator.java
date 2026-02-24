@@ -74,7 +74,7 @@ public class FileDownloadOrchestrator {
             applicationConfigStore.getFileDownloadEntryStore().save(
                     operationId,
                     new DownloadFileEntry(
-                            request.fingerprintConnection(),
+                            request.fingerprint(),
                             request.fileId(),
                             destinationFile.getAbsolutePath(),
                             temporaryFile.getAbsolutePath(),
@@ -107,7 +107,7 @@ public class FileDownloadOrchestrator {
                                             .withUpdated(Instant.now())
                             );
                     log.info("Exception occurred during download process operation {} fingerprint {} {}",
-                            operationId, request.fingerprintConnection(), exception.getMessage(), exception);
+                            operationId, request.fingerprint(), exception.getMessage(), exception);
                     throw new RuntimeException(exception);
                 } finally {
                     SafeUtils.execute(() -> downloadProcedures.remove(operationId));

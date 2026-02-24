@@ -111,7 +111,7 @@ public class ApiConnectionsShareFacade {
             for (int i = 0; i < iterations; i++) {
                 String filename = i + "-" + fileDownloadRequest.filename();
                 fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(fileDownloadRequest.fingerprintConnection(), fileDownloadRequest.fileId(), filename)
+                        new FileDownloadRequest(fileDownloadRequest.fingerprint(), fileDownloadRequest.fileId(), filename)
                 );
             }
             return null;
