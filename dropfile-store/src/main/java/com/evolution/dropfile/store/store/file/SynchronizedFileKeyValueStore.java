@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
 
@@ -35,6 +36,13 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
         Path filePath = fileProvider.getFilePath();
         fileOperations.write(filePath, all);
         return value;
+    }
+
+    @Override
+    public synchronized V update(String key, Function<V, V> updateFunction) {
+        V currentValue = getRequired(key).getValue();
+        V newValue = updateFunction.apply(currentValue);
+        return save(key, newValue);
     }
 
     @Override

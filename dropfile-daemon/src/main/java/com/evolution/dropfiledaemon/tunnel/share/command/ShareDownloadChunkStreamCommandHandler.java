@@ -45,6 +45,8 @@ public class ShareDownloadChunkStreamCommandHandler
 //            return new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
 //        }
 
+        Thread.sleep(3000);
+
         ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore()
                 .getRequired(request.id())
                 .getValue();

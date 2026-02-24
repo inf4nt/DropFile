@@ -4,10 +4,13 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public interface KeyValueStore<V> {
 
     V save(String key, V value);
+
+    V update(String key, Function<V, V> updateFunction);
 
     V remove(String key);
 
