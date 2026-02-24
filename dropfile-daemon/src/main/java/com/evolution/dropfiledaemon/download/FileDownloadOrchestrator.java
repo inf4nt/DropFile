@@ -111,7 +111,6 @@ public class FileDownloadOrchestrator {
                     throw new RuntimeException(exception);
                 } finally {
                     SafeUtils.execute(() -> downloadProcedures.remove(operationId));
-                    SafeUtils.execute(() -> downloadProcedureExecutorService.shutdownNow());
                     SafeUtils.execute(() -> downloadProcedureExecutorService.close());
                     SafeUtils.execute(() -> downloadingSemaphore.release());
                 }
