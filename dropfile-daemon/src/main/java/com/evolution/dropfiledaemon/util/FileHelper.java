@@ -95,13 +95,9 @@ public class FileHelper {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
         byte[] buffer = new byte[bufferSize];
         try (InputStream inputStream = new FileInputStream(file)) {
-            while (true) {
-                int read = inputStream.read(buffer);
-                if (read == -1) {
-                    break;
-                }
-                ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, read);
-                digest.update(byteBuffer);
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
             }
         }
         return bytesToHex(digest.digest());
