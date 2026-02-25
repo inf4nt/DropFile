@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfile.common.CommonUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,7 +34,9 @@ public class RetryExecutor<T> {
         int currentAttempt = 1;
         while (currentAttempt <= attempts) {
             try {
+                CommonUtils.isInterrupted();
                 T call = callable.call();
+
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
                 if (!continueRetry) {
                     if (doOnSuccessful != null) {
@@ -46,6 +49,9 @@ public class RetryExecutor<T> {
                     return call;
                 }
             } catch (Exception e) {
+                if (e instanceof InterruptedException || e.getCause() instanceof InterruptedException) {
+                    throw e;
+                }
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
                 if (!continueRetry) {
                     throw e;

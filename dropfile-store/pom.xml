@@ -11,12 +11,12 @@
 
     <groupId>com.evolution</groupId>
     <artifactId>dropfile-store</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>dropfile-store</name>
     <description>dropfile-store</description>
     <properties>
         <java.version>25</java.version>
-        <dropfile.common.version>1.1.0</dropfile.common.version>
+        <dropfile.common.version>1.2.0</dropfile.common.version>
     </properties>
     <dependencies>
         <dependency>

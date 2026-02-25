@@ -76,4 +76,18 @@ public class CommonUtils {
         }
         return sb.toString();
     }
+
+    @SneakyThrows
+    public static void isInterrupted() {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+    }
+
+    @SneakyThrows
+    public static void isInterrupted(String message) {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException(message);
+        }
+    }
 }

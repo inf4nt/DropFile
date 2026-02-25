@@ -4,9 +4,6 @@ import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.download.exception.DownloadingStoppedException;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,125 +21,99 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FileDownloadOrchestrator {
+public class FileDownloadOrchestrator implements AutoCloseable {
 
     private static final int MAX_PARALLEL_DOWNLOADING_COUNT = 10;
-
-    private static final int MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT = 2;
-
-    private final Semaphore downloadingSemaphore = new Semaphore(MAX_PARALLEL_DOWNLOADING_COUNT);
 
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Map<String, DownloadProcedure> downloadProcedures = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    private final TunnelClient tunnelClient;
+    private final DownloadProcedureFactory downloadProcedureFactory;
 
     private final ApplicationConfigStore applicationConfigStore;
 
-    private final FileHelper fileHelper;
-
     @SneakyThrows
-    public FileDownloadResponse start(FileDownloadRequest request) {
-        if (downloadingSemaphore.availablePermits() == 0) {
+    public synchronized FileDownloadResponse start(FileDownloadRequest request) {
+        if (downloadProcedures.size() >= MAX_PARALLEL_DOWNLOADING_COUNT) {
             throw new IllegalStateException("No available permits. Total: " + MAX_PARALLEL_DOWNLOADING_COUNT);
         }
 
-        downloadingSemaphore.acquire();
-        try {
-            File destinationFile = getDestinationFile(request);
-            File temporaryFile = getTemporaryFile(request);
+        String operationId = CommonUtils.random();
+        File destinationFile = getDestinationFile(request);
+        File temporaryFile = getTemporaryFile(request);
+        DownloadProcedure downloadProcedure = downloadProcedureFactory.get(
+                operationId,
+                request.fingerprint(),
+                request.fileId(),
+                request.filename(),
+                destinationFile,
+                temporaryFile
+        );
+        downloadProcedures.put(operationId, downloadProcedure);
 
-            String operationId = CommonUtils.random();
-            ExecutorService downloadProcedureExecutorService = Executors.newVirtualThreadPerTaskExecutor();
-            DownloadProcedure downloadProcedure = new DownloadProcedure(
-                    new Semaphore(MAX_PARALLEL_DOWNLOADING_CHUNK_COUNT),
-                    downloadProcedureExecutorService,
-                    tunnelClient,
-                    fileHelper,
-                    operationId,
-                    request,
-                    destinationFile,
-                    temporaryFile
-            );
-            downloadProcedures.put(operationId, downloadProcedure);
-            applicationConfigStore.getFileDownloadEntryStore().save(
-                    operationId,
-                    new DownloadFileEntry(
-                            request.fingerprint(),
-                            request.fileId(),
-                            destinationFile.getAbsolutePath(),
-                            temporaryFile.getAbsolutePath(),
-                            DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
-                            Instant.now(),
-                            Instant.now()
-                    )
-            );
-            fileDownloadingExecutorService.execute(() -> {
-                try {
-                    downloadProcedure.run();
-                    applicationConfigStore.getFileDownloadEntryStore()
-                            .update(
-                                    operationId,
-                                    currentValue -> currentValue.withHash(downloadProcedure.getProgress().hash())
-                                            .withTotal(downloadProcedure.getProgress().total())
-                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
-                                            .withUpdated(Instant.now())
-                            );
-                } catch (Exception exception) {
+        fileDownloadingExecutorService.execute(() -> {
+            try {
+                applicationConfigStore.getFileDownloadEntryStore().save(
+                        operationId,
+                        new DownloadFileEntry(
+                                request.fingerprint(),
+                                request.fileId(),
+                                destinationFile.getAbsolutePath(),
+                                temporaryFile.getAbsolutePath(),
+                                DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                                Instant.now(),
+                                Instant.now()
+                        )
+                );
+                downloadProcedure.run();
+                applicationConfigStore.getFileDownloadEntryStore()
+                        .update(
+                                operationId,
+                                downloadFileEntry -> downloadFileEntry
+                                        .withHash(downloadProcedure.getProgress().hash())
+                                        .withTotal(downloadProcedure.getProgress().total())
+                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
+                                        .withUpdated(Instant.now())
+                        );
+            } catch (Exception exception) {
+                log.info("Exception occurred during download process operation {} fingerprint {} {}",
+                        operationId, request.fingerprint(), exception.getMessage(), exception);
+                SafeUtils.execute(() -> {
                     DownloadFileEntry.DownloadFileEntryStatus status = getErrorStatus(exception);
                     applicationConfigStore.getFileDownloadEntryStore()
                             .update(
                                     operationId,
-                                    currentValue -> currentValue.withHash(downloadProcedure.getProgress().hash())
+                                    downloadFileEntry -> downloadFileEntry
+                                            .withHash(downloadProcedure.getProgress().hash())
                                             .withTotal(downloadProcedure.getProgress().total())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
                                             .withStatus(status)
                                             .withUpdated(Instant.now())
                             );
-                    log.info("Exception occurred during download process operation {} fingerprint {} {}",
-                            operationId, request.fingerprint(), exception.getMessage(), exception);
-                    throw new RuntimeException(exception);
-                } finally {
-                    SafeUtils.execute(() -> Files.deleteIfExists(temporaryFile.toPath()));
-                    SafeUtils.execute(() -> downloadProcedures.remove(operationId));
-                    SafeUtils.execute(() -> downloadProcedureExecutorService.close());
-                    SafeUtils.execute(() -> downloadingSemaphore.release());
-                }
-            });
-            return new FileDownloadResponse(operationId, request.fileId(), destinationFile.getAbsolutePath());
-        } catch (Exception e) {
-            SafeUtils.execute(() -> downloadingSemaphore.release());
-            log.info("Exception occurred during staring file download {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private DownloadFileEntry.DownloadFileEntryStatus getErrorStatus(Exception exception) {
-        if (exception instanceof DownloadingStoppedException || exception.getCause() instanceof DownloadingStoppedException) {
-            return DownloadFileEntry.DownloadFileEntryStatus.STOPPED;
-        }
-        return DownloadFileEntry.DownloadFileEntryStatus.ERROR;
+                });
+                throw new RuntimeException(exception);
+            } finally {
+                SafeUtils.execute(() -> downloadProcedures.remove(operationId));
+                SafeUtils.execute(() -> Files.deleteIfExists(temporaryFile.toPath()));
+            }
+        });
+        return new FileDownloadResponse(operationId, request.fileId(), destinationFile.getAbsolutePath());
     }
 
     public Map<String, DownloadProgress> getDownloadProcedures() {
-        Map<String, DownloadProgress> result = new LinkedHashMap<>();
-        for (Map.Entry<String, DownloadProcedure> entry : downloadProcedures.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().getProgress());
-        }
-        return result;
-    }
-
-    public void stopAll() {
-        for (DownloadProcedure procedure : downloadProcedures.values()) {
-            procedure.stop();
-        }
+        return downloadProcedures.entrySet().stream()
+                .collect(Collectors.toMap(
+                        it -> it.getKey(),
+                        it -> it.getValue().getProgress()
+                ));
     }
 
     public void stop(String operation) {
@@ -151,6 +122,17 @@ public class FileDownloadOrchestrator {
             throw new RuntimeException("No operation found: " + operation);
         }
         downloadProcedure.stop();
+    }
+
+    public void stopAll() {
+        downloadProcedures.values().forEach(it -> it.stop());
+    }
+
+    private DownloadFileEntry.DownloadFileEntryStatus getErrorStatus(Exception exception) {
+        if (exception instanceof InterruptedException) {
+            return DownloadFileEntry.DownloadFileEntryStatus.STOPPED;
+        }
+        return DownloadFileEntry.DownloadFileEntryStatus.ERROR;
     }
 
     private File getDestinationFile(FileDownloadRequest request) throws IOException {
@@ -189,6 +171,27 @@ public class FileDownloadOrchestrator {
         }
 
         return tmpDownloadFile;
+    }
+
+    @SneakyThrows
+    @Override
+    public void close() {
+        log.info("Closing FileDownloadOrchestrator");
+        log.info("Stop Download procedures");
+        downloadProcedures.values().forEach(it -> it.stop());
+        log.info("Stop Download procedures completed");
+
+        log.info("Shutdown main executor service");
+        fileDownloadingExecutorService.shutdown();
+        log.info("Shutdown main executor service completed");
+        log.info("AwaitTermination main executor service");
+        boolean finishedCleanly = fileDownloadingExecutorService.awaitTermination(10, TimeUnit.SECONDS);
+        log.info("AwaitTermination main executor service completed. Result {}", finishedCleanly);
+        if (!finishedCleanly) {
+            log.info("ShutdownNow main executor service");
+            fileDownloadingExecutorService.shutdownNow();
+            log.info("ShutdownNow main executor service completed");
+        }
     }
 
     // TODO add ETA

@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfile.common.CommonUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -97,6 +98,7 @@ public class FileHelper {
         try (InputStream inputStream = new FileInputStream(file)) {
             int read;
             while ((read = inputStream.read(buffer)) != -1) {
+                CommonUtils.isInterrupted();
                 digest.update(buffer, 0, read);
             }
         }
