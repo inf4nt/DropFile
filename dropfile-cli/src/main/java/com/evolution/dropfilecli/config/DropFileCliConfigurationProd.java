@@ -6,7 +6,6 @@ import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.secret.DaemonSecretsStoreInitializationProcedure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +18,6 @@ public class DropFileCliConfigurationProd {
     @Bean
     public AppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
         return new AppConfigStoreInitializationProcedure();
-    }
-
-    @Bean
-    public DaemonSecretsStoreInitializationProcedure secretsConfigStoreInitializationProcedure() {
-        return new DaemonSecretsStoreInitializationProcedure();
     }
 
     @Bean

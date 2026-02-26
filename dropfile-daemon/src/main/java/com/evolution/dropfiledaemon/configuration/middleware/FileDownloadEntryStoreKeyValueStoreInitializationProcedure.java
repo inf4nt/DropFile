@@ -1,13 +1,15 @@
-package com.evolution.dropfile.store.download;
+package com.evolution.dropfiledaemon.configuration.middleware;
 
-import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.download.DownloadFileEntry;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO move me to Daemon
+@Slf4j
 public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
         implements KeyValueStoreInitializationProcedure<FileDownloadEntryStore> {
 
@@ -33,9 +35,12 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
                 return Collections.emptyMap();
             }
 
+            log.info("Found {} invalid file download entries {}", staleDownloads.size(), staleDownloads.keySet());
+
             Map<String, DownloadFileEntry> all = new LinkedHashMap<>(currentValues);
             all.putAll(staleDownloads);
             return all;
         });
+
     }
 }

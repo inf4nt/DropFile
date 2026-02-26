@@ -1,6 +1,8 @@
-package com.evolution.dropfile.store.secret;
+package com.evolution.dropfiledaemon.configuration.middleware;
 
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
+import com.evolution.dropfile.store.secret.DaemonSecrets;
+import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 
 import java.util.UUID;
 
