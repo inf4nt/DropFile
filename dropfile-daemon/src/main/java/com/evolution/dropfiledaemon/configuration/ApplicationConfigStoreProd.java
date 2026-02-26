@@ -13,7 +13,7 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStoreInitializationProcedure;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.store.DefaultKeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.DefaultKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
 import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedOutStore;

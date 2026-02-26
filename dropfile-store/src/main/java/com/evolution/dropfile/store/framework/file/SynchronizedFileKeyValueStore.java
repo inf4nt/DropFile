@@ -1,6 +1,6 @@
-package com.evolution.dropfile.store.store.file;
+package com.evolution.dropfile.store.framework.file;
 
-import com.evolution.dropfile.store.store.KeyValueStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 
 import java.nio.file.Path;
 import java.util.*;

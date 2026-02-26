@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.handshake.store;
 
-import com.evolution.dropfile.store.store.KeyValueStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 
 import java.time.Instant;
 import java.util.Comparator;

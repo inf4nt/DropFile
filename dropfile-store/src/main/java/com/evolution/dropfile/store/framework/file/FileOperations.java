@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store.file;
+package com.evolution.dropfile.store.framework.file;
 
 import java.nio.file.Path;
 import java.util.Map;

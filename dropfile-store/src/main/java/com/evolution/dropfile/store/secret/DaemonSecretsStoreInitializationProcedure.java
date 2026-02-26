@@ -1,6 +1,6 @@
 package com.evolution.dropfile.store.secret;
 
-import com.evolution.dropfile.store.store.single.StoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
 
 import java.util.UUID;
 

@@ -1,6 +1,6 @@
 package com.evolution.dropfile.store.app;
 
-import com.evolution.dropfile.store.store.single.StoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
 import lombok.SneakyThrows;
 
 import java.io.FileNotFoundException;

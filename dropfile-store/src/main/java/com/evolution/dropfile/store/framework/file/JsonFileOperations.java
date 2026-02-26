@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store.file;
+package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.fasterxml.jackson.core.type.TypeReference;

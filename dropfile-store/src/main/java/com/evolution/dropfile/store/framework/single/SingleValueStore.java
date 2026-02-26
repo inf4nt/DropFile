@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store.single;
+package com.evolution.dropfile.store.framework.single;
 
 import java.util.Optional;
 

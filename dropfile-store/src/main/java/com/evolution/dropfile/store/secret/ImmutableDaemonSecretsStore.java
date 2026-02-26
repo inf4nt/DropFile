@@ -1,6 +1,6 @@
 package com.evolution.dropfile.store.secret;
 
-import com.evolution.dropfile.store.store.single.ImmutableSingleValueStore;
+import com.evolution.dropfile.store.framework.single.ImmutableSingleValueStore;
 
 import java.util.function.Supplier;
 

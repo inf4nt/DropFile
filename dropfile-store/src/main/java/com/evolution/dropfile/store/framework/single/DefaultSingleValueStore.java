@@ -1,6 +1,6 @@
-package com.evolution.dropfile.store.store.single;
+package com.evolution.dropfile.store.framework.single;
 
-import com.evolution.dropfile.store.store.KeyValueStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 
 import java.util.Map;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store;
+package com.evolution.dropfile.store.framework;
 
 public class DefaultKeyValueStoreInitializationProcedure
         implements KeyValueStoreInitializationProcedure<KeyValueStore> {

@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store.single;
+package com.evolution.dropfile.store.framework.single;
 
 public interface StoreInitializationProcedure<Store extends SingleValueStore> {
 

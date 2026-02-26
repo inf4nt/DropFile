@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.store;
+package com.evolution.dropfile.store.framework;
 
 import java.util.*;
 import java.util.function.Function;

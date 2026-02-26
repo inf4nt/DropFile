@@ -1,6 +1,6 @@
 package com.evolution.dropfile.store.secret;
 
-import com.evolution.dropfile.store.store.single.SingleValueStore;
+import com.evolution.dropfile.store.framework.single.SingleValueStore;
 
 public interface DaemonSecretsStore
         extends SingleValueStore<DaemonSecrets> {
