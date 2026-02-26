@@ -8,11 +8,7 @@ import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -63,12 +59,8 @@ public class ApiDownloadFacade {
 
         int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
         if (request.status() == null) {
-            return Stream.of(
-                            getByStatus(responses, ApiDownloadLsDTO.Status.ERROR, limit),
-                            getByStatus(responses, ApiDownloadLsDTO.Status.STOPPED, limit),
-                            getByStatus(responses, ApiDownloadLsDTO.Status.COMPLETED, limit),
-                            getByStatus(responses, ApiDownloadLsDTO.Status.DOWNLOADING, limit)
-                    )
+            return Arrays.stream(ApiDownloadLsDTO.Status.values())
+                    .map(status -> getByStatus(responses, status, limit))
                     .flatMap(it -> it.stream())
                     .toList();
         }

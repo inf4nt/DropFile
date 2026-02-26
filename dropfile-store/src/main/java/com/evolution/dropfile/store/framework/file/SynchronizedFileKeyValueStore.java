@@ -5,6 +5,7 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
 
@@ -24,8 +25,10 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized Collection<V> save(Map<String, V> values) {
-        if (values.isEmpty()) {
+    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier) {
+        Map<String, V> values = valuesSupplier.get();
+
+        if (values == null || values.isEmpty()) {
             return Collections.emptyList();
         }
 

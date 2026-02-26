@@ -2,14 +2,17 @@ package com.evolution.dropfile.store.framework;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
     private final Map<String, V> store = new LinkedHashMap<>();
 
     @Override
-    public synchronized Collection<V> save(Map<String, V> values) {
-        if (values.isEmpty()) {
+    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier) {
+        Map<String, V> values = valuesSupplier.get();
+
+        if (values == null || values.isEmpty()) {
             return Collections.emptyList();
         }
 

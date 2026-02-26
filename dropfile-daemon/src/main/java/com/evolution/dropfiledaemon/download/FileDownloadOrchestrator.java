@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -85,9 +86,12 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                         );
             } catch (Exception exception) {
                 log.info("Exception occurred during download process operation {} fingerprint {} {}",
-                        operationId, request.fingerprint(), exception.getMessage(), exception);
+                        operationId, request.fingerprint(), exception.getMessage(), exception
+                );
                 SafeUtils.execute(() -> {
-                    DownloadFileEntry.DownloadFileEntryStatus status = getErrorStatus(exception);
+                    boolean stopped = isStopped(operationId);
+                    DownloadFileEntry.DownloadFileEntryStatus status = stopped ?
+                            DownloadFileEntry.DownloadFileEntryStatus.STOPPED : DownloadFileEntry.DownloadFileEntryStatus.ERROR;
                     applicationConfigStore.getFileDownloadEntryStore()
                             .update(
                                     operationId,
@@ -128,11 +132,10 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         downloadProcedures.values().forEach(it -> it.stop());
     }
 
-    private DownloadFileEntry.DownloadFileEntryStatus getErrorStatus(Exception exception) {
-        if (exception instanceof InterruptedException) {
-            return DownloadFileEntry.DownloadFileEntryStatus.STOPPED;
-        }
-        return DownloadFileEntry.DownloadFileEntryStatus.ERROR;
+    private boolean isStopped(String operation) {
+        return Optional.ofNullable(downloadProcedures.get(operation))
+                .map(it -> it.isStopped())
+                .orElse(false);
     }
 
     private File getDestinationFile(FileDownloadRequest request) throws IOException {
@@ -177,9 +180,9 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     @Override
     public void close() {
         log.info("Closing FileDownloadOrchestrator");
-        log.info("Stop Download procedures");
-        downloadProcedures.values().forEach(it -> it.stop());
-        log.info("Stop Download procedures completed");
+        log.info("Stop All download procedures");
+        stopAll();
+        log.info("Stop All download procedures completed");
 
         log.info("Shutdown main executor service");
         fileDownloadingExecutorService.shutdown();

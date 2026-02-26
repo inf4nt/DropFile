@@ -2,13 +2,14 @@ package com.evolution.dropfile.store.framework;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface KeyValueStore<V> {
 
-    Collection<V> save(Map<String, V> values);
+    Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier);
 
     default V save(String key, V value) {
-        return save(Map.of(key, value)).iterator().next();
+        return save(() -> Map.of(key, value)).iterator().next();
     }
 
     V update(String key, Function<V, V> updateFunction);

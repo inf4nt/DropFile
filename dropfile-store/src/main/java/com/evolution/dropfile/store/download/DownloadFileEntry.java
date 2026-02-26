@@ -30,6 +30,7 @@ public record DownloadFileEntry(String fingerprint,
         DOWNLOADING,
         ERROR,
         STOPPED,
-        COMPLETED
+        COMPLETED,
+        INTERRUPTED
     }
 }

@@ -7,6 +7,7 @@ import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.download.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
@@ -50,6 +51,8 @@ class ApplicationConfigStoreProd
 
     private final FileDownloadEntryStore fileDownloadEntryStore;
 
+    private final FileDownloadEntryStoreKeyValueStoreInitializationProcedure fileDownloadEntryStoreKeyValueStoreInitializationProcedure;
+
     private final ShareFileEntryStore shareFileEntryStore;
 
     private final HandshakeStore handshakeStore;
@@ -69,6 +72,7 @@ class ApplicationConfigStoreProd
         daemonSecretsStoreInitializationProcedure = new DaemonSecretsStoreInitializationProcedure();
 
         fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
+        fileDownloadEntryStoreKeyValueStoreInitializationProcedure = new FileDownloadEntryStoreKeyValueStoreInitializationProcedure();
 
         accessKeyStore = new RuntimeAccessKeyStore();
 
@@ -128,9 +132,9 @@ class ApplicationConfigStoreProd
     public void onApplicationEvent(ApplicationReadyEvent event) {
         appConfigStoreInitializationProcedure.init(appConfigStore);
         daemonSecretsStoreInitializationProcedure.init(daemonSecretsStore);
+        fileDownloadEntryStoreKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
 
         defaultKeyValueStoreInitializationProcedure.init(accessKeyStore);
-        defaultKeyValueStoreInitializationProcedure.init(fileDownloadEntryStore);
         defaultKeyValueStoreInitializationProcedure.init(shareFileEntryStore);
 
         defaultKeyValueStoreInitializationProcedure.init(handshakeStore.trustedInStore());

@@ -36,7 +36,7 @@ public class DownloadProcedure {
 
     private static final Integer MAX_THREADS = 2;
 
-    private final AtomicBoolean isActive = new AtomicBoolean(true);
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
     private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
 
@@ -60,13 +60,17 @@ public class DownloadProcedure {
 
     private ShareDownloadManifestTunnelResponse manifest;
 
+    public boolean isStopped() {
+        return isStopped.get();
+    }
+
     @SneakyThrows
     public void stop() {
-        synchronized (isActive) {
-            if (!isActive.get()) {
+        synchronized (isStopped) {
+            if (isStopped.get()) {
                 return;
             }
-            isActive.set(false);
+            isStopped.set(true);
             if (executorService != null) {
                 executorService.shutdownNow();
             }
@@ -74,9 +78,9 @@ public class DownloadProcedure {
     }
 
     private ExecutorService getExecutorService() {
-        synchronized (isActive) {
-            if (!isActive.get()) {
-                throw new IllegalStateException("Executor service is not active");
+        synchronized (isStopped) {
+            if (isStopped.get()) {
+                throw new IllegalStateException("Download procedure already stopped: " + operation);
             }
             if (this.executorService == null) {
                 this.executorService = Executors.newVirtualThreadPerTaskExecutor();
