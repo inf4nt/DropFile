@@ -1,14 +1,15 @@
 package com.evolution.dropfile.store.store;
 
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public interface KeyValueStore<V> {
 
-    V save(String key, V value);
+    Collection<V> save(Map<String, V> values);
+
+    default V save(String key, V value) {
+        return save(Map.of(key, value)).iterator().next();
+    }
 
     V update(String key, Function<V, V> updateFunction);
 
@@ -34,7 +35,7 @@ public interface KeyValueStore<V> {
     default Map.Entry<String, V> getRequired(String key) {
         return get(key)
                 .orElseThrow(() -> new RuntimeException(String.format(
-                    "Store %s. No key %s found", getClass().getName(), key
+                        "Store %s. No key %s found", getClass().getName(), key
                 )));
     }
 

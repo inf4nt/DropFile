@@ -3,9 +3,7 @@ package com.evolution.dropfile.store.store.file;
 import com.evolution.dropfile.store.store.KeyValueStore;
 
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
@@ -26,22 +24,33 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized V save(String key, V value) {
-        Objects.requireNonNull(key, "key cannot be null");
-        Objects.requireNonNull(value, "value cannot be null");
-        validate(key, value);
+    public synchronized Collection<V> save(Map<String, V> values) {
+        if (values.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        Map<String, V> all = new LinkedHashMap<>(getAll());
-        all.put(key, value);
+        for (Map.Entry<String, V> entry : values.entrySet()) {
+            Objects.requireNonNull(entry.getKey(), "key cannot be null");
+            Objects.requireNonNull(entry.getValue(), "value cannot be null");
+        }
+
+        Map<String, V> currentValues = Collections.unmodifiableMap(getAll());
+        for (Map.Entry<String, V> entry : values.entrySet()) {
+            validate(entry.getKey(), entry.getValue());
+        }
+
+        Map<String, V> newMap = new LinkedHashMap<>(currentValues);
+        newMap.putAll(values);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, all);
-        return value;
+        fileOperations.write(filePath, newMap);
+        return List.copyOf(values.values());
     }
 
     @Override
     public synchronized V update(String key, Function<V, V> updateFunction) {
         V currentValue = getRequired(key).getValue();
         V newValue = updateFunction.apply(currentValue);
+        validate(key, newValue);
         return save(key, newValue);
     }
 
