@@ -6,14 +6,16 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Objects;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FileManifestBuilderTest {
+public class FileManifestServiceTest {
 
     private File file;
 
@@ -26,7 +28,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void noFileFound() {
-        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE, new FileHelper());
+        FileManifestService underTest = new FileManifestService(Integer.MAX_VALUE, Integer.MAX_VALUE, new FileHelper());
 
         assertThrows(FileNotFoundException.class, () -> {
             underTest.build(new File("fake-file.txt"));
@@ -35,7 +37,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void directoriesAreUnsupported() {
-        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE, new FileHelper());
+        FileManifestService underTest = new FileManifestService(Integer.MAX_VALUE, Integer.MAX_VALUE, new FileHelper());
 
         assertThrows(
                 UnsupportedOperationException.class,
@@ -45,7 +47,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize3() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, 4, new FileHelper());
+        FileManifestService underTest = new FileManifestService(3, 4, new FileHelper());
 
         FileManifest actual = underTest.build(file);
         assertThat(
@@ -97,7 +99,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize3Buffer1() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, 1, new FileHelper());
+        FileManifestService underTest = new FileManifestService(3, 1, new FileHelper());
 
         FileManifest actual = underTest.build(file);
         assertThat(
@@ -149,7 +151,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize3BufferMax() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, Integer.MAX_VALUE, new FileHelper());
+        FileManifestService underTest = new FileManifestService(3, Integer.MAX_VALUE, new FileHelper());
 
         FileManifest actual = underTest.build(file);
         assertThat(
@@ -201,7 +203,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize9() {
-        FileManifestBuilder underTest = new FileManifestBuilder(9, 4, new FileHelper());
+        FileManifestService underTest = new FileManifestService(9, 4, new FileHelper());
 
         FileManifest actual = underTest.build(file);
         assertThat(
@@ -241,7 +243,7 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize() {
-        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4, new FileHelper());
+        FileManifestService underTest = new FileManifestService(Integer.MAX_VALUE, 4, new FileHelper());
 
         FileManifest actual = underTest.build(file);
         assertThat(
@@ -271,5 +273,60 @@ public class FileManifestBuilderTest {
                         )
                 )
         );
+    }
+
+    @Test
+    public void validateChunkSize() {
+        FileManifestService underTest = new FileManifestService(10, Integer.MAX_VALUE, new FileHelper());
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 1, 1, 2)
+            )));
+        });
+        assertDoesNotThrow(() -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 9, 1, 2)
+            )));
+        });
+        assertDoesNotThrow(() -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 10, 1, 2)
+            )));
+        });
+    }
+
+    @Test
+    public void validateChunkSizeNegative() {
+        FileManifestService underTest = new FileManifestService(10, Integer.MAX_VALUE, new FileHelper());
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+            )));
+        });
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 11, 1, 2)
+            )));
+        });
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 0, 1, 2)
+            )));
+        });
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 5, 2, 2)
+            )));
+        });
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 5, 3, 2)
+            )));
+        });
     }
 }

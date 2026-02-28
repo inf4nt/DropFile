@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.share.command;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
-import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
+import com.evolution.dropfiledaemon.manifest.FileManifestService;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class ShareDownloadManifestCommandHandler
 
     private final ApplicationConfigStore applicationConfigStore;
 
-    private final FileManifestBuilder fileManifestBuilder;
+    private final FileManifestService fileManifestService;
 
     @Override
     public String getCommandName() {
@@ -34,7 +34,7 @@ public class ShareDownloadManifestCommandHandler
     public ShareDownloadManifestTunnelResponse handle(String id) {
         ShareFileEntry fileEntry = applicationConfigStore.getShareFileEntryStore()
                 .getRequired(id).getValue();
-        FileManifest fileManifest = fileManifestBuilder.build(new File(fileEntry.absolutePath()));
+        FileManifest fileManifest = fileManifestService.build(new File(fileEntry.absolutePath()));
 
         return new ShareDownloadManifestTunnelResponse(
                 id,

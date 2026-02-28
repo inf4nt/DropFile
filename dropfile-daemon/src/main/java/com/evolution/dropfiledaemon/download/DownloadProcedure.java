@@ -2,7 +2,6 @@ package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.download.exception.*;
-import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;

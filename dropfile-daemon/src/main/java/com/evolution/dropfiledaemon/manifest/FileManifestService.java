@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,7 +18,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 @Component
-public class FileManifestBuilder {
+public class FileManifestService {
 
     private static final String SHA256 = "SHA-256";
 
@@ -29,12 +30,36 @@ public class FileManifestBuilder {
     private final FileHelper fileHelper;
 
     @Autowired
-    public FileManifestBuilder(@Value("${file.manifest.builder.chunk.size}") Integer chunkSize,
+    public FileManifestService(@Value("${file.manifest.builder.chunk.size}") Integer chunkSize,
                                @Value("${file.manifest.builder.buffer.size}") Integer bufferSize,
                                FileHelper fileHelper) {
         this.chunkSize = Objects.requireNonNull(chunkSize, "chunkSize is null");
         this.bufferSize = Objects.requireNonNull(bufferSize, "bufferSize is null");
         this.fileHelper = fileHelper;
+    }
+
+    public void validate(FileManifest fileManifest) {
+        if (ObjectUtils.isEmpty(fileManifest.chunkManifests())) {
+            throw new IllegalStateException("File manifest has no chunk manifests");
+        }
+        List<ChunkManifest> zeroSizeChunks = fileManifest.chunkManifests().stream()
+                .filter(it -> it.size() <= 0)
+                .toList();
+        if (!zeroSizeChunks.isEmpty()) {
+            throw new RuntimeException("File manifest has chunk manifests size that are less or 0");
+        }
+        List<ChunkManifest> overSized = fileManifest.chunkManifests().stream()
+                .filter(it -> it.size() > chunkSize)
+                .toList();
+        if (!overSized.isEmpty()) {
+            throw new RuntimeException("File manifest has over sized chunk manifests");
+        }
+        List<ChunkManifest> startAfterEnd = fileManifest.chunkManifests().stream()
+                .filter(it -> it.startPosition() >= it.endPosition())
+                .toList();
+        if (!startAfterEnd.isEmpty()) {
+            throw new  RuntimeException("File manifest has start after end chunk manifests");
+        }
     }
 
     @SneakyThrows
