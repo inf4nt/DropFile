@@ -16,6 +16,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -26,26 +27,7 @@ public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
 
-    // TODO finish me
-    public void sha256(File file, int chunkSizeFactor, Consumer<Sha256Container> consumer) throws IOException {
-        long fileLength = file.length();
-        long processed = 0;
-        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            while (processed < fileLength) {
-                int chunkToProcess = chunkSizeFactor;
-                long leftOver = fileLength - processed;
-                if (leftOver < chunkToProcess) {
-                    chunkToProcess = Math.toIntExact(leftOver);
-                }
-
-                byte[] sha256 = getSha256(fileChannel, processed, chunkToProcess);
-                consumer.accept(new Sha256Container(sha256, processed, processed + chunkToProcess, chunkToProcess));
-                int length = chunkToProcess;
-                processed = processed + length;
-            }
-        }
-    }
-
+    @Deprecated
     public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) throws IOException {
         long fileLength = file.length();
         long processed = 0;
@@ -82,8 +64,7 @@ public class FileHelper {
     @SneakyThrows
     public String sha256(byte[] data) {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
-        byte[] hashBytes = digest.digest(data);
-        return bytesToHex(hashBytes);
+        return HexFormat.of().formatHex(digest.digest(data));
     }
 
     @SneakyThrows
@@ -102,9 +83,10 @@ public class FileHelper {
                 digest.update(buffer, 0, read);
             }
         }
-        return bytesToHex(digest.digest());
+        return HexFormat.of().formatHex(digest.digest());
     }
 
+    @Deprecated
     public void write(FileChannel fileChannel,
                       InputStream inputStream,
                       long position) throws IOException {
@@ -139,19 +121,36 @@ public class FileHelper {
         }
     }
 
-    public String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+    @SneakyThrows
+    public int read(FileChannel fileChannel,
+                    long skip,
+                    int take,
+                    ByteBuffer byteBuffer,
+                    Consumer<ByteBuffer> consumer) {
+        fileChannel.position(skip);
+        int totalRead = 0;
+        while (totalRead < take) {
+            int leftOver = take - totalRead;
+            int toRead = Math.min(byteBuffer.capacity(), leftOver);
+            byteBuffer.limit(toRead);
+
+            int read = fileChannel.read(byteBuffer);
+            if (read == -1) {
+                break;
+            }
+
+            byteBuffer.flip();
+
+            consumer.accept(byteBuffer.asReadOnlyBuffer());
+
+            totalRead += read;
+
+            byteBuffer.clear();
         }
-        return sb.toString();
+        return totalRead;
     }
 
-    public byte[] getSha256(FileChannel fileChannel, long skip, int take) throws IOException {
-        byte[] buffer = new byte[BUFFER_SIZE];
-        return null;
-    }
-
+    @Deprecated
     public byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(take);
         fileChannel.position(skip);
@@ -196,6 +195,7 @@ public class FileHelper {
         return String.format(Locale.US, "%.2fGB", gb);
     }
 
+    @Deprecated
     @Data
     @RequiredArgsConstructor
     public static class ChunkContainer {
@@ -204,6 +204,7 @@ public class FileHelper {
         private final long to;
     }
 
+    @Deprecated
     @Data
     @RequiredArgsConstructor
     public static class Sha256Container {

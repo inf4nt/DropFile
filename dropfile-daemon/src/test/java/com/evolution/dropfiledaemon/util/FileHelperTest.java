@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
@@ -260,5 +260,71 @@ class FileHelperTest {
                 fileHelper.toDisplaySize(1023 * 5_418_395_794L),
                 is("5162.34GB")
         );
+    }
+
+    @Test
+    public void readBuffer2Skip1Take5() throws Exception {
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             FileChannel fileChannel = fileInputStream.getChannel()) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(2);
+            List<String> numbers = new ArrayList<>();
+            fileHelper.read(fileChannel, 1, 5, byteBuffer, buffer -> {
+                byte[] bytes = new byte[byteBuffer.remaining()];
+                buffer.get(bytes);
+                numbers.add(new String(bytes));
+            });
+            assertThat(numbers.size(), is(3));
+            assertThat(
+                    numbers,
+                    hasItems(
+                            "23",
+                            "45",
+                            "6"
+                    )
+            );
+        }
+    }
+
+    @Test
+    public void readBuffer8Skip0Take12() throws Exception {
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             FileChannel fileChannel = fileInputStream.getChannel()) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+            List<String> numbers = new ArrayList<>();
+            fileHelper.read(fileChannel, 0, 12, byteBuffer, buffer -> {
+                byte[] bytes = new byte[byteBuffer.remaining()];
+                buffer.get(bytes);
+                numbers.add(new String(bytes));
+            });
+            assertThat(numbers.size(), is(2));
+            assertThat(
+                    numbers,
+                    hasItems(
+                            "12345678",
+                            "90"
+                    )
+            );
+        }
+    }
+
+    @Test
+    public void readBuffer12Skip0Take12() throws Exception {
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             FileChannel fileChannel = fileInputStream.getChannel()) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(12);
+            List<String> numbers = new ArrayList<>();
+            fileHelper.read(fileChannel, 0, 12, byteBuffer, buffer -> {
+                byte[] bytes = new byte[byteBuffer.remaining()];
+                buffer.get(bytes);
+                numbers.add(new String(bytes));
+            });
+            assertThat(numbers.size(), is(1));
+            assertThat(
+                    numbers,
+                    hasItems(
+                            "1234567890"
+                    )
+            );
+        }
     }
 }

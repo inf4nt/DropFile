@@ -1,29 +1,39 @@
 package com.evolution.dropfiledaemon.manifest;
 
 import com.evolution.dropfiledaemon.util.FileHelper;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class FileManifestBuilder {
 
-    public static final Integer CHUNK_SIZE = 4 * 1024 * 1024;
-
     private static final String SHA256 = "SHA-256";
+
+    @Getter
+    private final Integer chunkSize;
+
+    private final Integer bufferSize;
 
     private final FileHelper fileHelper;
 
     @Autowired
-    public FileManifestBuilder(FileHelper fileHelper) {
+    public FileManifestBuilder(@Value("${file.manifest.builder.chunk.size}") Integer chunkSize,
+                               @Value("${file.manifest.builder.buffer.size}") Integer bufferSize,
+                               FileHelper fileHelper) {
+        this.chunkSize = Objects.requireNonNull(chunkSize, "chunkSize is null");
+        this.bufferSize = Objects.requireNonNull(bufferSize, "bufferSize is null");
         this.fileHelper = fileHelper;
     }
 
@@ -38,37 +48,49 @@ public class FileManifestBuilder {
         }
 
         List<ChunkManifest> chunkManifests = Collections.synchronizedList(new ArrayList<>());
-        int chunkSizeFactor = getChunkSizeFactor(file);
-        MessageDigest manifestMessageDigest = MessageDigest.getInstance(SHA256);
+        int chunkSizeFactor = Math.toIntExact(Math.min(chunkSize, file.length()));
 
-        // TODO method "read" returns the whole chunk into a memory. 4mb is right now .
-        //  Unnecessary to read the whole chunk into a memory to get its length, and sha256
-        //  It is possible to add a new one method that returns length and sha256
-        fileHelper.read(file, chunkSizeFactor, chunkContainer -> {
-            byte[] data = chunkContainer.getData();
-            int chunkSize = data.length;
-            String sha256 = fileHelper.sha256(data);
-            manifestMessageDigest.update(data);
-            ChunkManifest chunkManifest = new ChunkManifest(
-                    sha256,
-                    chunkSize,
-                    chunkContainer.getFrom(),
-                    chunkContainer.getTo()
-            );
-            chunkManifests.add(chunkManifest);
-        });
+        MessageDigest manifestDigest = MessageDigest.getInstance(SHA256);
+        MessageDigest chunkDigest = MessageDigest.getInstance(SHA256);
+
+        long fileLength = file.length();
+        long processed = 0;
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate((int) Math.min(file.length(), bufferSize));
+
+        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
+            while (processed < fileLength) {
+                int chunkToProcess = chunkSizeFactor;
+                long leftOver = fileLength - processed;
+                if (leftOver < chunkToProcess) {
+                    chunkToProcess = Math.toIntExact(leftOver);
+                }
+
+                int totalRead = fileHelper.read(fileChannel, processed, chunkToProcess, byteBuffer, buffer -> {
+                    manifestDigest.update(buffer.duplicate());
+                    chunkDigest.update(buffer);
+                });
+                ChunkManifest chunkManifest = new ChunkManifest(
+                        HexFormat.of().formatHex(chunkDigest.digest()),
+                        totalRead,
+                        processed,
+                        processed + chunkToProcess
+                );
+                chunkManifests.add(chunkManifest);
+
+                processed = processed + totalRead;
+            }
+        }
 
         long totalSize = chunkManifests.stream().map(it -> it.size())
                 .mapToLong(Long::valueOf)
                 .sum();
 
-        String manifestSha256 = fileHelper.bytesToHex(manifestMessageDigest.digest());
-
-        return new FileManifest(file.getName(), manifestSha256, totalSize, chunkManifests);
-    }
-
-    private int getChunkSizeFactor(File file) {
-        long size = Math.min(CHUNK_SIZE, file.length());
-        return Math.toIntExact(size);
+        return new FileManifest(
+                file.getName(),
+                HexFormat.of().formatHex(manifestDigest.digest()),
+                totalSize,
+                chunkManifests
+        );
     }
 }
