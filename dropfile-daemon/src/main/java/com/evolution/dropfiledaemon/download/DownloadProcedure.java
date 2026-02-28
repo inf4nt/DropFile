@@ -198,15 +198,14 @@ public class DownloadProcedure {
                     "No chunks in manifest found %s %s", manifest.id(), manifest.hash()
             ));
         }
-////         TODO fix me
-//        List<ShareDownloadManifestTunnelResponse.ChunkManifest> list = manifest.chunkManifests().stream()
-//                .filter(it -> it.size() > FileManifestBuilder.CHUNK_SIZE) // TODO
-//                .toList();
-//        if (!list.isEmpty()) {
-//            throw new RuntimeException(String.format(
-//                    "Found %s unacceptable chunk size %s %s", list.size(), manifest.id(), manifest.hash()
-//            ));
-//        }
+        List<ShareDownloadManifestTunnelResponse.ChunkManifest> list = manifest.chunkManifests().stream()
+                .filter(it -> it.size() > 4 * 1024 * 1024) // TODO Fix me
+                .toList();
+        if (!list.isEmpty()) {
+            throw new RuntimeException(String.format(
+                    "Found %s unacceptable chunk size %s %s", list.size(), manifest.id(), manifest.hash()
+            ));
+        }
     }
 
     private void downloadAndWriteChunks() throws Exception {
