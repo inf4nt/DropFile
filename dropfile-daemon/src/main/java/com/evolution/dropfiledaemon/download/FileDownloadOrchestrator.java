@@ -5,9 +5,10 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.util.SafeUtils;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -27,10 +28,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FileDownloadOrchestrator implements AutoCloseable {
-
-    private static final int MAX_PARALLEL_DOWNLOADING_COUNT = 10;
 
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -40,10 +38,21 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final ApplicationConfigStore applicationConfigStore;
 
+    private final int downloadOrchestratorThreadSize;
+
+    @Autowired
+    public FileDownloadOrchestrator(DownloadProcedureFactory downloadProcedureFactory,
+                                    ApplicationConfigStore applicationConfigStore,
+                                    @Value("${download.ochestrator.thread-size}") int downloadOrchestratorThreadSize) {
+        this.downloadProcedureFactory = downloadProcedureFactory;
+        this.applicationConfigStore = applicationConfigStore;
+        this.downloadOrchestratorThreadSize = downloadOrchestratorThreadSize;
+    }
+
     @SneakyThrows
     public synchronized FileDownloadResponse start(FileDownloadRequest request) {
-        if (downloadProcedures.size() >= MAX_PARALLEL_DOWNLOADING_COUNT) {
-            throw new IllegalStateException("No available permits. Total: " + MAX_PARALLEL_DOWNLOADING_COUNT);
+        if (downloadProcedures.size() >= downloadOrchestratorThreadSize) {
+            throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorThreadSize);
         }
 
         String operationId = CommonUtils.random();
@@ -195,6 +204,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             fileDownloadingExecutorService.shutdownNow();
             log.info("ShutdownNow main executor service completed");
         }
+        fileDownloadingExecutorService.close();
     }
 
     // TODO add ETA

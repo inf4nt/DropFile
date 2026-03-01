@@ -2,16 +2,17 @@ package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.download.exception.*;
+import com.evolution.dropfiledaemon.manifest.ChunkManifest;
+import com.evolution.dropfiledaemon.manifest.FileManifest;
+import com.evolution.dropfiledaemon.manifest.FileManifestService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestTunnelResponse;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -33,8 +34,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class DownloadProcedure {
 
-    private static final Integer MAX_THREADS = 2;
-
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
     private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
@@ -42,6 +41,10 @@ public class DownloadProcedure {
     private final TunnelClient tunnelClient;
 
     private final FileHelper fileHelper;
+
+    private final FileManifestService fileManifestService;
+
+    private final int maxThreadSize;
 
     private final String operation;
 
@@ -57,7 +60,7 @@ public class DownloadProcedure {
 
     private ExecutorService executorService;
 
-    private ShareDownloadManifestTunnelResponse manifest;
+    private FileManifest manifest;
 
     public boolean isStopped() {
         return isStopped.get();
@@ -90,7 +93,6 @@ public class DownloadProcedure {
 
     public void run() {
         try (ExecutorService executorService = getExecutorService()) {
-            this.executorService = executorService;
             CompletableFuture.runAsync(() -> runProcedure(), executorService)
                     .join();
         }
@@ -108,7 +110,7 @@ public class DownloadProcedure {
                             () -> downloadManifest()
                     );
 
-                    validateManifest(manifest);
+                    fileManifestService.validate(manifest);
 
                     ExecutionProfiling.run(
                             String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
@@ -177,7 +179,7 @@ public class DownloadProcedure {
                                                 .body(fileId)
                                                 .fingerprint(fingerprint)
                                                 .build(),
-                                        ShareDownloadManifestTunnelResponse.class
+                                        FileManifest.class
                                 );
                             }
                     )
@@ -192,22 +194,6 @@ public class DownloadProcedure {
         }
     }
 
-    private void validateManifest(ShareDownloadManifestTunnelResponse manifest) {
-        if (ObjectUtils.isEmpty(manifest.chunkManifests())) {
-            throw new RuntimeException(String.format(
-                    "No chunks in manifest found %s %s", manifest.id(), manifest.hash()
-            ));
-        }
-        List<ShareDownloadManifestTunnelResponse.ChunkManifest> list = manifest.chunkManifests().stream()
-                .filter(it -> it.size() > 4 * 1024 * 1024) // TODO Fix me
-                .toList();
-        if (!list.isEmpty()) {
-            throw new RuntimeException(String.format(
-                    "Found %s unacceptable chunk size %s %s", list.size(), manifest.id(), manifest.hash()
-            ));
-        }
-    }
-
     private void downloadAndWriteChunks() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
@@ -216,13 +202,13 @@ public class DownloadProcedure {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
-            Iterator<ShareDownloadManifestTunnelResponse.ChunkManifest> iterator = manifest.chunkManifests().iterator();
+            Iterator<ChunkManifest> iterator = manifest.chunkManifests().iterator();
             while (iterator.hasNext()) {
                 if (exceptionAtomicReference.get() != null) {
                     throw exceptionAtomicReference.get();
                 }
                 isInterrupted();
-                ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest = iterator.next();
+                ChunkManifest chunkManifest = iterator.next();
                 CompletableFuture<Void> future = CompletableFuture.runAsync(
                         () -> {
                             if (exceptionAtomicReference.get() != null) {
@@ -242,7 +228,7 @@ public class DownloadProcedure {
 
                 if (!iterator.hasNext()) {
                     CompletableFuture.allOf(activeFutures.toArray(new CompletableFuture[0])).join();
-                } else if (activeFutures.size() >= MAX_THREADS) {
+                } else if (activeFutures.size() >= maxThreadSize) {
                     CompletableFuture.anyOf(activeFutures.toArray(new CompletableFuture[0])).join();
                     activeFutures.removeIf(it -> it.isDone());
                 }
@@ -250,7 +236,7 @@ public class DownloadProcedure {
         }
     }
 
-    private byte[] chunkDownload(ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
+    private byte[] chunkDownload(ChunkManifest chunkManifest) {
         try {
             return RetryExecutor.call(
                             () -> {
@@ -290,7 +276,7 @@ public class DownloadProcedure {
 
     private void writeChunkToFile(FileChannel writeToFileChannel,
                                   byte[] chunkBytes,
-                                  ShareDownloadManifestTunnelResponse.ChunkManifest chunkManifest) {
+                                  ChunkManifest chunkManifest) {
         try {
             RetryExecutor.call(
                             () -> {

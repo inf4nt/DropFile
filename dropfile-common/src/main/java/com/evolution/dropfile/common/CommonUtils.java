@@ -69,6 +69,8 @@ public class CommonUtils {
         return getFingerprint(publicKey.getEncoded());
     }
 
+    // TODO fix me
+    @Deprecated
     private static String hexString(byte[] hash) {
         StringBuilder sb = new StringBuilder();
         for (byte b : hash) {

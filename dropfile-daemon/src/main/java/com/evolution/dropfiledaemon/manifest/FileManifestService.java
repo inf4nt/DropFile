@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.manifest;
 
 import com.evolution.dropfiledaemon.util.FileHelper;
-import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +21,6 @@ public class FileManifestService {
 
     private static final String SHA256 = "SHA-256";
 
-    @Getter
     private final Integer chunkSize;
 
     private final Integer bufferSize;
@@ -58,7 +56,7 @@ public class FileManifestService {
                 .filter(it -> it.startPosition() >= it.endPosition())
                 .toList();
         if (!startAfterEnd.isEmpty()) {
-            throw new  RuntimeException("File manifest has start after end chunk manifests");
+            throw new RuntimeException("File manifest has start after end chunk manifests");
         }
     }
 
