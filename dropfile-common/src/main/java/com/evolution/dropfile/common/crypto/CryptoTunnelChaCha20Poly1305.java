@@ -29,6 +29,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         return CIPHER_ALGORITHM;
     }
 
+    // TODO add HKDF
     @SneakyThrows
     @Override
     public SecretKey secretKey(byte[] secret) {

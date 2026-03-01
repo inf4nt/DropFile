@@ -5,9 +5,9 @@ import lombok.SneakyThrows;
 
 import java.net.URI;
 import java.security.MessageDigest;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.UUID;
 
 public class CommonUtils {
@@ -61,22 +61,7 @@ public class CommonUtils {
     public static String getFingerprint(byte[] data) {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         byte[] hash = md.digest(data);
-        return hexString(hash);
-    }
-
-    @SneakyThrows
-    public static String getFingerprint(PublicKey publicKey) {
-        return getFingerprint(publicKey.getEncoded());
-    }
-
-    // TODO fix me
-    @Deprecated
-    private static String hexString(byte[] hash) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hash) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
+        return HexFormat.of().formatHex(hash);
     }
 
     @SneakyThrows
