@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,7 @@ public class CommandHandlerExecutor {
 
     private final ObjectMapper objectMapper;
 
+    @Autowired
     public CommandHandlerExecutor(List<CommandHandler> handers,
                                   ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -33,9 +35,6 @@ public class CommandHandlerExecutor {
     @SneakyThrows
     public Object handle(TunnelRequestDTO.TunnelRequestPayload payload) {
         CommandHandler commandHandler = getHandler(payload.command());
-        if (commandHandler == null) {
-            throw new RuntimeException("No found: " + payload.command());
-        }
         Object handlerArgumentPayload = getBody(commandHandler, payload);
         Object result = commandHandler.handle(handlerArgumentPayload);
         Objects.requireNonNull(
