@@ -1,8 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.springframework.stereotype.Component;
@@ -26,25 +24,6 @@ public class FileHelper {
     private static final int BUFFER_SIZE = 64 * 1_024;
 
     private static final String SHA256 = "SHA-256";
-
-    @Deprecated
-    public void read(File file, int chunkSizeFactor, Consumer<ChunkContainer> consumer) throws IOException {
-        long fileLength = file.length();
-        long processed = 0;
-        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            while (processed < fileLength) {
-                int chunkToProcess = chunkSizeFactor;
-                long leftOver = fileLength - processed;
-                if (leftOver < chunkToProcess) {
-                    chunkToProcess = Math.toIntExact(leftOver);
-                }
-
-                byte[] chunk = readBytes(fileChannel, processed, chunkToProcess);
-                consumer.accept(new ChunkContainer(chunk, processed, processed + chunkToProcess));
-                processed = processed + chunk.length;
-            }
-        }
-    }
 
     public InputStream readStream(File file, long skip, int take) throws IOException {
         FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
@@ -84,27 +63,6 @@ public class FileHelper {
             }
         }
         return HexFormat.of().formatHex(digest.digest());
-    }
-
-    @Deprecated
-    public void write(FileChannel fileChannel,
-                      InputStream inputStream,
-                      long position) throws IOException {
-        byte[] buffer = new byte[BUFFER_SIZE];
-        long offset = position;
-        while (true) {
-            int read = inputStream.read(buffer);
-            if (read == -1) {
-                break;
-            }
-
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, read);
-
-            while (byteBuffer.hasRemaining()) {
-                int written = fileChannel.write(byteBuffer, offset);
-                offset += written;
-            }
-        }
     }
 
     public void write(FileChannel fileChannel,
@@ -150,14 +108,6 @@ public class FileHelper {
         return totalRead;
     }
 
-    @Deprecated
-    public byte[] readBytes(FileChannel fileChannel, long skip, int take) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(take);
-        fileChannel.position(skip);
-        fileChannel.read(buffer);
-        return buffer.array();
-    }
-
     public String percent(long total, long downloaded) {
         if (total == 0) {
             return "0%";
@@ -193,24 +143,5 @@ public class FileHelper {
         }
         double gb = size / (1024 * 1024 * 1024D);
         return String.format(Locale.US, "%.2fGB", gb);
-    }
-
-    @Deprecated
-    @Data
-    @RequiredArgsConstructor
-    public static class ChunkContainer {
-        private final byte[] data;
-        private final long from;
-        private final long to;
-    }
-
-    @Deprecated
-    @Data
-    @RequiredArgsConstructor
-    public static class Sha256Container {
-        private final byte[] sha256;
-        private final long from;
-        private final long to;
-        private final int length;
     }
 }

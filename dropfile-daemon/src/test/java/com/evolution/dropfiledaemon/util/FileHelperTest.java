@@ -107,47 +107,6 @@ class FileHelperTest {
     }
 
     @Test
-    public void testReadChunks() throws Exception {
-        List<FileHelper.ChunkContainer> containers = new ArrayList<>();
-        fileHelper.read(file, 3, chunkContainer -> {
-            containers.add(chunkContainer);
-        });
-
-        assertThat(containers.size(), is(4));
-
-        assertThat(
-                containers,
-                hasItems(
-                        new FileHelper.ChunkContainer("123".getBytes(), 0, 3),
-                        new FileHelper.ChunkContainer("456".getBytes(), 3, 6),
-                        new FileHelper.ChunkContainer("789".getBytes(), 6, 9),
-                        new FileHelper.ChunkContainer("0".getBytes(), 9, 10)
-                )
-        );
-    }
-
-    @Test
-    public void readBytes() throws Exception {
-        try (FileInputStream inputStream = new FileInputStream(file);
-             FileChannel fileChannel = inputStream.getChannel()) {
-            byte[] bytes = fileHelper.readBytes(fileChannel, 0, 2);
-            assertThat(
-                    bytes,
-                    is("12".getBytes())
-            );
-        }
-
-        try (FileInputStream inputStream = new FileInputStream(file);
-             FileChannel fileChannel = inputStream.getChannel()) {
-            byte[] bytes = fileHelper.readBytes(fileChannel, 2, 4);
-            assertThat(
-                    bytes,
-                    is("3456".getBytes())
-            );
-        }
-    }
-
-    @Test
     public void sha256() {
         String message = "abcdefg";
 
