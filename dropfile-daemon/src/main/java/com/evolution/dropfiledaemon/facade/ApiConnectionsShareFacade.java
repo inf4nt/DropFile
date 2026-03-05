@@ -34,8 +34,7 @@ public class ApiConnectionsShareFacade {
     private final FileHelper fileHelper;
 
     public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
-        String fingerprintConnection = applicationConfigStore.getHandshakeStore()
-                .sessionOutStore().getRequiredLatestUpdated()
+        String fingerprintConnection = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
                 .getKey();
         return ls(fingerprintConnection, requestDTO);
     }
@@ -67,8 +66,7 @@ public class ApiConnectionsShareFacade {
                         .command("share-cat")
                         .body(id)
                         .fingerprint(
-                                applicationConfigStore.getHandshakeStore()
-                                        .sessionOutStore().getRequiredLatestUpdated()
+                                applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
                                         .getKey()
                         )
                         .build(),
@@ -98,8 +96,7 @@ public class ApiConnectionsShareFacade {
     }
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        String fingerprintConnection = applicationConfigStore.getHandshakeStore()
-                .sessionOutStore().getRequiredLatestUpdated()
+        String fingerprintConnection = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
                 .getKey();
 
         FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);

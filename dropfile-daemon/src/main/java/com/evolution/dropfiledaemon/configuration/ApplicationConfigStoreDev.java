@@ -12,7 +12,10 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
@@ -53,7 +56,13 @@ class ApplicationConfigStoreDev
 
     private final ShareFileEntryStore shareFileEntryStore;
 
-    private final HandshakeStore handshakeStore;
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
 
     @Autowired
     public ApplicationConfigStoreDev(Environment environment, ApplicationEventPublisher eventPublisher) {
@@ -88,12 +97,13 @@ class ApplicationConfigStoreDev
         fileDownloadEntryStore = new RuntimeFileDownloadEntryStore();
         shareFileEntryStore = new RuntimeShareFileEntryStore();
 
-        handshakeStore = new HandshakeStore(
-                new RuntimeHandshakeTrustedOutStore(),
-                new RuntimeHandshakeTrustedInStore(),
-                new RuntimeHandshakeSessionOutStore(),
-                new RuntimeHandshakeSessionInStore()
-        );
+        handshakeTrustedOutStore = new RuntimeHandshakeTrustedOutStore();
+
+        handshakeTrustedInStore = new RuntimeHandshakeTrustedInStore();
+
+        handshakeSessionOutStore = new RuntimeHandshakeSessionOutStore();
+
+        handshakeSessionInStore = new RuntimeHandshakeSessionInStore();
     }
 
     @Override
@@ -132,9 +142,27 @@ class ApplicationConfigStoreDev
     }
 
     @Override
-    public HandshakeStore getHandshakeStore() {
+    public HandshakeTrustedOutStore getHandshakeTrustedOutStore() {
         checkInitialized();
-        return handshakeStore;
+        return handshakeTrustedOutStore;
+    }
+
+    @Override
+    public HandshakeTrustedInStore getHandshakeTrustedInStore() {
+        checkInitialized();
+        return handshakeTrustedInStore;
+    }
+
+    @Override
+    public HandshakeSessionOutStore getHandshakeSessionOutStore() {
+        checkInitialized();
+        return handshakeSessionOutStore;
+    }
+
+    @Override
+    public HandshakeSessionInStore getHandshakeSessionInStore() {
+        checkInitialized();
+        return handshakeSessionInStore;
     }
 
     @Override

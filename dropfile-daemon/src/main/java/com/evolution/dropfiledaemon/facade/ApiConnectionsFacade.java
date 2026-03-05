@@ -11,31 +11,31 @@ public class ApiConnectionsFacade {
     private final ApplicationConfigStore applicationConfigStore;
 
     public void revoke(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeStore().trustedInStore().getRequiredByKeyStartWith(fingerprint)
+        String key = applicationConfigStore.getHandshakeTrustedInStore().getRequiredByKeyStartWith(fingerprint)
                 .getKey();
-        applicationConfigStore.getHandshakeStore().sessionInStore().remove(key);
-        applicationConfigStore.getHandshakeStore().trustedInStore().remove(key);
+        applicationConfigStore.getHandshakeSessionInStore().remove(key);
+        applicationConfigStore.getHandshakeTrustedInStore().remove(key);
     }
 
     public void revokeAll() {
-        applicationConfigStore.getHandshakeStore().sessionInStore().removeAll();
-        applicationConfigStore.getHandshakeStore().trustedInStore().removeAll();
+        applicationConfigStore.getHandshakeSessionInStore().removeAll();
+        applicationConfigStore.getHandshakeTrustedInStore().removeAll();
     }
 
     public void disconnect(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeStore().trustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
-        applicationConfigStore.getHandshakeStore().sessionOutStore().remove(key);
-        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeTrustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
+        applicationConfigStore.getHandshakeSessionOutStore().remove(key);
+        applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
     }
 
     public void disconnectCurrent() {
-        String key = applicationConfigStore.getHandshakeStore().sessionOutStore().getRequiredLatestUpdated().getKey();
-        applicationConfigStore.getHandshakeStore().sessionOutStore().remove(key);
-        applicationConfigStore.getHandshakeStore().trustedOutStore().remove(key);
+        String key = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated().getKey();
+        applicationConfigStore.getHandshakeSessionOutStore().remove(key);
+        applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
     }
 
     public void disconnectAll() {
-        applicationConfigStore.getHandshakeStore().sessionOutStore().removeAll();
-        applicationConfigStore.getHandshakeStore().trustedOutStore().removeAll();
+        applicationConfigStore.getHandshakeSessionOutStore().removeAll();
+        applicationConfigStore.getHandshakeTrustedOutStore().removeAll();
     }
 }

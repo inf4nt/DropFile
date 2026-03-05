@@ -82,7 +82,7 @@ public class HandshakeFacade {
 
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
-        applicationConfigStore.getHandshakeStore().trustedInStore()
+        applicationConfigStore.getHandshakeTrustedInStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeTrustedInStore.TrustedIn(
@@ -94,7 +94,7 @@ public class HandshakeFacade {
                 );
 
         byte[] publicKeyDH = requestPayload.publicKeyDH();
-        applicationConfigStore.getHandshakeStore().sessionInStore()
+        applicationConfigStore.getHandshakeSessionInStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -109,8 +109,7 @@ public class HandshakeFacade {
 
     @SneakyThrows
     public synchronized HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
-        HandshakeTrustedInStore.TrustedIn trustedIn = applicationConfigStore.getHandshakeStore()
-                .trustedInStore()
+        HandshakeTrustedInStore.TrustedIn trustedIn = applicationConfigStore.getHandshakeTrustedInStore()
                 .getRequired(sessionDTO.fingerprint())
                 .getValue();
         String remoteFingerprint = sessionDTO.fingerprint();
@@ -143,8 +142,7 @@ public class HandshakeFacade {
                 signature
         );
 
-        applicationConfigStore.getHandshakeStore()
-                .sessionInStore()
+        applicationConfigStore.getHandshakeSessionInStore()
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
