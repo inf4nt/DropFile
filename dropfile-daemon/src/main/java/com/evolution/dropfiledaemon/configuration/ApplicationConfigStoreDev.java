@@ -7,6 +7,8 @@ import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
+import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
@@ -35,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @Profile("dev")
 @Slf4j
@@ -46,123 +49,68 @@ class ApplicationConfigStoreDev
 
     private final ApplicationEventPublisher eventPublisher;
 
-    private final AppConfigStore appConfigStore;
+    private final Map<Class, KeyValueStore> keyValueStores;
 
-    private final DaemonSecretsStore daemonSecretsStore;
-
-    private final AccessKeyStore accessKeyStore;
-
-    private final FileDownloadEntryStore fileDownloadEntryStore;
-
-    private final ShareFileEntryStore shareFileEntryStore;
-
-    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
-
-    private final HandshakeTrustedInStore handshakeTrustedInStore;
-
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
-
-    private final HandshakeSessionInStore handshakeSessionInStore;
+    private final Map<Class, SingleValueStore> singleValueStores;
 
     @Autowired
     public ApplicationConfigStoreDev(Environment environment, ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
 
-        appConfigStore = new ImmutableAppConfigStore(() -> {
-            Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
-            String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
+        keyValueStores = Map.of(
+                AccessKeyStore.class, new RuntimeAccessKeyStore(),
+                FileDownloadEntryStore.class, new RuntimeFileDownloadEntryStore(),
+                ShareFileEntryStore.class, new RuntimeShareFileEntryStore(),
+                HandshakeTrustedOutStore.class, new RuntimeHandshakeTrustedOutStore(),
+                HandshakeTrustedInStore.class, new RuntimeHandshakeTrustedInStore(),
+                HandshakeSessionOutStore.class, new RuntimeHandshakeSessionOutStore(),
+                HandshakeSessionInStore.class, new RuntimeHandshakeSessionInStore()
+        );
+        singleValueStores = Map.of(
+                AppConfigStore.class, new ImmutableAppConfigStore(() -> {
+                    Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
+                    String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
 
-            log.info("Provided download directory: {}", daemonDownloadDirectory);
-            log.info("Provided daemon port: {}", daemonPort);
+                    log.info("Provided download directory: {}", daemonDownloadDirectory);
+                    log.info("Provided daemon port: {}", daemonPort);
 
-            File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
-            log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
+                    File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
+                    log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
 
-            return new AppConfig(
-                    null,
-                    new AppConfig.DaemonAppConfig(
-                            daemonDownloadDirectoryFile.getAbsolutePath(),
-                            daemonPort
-                    )
-            );
-        });
-
-        daemonSecretsStore = new ImmutableDaemonSecretsStore(() -> {
-            String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
-            log.info("Provided daemon token: {}", daemonToken);
-            return new DaemonSecrets(daemonToken);
-        });
-
-        accessKeyStore = new RuntimeAccessKeyStore();
-        fileDownloadEntryStore = new RuntimeFileDownloadEntryStore();
-        shareFileEntryStore = new RuntimeShareFileEntryStore();
-
-        handshakeTrustedOutStore = new RuntimeHandshakeTrustedOutStore();
-
-        handshakeTrustedInStore = new RuntimeHandshakeTrustedInStore();
-
-        handshakeSessionOutStore = new RuntimeHandshakeSessionOutStore();
-
-        handshakeSessionInStore = new RuntimeHandshakeSessionInStore();
+                    return new AppConfig(
+                            null,
+                            new AppConfig.DaemonAppConfig(
+                                    daemonDownloadDirectoryFile.getAbsolutePath(),
+                                    daemonPort
+                            )
+                    );
+                }),
+                DaemonSecretsStore.class, new ImmutableDaemonSecretsStore(() -> {
+                    String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
+                    log.info("Provided daemon token: {}", daemonToken);
+                    return new DaemonSecrets(daemonToken);
+                })
+        );
     }
 
     @Override
-    public AppConfigStore getAppConfigStore() {
+    public <T extends KeyValueStore> T requiredStore(Class<T> clazz) {
         checkInitialized();
-        return appConfigStore;
+        KeyValueStore entry = keyValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry;
     }
 
     @Override
-    public AppConfigStore getUninitializedAppConfigStore() {
-        return appConfigStore;
-    }
-
-    @Override
-    public AccessKeyStore getAccessKeyStore() {
+    public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
         checkInitialized();
-        return accessKeyStore;
-    }
-
-    @Override
-    public FileDownloadEntryStore getFileDownloadEntryStore() {
-        checkInitialized();
-        return fileDownloadEntryStore;
-    }
-
-    @Override
-    public DaemonSecretsStore getSecretsConfigStore() {
-        checkInitialized();
-        return daemonSecretsStore;
-    }
-
-    @Override
-    public ShareFileEntryStore getShareFileEntryStore() {
-        checkInitialized();
-        return shareFileEntryStore;
-    }
-
-    @Override
-    public HandshakeTrustedOutStore getHandshakeTrustedOutStore() {
-        checkInitialized();
-        return handshakeTrustedOutStore;
-    }
-
-    @Override
-    public HandshakeTrustedInStore getHandshakeTrustedInStore() {
-        checkInitialized();
-        return handshakeTrustedInStore;
-    }
-
-    @Override
-    public HandshakeSessionOutStore getHandshakeSessionOutStore() {
-        checkInitialized();
-        return handshakeSessionOutStore;
-    }
-
-    @Override
-    public HandshakeSessionInStore getHandshakeSessionInStore() {
-        checkInitialized();
-        return handshakeSessionInStore;
+        SingleValueStore entry = singleValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry;
     }
 
     @Override
@@ -201,5 +149,10 @@ class ApplicationConfigStoreDev
         if (!initialized) {
             throw new IllegalStateException("Application has not been initialized yet");
         }
+    }
+
+    @Override
+    public AppConfigStore getUninitializedAppConfigStore() {
+        return (AppConfigStore) singleValueStores.get(AppConfigStore.class);
     }
 }

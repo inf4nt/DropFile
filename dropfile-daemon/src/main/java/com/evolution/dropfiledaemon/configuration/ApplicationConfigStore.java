@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
+import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
@@ -12,23 +14,47 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 
 public interface ApplicationConfigStore {
 
-    AppConfigStore getAppConfigStore();
+    @SuppressWarnings("rawtypes")
+    <T extends KeyValueStore> T requiredStore(Class<T> clazz);
 
-    AccessKeyStore getAccessKeyStore();
+    @SuppressWarnings("rawtypes")
+    <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz);
 
-    FileDownloadEntryStore getFileDownloadEntryStore();
+    default AppConfigStore getAppConfigStore() {
+        return requiredSingleStore(AppConfigStore.class);
+    }
 
-    DaemonSecretsStore getSecretsConfigStore();
+    default AccessKeyStore getAccessKeyStore() {
+        return requiredStore(AccessKeyStore.class);
+    }
 
-    ShareFileEntryStore getShareFileEntryStore();
+    default FileDownloadEntryStore getFileDownloadEntryStore() {
+        return requiredStore(FileDownloadEntryStore.class);
+    }
 
-    HandshakeTrustedOutStore getHandshakeTrustedOutStore();
+    default DaemonSecretsStore getSecretsConfigStore() {
+        return requiredSingleStore(DaemonSecretsStore.class);
+    }
 
-    HandshakeTrustedInStore getHandshakeTrustedInStore();
+    default ShareFileEntryStore getShareFileEntryStore() {
+        return requiredStore(ShareFileEntryStore.class);
+    }
 
-    HandshakeSessionOutStore getHandshakeSessionOutStore();
+    default HandshakeTrustedOutStore getHandshakeTrustedOutStore() {
+        return requiredStore(HandshakeTrustedOutStore.class);
+    }
 
-    HandshakeSessionInStore getHandshakeSessionInStore();
+    default HandshakeTrustedInStore getHandshakeTrustedInStore() {
+        return requiredStore(HandshakeTrustedInStore.class);
+    }
+
+    default HandshakeSessionOutStore getHandshakeSessionOutStore() {
+        return requiredStore(HandshakeSessionOutStore.class);
+    }
+
+    default HandshakeSessionInStore getHandshakeSessionInStore() {
+        return requiredStore(HandshakeSessionInStore.class);
+    }
 
     void cacheReset();
 

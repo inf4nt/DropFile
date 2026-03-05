@@ -43,6 +43,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     @Autowired
     public FileDownloadOrchestrator(DownloadProcedureFactory downloadProcedureFactory,
                                     ApplicationConfigStore applicationConfigStore,
+                                    // TODO move all configurations to app.config
                                     @Value("${download.ochestrator.thread-size}") int downloadOrchestratorThreadSize) {
         this.downloadProcedureFactory = downloadProcedureFactory;
         this.applicationConfigStore = applicationConfigStore;
