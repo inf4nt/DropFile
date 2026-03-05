@@ -34,6 +34,8 @@ public class AppConfigStoreInitializationProcedure
         }
 
         int daemonPort = 18181;
+        int downloadOrchestratorThreadSize = 10;
+        int downloadProcedureThreadSize = 2;
         AppConfig config = new AppConfig(
                 new AppConfig.CliAppConfig(
                         "127.0.0.1",
@@ -41,7 +43,9 @@ public class AppConfigStoreInitializationProcedure
                 ),
                 new AppConfig.DaemonAppConfig(
                         homeDir.toAbsolutePath().toString(),
-                        daemonPort
+                        daemonPort,
+                        downloadOrchestratorThreadSize,
+                        downloadProcedureThreadSize
                 )
         );
         store.save(config);

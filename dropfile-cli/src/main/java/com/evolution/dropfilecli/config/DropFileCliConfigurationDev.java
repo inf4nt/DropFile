@@ -4,8 +4,8 @@ import com.evolution.dropfile.store.app.AppConfig;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +30,9 @@ public class DropFileCliConfigurationDev {
                     ),
                     new AppConfig.DaemonAppConfig(
                             "NO-SET",
-                            daemonPort
+                            daemonPort,
+                            null,
+                            null
                     )
             );
         });

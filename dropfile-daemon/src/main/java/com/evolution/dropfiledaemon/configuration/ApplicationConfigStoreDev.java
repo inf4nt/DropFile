@@ -70,9 +70,15 @@ class ApplicationConfigStoreDev
                 AppConfigStore.class, new ImmutableAppConfigStore(() -> {
                     int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
                     String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
+                    int downloadOrchestratorThreadSize = Integer.parseInt(environment.getRequiredProperty(
+                            "dropfile.daemon.download.ochestrator.thread-size"));
+                    int downloadProcedureThreadSize = Integer.parseInt(environment.getRequiredProperty(
+                            "dropfile.daemon.download.procedure.thread-size"));
 
                     log.info("Provided download directory: {}", daemonDownloadDirectory);
                     log.info("Provided daemon port: {}", daemonPort);
+                    log.info("Provided download orchestrator thread size: {}", downloadOrchestratorThreadSize);
+                    log.info("Provided download procedure thread size: {}", downloadProcedureThreadSize);
 
                     File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
                     log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
@@ -81,7 +87,9 @@ class ApplicationConfigStoreDev
                             null,
                             new AppConfig.DaemonAppConfig(
                                     daemonDownloadDirectoryFile.getAbsolutePath(),
-                                    daemonPort
+                                    daemonPort,
+                                    downloadOrchestratorThreadSize,
+                                    downloadProcedureThreadSize
                             )
                     );
                 }),

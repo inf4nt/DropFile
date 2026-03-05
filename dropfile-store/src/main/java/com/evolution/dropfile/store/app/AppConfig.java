@@ -8,7 +8,10 @@ public record AppConfig(
                                int daemonPort) {
     }
 
+    // TODO create separate config for daemon and cli
     public record DaemonAppConfig(String downloadDirectory,
-                                  int daemonPort) {
+                                  int daemonPort,
+                                  Integer downloadOrchestratorThreadSize,
+                                  Integer downloadProcedureThreadSize) {
     }
 }

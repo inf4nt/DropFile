@@ -1,14 +1,15 @@
 package com.evolution.dropfiledaemon.download;
 
+import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileManifestService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.FileHelper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 
+@RequiredArgsConstructor
 @Component
 public class DownloadProcedureFactory {
 
@@ -18,18 +19,7 @@ public class DownloadProcedureFactory {
 
     private final FileManifestService fileManifestService;
 
-    private final int maxThreadSize;
-
-    @Autowired
-    public DownloadProcedureFactory(TunnelClient tunnelClient,
-                                    FileHelper fileHelper,
-                                    FileManifestService fileManifestService,
-                                    @Value("${download.procedure.thread-size}") int maxThreadSize) {
-        this.tunnelClient = tunnelClient;
-        this.fileHelper = fileHelper;
-        this.fileManifestService = fileManifestService;
-        this.maxThreadSize = maxThreadSize;
-    }
+    private final ApplicationConfigStore applicationConfigStore;
 
     public DownloadProcedure get(String operation,
                                  String fingerprint,
@@ -37,8 +27,10 @@ public class DownloadProcedureFactory {
                                  String filename,
                                  File destinationFile,
                                  File temporaryFile) {
+        Integer downloadProcedureThreadSize = applicationConfigStore.getAppConfigStore().getRequired()
+                .daemonAppConfig().downloadProcedureThreadSize();
         return new DownloadProcedure(
-                tunnelClient, fileHelper, fileManifestService, maxThreadSize,
+                tunnelClient, fileHelper, fileManifestService, downloadProcedureThreadSize,
                 operation, fingerprint, fileId, filename, destinationFile, temporaryFile
         );
     }
