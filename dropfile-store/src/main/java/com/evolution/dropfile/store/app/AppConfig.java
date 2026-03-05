@@ -5,10 +5,10 @@ public record AppConfig(
         DaemonAppConfig daemonAppConfig) {
 
     public record CliAppConfig(String daemonHost,
-                               Integer daemonPort) {
+                               int daemonPort) {
     }
 
     public record DaemonAppConfig(String downloadDirectory,
-                                  Integer daemonPort) {
+                                  int daemonPort) {
     }
 }

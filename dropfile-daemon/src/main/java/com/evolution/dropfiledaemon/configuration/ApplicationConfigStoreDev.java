@@ -68,7 +68,7 @@ class ApplicationConfigStoreDev
         );
         singleValueStores = Map.of(
                 AppConfigStore.class, new ImmutableAppConfigStore(() -> {
-                    Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
+                    int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
                     String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
 
                     log.info("Provided download directory: {}", daemonDownloadDirectory);

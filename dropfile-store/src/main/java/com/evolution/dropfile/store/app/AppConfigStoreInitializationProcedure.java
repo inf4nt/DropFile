@@ -33,7 +33,7 @@ public class AppConfigStoreInitializationProcedure
             Files.createDirectories(homeDir);
         }
 
-        Integer daemonPort = 18181;
+        int daemonPort = 18181;
         AppConfig config = new AppConfig(
                 new AppConfig.CliAppConfig(
                         "127.0.0.1",

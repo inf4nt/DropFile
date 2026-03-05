@@ -21,7 +21,7 @@ public class DropFileCliConfigurationDev {
     public AppConfigStore appConfigStore(Environment environment) {
         return new ImmutableAppConfigStore(() -> {
             String daemonHost = environment.getRequiredProperty("dropfile.daemon.host");
-            Integer daemonPort = Integer.valueOf(environment.getRequiredProperty("dropfile.daemon.port"));
+            int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
 
             return new AppConfig(
                     new AppConfig.CliAppConfig(
