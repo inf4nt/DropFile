@@ -29,6 +29,7 @@ import com.evolution.dropfiledaemon.handshake.store.crypto.CacheableCryptoHandsh
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Profile;
 import java.util.AbstractMap;
 import java.util.Map;
 
+@Slf4j
 @Profile("prod")
 @Configuration
 class ApplicationConfigStoreProd
@@ -133,12 +135,14 @@ class ApplicationConfigStoreProd
         for (Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure> value : keyValueStores.values()) {
             KeyValueStore keyValueStore = value.getKey();
             if (keyValueStore instanceof Cacheable cacheable) {
+                log.info("Cache reset {}", keyValueStore.getClass().getName());
                 cacheable.reset();
             }
         }
         for (Map.Entry<SingleValueStore, StoreInitializationProcedure> value : singleValueStores.values()) {
             SingleValueStore singleValueStore = value.getKey();
             if (singleValueStore instanceof Cacheable cacheable) {
+                log.info("Cache reset {}", singleValueStore.getClass().getName());
                 cacheable.reset();
             }
         }

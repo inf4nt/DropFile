@@ -34,4 +34,8 @@ public class ApiDaemonFacade {
                 applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
         );
     }
+
+    public void cacheReset() {
+        applicationConfigStore.cacheReset();
+    }
 }

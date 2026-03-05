@@ -29,4 +29,8 @@ public class ApiDaemonRestController {
         return apiDaemonFacade.info();
     }
 
+    @PostMapping("/cache-reset")
+    public void cacheReset() {
+        apiDaemonFacade.cacheReset();
+    }
 }
