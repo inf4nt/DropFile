@@ -21,6 +21,8 @@ public interface ApplicationConfigStore {
 
     HandshakeStore getHandshakeStore();
 
+    void cacheReset();
+
     class ApplicationConfigStoreInitialized {
 
     }

@@ -5,19 +5,19 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.app.AppConfigStore;
 import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.app.CacheableJsonFileAppConfigStore;
+import com.evolution.dropfile.store.download.CacheableJsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
-import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
-import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.framework.DefaultKeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.secret.CacheableCryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsStoreInitializationProcedure;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.framework.DefaultKeyValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CacheableCryptoHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CacheableCryptoHandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +31,10 @@ import org.springframework.context.annotation.Profile;
 @Profile("prod")
 @Configuration
 class ApplicationConfigStoreProd
-        implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
+        implements
+        ApplicationConfigStore,
+        AppConfigStoreUninitialized,
+        ApplicationListener<ApplicationReadyEvent> {
 
     private boolean initialized = false;
 
@@ -65,13 +68,13 @@ class ApplicationConfigStoreProd
 
         defaultKeyValueStoreInitializationProcedure = new DefaultKeyValueStoreInitializationProcedure();
 
-        appConfigStore = new JsonFileAppConfigStore(objectMapper);
+        appConfigStore = new CacheableJsonFileAppConfigStore(objectMapper);
         appConfigStoreInitializationProcedure = new AppConfigStoreInitializationProcedure();
 
-        daemonSecretsStore = new CryptoDaemonSecretsStore(objectMapper, cryptoTunnel);
+        daemonSecretsStore = new CacheableCryptoDaemonSecretsStore(objectMapper, cryptoTunnel);
         daemonSecretsStoreInitializationProcedure = new DaemonSecretsStoreInitializationProcedure();
 
-        fileDownloadEntryStore = new JsonFileFileDownloadEntryStore(objectMapper);
+        fileDownloadEntryStore = new CacheableJsonFileFileDownloadEntryStore(objectMapper);
         fileDownloadEntryStoreKeyValueStoreInitializationProcedure = new FileDownloadEntryStoreKeyValueStoreInitializationProcedure();
 
         accessKeyStore = new RuntimeAccessKeyStore();
@@ -80,8 +83,8 @@ class ApplicationConfigStoreProd
         shareFileEntryStore = new RuntimeShareFileEntryStore();
 
         handshakeStore = new HandshakeStore(
-                new CryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel),
-                new CryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel),
+                new CacheableCryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel),
+                new CacheableCryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel),
                 new RuntimeHandshakeSessionOutStore(),
                 new RuntimeHandshakeSessionInStore()
         );
@@ -126,6 +129,11 @@ class ApplicationConfigStoreProd
     public HandshakeStore getHandshakeStore() {
         checkInitialized();
         return handshakeStore;
+    }
+
+    @Override
+    public void cacheReset() {
+        // TODO
     }
 
     @Override

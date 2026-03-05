@@ -8,12 +8,15 @@ import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.*;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,6 +135,11 @@ class ApplicationConfigStoreDev
     public HandshakeStore getHandshakeStore() {
         checkInitialized();
         return handshakeStore;
+    }
+
+    @Override
+    public void cacheReset() {
+        throw new UnsupportedOperationException("Dev configuration store cannot cache reset");
     }
 
     @Override
