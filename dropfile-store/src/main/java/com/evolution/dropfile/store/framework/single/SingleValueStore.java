@@ -14,9 +14,7 @@ public interface SingleValueStore<V> {
 
     V remove();
 
-    default void init() {
-
-    }
+    void init();
 
     default void validate(V value) {
 

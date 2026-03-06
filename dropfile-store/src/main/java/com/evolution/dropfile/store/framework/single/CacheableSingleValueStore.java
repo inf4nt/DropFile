@@ -56,6 +56,10 @@ public class CacheableSingleValueStore<V>
 
     @Override
     public void init() {
-        delegate.init();
+        try {
+            delegate.init();
+        } finally {
+            reset();
+        }
     }
 }
