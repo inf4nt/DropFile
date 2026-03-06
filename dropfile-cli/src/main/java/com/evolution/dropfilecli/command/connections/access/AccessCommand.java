@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections.access;
 
+import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -14,13 +15,13 @@ import picocli.CommandLine;
                 AccessRmCommand.class
         }
 )
-public class AccessCommand implements Runnable {
+public class AccessCommand implements SimpleCommandHandler {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
     @Override
-    public void run() {
+    public void handle() {
         spec.commandLine().usage(System.out);
     }
 }

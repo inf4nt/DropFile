@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.link;
 
+import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -14,12 +15,12 @@ import picocli.CommandLine;
                 LinkRmCommand.class
         }
 )
-public class LinkCommand implements Runnable {
+public class LinkCommand implements SimpleCommandHandler {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
     @Override
-    public void run() {
+    public void handle() {
         spec.commandLine().usage(System.out);
     }
 }

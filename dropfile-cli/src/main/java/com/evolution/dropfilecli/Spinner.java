@@ -2,7 +2,6 @@ package com.evolution.dropfilecli;
 
 import lombok.SneakyThrows;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Spinner {
@@ -37,8 +36,6 @@ public class Spinner {
         }
         EXECUTING.set(false);
         System.out.print("\r");
-        long time = System.currentTimeMillis() - START.get();
-        System.out.println("Finished processing " + TimeUnit.MILLISECONDS.toSeconds(time) + " seconds");
     }
 
     public static String getProgressIndicator() {

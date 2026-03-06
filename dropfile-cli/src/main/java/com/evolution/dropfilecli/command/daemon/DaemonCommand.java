@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -14,13 +15,13 @@ import picocli.CommandLine;
                 CacheResetCommand.class
         }
 )
-public class DaemonCommand implements Runnable {
+public class DaemonCommand implements SimpleCommandHandler {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
     @Override
-    public void run() {
+    public void handle() {
         spec.commandLine().usage(System.out);
     }
 }

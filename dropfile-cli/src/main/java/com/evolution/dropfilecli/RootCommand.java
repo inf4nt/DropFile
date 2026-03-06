@@ -24,7 +24,7 @@ import picocli.CommandLine;
                 LinkCommand.class
         }
 )
-public class RootCommand implements Runnable {
+public class RootCommand implements SimpleCommandHandler {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
@@ -32,7 +32,7 @@ public class RootCommand implements Runnable {
     private final CliAppConfigStore cliAppConfigStore;
 
     @Override
-    public void run() {
+    public void handle() {
         System.out.println("░███████                                      ░████ ░██░██            \n" +
                 "░██   ░██                                    ░██       ░██            \n" +
                 "░██    ░██ ░██░████  ░███████  ░████████  ░████████ ░██░██  ░███████  \n" +
