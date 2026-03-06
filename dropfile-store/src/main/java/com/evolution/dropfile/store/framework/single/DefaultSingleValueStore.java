@@ -29,9 +29,10 @@ public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
 
     @Override
     public V save(V value) {
-        // TODO
-        validate(value);
-        return store.save(storeName, value);
+        return store.save(storeName, () -> {
+            validate(value);
+            return value;
+        });
     }
 
     @Override

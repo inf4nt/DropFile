@@ -8,6 +8,10 @@ public interface KeyValueStore<V> {
 
     Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier);
 
+    default V save(String key, Supplier<V> valueSupplier) {
+        return save(() -> Map.of(key, valueSupplier.get())).iterator().next();
+    }
+
     default V save(String key, V value) {
         return save(() -> Map.of(key, value)).iterator().next();
     }
