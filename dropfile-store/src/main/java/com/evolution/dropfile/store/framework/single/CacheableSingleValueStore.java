@@ -53,4 +53,9 @@ public class CacheableSingleValueStore<V>
     public synchronized void reset() {
         cache = null;
     }
+
+    @Override
+    public void init() {
+        delegate.init();
+    }
 }

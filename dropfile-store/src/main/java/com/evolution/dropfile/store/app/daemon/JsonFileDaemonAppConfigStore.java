@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.app;
+package com.evolution.dropfile.store.app.daemon;
 
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.framework.file.JsonFileOperations;
@@ -6,18 +6,18 @@ import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore
 import com.evolution.dropfile.store.framework.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonFileAppConfigStore
-        extends DefaultSingleValueStore<AppConfig>
-        implements AppConfigStore {
+public class JsonFileDaemonAppConfigStore
+        extends DefaultSingleValueStore<DaemonAppConfig>
+        implements DaemonAppConfigStore {
 
-    public JsonFileAppConfigStore(ObjectMapper objectMapper) {
+    public JsonFileDaemonAppConfigStore(ObjectMapper objectMapper) {
         super(
-                "appConfig",
+                "daemonAppConfig",
                 new SynchronizedFileKeyValueStore<>(
-                        new FileProviderImpl("app.config.json"),
+                        new FileProviderImpl("daemon.app.config.json"),
                         new JsonFileOperations<>(
                                 objectMapper,
-                                AppConfig.class
+                                DaemonAppConfig.class
                         )
                 )
         );

@@ -27,8 +27,8 @@ public class DownloadProcedureFactory {
                                  String filename,
                                  File destinationFile,
                                  File temporaryFile) {
-        Integer downloadProcedureThreadSize = applicationConfigStore.getAppConfigStore().getRequired()
-                .daemonAppConfig().downloadProcedureThreadSize();
+        int downloadProcedureThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
+                .downloadProcedureThreadSize();
         return new DownloadProcedure(
                 tunnelClient, fileHelper, fileManifestService, downloadProcedureThreadSize,
                 operation, fingerprint, fileId, filename, destinationFile, temporaryFile

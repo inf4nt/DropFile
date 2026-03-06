@@ -40,8 +40,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     @SneakyThrows
     public synchronized FileDownloadResponse start(FileDownloadRequest request) {
-        int downloadOrchestratorThreadSize = applicationConfigStore.getAppConfigStore().getRequired()
-                .daemonAppConfig().downloadOrchestratorThreadSize();
+        int downloadOrchestratorThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
+                .downloadOrchestratorThreadSize();
         if (downloadProcedures.size() >= downloadOrchestratorThreadSize) {
             throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorThreadSize);
         }
@@ -147,7 +147,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
 
-        String downloadDirectory = applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig().downloadDirectory();
+        String downloadDirectory = applicationConfigStore.getDaemonAppConfigStore().getRequired().downloadDirectory();
         File downloadFile = new File(downloadDirectory, request.filename()).getCanonicalFile();
 
         if (Files.exists(downloadFile.toPath())) {
@@ -166,7 +166,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         }
 
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
-        String downloadDirectory = applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig().downloadDirectory();
+        String downloadDirectory = applicationConfigStore.getDaemonAppConfigStore().getRequired().downloadDirectory();
         File tmpDownloadFile = new File(downloadDirectory, temporaryFileName).getCanonicalFile();
 
         if (Files.notExists(tmpDownloadFile.toPath())) {

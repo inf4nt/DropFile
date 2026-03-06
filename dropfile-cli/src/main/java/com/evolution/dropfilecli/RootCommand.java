@@ -1,7 +1,7 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfile.store.app.AppConfig;
-import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.app.cli.CliAppConfig;
+import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.download.DownloadCommand;
@@ -29,7 +29,7 @@ public class RootCommand implements Runnable {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    private final AppConfigStore appConfigStore;
+    private final CliAppConfigStore cliAppConfigStore;
 
     @Override
     public void run() {
@@ -44,7 +44,7 @@ public class RootCommand implements Runnable {
                 "                               ░██                                    \n" +
                 "                                                                      ");
 
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         System.out.println("Daemon host: " + cliAppConfig.daemonHost());
         System.out.println("Daemon port: " + cliAppConfig.daemonPort());

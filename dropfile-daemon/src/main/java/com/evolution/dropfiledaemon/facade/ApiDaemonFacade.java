@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @RequiredArgsConstructor
@@ -22,16 +23,16 @@ public class ApiDaemonFacade {
     private final ApplicationContext applicationContext;
 
     public void shutdown() {
-        Executors.newVirtualThreadPerTaskExecutor().execute(() -> {
-            SpringApplication.exit(applicationContext, () -> 0);
-        });
+        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+            executorService.execute(() -> SpringApplication.exit(applicationContext, () -> 0));
+        }
     }
 
     @SneakyThrows
     public DaemonInfoResponseDTO info() {
         return new DaemonInfoResponseDTO(
                 systemInfoProvider.getSystemInfo(),
-                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
+                applicationConfigStore.getDaemonAppConfigStore().getRequired()
         );
     }
 

@@ -30,7 +30,7 @@ public class BootstrapSystemInfoPrinter {
         ));
         System.out.println("================================");
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                applicationConfigStore.getAppConfigStore().getRequired().daemonAppConfig()
+                applicationConfigStore.getDaemonAppConfigStore().getRequired()
         ));
         System.out.println("================================");
     }

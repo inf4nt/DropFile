@@ -3,9 +3,9 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.app.CacheableJsonFileAppConfigStore;
+import com.evolution.dropfile.store.app.daemon.CacheableJsonFileDaemonAppConfigStore;
+import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStore;
+import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.download.CacheableJsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.Cacheable;
@@ -93,9 +93,9 @@ class ApplicationConfigStoreProd
                 )
         );
         singleValueStores = Map.of(
-                AppConfigStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileAppConfigStore(objectMapper),
-                        new AppConfigStoreInitializationProcedure()
+                DaemonAppConfigStore.class, new AbstractMap.SimpleEntry<>(
+                        new CacheableJsonFileDaemonAppConfigStore(objectMapper),
+                        new DaemonAppConfigStoreInitializationProcedure()
                 ),
                 DaemonSecretsStore.class, new AbstractMap.SimpleEntry<>(
                         new CacheableCryptoDaemonSecretsStore(objectMapper, cryptoTunnel),
@@ -105,28 +105,8 @@ class ApplicationConfigStoreProd
     }
 
     @Override
-    public <T extends KeyValueStore> T requiredStore(Class<T> clazz) {
-        checkInitialized();
-        Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure> entry = keyValueStores.get(clazz);
-        if (entry == null) {
-            throw new RuntimeException("No store found for " + clazz.getName());
-        }
-        return (T) entry.getKey();
-    }
-
-    @Override
-    public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
-        checkInitialized();
-        Map.Entry<SingleValueStore, StoreInitializationProcedure> entry = singleValueStores.get(clazz);
-        if (entry == null) {
-            throw new RuntimeException("No store found for " + clazz.getName());
-        }
-        return (T) entry.getKey();
-    }
-
-    @Override
-    public AppConfigStore getUninitializedAppConfigStore() {
-        return (AppConfigStore) singleValueStores.get(AppConfigStore.class).getKey();
+    public DaemonAppConfigStore getUninitializedDaemonAppConfigStore() {
+        return (DaemonAppConfigStore) singleValueStores.get(DaemonAppConfigStore.class).getKey();
     }
 
     @Override
@@ -151,23 +131,45 @@ class ApplicationConfigStoreProd
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         for (Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure> value : keyValueStores.values()) {
-            KeyValueStore keyValueStore = value.getKey();
+            KeyValueStore store = value.getKey();
             KeyValueStoreInitializationProcedure initializationProcedure = value.getValue();
+            log.info("Store initialization {}", store.getClass().getName());
             if (initializationProcedure != null) {
-                initializationProcedure.init(keyValueStore);
+                initializationProcedure.init(store);
             } else {
-                defaultKeyValueStoreInitializationProcedure.init(keyValueStore);
+                defaultKeyValueStoreInitializationProcedure.init(store);
             }
         }
         for (Map.Entry<SingleValueStore, StoreInitializationProcedure> value : singleValueStores.values()) {
-            SingleValueStore singleValueStore = value.getKey();
+            SingleValueStore store = value.getKey();
+            log.info("Store initialization {}", store.getClass().getName());
             StoreInitializationProcedure initializationProcedure = value.getValue();
-            initializationProcedure.init(singleValueStore);
+            initializationProcedure.init(store);
         }
 
         initialized = true;
 
         eventPublisher.publishEvent(new ApplicationConfigStoreInitialized());
+    }
+
+    @Override
+    public <T extends KeyValueStore> T requiredStore(Class<T> clazz) {
+        checkInitialized();
+        Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure> entry = keyValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry.getKey();
+    }
+
+    @Override
+    public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
+        checkInitialized();
+        Map.Entry<SingleValueStore, StoreInitializationProcedure> entry = singleValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry.getKey();
     }
 
     private void checkInitialized() {

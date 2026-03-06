@@ -2,9 +2,9 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.app.AppConfig;
-import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfile.store.app.ImmutableAppConfigStore;
+import com.evolution.dropfile.store.app.daemon.DaemonAppConfig;
+import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStore;
+import com.evolution.dropfile.store.app.daemon.ImmutableDaemonAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -67,30 +67,29 @@ class ApplicationConfigStoreDev
                 HandshakeSessionInStore.class, new RuntimeHandshakeSessionInStore()
         );
         singleValueStores = Map.of(
-                AppConfigStore.class, new ImmutableAppConfigStore(() -> {
+                DaemonAppConfigStore.class, new ImmutableDaemonAppConfigStore(() -> {
                     int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
+                    log.info("Provided daemon port: {}", daemonPort);
+
                     String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
+                    log.info("Provided download directory: {}", daemonDownloadDirectory);
+
                     int downloadOrchestratorThreadSize = Integer.parseInt(environment.getRequiredProperty(
                             "dropfile.daemon.download.ochestrator.thread-size"));
+                    log.info("Provided download orchestrator thread size: {}", downloadOrchestratorThreadSize);
+
                     int downloadProcedureThreadSize = Integer.parseInt(environment.getRequiredProperty(
                             "dropfile.daemon.download.procedure.thread-size"));
-
-                    log.info("Provided download directory: {}", daemonDownloadDirectory);
-                    log.info("Provided daemon port: {}", daemonPort);
-                    log.info("Provided download orchestrator thread size: {}", downloadOrchestratorThreadSize);
                     log.info("Provided download procedure thread size: {}", downloadProcedureThreadSize);
 
                     File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
                     log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
 
-                    return new AppConfig(
-                            null,
-                            new AppConfig.DaemonAppConfig(
-                                    daemonDownloadDirectoryFile.getAbsolutePath(),
-                                    daemonPort,
-                                    downloadOrchestratorThreadSize,
-                                    downloadProcedureThreadSize
-                            )
+                    return new DaemonAppConfig(
+                            daemonDownloadDirectoryFile.getAbsolutePath(),
+                            daemonPort,
+                            downloadOrchestratorThreadSize,
+                            downloadProcedureThreadSize
                     );
                 }),
                 DaemonSecretsStore.class, new ImmutableDaemonSecretsStore(() -> {
@@ -99,26 +98,6 @@ class ApplicationConfigStoreDev
                     return new DaemonSecrets(daemonToken);
                 })
         );
-    }
-
-    @Override
-    public <T extends KeyValueStore> T requiredStore(Class<T> clazz) {
-        checkInitialized();
-        KeyValueStore entry = keyValueStores.get(clazz);
-        if (entry == null) {
-            throw new RuntimeException("No store found for " + clazz.getName());
-        }
-        return (T) entry;
-    }
-
-    @Override
-    public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
-        checkInitialized();
-        SingleValueStore entry = singleValueStores.get(clazz);
-        if (entry == null) {
-            throw new RuntimeException("No store found for " + clazz.getName());
-        }
-        return (T) entry;
     }
 
     @Override
@@ -153,14 +132,34 @@ class ApplicationConfigStoreDev
         return downloadDirectoryPath.toFile();
     }
 
+    @Override
+    public DaemonAppConfigStore getUninitializedDaemonAppConfigStore() {
+        return (DaemonAppConfigStore) singleValueStores.get(DaemonAppConfigStore.class);
+    }
+
+    @Override
+    public <T extends KeyValueStore> T requiredStore(Class<T> clazz) {
+        checkInitialized();
+        KeyValueStore entry = keyValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry;
+    }
+
+    @Override
+    public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
+        checkInitialized();
+        SingleValueStore entry = singleValueStores.get(clazz);
+        if (entry == null) {
+            throw new RuntimeException("No store found for " + clazz.getName());
+        }
+        return (T) entry;
+    }
+
     private void checkInitialized() {
         if (!initialized) {
             throw new IllegalStateException("Application has not been initialized yet");
         }
-    }
-
-    @Override
-    public AppConfigStore getUninitializedAppConfigStore() {
-        return (AppConfigStore) singleValueStores.get(AppConfigStore.class);
     }
 }

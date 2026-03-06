@@ -10,17 +10,14 @@ import org.springframework.context.annotation.Configuration;
 public class DropFileWebServerFactoryCustomizer
         implements WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
 
-    private static final Integer DEFAULT_PORT = 18181;
-
     private final AppConfigStoreUninitialized appConfigStoreUninitialized;
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        Integer daemonPort = appConfigStoreUninitialized.getUninitializedAppConfigStore()
+        Integer daemonPort = appConfigStoreUninitialized.getUninitializedDaemonAppConfigStore()
                 .get()
-                .map(it -> it.daemonAppConfig())
                 .map(it -> it.daemonPort())
-                .orElse(DEFAULT_PORT);
+                .orElse(18181);
         factory.setPort(daemonPort);
     }
 }

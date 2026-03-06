@@ -73,4 +73,9 @@ public class CacheableKeyValueStore<V> implements KeyValueStore<V>, Cacheable {
         }
         return result;
     }
+
+    @Override
+    public void init() {
+        delegate.init();
+    }
 }

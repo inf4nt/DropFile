@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.app;
+package com.evolution.dropfile.store.app.daemon;
 
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
 import lombok.SneakyThrows;
@@ -7,24 +7,20 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
-public class AppConfigStoreInitializationProcedure
-        implements StoreInitializationProcedure<AppConfigStore> {
+public class DaemonAppConfigStoreInitializationProcedure
+        implements StoreInitializationProcedure<DaemonAppConfigStore> {
 
     @SneakyThrows
     @Override
-    public void init(AppConfigStore store) {
+    public void init(DaemonAppConfigStore store) {
         store.init();
 
-        Optional<AppConfig> configOptional = store.get();
-        if (configOptional.isPresent()) {
-            String downloadDirectory = configOptional.get().daemonAppConfig().downloadDirectory();
+        DaemonAppConfig daemonAppConfig = store.get().orElse(null);
+
+        if (daemonAppConfig != null) {
+            String downloadDirectory = daemonAppConfig.downloadDirectory();
             validateDaemonDownloadDirectory(downloadDirectory);
-            Path daemonDownloadDirectoryPath = Paths.get(downloadDirectory);
-            if (Files.notExists(daemonDownloadDirectoryPath)) {
-                Files.createDirectories(daemonDownloadDirectoryPath);
-            }
             return;
         }
 
@@ -36,19 +32,15 @@ public class AppConfigStoreInitializationProcedure
         int daemonPort = 18181;
         int downloadOrchestratorThreadSize = 10;
         int downloadProcedureThreadSize = 2;
-        AppConfig config = new AppConfig(
-                new AppConfig.CliAppConfig(
-                        "127.0.0.1",
-                        daemonPort
-                ),
-                new AppConfig.DaemonAppConfig(
+
+        store.save(
+                new DaemonAppConfig(
                         homeDir.toAbsolutePath().toString(),
                         daemonPort,
                         downloadOrchestratorThreadSize,
                         downloadProcedureThreadSize
                 )
         );
-        store.save(config);
     }
 
     @SneakyThrows

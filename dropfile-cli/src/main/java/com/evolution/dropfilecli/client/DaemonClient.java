@@ -2,13 +2,13 @@ package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.store.app.AppConfig;
-import com.evolution.dropfile.store.app.AppConfigStore;
+import com.evolution.dropfile.store.app.cli.CliAppConfig;
+import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -18,31 +18,21 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 @Component
 public class DaemonClient {
 
     private final HttpClient httpClient;
 
-    private final AppConfigStore appConfigStore;
+    private final CliAppConfigStore cliAppConfigStore;
 
     private final DaemonSecretsStore daemonSecretsStore;
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    public DaemonClient(HttpClient httpClient,
-                        AppConfigStore appConfigStore,
-                        DaemonSecretsStore daemonSecretsStore,
-                        ObjectMapper objectMapper) {
-        this.httpClient = httpClient;
-        this.appConfigStore = appConfigStore;
-        this.daemonSecretsStore = daemonSecretsStore;
-        this.objectMapper = objectMapper;
-    }
-
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnect(String fingerprint) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/disconnect/fingerprint/")
@@ -62,7 +52,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectCurrent() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/disconnect/current");
@@ -81,7 +71,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/disconnect/all");
@@ -100,7 +90,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevoke(String fingerprint) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/revoke/fingerprint/")
@@ -120,7 +110,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevokeAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/revoke/all");
@@ -139,7 +129,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/share/ls");
@@ -163,7 +153,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/share/download");
@@ -185,7 +175,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareCat(String id) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/share/cat/")
@@ -205,7 +195,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareLs() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/share/ls");
@@ -224,7 +214,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareAdd(String alias, String absoluteFilePath) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/share/add");
@@ -248,7 +238,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRm(String id) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/share/rm/")
@@ -268,7 +258,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRmAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/share/rm-all");
@@ -287,7 +277,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/access/generate");
@@ -311,7 +301,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessLs() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/access/ls");
@@ -330,7 +320,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRm(String id) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/access/rm/")
@@ -350,7 +340,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRmAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/connections/access/rm-all");
@@ -369,7 +359,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonInfo() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/daemon/info");
@@ -388,7 +378,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustIn() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/in");
@@ -406,7 +396,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustOut() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out");
@@ -424,7 +414,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustLatest() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/trust/out/latest");
@@ -442,7 +432,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonShutdown() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/daemon/shutdown");
@@ -461,7 +451,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonCacheReset() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/daemon/cache-reset");
@@ -481,7 +471,7 @@ public class DaemonClient {
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI address,
                                           String key) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake");
@@ -506,7 +496,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeReconnect(URI address) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/reconnect");
@@ -530,7 +520,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeStatus() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/handshake/status");
@@ -549,7 +539,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/download/ls");
@@ -574,7 +564,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStop(String operation) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/download/stop/")
@@ -594,7 +584,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStopAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/download/stop-all");
@@ -613,7 +603,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRm(String operationId) {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/download/rm/")
@@ -633,7 +623,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRmAll() {
-        AppConfig.CliAppConfig cliAppConfig = appConfigStore.getRequired().cliAppConfig();
+        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
         URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
                 .resolve("/api/download/rm-all");

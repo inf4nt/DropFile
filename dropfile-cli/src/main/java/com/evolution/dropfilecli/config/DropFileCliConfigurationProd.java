@@ -1,9 +1,9 @@
 package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.store.app.AppConfigStore;
-import com.evolution.dropfile.store.app.AppConfigStoreInitializationProcedure;
-import com.evolution.dropfile.store.app.JsonFileAppConfigStore;
+import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
+import com.evolution.dropfile.store.app.cli.CliAppConfigStoreInitializationProcedure;
+import com.evolution.dropfile.store.app.cli.JsonFileCliAppConfigStore;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,14 +16,14 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationProd {
 
     @Bean
-    public AppConfigStoreInitializationProcedure appConfigStoreInitializationProcedure() {
-        return new AppConfigStoreInitializationProcedure();
+    public CliAppConfigStoreInitializationProcedure cliAppConfigStoreInitializationProcedure() {
+        return new CliAppConfigStoreInitializationProcedure();
     }
 
     @Bean
-    public AppConfigStore appConfigStore(ObjectMapper objectMapper,
-                                         AppConfigStoreInitializationProcedure initializationProcedure) {
-        AppConfigStore store = new JsonFileAppConfigStore(objectMapper);
+    public CliAppConfigStore cliAppConfigStore(ObjectMapper objectMapper,
+                                               CliAppConfigStoreInitializationProcedure initializationProcedure) {
+        CliAppConfigStore store = new JsonFileCliAppConfigStore(objectMapper);
         initializationProcedure.init(store);
         return store;
     }
