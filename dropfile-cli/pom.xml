@@ -16,6 +16,7 @@
     <properties>
         <java.version>25</java.version>
         <picocli.version>4.7.7</picocli.version>
+        <asciitable.version>0.3.2</asciitable.version>
         <dropfile.common.version>1.2.0</dropfile.common.version>
         <dropfile.store.version>1.2.0</dropfile.store.version>
     </properties>
@@ -37,6 +38,12 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli-spring-boot-starter</artifactId>
             <version>${picocli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.vandermeer</groupId>
+            <artifactId>asciitable</artifactId>
+            <version>${asciitable.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

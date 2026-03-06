@@ -1,129 +1,142 @@
 package com.evolution.dropfilecli.util;
 
+import de.vandermeer.asciitable.AsciiTable;
+import de.vandermeer.asciitable.CWC_FixedWidth;
+import de.vandermeer.asciithemes.a8.A8_Grids;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class TablePrinter {
 
-    private static final int MAX_VALUE_LENGTH = 24;
+    private static final int MAX_TABLE_WIDTH = 180;
 
-    private static final int MAX_COL_WIDTH = MAX_VALUE_LENGTH + 2;
+    private static final int MAX_LINES = 5;
 
-    public static void print(List<?> rows) {
-        if (rows == null || rows.isEmpty()) {
-            System.out.println("No values present");
-            return;
-        }
-
-        Class<?> type = rows.getFirst().getClass();
-        List<Field> fields = getPrintableFields(type);
-
-        if (fields.isEmpty()) {
-            throw new UnsupportedOperationException("No printable fields");
-        }
-
-        List<String> headers = new ArrayList<>();
-        for (Field f : fields) {
-            headers.add(f.getName());
-        }
-
-        List<List<String>> data = extractData(rows, fields);
-        List<Integer> widths = computeWidths(headers, data);
-
-        printHeader(headers, widths);
-        printSeparator(widths);
-        printRows(data, widths);
-    }
-
-    private static List<Field> getPrintableFields(Class<?> type) {
-        List<Field> result = new ArrayList<>();
-        for (Field field : type.getDeclaredFields()) {
-            if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            field.setAccessible(true);
-            result.add(field);
-        }
-        return result;
-    }
+    private static final int PADDING = 0;
 
     @SneakyThrows
-    private static List<List<String>> extractData(List<?> rows, List<Field> fields) {
-        List<List<String>> result = new ArrayList<>();
+    public static <T> String get(List<T> list) {
+        if (list == null || list.isEmpty()) {
+            return "No values present";
+        }
 
-        for (Object row : rows) {
-            List<String> line = new ArrayList<>();
-            for (Field field : fields) {
-                Object value = field.get(row);
-                if (value instanceof Instant) {
-                    value = DateUtils.FORMATTER.format((Instant) value);
+        Class<?> clazz = list.getFirst().getClass();
+        Field[] fields = clazz.getDeclaredFields();
+        Arrays.stream(fields).forEach(it -> it.setAccessible(true));
+
+        int colCount = fields.length;
+
+        String[] headers = Arrays.stream(fields)
+                .map(f -> capitalize(f.getName()))
+                .toArray(String[]::new);
+
+        int[] intrinsicWidths = new int[colCount];
+        for (int i = 0; i < colCount; i++) {
+            intrinsicWidths[i] = headers[i].length() + PADDING;
+        }
+
+        List<String[]> rows = new ArrayList<>();
+        for (T item : list) {
+            String[] row = new String[colCount];
+            for (int i = 0; i < colCount; i++) {
+                Object val = fields[i].get(item);
+                if (val instanceof Instant instant) {
+                    val = DateUtils.FORMATTER.format(instant);
                 }
-                String s = value == null ? "" : value.toString();
-                line.add(truncateValue(s));
-
+                String strVal = (val == null) ? "" : val.toString();
+                row[i] = strVal;
+                intrinsicWidths[i] = Math.max(intrinsicWidths[i], strVal.length() + PADDING);
             }
-            result.add(line);
+            rows.add(row);
         }
-        return result;
-    }
 
-    private static List<Integer> computeWidths(List<String> headers, List<List<String>> rows) {
-        List<Integer> widths = new ArrayList<>();
+        int usableWidth = MAX_TABLE_WIDTH - (colCount + 1);
+        int[] finalWidths = calculateSmartWidths(intrinsicWidths, usableWidth);
 
-        for (int col = 0; col < headers.size(); col++) {
-            int max = headers.get(col).length();
-            for (List<String> row : rows) {
-                max = Math.max(max, row.get(col).length());
+        List<String[]> processedRows = new ArrayList<>();
+        for (String[] row : rows) {
+            String[] processedRow = new String[colCount];
+            for (int i = 0; i < colCount; i++) {
+                processedRow[i] = truncateToMaxLines(row[i], finalWidths[i]);
             }
-            widths.add(Math.min(max, MAX_COL_WIDTH));
+            processedRows.add(processedRow);
         }
-        return widths;
-    }
 
-    private static void printHeader(List<String> headers, List<Integer> widths) {
-        for (int i = 0; i < headers.size(); i++) {
-            System.out.print(pad(headers.get(i), widths.get(i)));
-            if (i < headers.size() - 1) {
-                System.out.print(" ");
-            }
+        AsciiTable at = new AsciiTable();
+        at.addRule();
+        at.addRow((Object[]) headers);
+        at.addRule();
+        for (String[] row : processedRows) {
+            at.addRow((Object[]) row);
+            at.addRule();
         }
-        System.out.println();
+
+        CWC_FixedWidth cwc = new CWC_FixedWidth();
+        for (int w : finalWidths) {
+            cwc.add(w);
+        }
+        at.getRenderer().setCWC(cwc);
+
+        at.getContext().setGrid(A8_Grids.lineDobuleTripple());
+        return at.render();
     }
 
-    private static void printSeparator(List<Integer> widths) {
-        int total = widths.stream().mapToInt(Integer::intValue).sum()
-                + (widths.size() - 1) * 2;
-        System.out.println("-".repeat(total));
-    }
+    private static int[] calculateSmartWidths(int[] widths, int targetTotal) {
+        int[] current = Arrays.copyOf(widths, widths.length);
+        int currentTotal = IntStream.of(current).sum();
 
-    private static void printRows(List<List<String>> rows, List<Integer> widths) {
-        for (List<String> row : rows) {
-            for (int i = 0; i < row.size(); i++) {
-                System.out.print(pad(row.get(i), widths.get(i)));
-                if (i < row.size() - 1) {
-                    System.out.print(" ");
+        if (currentTotal <= targetTotal) {
+            return current;
+        }
+
+        while (IntStream.of(current).sum() > targetTotal) {
+            int maxIdx = -1;
+            int maxVal = -1;
+
+            for (int i = 0; i < current.length; i++) {
+                if (current[i] > maxVal) {
+                    maxVal = current[i];
+                    maxIdx = i;
                 }
             }
-            System.out.println();
+
+            if (maxIdx == -1 || current[maxIdx] <= 3) {
+                break;
+            }
+
+            current[maxIdx]--;
         }
+
+        return current;
     }
 
-    private static String truncateValue(String s) {
-        if (s.length() > MAX_VALUE_LENGTH) {
-            return s.substring(0, MAX_VALUE_LENGTH - 1) + "..";
+    private static String truncateToMaxLines(String text, int width) {
+        if (text == null) {
+            return "";
         }
-        return s;
+        int effectiveWidth = width - PADDING;
+        if (effectiveWidth <= 0) {
+            effectiveWidth = 1;
+        }
+
+        int maxChars = effectiveWidth * MAX_LINES;
+        if (text.length() <= maxChars) {
+            return text;
+        }
+
+        return text.substring(0, maxChars - 3) + "...";
     }
 
-    private static String pad(String s, int width) {
-        if (s.length() > width) {
-            return s.substring(0, width - 1) + "..";
+    private static String capitalize(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
         }
-        return String.format("%-" + width + "s", s);
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }

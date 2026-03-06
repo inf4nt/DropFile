@@ -7,6 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DropFileCliApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DropFileCliApplication.class, args);
+        Spinner.start();
+        try {
+            SpringApplication.run(DropFileCliApplication.class, args);
+        } finally {
+            Spinner.stop();
+        }
     }
 }

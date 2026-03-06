@@ -27,10 +27,8 @@ public class ConnectCommand extends AbstractCommandHttpHandler {
     @Override
     public HttpResponse<byte[]> execute() {
         if (!ObjectUtils.isEmpty(key)) {
-            System.out.println("Connecting...");
             return daemonClient.handshake(CommonUtils.toURI(address), key);
         }
-        System.out.println("Reconnecting...");
         return daemonClient.handshakeReconnect(CommonUtils.toURI(address));
     }
 

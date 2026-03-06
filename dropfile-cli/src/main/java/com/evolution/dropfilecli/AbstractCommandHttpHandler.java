@@ -22,6 +22,9 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
     @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false")
     protected boolean list;
 
+    @CommandLine.Option(names = {"-live", "--live"}, description = "Print live", defaultValue = "false")
+    protected boolean live;
+
     protected DaemonClient daemonClient;
 
     protected ObjectMapper objectMapper;
@@ -69,16 +72,27 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
         return response.statusCode() == 200;
     }
 
+    @SneakyThrows
     @Override
     public void run() {
+        if (live) {
+            LivePrinter.live(() -> runCommand());
+        } else {
+            runCommand();
+        }
+    }
+
+    private void runCommand() {
         try {
             HttpResponse<byte[]> httpResponse = execute();
+            Spinner.stop();
             if (isSuccessful(httpResponse)) {
                 handleSuccessful(httpResponse);
             } else {
                 handleUnsuccessful(httpResponse);
             }
         } catch (Exception exception) {
+            Spinner.stop();
             handleError(exception);
         }
     }
@@ -117,7 +131,6 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
             System.out.println("No values present");
             return;
         }
-
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
         System.out.println(json);
     }
@@ -127,7 +140,12 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
             throw new UnsupportedOperationException("Print table supports only Iterable.class");
         }
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
-        TablePrinter.print(data);
+        String print = TablePrinter.get(data);
+        if (live) {
+            LivePrinter.printLive(() -> print);
+        } else {
+            System.out.println(print);
+        }
     }
 
     protected enum PrintModeEnum {
