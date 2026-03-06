@@ -15,7 +15,7 @@ import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
 import com.evolution.dropfile.store.secret.CacheableCryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
+import com.evolution.dropfile.store.share.CacheableJsonFileShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
@@ -69,7 +69,7 @@ class ApplicationConfigStoreProd
                         null
                 ),
                 ShareFileEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new RuntimeShareFileEntryStore(),
+                        new CacheableJsonFileShareFileEntryStore(objectMapper),
                         null
                 ),
                 HandshakeTrustedOutStore.class, new AbstractMap.SimpleEntry<>(
