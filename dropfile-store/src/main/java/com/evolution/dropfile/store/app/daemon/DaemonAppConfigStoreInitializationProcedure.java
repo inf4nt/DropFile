@@ -14,8 +14,6 @@ public class DaemonAppConfigStoreInitializationProcedure
     @SneakyThrows
     @Override
     public void init(DaemonAppConfigStore store) {
-        store.init();
-
         DaemonAppConfig daemonAppConfig = store.get().orElse(null);
 
         if (daemonAppConfig != null) {

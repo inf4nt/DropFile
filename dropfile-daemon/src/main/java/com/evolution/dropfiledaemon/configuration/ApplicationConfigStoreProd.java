@@ -9,7 +9,6 @@ import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStoreInitializatio
 import com.evolution.dropfile.store.download.CacheableJsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.Cacheable;
-import com.evolution.dropfile.store.framework.DefaultKeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
@@ -53,8 +52,6 @@ class ApplicationConfigStoreProd
     private final Map<Class, Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure>> keyValueStores;
 
     private final Map<Class, Map.Entry<SingleValueStore, StoreInitializationProcedure>> singleValueStores;
-
-    private final KeyValueStoreInitializationProcedure defaultKeyValueStoreInitializationProcedure = new DefaultKeyValueStoreInitializationProcedure();
 
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher,
@@ -132,17 +129,19 @@ class ApplicationConfigStoreProd
     public void onApplicationEvent(ApplicationReadyEvent event) {
         for (Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure> value : keyValueStores.values()) {
             KeyValueStore store = value.getKey();
-            KeyValueStoreInitializationProcedure initializationProcedure = value.getValue();
             log.info("Store initialization {}", store.getClass().getName());
+            store.init();
+
+            KeyValueStoreInitializationProcedure initializationProcedure = value.getValue();
             if (initializationProcedure != null) {
                 initializationProcedure.init(store);
-            } else {
-                defaultKeyValueStoreInitializationProcedure.init(store);
             }
         }
         for (Map.Entry<SingleValueStore, StoreInitializationProcedure> value : singleValueStores.values()) {
             SingleValueStore store = value.getKey();
             log.info("Store initialization {}", store.getClass().getName());
+            store.init();
+
             StoreInitializationProcedure initializationProcedure = value.getValue();
             initializationProcedure.init(store);
         }

@@ -2,7 +2,8 @@ package com.evolution.dropfiledaemon.configuration.middleware;
 
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;import lombok.extern.slf4j.Slf4j;
+import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,8 +16,6 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
 
     @Override
     public void init(FileDownloadEntryStore store) {
-        store.init();
-
         store.save(() -> {
             Map<String, DownloadFileEntry> currentValues = store.getAll();
 
@@ -27,7 +26,7 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
                     )
                     .collect(Collectors.toMap(
                             it -> it.getKey(),
-                            it -> it.getValue()
+                               it -> it.getValue()
                                     .withStatus(DownloadFileEntry.DownloadFileEntryStatus.INTERRUPTED)
                     ));
 

@@ -7,8 +7,6 @@ public class CliAppConfigStoreInitializationProcedure
 
     @Override
     public void init(CliAppConfigStore store) {
-        store.init();
-
         CliAppConfig cliAppConfig = store.get().orElse(null);
         if (cliAppConfig != null) {
             return;
