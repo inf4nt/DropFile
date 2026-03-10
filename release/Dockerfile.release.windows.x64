@@ -43,6 +43,7 @@ FROM busybox
 RUN mkdir -p dropfile/bin dropfile/logs dropfile/runtime dropfile/dropfile-cli dropfile/dropfile-daemon
 
 COPY /release/windows /dropfile/bin
+COPY /release/common /dropfile/
 
 COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
 COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/dropfile-cli/dropfile-cli.jar
