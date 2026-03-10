@@ -17,7 +17,7 @@ RUN curl -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
     && rm $JDK_ARCHIVE \
     && mv $JAVA_HOME $RUNTIME_DIR_NAME
 
-FROM maven:3.9.12-eclipse-temurin-25 AS build
+FROM maven:3.9.13-eclipse-temurin-25 AS build
 
 ARG WORKDIR_NAME=/build
 
