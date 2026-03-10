@@ -27,4 +27,9 @@ public class ImmutableSingleValueStore<V>
     public V remove() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void init() {
+
+    }
 }
