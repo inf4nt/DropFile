@@ -28,6 +28,7 @@ public class FileManifestService {
     private final FileHelper fileHelper;
 
     @Autowired
+    // TODO file.manifest.builder.chunk.size move to dropfileconfig
     public FileManifestService(@Value("${file.manifest.builder.chunk.size}") Integer chunkSize,
                                @Value("${file.manifest.builder.buffer.size}") Integer bufferSize,
                                FileHelper fileHelper) {
