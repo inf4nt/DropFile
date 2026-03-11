@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfilecli.SimpleCommandHandler;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -12,10 +13,10 @@ import java.nio.file.Paths;
         name = "start",
         description = "Daemon start"
 )
-public class StartCommand implements Runnable {
+public class StartCommand implements SimpleCommandHandler {
 
     @Override
-    public void run() {
+    public void handle() {
         Path binPath = getBinPath();
         Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
                 : binPath.resolve("dropfile-daemon");
