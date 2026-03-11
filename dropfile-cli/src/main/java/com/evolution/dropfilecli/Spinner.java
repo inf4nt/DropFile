@@ -35,7 +35,7 @@ public class Spinner {
             return;
         }
         EXECUTING.set(false);
-        System.out.print("\r");
+        System.out.print("\r\u001b[K");
     }
 
     public static String getProgressIndicator() {
