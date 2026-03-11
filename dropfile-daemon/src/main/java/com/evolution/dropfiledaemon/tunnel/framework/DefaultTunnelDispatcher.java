@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfiledaemon.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final CryptoTunnel cryptoTunnel;
 
+    private final CompressTunnelService compressTunnelService;
+
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
@@ -47,8 +50,11 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         Object handlerResult = commandHandlerExecutor.handle(payload);
 
-        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult)) {
-            cryptoTunnel.encrypt(inputStreamResult, outputStream, secretKey);
+        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
+             OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(outputStream, secretKey);
+             OutputStream compressOutputStream = compressTunnelService.compressWrapper(encryptOutputStream)) {
+            inputStreamResult.transferTo(compressOutputStream);
+            compressOutputStream.flush();
         }
     }
 

@@ -20,5 +20,7 @@ public interface CryptoTunnel {
 
     void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key);
 
+    OutputStream encryptWrapper(OutputStream outputStream, SecretKey key);
+
     InputStream decrypt(InputStream inputStream, SecretKey key);
 }

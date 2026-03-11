@@ -30,13 +30,17 @@ public class DaemonAppConfigStoreInitializationProcedure
         int daemonPort = 18181;
         int downloadOrchestratorThreadSize = 10;
         int downloadProcedureThreadSize = 2;
+        boolean compressTunnelActive = true;
+        int compressTunnelLevel = 3;
 
         store.save(
                 new DaemonAppConfig(
                         homeDir.toAbsolutePath().toString(),
                         daemonPort,
                         downloadOrchestratorThreadSize,
-                        downloadProcedureThreadSize
+                        downloadProcedureThreadSize,
+                        compressTunnelActive,
+                        compressTunnelLevel
                 )
         );
     }

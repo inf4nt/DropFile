@@ -2,6 +2,8 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfiledaemon.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.compress.ZstdCompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
@@ -27,5 +29,10 @@ public class DropFileDaemonConfiguration {
     @Bean
     public CryptoTunnel cryptoTunnel() {
         return new CryptoTunnelChaCha20Poly1305();
+    }
+
+    @Bean
+    public CompressTunnelService compressTunnelService(ApplicationConfigStore applicationConfigStore) {
+        return new ZstdCompressTunnelService(applicationConfigStore);
     }
 }

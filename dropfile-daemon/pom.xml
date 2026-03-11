@@ -16,6 +16,7 @@
     <properties>
         <java.version>25</java.version>
         <commons.io.version>2.21.0</commons.io.version>
+        <zstd-jni.version>1.5.7-7</zstd-jni.version>
         <dropfile.common.version>1.2.0</dropfile.common.version>
         <dropfile.store.version>1.2.0</dropfile.store.version>
     </properties>
@@ -37,6 +38,12 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons.io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+            <version>${zstd-jni.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

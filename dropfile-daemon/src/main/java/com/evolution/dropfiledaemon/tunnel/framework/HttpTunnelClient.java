@@ -2,11 +2,12 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.SecureEnvelope;
+import com.evolution.dropfiledaemon.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,8 @@ public class HttpTunnelClient implements TunnelClient {
     private final ApplicationConfigStore applicationConfigStore;
 
     private final CryptoTunnel cryptoTunnel;
+
+    private final CompressTunnelService compressTunnelService;
 
     private final HttpClient httpClient;
 
@@ -77,14 +80,17 @@ public class HttpTunnelClient implements TunnelClient {
             }
 
             if (isInputStream(responseType)) {
-                return (T) cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+                InputStream decrypt = cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+                InputStream decompress = compressTunnelService.decompress(decrypt);
+                return (T) decompress;
             }
 
-            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey)) {
+            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey);
+                 InputStream inputStream = compressTunnelService.decompress(decryptInputStream)) {
                 if (responseType.getType().equals(String.class)) {
-                    return (T) new String(decryptInputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    return (T) new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                 }
-                return objectMapper.readValue(decryptInputStream, responseType);
+                return objectMapper.readValue(inputStream, responseType);
             }
         } catch (Exception e) {
             if (httpResponse != null) {

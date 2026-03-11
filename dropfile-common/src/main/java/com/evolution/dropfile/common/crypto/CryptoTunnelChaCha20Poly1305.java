@@ -87,15 +87,20 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @SneakyThrows
     @Override
     public void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key) {
+        try (CipherOutputStream cipherOut = encryptWrapper(outputStream, key)) {
+            inputStream.transferTo(cipherOut);
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public CipherOutputStream encryptWrapper(OutputStream outputStream, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
 
         outputStream.write(nonce);
-
-        try (CipherOutputStream cipherOut = new CipherOutputStream(outputStream, cipher)) {
-            inputStream.transferTo(cipherOut);
-        }
+        return new CipherOutputStream(outputStream, cipher);
     }
 
     @SneakyThrows

@@ -85,11 +85,21 @@ class ApplicationConfigStoreDev
                     File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
                     log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
 
+                    boolean compressTunnelActive = Boolean.parseBoolean(environment.getRequiredProperty(
+                            "compress.tunnel.active"));
+                    log.info("Provided compress.tunnel.active: {}", compressTunnelActive);
+
+                    int compressTunnelLevel = Integer.parseInt(environment.getRequiredProperty(
+                            "compress.tunnel.level"));
+                    log.info("Provided compress.tunnel.level: {}", compressTunnelLevel);
+
                     return new DaemonAppConfig(
                             daemonDownloadDirectoryFile.getAbsolutePath(),
                             daemonPort,
                             downloadOrchestratorThreadSize,
-                            downloadProcedureThreadSize
+                            downloadProcedureThreadSize,
+                            compressTunnelActive,
+                            compressTunnelLevel
                     );
                 }),
                 DaemonSecretsStore.class, new ImmutableDaemonSecretsStore(() -> {
