@@ -75,11 +75,11 @@ class ApplicationConfigStoreDev
                     log.info("Provided download directory: {}", daemonDownloadDirectory);
 
                     int downloadOrchestratorThreadSize = Integer.parseInt(environment.getRequiredProperty(
-                            "dropfile.daemon.download.ochestrator.thread-size"));
+                            "download.ochestrator.thread-size"));
                     log.info("Provided download orchestrator thread size: {}", downloadOrchestratorThreadSize);
 
                     int downloadProcedureThreadSize = Integer.parseInt(environment.getRequiredProperty(
-                            "dropfile.daemon.download.procedure.thread-size"));
+                            "download.procedure.thread-size"));
                     log.info("Provided download procedure thread size: {}", downloadProcedureThreadSize);
 
                     File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
