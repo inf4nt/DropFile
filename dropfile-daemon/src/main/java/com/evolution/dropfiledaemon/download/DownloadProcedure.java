@@ -21,6 +21,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +46,10 @@ public class DownloadProcedure {
     private final FileManifestService fileManifestService;
 
     private final int maxThreadSize;
+
+    private final int manifestCallTimeoutMillis;
+
+    private final int chunkCallTimeoutMillis;
 
     private final String operation;
 
@@ -188,6 +193,7 @@ public class DownloadProcedure {
                                 operation, fingerprint, fileId, filename, attempt, exception.getMessage(), exception
                         );
                     })
+                    .callTimeout(Duration.ofMillis(manifestCallTimeoutMillis))
                     .run();
         } catch (Exception e) {
             throw new ManifestDownloadingFailedException(operation, fileId, filename, e);
@@ -268,6 +274,7 @@ public class DownloadProcedure {
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception
                         );
                     })
+                    .callTimeout(Duration.ofMillis(chunkCallTimeoutMillis))
                     .run();
         } catch (Exception e) {
             throw new ChunkDownloadingFailedException(operation, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);

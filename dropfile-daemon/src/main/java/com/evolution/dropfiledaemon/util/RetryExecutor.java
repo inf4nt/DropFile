@@ -9,9 +9,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 public class RetryExecutor<T> {
@@ -28,6 +29,8 @@ public class RetryExecutor<T> {
 
     private final Duration delay;
 
+    private final Duration callTimeout;
+
     @SneakyThrows
     public T run() {
         List<Exception> exceptions = new ArrayList<>();
@@ -35,7 +38,8 @@ public class RetryExecutor<T> {
         while (currentAttempt <= attempts) {
             try {
                 CommonUtils.isInterrupted();
-                T call = callable.call();
+
+                T call = callWithTimeout();
 
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
                 if (!continueRetry) {
@@ -72,6 +76,44 @@ public class RetryExecutor<T> {
         throw new RetryExecutorException(exceptions);
     }
 
+    @SneakyThrows
+    private T callWithTimeout() {
+        ExecutorService executor = null;
+        CompletableFuture<T> future = null;
+        try {
+            executor = Executors.newVirtualThreadPerTaskExecutor();
+            future = CompletableFuture
+                    .supplyAsync(
+                            new Supplier<T>() {
+                                @Override
+                                @SneakyThrows
+                                public T get() {
+                                    return callable.call();
+                                }
+                            },
+                            executor
+                    );
+            long millis = callTimeout.toMillis();
+            return future.get(millis, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            if (future != null) {
+                future.cancel(true);
+            }
+            if (executor != null) {
+                executor.shutdownNow();
+            }
+            if (e instanceof ExecutionException executionException
+                    && executionException.getCause() != null) {
+                throw executionException.getCause();
+            }
+            throw e;
+        } finally {
+            if (executor != null) {
+                executor.close();
+            }
+        }
+    }
+
     public static <T> RetryExecutorBuilder<T> call(Callable<T> callable) {
         return new RetryExecutorBuilder<>(callable);
     }
@@ -90,6 +132,8 @@ public class RetryExecutor<T> {
         private int attempts = 10;
 
         private Duration delay = Duration.ofSeconds(1);
+
+        private Duration callTimeout = Duration.ofSeconds(60);
 
         public RetryExecutorBuilder<T> attempts(int attempts) {
             if (attempts <= 0) {
@@ -119,6 +163,11 @@ public class RetryExecutor<T> {
             return this;
         }
 
+        public RetryExecutorBuilder<T> callTimeout(Duration duration) {
+            this.callTimeout = Objects.requireNonNull(duration);
+            return this;
+        }
+
         public T run() {
             RetryExecutor<T> retry = new RetryExecutor<>(
                     callable,
@@ -126,7 +175,8 @@ public class RetryExecutor<T> {
                     doOnSuccessful,
                     retryIf,
                     attempts,
-                    delay
+                    delay,
+                    callTimeout
             );
             return retry.run();
         }

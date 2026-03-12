@@ -6,15 +6,16 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Fail.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RetryExecutorTest {
 
@@ -390,5 +391,78 @@ public class RetryExecutorTest {
             assertThat(e.getClass(), is(IllegalArgumentException.class));
             assertThat(counter.get(), is(2));
         }
+    }
+
+    @Test
+    public void callTimeoutNegative() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+        AtomicBoolean exit = new AtomicBoolean(false);
+        List<Exception> exceptions = new ArrayList<>();
+
+        long start = System.currentTimeMillis();
+        assertThrows(RetryExecutor.RetryExecutorException.class, () -> {
+            RetryExecutor
+                    .call(() -> {
+                        callCounter.incrementAndGet();
+                        Thread.sleep(1000);
+                        exit.set(true);
+                        return true;
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .callTimeout(Duration.ofMillis(50))
+                    .doOnError((integer, e) -> {
+                        exceptions.add(e);
+                    })
+                    .run();
+        });
+        long executionTime = System.currentTimeMillis() - start;
+
+        assertThat(executionTime >= 500, is(true));
+        assertThat(callCounter.get(), is(10));
+        assertThat(exit.get(), is(false));
+        assertThat(exceptions.size(), is(10));
+
+        assertThat(
+                exceptions.stream().allMatch(it -> it instanceof TimeoutException),
+                is(true)
+        );
+    }
+
+    @Test
+    public void callTimeout() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+        AtomicInteger exitCounter = new AtomicInteger();
+        List<Exception> exceptions = new ArrayList<>();
+
+        long start = System.currentTimeMillis();
+        boolean result = RetryExecutor
+                .call(() -> {
+                    callCounter.incrementAndGet();
+                    if (callCounter.get() != 5) {
+                        Thread.sleep(1000);
+                    }
+                    exitCounter.incrementAndGet();
+                    return true;
+                })
+                .attempts(10)
+                .delay(Duration.ofMillis(0))
+                .callTimeout(Duration.ofMillis(50))
+                .doOnError((integer, e) -> {
+                    exceptions.add(e);
+                })
+                .run();
+        long executionTime = System.currentTimeMillis() - start;
+
+        assertThat(executionTime >= 200, is(true));
+        assertThat(result, is(true));
+        assertThat(callCounter.get(), is(5));
+        assertThat(exitCounter.get(), is(1));
+        assertThat(exceptions.size(), is(4));
+
+        assertThat(
+                exceptions.stream().allMatch(it -> it instanceof TimeoutException),
+                is(true)
+        );
     }
 }

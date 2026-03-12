@@ -16,6 +16,7 @@ public class LivePrinter {
     @SneakyThrows
     public static void live(Runnable runnable) {
         boolean first = true;
+        // TODO add live timeout. 5 min is ok
         while (!Thread.currentThread().isInterrupted()) {
             runnable.run();
             Spinner.stop();

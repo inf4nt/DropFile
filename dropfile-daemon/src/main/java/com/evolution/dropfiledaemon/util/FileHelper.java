@@ -55,7 +55,8 @@ public class FileHelper {
     String sha256(File file, int bufferSize) {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
         byte[] buffer = new byte[bufferSize];
-        try (InputStream inputStream = new FileInputStream(file)) {
+        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+             InputStream inputStream = Channels.newInputStream(channel)) {
             int read;
             while ((read = inputStream.read(buffer)) != -1) {
                 CommonUtils.isInterrupted();
