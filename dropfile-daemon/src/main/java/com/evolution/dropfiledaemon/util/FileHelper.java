@@ -71,6 +71,7 @@ public class FileHelper {
         ByteBuffer wrap = ByteBuffer.wrap(bytes);
         long offset = position;
         while (wrap.hasRemaining()) {
+            CommonUtils.isInterrupted();
             int written = fileChannel.write(wrap, offset);
             if (written <= 0) {
                 throw new IOException("FileChannel.write wrote zero or negative numbers of bytes");
@@ -88,6 +89,7 @@ public class FileHelper {
         fileChannel.position(skip);
         int totalRead = 0;
         while (totalRead < take) {
+            CommonUtils.isInterrupted();
             int leftOver = take - totalRead;
             int toRead = Math.min(byteBuffer.capacity(), leftOver);
             byteBuffer.limit(toRead);
