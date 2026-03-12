@@ -185,7 +185,7 @@ public class DownloadProcedure {
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
-                                operation, fingerprint, fileId, filename, attempt, exception.getMessage()
+                                operation, fingerprint, fileId, filename, attempt, exception.getMessage(), exception
                         );
                     })
                     .run();
@@ -265,7 +265,7 @@ public class DownloadProcedure {
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} start {} end {} exception: {}",
                                 operation, fingerprint, fileId, filename, attempt,
-                                chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage()
+                                chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception
                         );
                     })
                     .run();
@@ -287,7 +287,8 @@ public class DownloadProcedure {
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'write-chunk'. Attempt: {} start {} end {} exception {}",
-                                attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception);
+                                attempt, chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception
+                        );
                     })
                     .retryIf(it -> {
                         if (it.exception() instanceof ClosedChannelException) {
