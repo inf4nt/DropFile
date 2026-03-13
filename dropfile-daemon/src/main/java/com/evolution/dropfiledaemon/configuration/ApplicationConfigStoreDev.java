@@ -93,11 +93,21 @@ class ApplicationConfigStoreDev
                             "compress.tunnel.level"));
                     log.info("Provided compress.tunnel.level: {}", compressTunnelLevel);
 
+                    int downloadProcedureManifestCallTimeoutMillis = Integer.parseInt(environment.getRequiredProperty(
+                            "download.procedure.manifest.call.timeout-millis"));
+                    log.info("Provided download.procedure.manifest.call.timeout-millis: {}", downloadProcedureManifestCallTimeoutMillis);
+
+                    int downloadProcedureChunkCallTimeoutMillis = Integer.parseInt(environment.getRequiredProperty(
+                            "download.procedure.chunk.call.timeout-millis"));
+                    log.info("Provided download.procedure.chunk.call.timeout-millis: {}", downloadProcedureChunkCallTimeoutMillis);
+
                     return new DaemonAppConfig(
                             daemonDownloadDirectoryFile.getAbsolutePath(),
                             daemonPort,
                             downloadOrchestratorThreadSize,
                             downloadProcedureThreadSize,
+                            downloadProcedureManifestCallTimeoutMillis,
+                            downloadProcedureChunkCallTimeoutMillis,
                             compressTunnelActive,
                             compressTunnelLevel
                     );

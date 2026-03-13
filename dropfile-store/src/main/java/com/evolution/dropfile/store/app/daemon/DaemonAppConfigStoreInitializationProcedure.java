@@ -30,6 +30,9 @@ public class DaemonAppConfigStoreInitializationProcedure
         int daemonPort = 18181;
         int downloadOrchestratorThreadSize = 10;
         int downloadProcedureThreadSize = 2;
+        int downloadProcedureManifestCallTimeoutMillis = 300_000;
+        int downloadProcedureChunkCallTimeoutMillis = 120_000;
+
         boolean compressTunnelActive = true;
         int compressTunnelLevel = 3;
 
@@ -39,6 +42,8 @@ public class DaemonAppConfigStoreInitializationProcedure
                         daemonPort,
                         downloadOrchestratorThreadSize,
                         downloadProcedureThreadSize,
+                        downloadProcedureManifestCallTimeoutMillis,
+                        downloadProcedureChunkCallTimeoutMillis,
                         compressTunnelActive,
                         compressTunnelLevel
                 )

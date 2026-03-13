@@ -29,12 +29,16 @@ public class DownloadProcedureFactory {
                                  File temporaryFile) {
         int downloadProcedureThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
                 .downloadProcedureThreadSize();
-        // TODO move it to dropfile configuration
-        int manifestCallTimeoutMillis = 120_000;
-        int chunkCallTimeoutMillis = 60_000;
+        int downloadProcedureManifestCallTimeoutMillis = applicationConfigStore.getDaemonAppConfigStore().getRequired()
+                .downloadProcedureManifestCallTimeoutMillis();;
+        int downloadProcedureChunkCallTimeoutMillis = applicationConfigStore.getDaemonAppConfigStore().getRequired()
+                .downloadProcedureChunkCallTimeoutMillis();
 
         return new DownloadProcedure(
-                tunnelClient, fileHelper, fileManifestService, downloadProcedureThreadSize, manifestCallTimeoutMillis, chunkCallTimeoutMillis,
+                tunnelClient, fileHelper, fileManifestService,
+                downloadProcedureThreadSize,
+                downloadProcedureManifestCallTimeoutMillis,
+                downloadProcedureChunkCallTimeoutMillis,
                 operation, fingerprint, fileId, filename, destinationFile, temporaryFile
         );
     }

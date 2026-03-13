@@ -38,6 +38,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final ApplicationConfigStore applicationConfigStore;
 
+    // TODO add multi download
+
     @SneakyThrows
     public synchronized FileDownloadResponse start(FileDownloadRequest request) {
         int downloadOrchestratorThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
