@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.share.command;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
-import com.evolution.dropfiledaemon.manifest.FileManifestService;
+import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class ShareDownloadManifestCommandHandler
 
     private final ApplicationConfigStore applicationConfigStore;
 
-    private final FileManifestService fileManifestService;
+    private final FileManifestBuilder fileManifestBuilder;
 
     @Override
     public String getCommandName() {
@@ -33,6 +33,6 @@ public class ShareDownloadManifestCommandHandler
     public FileManifest handle(String id) {
         ShareFileEntry fileEntry = applicationConfigStore.getShareFileEntryStore()
                 .getRequired(id).getValue();
-        return fileManifestService.build(new File(fileEntry.absolutePath()));
+        return fileManifestBuilder.build(new File(fileEntry.absolutePath()));
     }
 }

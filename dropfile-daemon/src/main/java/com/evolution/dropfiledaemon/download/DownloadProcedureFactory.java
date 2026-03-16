@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.manifest.FileManifestService;
+import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class DownloadProcedureFactory {
 
     private final FileHelper fileHelper;
 
-    private final FileManifestService fileManifestService;
+    private final FileManifestBuilder fileManifestBuilder;
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
@@ -32,7 +32,7 @@ public class DownloadProcedureFactory {
         int downloadProcedureChunkCallTimeoutMillis = daemonApplicationProperties.downloadProcedureChunkCallTimeoutMillis;
 
         return new DownloadProcedure(
-                tunnelClient, fileHelper, fileManifestService,
+                tunnelClient, fileHelper, fileManifestBuilder,
                 downloadProcedureThreadSize,
                 downloadProcedureManifestCallTimeoutMillis,
                 downloadProcedureChunkCallTimeoutMillis,

@@ -4,7 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.download.exception.*;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
-import com.evolution.dropfiledaemon.manifest.FileManifestService;
+import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
@@ -43,7 +43,7 @@ public class DownloadProcedure {
 
     private final FileHelper fileHelper;
 
-    private final FileManifestService fileManifestService;
+    private final FileManifestBuilder fileManifestBuilder;
 
     private final int maxThreadSize;
 
@@ -115,7 +115,7 @@ public class DownloadProcedure {
                             () -> downloadManifest()
                     );
 
-                    fileManifestService.validate(manifest);
+                    fileManifestBuilder.validate(manifest);
 
                     ExecutionProfiling.run(
                             String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",

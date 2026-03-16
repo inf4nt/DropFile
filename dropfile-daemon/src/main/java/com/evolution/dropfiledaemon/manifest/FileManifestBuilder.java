@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.manifest;
 
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -17,7 +17,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 @Component
-public class FileManifestService {
+public class FileManifestBuilder {
 
     private static final String SHA256 = "SHA-256";
 
@@ -28,10 +28,14 @@ public class FileManifestService {
     private final FileHelper fileHelper;
 
     @Autowired
-    // TODO file.manifest.builder.chunk.size move to dropfileconfig
-    public FileManifestService(@Value("${file.manifest.builder.chunk.size}") Integer chunkSize,
-                               @Value("${file.manifest.builder.buffer.size}") Integer bufferSize,
+    public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties,
                                FileHelper fileHelper) {
+        this(daemonApplicationProperties.manifestBuildChunkSize, daemonApplicationProperties.manifestBuildBufferSize, fileHelper);
+    }
+
+    FileManifestBuilder(Integer chunkSize,
+                        Integer bufferSize,
+                        FileHelper fileHelper) {
         this.chunkSize = Objects.requireNonNull(chunkSize, "chunkSize is null");
         this.bufferSize = Objects.requireNonNull(bufferSize, "bufferSize is null");
         this.fileHelper = fileHelper;
