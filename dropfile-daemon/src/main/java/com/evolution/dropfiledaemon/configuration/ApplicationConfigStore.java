@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
-import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
@@ -19,10 +18,6 @@ public interface ApplicationConfigStore {
 
     @SuppressWarnings("rawtypes")
     <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz);
-
-    default DaemonAppConfigStore getDaemonAppConfigStore() {
-        return requiredSingleStore(DaemonAppConfigStore.class);
-    }
 
     default AccessKeyStore getAccessKeyStore() {
         return requiredStore(AccessKeyStore.class);

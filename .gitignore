@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 logs
+downloads
+conf
+release/dropfile-*.tar.gz
 
 ### STS ###
 .apt_generated

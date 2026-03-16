@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.download;
 
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.manifest.FileManifestService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.FileHelper;
@@ -19,7 +19,7 @@ public class DownloadProcedureFactory {
 
     private final FileManifestService fileManifestService;
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     public DownloadProcedure get(String operation,
                                  String fingerprint,
@@ -27,12 +27,9 @@ public class DownloadProcedureFactory {
                                  String filename,
                                  File destinationFile,
                                  File temporaryFile) {
-        int downloadProcedureThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
-                .downloadProcedureThreadSize();
-        int downloadProcedureManifestCallTimeoutMillis = applicationConfigStore.getDaemonAppConfigStore().getRequired()
-                .downloadProcedureManifestCallTimeoutMillis();;
-        int downloadProcedureChunkCallTimeoutMillis = applicationConfigStore.getDaemonAppConfigStore().getRequired()
-                .downloadProcedureChunkCallTimeoutMillis();
+        int downloadProcedureThreadSize = daemonApplicationProperties.downloadProcedureThreadSize;
+        int downloadProcedureManifestCallTimeoutMillis = daemonApplicationProperties.downloadProcedureManifestCallTimeoutMillis;
+        int downloadProcedureChunkCallTimeoutMillis = daemonApplicationProperties.downloadProcedureChunkCallTimeoutMillis;
 
         return new DownloadProcedure(
                 tunnelClient, fileHelper, fileManifestService,

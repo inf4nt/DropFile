@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.compress;
 
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
 import lombok.RequiredArgsConstructor;
@@ -13,30 +13,21 @@ import java.io.OutputStream;
 public class ZstdCompressTunnelService
         implements CompressTunnelService {
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     @Override
     public OutputStream compressWrapper(OutputStream outputStream) throws IOException {
-        if (!active()) {
+        if (!daemonApplicationProperties.tunnelCompressEnabled) {
             return outputStream;
         }
-        int compressLevel = getCompressLevel();
-        return new ZstdOutputStream(outputStream, compressLevel);
+        return new ZstdOutputStream(outputStream, daemonApplicationProperties.tunnelCompressLevel);
     }
 
     @Override
     public InputStream decompress(InputStream inputStream) throws IOException {
-        if (!active()) {
+        if (!daemonApplicationProperties.tunnelCompressEnabled) {
             return inputStream;
         }
         return new ZstdInputStream(inputStream);
-    }
-
-    private int getCompressLevel() {
-        return applicationConfigStore.getDaemonAppConfigStore().getRequired().compressTunnelLevel();
-    }
-
-    private boolean active() {
-        return applicationConfigStore.getDaemonAppConfigStore().getRequired().compressTunnelActive();
     }
 }

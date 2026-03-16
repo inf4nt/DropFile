@@ -5,13 +5,15 @@ import com.evolution.dropfile.store.framework.file.JsonFileOperations;
 import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.file.Path;
+
 public class JsonFileFileDownloadEntryStore
         extends SynchronizedFileKeyValueStore<DownloadFileEntry>
         implements FileDownloadEntryStore {
 
-    public JsonFileFileDownloadEntryStore(ObjectMapper objectMapper) {
+    public JsonFileFileDownloadEntryStore(ObjectMapper objectMapper, Path parrentDirectoryPath) {
         super(
-                new FileProviderImpl("download.file.entries.json"),
+                new FileProviderImpl(parrentDirectoryPath, "download.file.entries.json"),
                 new JsonFileOperations<>(
                         objectMapper,
                         DownloadFileEntry.class

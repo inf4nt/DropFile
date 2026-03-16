@@ -8,12 +8,14 @@ import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.file.Path;
+
 public class CryptoHandshakeTrustedInStore
         extends SynchronizedFileKeyValueStore<HandshakeTrustedInStore.TrustedIn>
         implements HandshakeTrustedInStore {
 
-    public CryptoHandshakeTrustedInStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel) {
-        FileProvider fileProvider = new FileProviderImpl("trustin.bin");
+    public CryptoHandshakeTrustedInStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
+        FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "trustin.bin");
         super(
                 fileProvider,
                 new CryptoFileOperations<>(

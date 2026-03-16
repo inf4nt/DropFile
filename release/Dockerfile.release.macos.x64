@@ -40,10 +40,18 @@ RUN mvn package -Dmaven.test.skip=true
 
 FROM busybox
 
-RUN mkdir -p dropfile/bin dropfile/logs dropfile/runtime dropfile/dropfile-cli dropfile/dropfile-daemon
+RUN mkdir -p dropfile/bin \
+    && mkdir -p dropfile/logs \
+    && mkdir -p dropfile/runtime \
+    && mkdir -p dropfile/conf \
+    && mkdir -p dropfile/downloads \
+    && mkdir -p dropfile/dropfile-cli \
+    && mkdir -p dropfile/dropfile-daemon
 
 COPY /release/unix /dropfile/bin
 COPY /release/common /dropfile/
+COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
+COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/dropfile-cli.application.properties
 
 COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
 COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/dropfile-cli/dropfile-cli.jar

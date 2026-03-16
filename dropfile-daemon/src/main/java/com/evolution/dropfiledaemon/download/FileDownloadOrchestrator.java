@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,12 +39,14 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final ApplicationConfigStore applicationConfigStore;
 
+    private final DaemonApplicationProperties daemonApplicationProperties;
+
     // TODO add multi download
 
     @SneakyThrows
     public synchronized FileDownloadResponse start(FileDownloadRequest request) {
-        int downloadOrchestratorThreadSize = applicationConfigStore.getDaemonAppConfigStore().getRequired()
-                .downloadOrchestratorThreadSize();
+        // TODO
+        int downloadOrchestratorThreadSize = 10;
         if (downloadProcedures.size() >= downloadOrchestratorThreadSize) {
             throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorThreadSize);
         }
@@ -149,7 +152,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
 
-        String downloadDirectory = applicationConfigStore.getDaemonAppConfigStore().getRequired().downloadDirectory();
+        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
         File downloadFile = new File(downloadDirectory, request.filename()).getCanonicalFile();
 
         if (Files.exists(downloadFile.toPath())) {
@@ -168,7 +171,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         }
 
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
-        String downloadDirectory = applicationConfigStore.getDaemonAppConfigStore().getRequired().downloadDirectory();
+        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
         File tmpDownloadFile = new File(downloadDirectory, temporaryFileName).getCanonicalFile();
 
         if (Files.notExists(tmpDownloadFile.toPath())) {

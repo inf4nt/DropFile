@@ -7,12 +7,14 @@ import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.file.Path;
+
 public class CryptoFileAccessKeyStore
         extends SynchronizedFileKeyValueStore<AccessKey>
         implements AccessKeyStore {
 
-    public CryptoFileAccessKeyStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel) {
-        FileProvider fileProvider = new FileProviderImpl("access.keys.config.json");
+    public CryptoFileAccessKeyStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
+        FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "access.keys.config.json");
         super(
                 fileProvider,
                 new CryptoFileOperations<>(

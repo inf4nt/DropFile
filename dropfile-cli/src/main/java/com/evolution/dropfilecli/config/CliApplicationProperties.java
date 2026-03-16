@@ -1,0 +1,32 @@
+package com.evolution.dropfilecli.config;
+
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.nio.file.Paths;
+
+@Component
+public class CliApplicationProperties {
+
+    public final String configDirectory;
+
+    public final String daemonHost;
+
+    public final int daemonPort;
+
+    @Autowired
+    public CliApplicationProperties(@Value("${dropfile.application.directory}") String applicationDirectory,
+                                    @Value("${dropfile.daemon.host}") String daemonHost,
+                                    @Value("${dropfile.daemon.port}") int daemonPort) {
+        this.configDirectory = getConfigDirectory(applicationDirectory);
+        this.daemonHost = daemonHost;
+        this.daemonPort = daemonPort;
+    }
+
+    @SneakyThrows
+    private String getConfigDirectory(String applicationDirectory) {
+        return Paths.get(applicationDirectory, "conf").toString();
+    }
+}

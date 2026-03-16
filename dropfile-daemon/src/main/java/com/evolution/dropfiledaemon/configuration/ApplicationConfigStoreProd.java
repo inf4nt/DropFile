@@ -3,9 +3,6 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.app.daemon.CacheableJsonFileDaemonAppConfigStore;
-import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStore;
-import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStoreInitializationProcedure;
 import com.evolution.dropfile.store.download.CacheableJsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.Cacheable;
@@ -36,6 +33,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Map;
 
@@ -43,7 +41,7 @@ import java.util.Map;
 @Profile("prod")
 @Configuration
 class ApplicationConfigStoreProd
-        implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
+        implements ApplicationConfigStore, ApplicationListener<ApplicationReadyEvent> {
 
     private boolean initialized = false;
 
@@ -56,12 +54,14 @@ class ApplicationConfigStoreProd
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher,
                                       ObjectMapper objectMapper,
-                                      CryptoTunnel cryptoTunnel) {
+                                      CryptoTunnel cryptoTunnel,
+                                      DaemonApplicationProperties daemonApplicationProperties) {
         this.eventPublisher = eventPublisher;
+        String configDirectory = daemonApplicationProperties.configDirectory;
 
         keyValueStores = Map.of(
                 FileDownloadEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileFileDownloadEntryStore(objectMapper),
+                        new CacheableJsonFileFileDownloadEntryStore(objectMapper, Paths.get(configDirectory)),
                         new FileDownloadEntryStoreKeyValueStoreInitializationProcedure()
                 ),
                 AccessKeyStore.class, new AbstractMap.SimpleEntry<>(
@@ -69,15 +69,15 @@ class ApplicationConfigStoreProd
                         null
                 ),
                 ShareFileEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileShareFileEntryStore(objectMapper),
+                        new CacheableJsonFileShareFileEntryStore(objectMapper, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedOutStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel),
+                        new CacheableCryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedInStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel),
+                        new CacheableCryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeSessionOutStore.class, new AbstractMap.SimpleEntry<>(
@@ -90,20 +90,11 @@ class ApplicationConfigStoreProd
                 )
         );
         singleValueStores = Map.of(
-                DaemonAppConfigStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileDaemonAppConfigStore(objectMapper),
-                        new DaemonAppConfigStoreInitializationProcedure()
-                ),
                 DaemonSecretsStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoDaemonSecretsStore(objectMapper, cryptoTunnel),
+                        new CacheableCryptoDaemonSecretsStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         new DaemonSecretsStoreInitializationProcedure()
                 )
         );
-    }
-
-    @Override
-    public DaemonAppConfigStore getUninitializedDaemonAppConfigStore() {
-        return (DaemonAppConfigStore) singleValueStores.get(DaemonAppConfigStore.class).getKey();
     }
 
     @Override

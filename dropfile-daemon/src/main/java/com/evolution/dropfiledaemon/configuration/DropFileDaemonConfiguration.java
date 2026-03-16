@@ -32,7 +32,7 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public CompressTunnelService compressTunnelService(ApplicationConfigStore applicationConfigStore) {
-        return new ZstdCompressTunnelService(applicationConfigStore);
+    public CompressTunnelService compressTunnelService(DaemonApplicationProperties daemonApplicationProperties) {
+        return new ZstdCompressTunnelService(daemonApplicationProperties);
     }
 }

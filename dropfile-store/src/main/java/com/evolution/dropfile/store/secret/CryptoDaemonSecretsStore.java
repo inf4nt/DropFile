@@ -8,13 +8,16 @@ import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore
 import com.evolution.dropfile.store.framework.single.DefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.file.Path;
+
 public class CryptoDaemonSecretsStore
         extends DefaultSingleValueStore<DaemonSecrets>
         implements DaemonSecretsStore {
 
     public CryptoDaemonSecretsStore(ObjectMapper objectMapper,
-                                    CryptoTunnel cryptoTunnel) {
-        FileProvider fileProvider = new FileProviderImpl("daemon.secrets.bin");
+                                    CryptoTunnel cryptoTunnel,
+                                    Path parrentDirectoryPath) {
+        FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "daemon.secrets.bin");
         super(
                 "daemonSecrets",
                 new SynchronizedFileKeyValueStore<>(

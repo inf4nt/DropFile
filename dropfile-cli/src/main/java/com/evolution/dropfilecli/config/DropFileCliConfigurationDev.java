@@ -1,8 +1,5 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.store.app.cli.CliAppConfig;
-import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
-import com.evolution.dropfile.store.app.cli.ImmutableCliAppConfigStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
@@ -16,19 +13,6 @@ import org.springframework.core.env.Environment;
 @Profile("dev")
 @Configuration
 public class DropFileCliConfigurationDev {
-
-    @Bean
-    public CliAppConfigStore appConfigStore(Environment environment) {
-        return new ImmutableCliAppConfigStore(() -> {
-            String daemonHost = environment.getRequiredProperty("dropfile.daemon.host");
-            int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
-
-            return new CliAppConfig(
-                    daemonHost,
-                    daemonPort
-            );
-        });
-    }
 
     @Bean
     public DaemonSecretsStore secretsConfigStore(Environment environment) {

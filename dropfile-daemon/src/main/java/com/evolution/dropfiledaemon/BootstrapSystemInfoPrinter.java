@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon;
 
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.system.SystemInfoProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class BootstrapSystemInfoPrinter {
 
     private final SystemInfoProvider systemInfoProvider;
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final ObjectMapper objectMapper;
 
@@ -30,7 +31,7 @@ public class BootstrapSystemInfoPrinter {
         ));
         System.out.println("================================");
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                applicationConfigStore.getDaemonAppConfigStore().getRequired()
+                daemonApplicationProperties
         ));
         System.out.println("================================");
     }

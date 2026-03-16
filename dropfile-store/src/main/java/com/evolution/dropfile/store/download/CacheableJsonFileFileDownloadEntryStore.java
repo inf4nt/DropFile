@@ -3,11 +3,13 @@ package com.evolution.dropfile.store.download;
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.file.Path;
+
 public class CacheableJsonFileFileDownloadEntryStore
         extends CacheableKeyValueStore<DownloadFileEntry>
         implements FileDownloadEntryStore {
 
-    public CacheableJsonFileFileDownloadEntryStore(ObjectMapper objectMapper) {
-        super(new JsonFileFileDownloadEntryStore(objectMapper));
+    public CacheableJsonFileFileDownloadEntryStore(ObjectMapper objectMapper, Path parrentDirectoryPath) {
+        super(new JsonFileFileDownloadEntryStore(objectMapper, parrentDirectoryPath));
     }
 }

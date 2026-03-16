@@ -1,12 +1,11 @@
 package com.evolution.dropfilecli;
 
-import com.evolution.dropfile.store.app.cli.CliAppConfig;
-import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.download.DownloadCommand;
 import com.evolution.dropfilecli.command.link.LinkCommand;
 import com.evolution.dropfilecli.command.share.ShareCommand;
+import com.evolution.dropfilecli.config.CliApplicationProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -29,7 +28,7 @@ public class RootCommand implements SimpleCommandHandler {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    private final CliAppConfigStore cliAppConfigStore;
+    private final CliApplicationProperties cliApplicationProperties;
 
     @Override
     public void handle() {
@@ -44,10 +43,8 @@ public class RootCommand implements SimpleCommandHandler {
                 "                               ░██                                    \n" +
                 "                                                                      ");
 
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
-
-        System.out.println("Daemon host: " + cliAppConfig.daemonHost());
-        System.out.println("Daemon port: " + cliAppConfig.daemonPort());
+        System.out.println("Daemon host: " + cliApplicationProperties.daemonHost);
+        System.out.println("Daemon port: " + cliApplicationProperties.daemonPort);
         spec.commandLine().usage(System.out);
     }
 }

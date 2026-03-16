@@ -2,10 +2,9 @@ package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.store.app.cli.CliAppConfig;
-import com.evolution.dropfile.store.app.cli.CliAppConfigStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,7 +23,7 @@ public class DaemonClient {
 
     private final HttpClient httpClient;
 
-    private final CliAppConfigStore cliAppConfigStore;
+    private final CliApplicationProperties cliApplicationProperties;
 
     private final DaemonSecretsStore daemonSecretsStore;
 
@@ -32,9 +31,7 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnect(String fingerprint) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
-
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/disconnect/fingerprint/")
                 .resolve(fingerprint);
 
@@ -52,9 +49,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectCurrent() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/disconnect/current");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -71,9 +67,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/disconnect/all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -90,9 +85,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevoke(String fingerprint) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/revoke/fingerprint/")
                 .resolve(fingerprint);
 
@@ -110,9 +104,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevokeAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/revoke/all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -129,9 +122,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -153,9 +145,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/download");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -175,9 +166,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareCat(String id) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/cat/")
                 .resolve(id);
 
@@ -195,9 +185,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareLs() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -214,9 +203,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareAdd(String alias, String absoluteFilePath) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/add");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -238,9 +226,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRm(String id) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/rm/")
                 .resolve(id);
 
@@ -258,9 +245,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRmAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -277,9 +263,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/generate");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -301,9 +286,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessLs() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -320,9 +304,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRm(String id) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/rm/")
                 .resolve(id);
 
@@ -340,9 +323,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRmAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -359,9 +341,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonInfo() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/info");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -378,9 +359,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustIn() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/in");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -396,9 +376,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustOut() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/out");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -414,9 +393,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustLatest() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/out/latest");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -432,9 +410,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonShutdown() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/shutdown");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -451,9 +428,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonCacheReset() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/cache-reset");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -471,9 +447,8 @@ public class DaemonClient {
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI address,
                                           String key) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -496,9 +471,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeReconnect(URI address) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/reconnect");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -520,9 +494,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeStatus() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/status");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -539,9 +512,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -564,9 +536,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStop(String operation) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/stop/")
                 .resolve(operation);
 
@@ -584,9 +555,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStopAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/stop-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -603,9 +573,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRm(String operationId) {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/rm/")
                 .resolve(operationId);
 
@@ -623,9 +592,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRmAll() {
-        CliAppConfig cliAppConfig = cliAppConfigStore.getRequired();
 
-        URI daemonURI = CommonUtils.toURI(cliAppConfig.daemonHost(), cliAppConfig.daemonPort())
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();

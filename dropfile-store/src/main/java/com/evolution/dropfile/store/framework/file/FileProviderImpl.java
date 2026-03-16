@@ -5,14 +5,15 @@ import lombok.SneakyThrows;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
 
 public class FileProviderImpl implements FileProvider {
 
+    private final Path parrentDirectoryPath;
+
     private final String filename;
 
-    public FileProviderImpl(String filename) {
+    public FileProviderImpl(Path parrentDirectoryPath, String filename) {
+        this.parrentDirectoryPath = parrentDirectoryPath;
         this.filename = filename;
     }
 
@@ -37,38 +38,11 @@ public class FileProviderImpl implements FileProvider {
 
     @Override
     public Path getHomePath() {
-        if (isWindows()) {
-            String basePath = System.getenv("LOCALAPPDATA");
-            Objects.requireNonNull(basePath);
-            return Path.of(basePath, "DropFile");
-        }
-        if (isLinux() || isMacOs()) {
-            return Paths.get(System.getProperty("user.home"), ".dropfile");
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported operating system " + getOs()
-        );
+        return parrentDirectoryPath;
     }
 
     @Override
     public Path getFilePath() {
-        String filename = getFilename();
         return getHomePath().resolve(filename);
-    }
-
-    private boolean isMacOs() {
-        return getOs().toLowerCase().startsWith("mac");
-    }
-
-    private boolean isLinux() {
-        return getOs().toLowerCase().startsWith("linux");
-    }
-
-    private boolean isWindows() {
-        return getOs().toLowerCase().startsWith("windows");
-    }
-
-    private String getOs() {
-        return System.getProperty("os.name");
     }
 }

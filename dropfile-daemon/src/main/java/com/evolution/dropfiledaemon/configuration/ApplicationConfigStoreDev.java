@@ -2,9 +2,6 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.app.daemon.DaemonAppConfig;
-import com.evolution.dropfile.store.app.daemon.DaemonAppConfigStore;
-import com.evolution.dropfile.store.app.daemon.ImmutableDaemonAppConfigStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -43,7 +40,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 class ApplicationConfigStoreDev
-        implements ApplicationConfigStore, AppConfigStoreUninitialized, ApplicationListener<ApplicationReadyEvent> {
+        implements ApplicationConfigStore, ApplicationListener<ApplicationReadyEvent> {
 
     private boolean initialized = false;
 
@@ -67,51 +64,6 @@ class ApplicationConfigStoreDev
                 HandshakeSessionInStore.class, new RuntimeHandshakeSessionInStore()
         );
         singleValueStores = Map.of(
-                DaemonAppConfigStore.class, new ImmutableDaemonAppConfigStore(() -> {
-                    int daemonPort = Integer.parseInt(environment.getRequiredProperty("dropfile.daemon.port"));
-                    log.info("Provided daemon port: {}", daemonPort);
-
-                    String daemonDownloadDirectory = environment.getProperty("dropfile.daemon.download.directory");
-                    log.info("Provided download directory: {}", daemonDownloadDirectory);
-
-                    int downloadOrchestratorThreadSize = Integer.parseInt(environment.getRequiredProperty(
-                            "download.ochestrator.thread-size"));
-                    log.info("Provided download orchestrator thread size: {}", downloadOrchestratorThreadSize);
-
-                    int downloadProcedureThreadSize = Integer.parseInt(environment.getRequiredProperty(
-                            "download.procedure.thread-size"));
-                    log.info("Provided download procedure thread size: {}", downloadProcedureThreadSize);
-
-                    File daemonDownloadDirectoryFile = getDaemonDownloadDirectory(daemonDownloadDirectory);
-                    log.info("Download directory: {}", daemonDownloadDirectoryFile.getAbsolutePath());
-
-                    boolean compressTunnelActive = Boolean.parseBoolean(environment.getRequiredProperty(
-                            "compress.tunnel.active"));
-                    log.info("Provided compress.tunnel.active: {}", compressTunnelActive);
-
-                    int compressTunnelLevel = Integer.parseInt(environment.getRequiredProperty(
-                            "compress.tunnel.level"));
-                    log.info("Provided compress.tunnel.level: {}", compressTunnelLevel);
-
-                    int downloadProcedureManifestCallTimeoutMillis = Integer.parseInt(environment.getRequiredProperty(
-                            "download.procedure.manifest.call.timeout-millis"));
-                    log.info("Provided download.procedure.manifest.call.timeout-millis: {}", downloadProcedureManifestCallTimeoutMillis);
-
-                    int downloadProcedureChunkCallTimeoutMillis = Integer.parseInt(environment.getRequiredProperty(
-                            "download.procedure.chunk.call.timeout-millis"));
-                    log.info("Provided download.procedure.chunk.call.timeout-millis: {}", downloadProcedureChunkCallTimeoutMillis);
-
-                    return new DaemonAppConfig(
-                            daemonDownloadDirectoryFile.getAbsolutePath(),
-                            daemonPort,
-                            downloadOrchestratorThreadSize,
-                            downloadProcedureThreadSize,
-                            downloadProcedureManifestCallTimeoutMillis,
-                            downloadProcedureChunkCallTimeoutMillis,
-                            compressTunnelActive,
-                            compressTunnelLevel
-                    );
-                }),
                 DaemonSecretsStore.class, new ImmutableDaemonSecretsStore(() -> {
                     String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
                     log.info("Provided daemon token: {}", daemonToken);
@@ -130,31 +82,6 @@ class ApplicationConfigStoreDev
         initialized = true;
 
         eventPublisher.publishEvent(new ApplicationConfigStoreInitialized());
-    }
-
-    @SneakyThrows
-    private File getDaemonDownloadDirectory(String daemonDownloadDirectory) {
-        if (daemonDownloadDirectory != null && !daemonDownloadDirectory.isBlank()) {
-            Path daemonDownloadDirectoryPath = Paths.get(daemonDownloadDirectory)
-                    .normalize();
-            if (!daemonDownloadDirectoryPath.isAbsolute()) {
-                throw new IllegalArgumentException("Daemon download directory has to be absolute: " + daemonDownloadDirectoryPath);
-            }
-            if (Files.notExists(daemonDownloadDirectoryPath)) {
-                throw new FileNotFoundException("Daemon download directory does not exist: " + daemonDownloadDirectoryPath);
-            }
-            return daemonDownloadDirectoryPath.toFile();
-        }
-        Path downloadDirectoryPath = Paths.get(System.getProperty("user.home"), "/DropfileDownloads");
-        if (Files.notExists(downloadDirectoryPath)) {
-            Files.createDirectory(downloadDirectoryPath);
-        }
-        return downloadDirectoryPath.toFile();
-    }
-
-    @Override
-    public DaemonAppConfigStore getUninitializedDaemonAppConfigStore() {
-        return (DaemonAppConfigStore) singleValueStores.get(DaemonAppConfigStore.class);
     }
 
     @Override
