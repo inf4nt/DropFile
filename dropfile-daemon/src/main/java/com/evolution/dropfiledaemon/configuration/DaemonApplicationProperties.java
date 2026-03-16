@@ -13,8 +13,6 @@ import java.nio.file.Paths;
 @Component
 public class DaemonApplicationProperties {
 
-    public final String applicationDirectory;
-
     public final String downloadDirectory;
 
     public final String configDirectory;
@@ -31,7 +29,7 @@ public class DaemonApplicationProperties {
 
     public final int tunnelCompressLevel;
 
-    public DaemonApplicationProperties(@Value("${dropfile.application.directory}") String applicationDirectory,
+    public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                        @Value("${dropfile.download.directory}") String downloadDirectory,
                                        @Value("${dropfile.daemon.port}") int daemonPort,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
@@ -39,7 +37,6 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.download.procedure.chunk.call.timeout-millis}") int downloadProcedureChunkCallTimeoutMillis,
                                        @Value("${dropfile.tunnel.compress.enabled}") boolean tunnelCompressEnabled,
                                        @Value("${dropfile.tunnel.compress.level}") int tunnelCompressLevel) {
-        this.applicationDirectory = applicationDirectory;
         this.downloadDirectory = getDownloadDirectory(applicationDirectory, downloadDirectory);
         this.configDirectory = getConfigDirectory(applicationDirectory);
         this.daemonPort = daemonPort;

@@ -17,7 +17,7 @@ public class CliApplicationProperties {
     public final int daemonPort;
 
     @Autowired
-    public CliApplicationProperties(@Value("${dropfile.application.directory}") String applicationDirectory,
+    public CliApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
                                     @Value("${dropfile.daemon.port}") int daemonPort) {
         this.configDirectory = getConfigDirectory(applicationDirectory);
