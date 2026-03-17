@@ -42,17 +42,12 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @SneakyThrows
     @Override
     public byte[] encryptInline(byte[] data, SecretKey key) {
-        byte[] nonce = CommonUtils.nonce12();
-
-        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
-
-        byte[] encrypted = cipher.doFinal(data);
-
-        byte[] finalArray = new byte[nonce.length + encrypted.length];
-        System.arraycopy(nonce, 0, finalArray, 0, nonce.length);
-        System.arraycopy(encrypted, 0, finalArray, nonce.length, encrypted.length);
-
+        SecureEnvelope encrypt = encrypt(data, key);
+        byte[] finalArray = new byte[encrypt.nonce().length + encrypt.payload().length];
+        System.arraycopy(encrypt.nonce(), 0, finalArray, 0, encrypt.nonce().length);
+        System.arraycopy(
+                encrypt.payload(), 0, finalArray, encrypt.nonce().length, encrypt.payload().length
+        );
         return finalArray;
     }
 

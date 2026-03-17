@@ -5,11 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
+import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -81,13 +85,15 @@ public class JsonFileOperations<V> implements FileOperations<V> {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
             return Collections.emptyMap();
         }
-        byte[] bytes = Files.readAllBytes(destination);
-        return deserialize(bytes);
+        try (FileChannel fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
+             InputStream inputStream = Channels.newInputStream(fileChannel)) {
+            return deserialize(inputStream);
+        }
     }
 
     @SneakyThrows
-    protected Map<String, V> deserialize(byte[] bytes) {
-        return objectMapper.readValue(bytes, typeReference);
+    protected Map<String, V> deserialize(InputStream inputStream) {
+        return objectMapper.readValue(inputStream, typeReference);
     }
 
     @SneakyThrows

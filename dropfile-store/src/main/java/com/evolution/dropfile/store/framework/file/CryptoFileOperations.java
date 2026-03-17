@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
 import javax.crypto.SecretKey;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -30,11 +31,12 @@ public class CryptoFileOperations<V>
 
     @SneakyThrows
     @Override
-    protected Map<String, V> deserialize(byte[] bytes) {
+    protected Map<String, V> deserialize(InputStream inputStream) {
         byte[] secret = getSecret();
         SecretKey secretKey = cryptoTunnel.secretKey(secret);
-        byte[] decrypted = cryptoTunnel.decryptInline(bytes, secretKey);
-        return objectMapper.readValue(decrypted, typeReference);
+        try (InputStream decryptInputStream = cryptoTunnel.decrypt(inputStream, secretKey)) {
+            return objectMapper.readValue(decryptInputStream, typeReference);
+        }
     }
 
     @Override
