@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.system;
 
-import com.evolution.dropfiledaemon.util.FileHelper;
+import com.evolution.dropfile.common.CommonUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +15,6 @@ public class SystemInfoProvider {
 
     private static final String PROCESS_ID = UUID.randomUUID().toString();
 
-    private final FileHelper fileHelper;
-
     public Map<String, Object> getSystemInfo() {
         return new LinkedHashMap<>() {{
             put("SystemInfoProvider.PROCESS_ID", PROCESS_ID);
@@ -25,11 +23,11 @@ public class SystemInfoProvider {
             put("ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage()", ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage());
 
             long maxMemory = Runtime.getRuntime().maxMemory();
-            put("Runtime.getRuntime().maxMemory()", maxMemory + " bytes (" + fileHelper.toDisplaySize(maxMemory) + ")");
+            put("Runtime.getRuntime().maxMemory()", maxMemory + " bytes (" + CommonUtils.toDisplaySize(maxMemory) + ")");
             long totalMemory = Runtime.getRuntime().totalMemory();
-            put("Runtime.getRuntime().totalMemory()", totalMemory + " bytes (" + fileHelper.toDisplaySize(totalMemory) + ")");
+            put("Runtime.getRuntime().totalMemory()", totalMemory + " bytes (" + CommonUtils.toDisplaySize(totalMemory) + ")");
             long freeMemory = Runtime.getRuntime().freeMemory();
-            put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + fileHelper.toDisplaySize(freeMemory) + ")");
+            put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + CommonUtils.toDisplaySize(freeMemory) + ")");
         }};
     }
 }

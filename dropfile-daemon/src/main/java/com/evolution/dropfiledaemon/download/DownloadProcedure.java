@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.download.exception.*;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
@@ -8,7 +9,6 @@ import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -127,7 +127,7 @@ public class DownloadProcedure {
                     String actualSha256 = ExecutionProfiling.run(
                             String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
                                     operation, fingerprint, fileId),
-                            () -> fileHelper.sha256(temporaryFile)
+                            () -> fileHelper.sha256(temporaryFile.toPath())
                     );
 
                     if (!manifest.hash().equals(actualSha256)) {
@@ -152,13 +152,13 @@ public class DownloadProcedure {
                     0,
                     0,
                     0,
-                    fileHelper.percent(0, 0)
+                    CommonUtils.percent(0, 0)
             );
         }
 
         long totalDownloaded = downloadSpeedMeter.getTotalDownloaded();
         long speedBytesPerSec = downloadSpeedMeter.getSpeedBytesPerSec();
-        String percent = fileHelper.percent(totalDownloaded, manifest.size());
+        String percent = CommonUtils.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
                 operation,

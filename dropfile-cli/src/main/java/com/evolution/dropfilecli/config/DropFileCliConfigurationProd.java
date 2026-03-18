@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.config;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.secret.CacheableCryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
@@ -15,10 +16,17 @@ import java.nio.file.Paths;
 public class DropFileCliConfigurationProd {
 
     @Bean
-    public DaemonSecretsStore secretsConfigStore(ObjectMapper objectMapper,
+    public FileHelper fileHelper(CliApplicationProperties applicationProperties) {
+        return new FileHelper(applicationProperties.fileOperationsBufferSize);
+    }
+
+    @Bean
+    public DaemonSecretsStore secretsConfigStore(FileHelper fileHelper,
+                                                 ObjectMapper objectMapper,
                                                  CryptoTunnel cryptoTunnel,
                                                  CliApplicationProperties cliApplicationProperties) {
         return new CacheableCryptoDaemonSecretsStore(
+                fileHelper,
                 objectMapper,
                 cryptoTunnel,
                 Paths.get(cliApplicationProperties.configDirectory)

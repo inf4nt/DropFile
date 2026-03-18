@@ -1,5 +1,6 @@
 package com.evolution.dropfile.store.secret;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.file.CryptoFileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
@@ -14,7 +15,8 @@ public class CryptoDaemonSecretsStore
         extends DefaultSingleValueStore<DaemonSecrets>
         implements DaemonSecretsStore {
 
-    public CryptoDaemonSecretsStore(ObjectMapper objectMapper,
+    public CryptoDaemonSecretsStore(FileHelper fileHelper,
+                                    ObjectMapper objectMapper,
                                     CryptoTunnel cryptoTunnel,
                                     Path parrentDirectoryPath) {
         FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "daemon.secrets.bin");
@@ -23,6 +25,7 @@ public class CryptoDaemonSecretsStore
                 new SynchronizedFileKeyValueStore<>(
                         fileProvider,
                         new CryptoFileOperations<>(
+                                fileHelper,
                                 objectMapper,
                                 DaemonSecrets.class,
                                 fileProvider,

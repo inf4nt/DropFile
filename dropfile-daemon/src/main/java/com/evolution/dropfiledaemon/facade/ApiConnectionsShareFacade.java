@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
@@ -11,7 +12,6 @@ import com.evolution.dropfiledaemon.download.FileDownloadResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +30,6 @@ public class ApiConnectionsShareFacade {
     private final TunnelClient tunnelClient;
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
-
-    private final FileHelper fileHelper;
 
     public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
         String fingerprintConnection = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
@@ -54,7 +52,7 @@ public class ApiConnectionsShareFacade {
                 .map(it -> new ApiConnectionsShareLsResponseDTO(
                         it.id(),
                         it.alias(),
-                        fileHelper.toDisplaySize(it.size()),
+                        CommonUtils.toDisplaySize(it.size()),
                         it.created()
                 ))
                 .toList();

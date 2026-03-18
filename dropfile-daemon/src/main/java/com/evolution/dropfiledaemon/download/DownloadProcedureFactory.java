@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.download;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

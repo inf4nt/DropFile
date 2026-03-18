@@ -1,10 +1,10 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,8 +18,6 @@ public class ApiDownloadFacade {
 
     private final ApplicationConfigStore applicationConfigStore;
 
-    private final FileHelper fileHelper;
-
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
         List<ApiDownloadLsDTO.Response> responses = new ArrayList<>();
         Map<String, DownloadFileEntry> entryMap = applicationConfigStore.getFileDownloadEntryStore().getAll();
@@ -30,7 +28,7 @@ public class ApiDownloadFacade {
             if (downloadProgress != null) {
                 ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.DOWNLOADING;
                 String progress = getProgress(downloadProgress.total(), downloadProgress.downloaded());
-                String speedPerSecond = fileHelper.toDisplaySize(downloadProgress.speedBytesPerSec());
+                String speedPerSecond = CommonUtils.toDisplaySize(downloadProgress.speedBytesPerSec());
                 responses.add(new ApiDownloadLsDTO.Response(
                         downloadProgress.operationId(),
                         downloadProgress.fileId(),
@@ -68,28 +66,6 @@ public class ApiDownloadFacade {
         return getByStatus(responses, status, limit);
     }
 
-    private String getProgress(long total, long downloaded) {
-        if (total == 0) {
-            return "0%";
-        }
-        if (downloaded == 0) {
-            return String.format("%s/0 (%s)", fileHelper.toDisplaySize(total), "0%");
-        }
-        if (total == downloaded) {
-            return String.format("%s (%s)", fileHelper.toDisplaySize(total), "100%");
-        }
-        return String.format("%s/%s (%s)", fileHelper.toDisplaySize(total), fileHelper.toDisplaySize(downloaded), fileHelper.percent(total, downloaded));
-    }
-
-    private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
-        return source.stream()
-                .filter(it -> it.status() == status)
-                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
-                .limit(limit)
-                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
-                .toList();
-    }
-
     // TODO add some Util class to do "one or nothing"
     public void stop(String operationId) {
         List<String> list = fileDownloadOrchestrator.getDownloadProcedures().keySet()
@@ -119,5 +95,27 @@ public class ApiDownloadFacade {
 
     public void rmAll() {
         applicationConfigStore.getFileDownloadEntryStore().removeAll();
+    }
+
+    private String getProgress(long total, long downloaded) {
+        if (total == 0) {
+            return "0%";
+        }
+        if (downloaded == 0) {
+            return String.format("%s/0 (%s)", CommonUtils.toDisplaySize(total), "0%");
+        }
+        if (total == downloaded) {
+            return String.format("%s (%s)", CommonUtils.toDisplaySize(total), "100%");
+        }
+        return String.format("%s/%s (%s)", CommonUtils.toDisplaySize(total), CommonUtils.toDisplaySize(downloaded), CommonUtils.percent(total, downloaded));
+    }
+
+    private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
+        return source.stream()
+                .filter(it -> it.status() == status)
+                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
+                .limit(limit)
+                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
+                .toList();
     }
 }

@@ -1,5 +1,6 @@
 package com.evolution.dropfile.store.download;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.framework.file.JsonFileOperations;
 import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore;
@@ -11,10 +12,11 @@ public class JsonFileFileDownloadEntryStore
         extends SynchronizedFileKeyValueStore<DownloadFileEntry>
         implements FileDownloadEntryStore {
 
-    public JsonFileFileDownloadEntryStore(ObjectMapper objectMapper, Path parrentDirectoryPath) {
+    public JsonFileFileDownloadEntryStore(FileHelper fileHelper, ObjectMapper objectMapper, Path parrentDirectoryPath) {
         super(
                 new FileProviderImpl(parrentDirectoryPath, "download.file.entries.json"),
                 new JsonFileOperations<>(
+                        fileHelper,
                         objectMapper,
                         DownloadFileEntry.class
                 )

@@ -19,6 +19,8 @@ public class DaemonApplicationProperties {
 
     public final int daemonPort;
 
+    public final int fileOperationsBufferSize;
+
     public final int downloadProcedureThreadSize;
 
     public final int downloadProcedureManifestCallTimeoutMillis;
@@ -36,6 +38,7 @@ public class DaemonApplicationProperties {
     public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                        @Value("${dropfile.download.directory}") String downloadDirectory,
                                        @Value("${dropfile.daemon.port}") int daemonPort,
+                                       @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
                                        @Value("${dropfile.download.procedure.manifest.call.timeout-millis}") int downloadProcedureManifestCallTimeoutMillis,
                                        @Value("${dropfile.download.procedure.chunk.call.timeout-millis}") int downloadProcedureChunkCallTimeoutMillis,
@@ -43,6 +46,7 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.compress.level}") int tunnelCompressLevel,
                                        @Value("${dropfile.manifest-builder.chunk-size}") int manifestBuildChunkSize,
                                        @Value("${dropfile.manifest-builder.buffer-size}") int manifestBuildBufferSize) {
+        this.fileOperationsBufferSize = fileOperationsBufferSize;
         this.manifestBuildChunkSize = manifestBuildChunkSize;
         this.manifestBuildBufferSize = manifestBuildBufferSize;
         this.downloadDirectory = getDownloadDirectory(applicationDirectory, downloadDirectory);

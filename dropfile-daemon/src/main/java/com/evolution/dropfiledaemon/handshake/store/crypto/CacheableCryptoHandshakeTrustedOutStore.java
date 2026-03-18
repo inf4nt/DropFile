@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.handshake.store.crypto;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
@@ -11,7 +12,7 @@ public class CacheableCryptoHandshakeTrustedOutStore
         extends CacheableKeyValueStore<HandshakeTrustedOutStore.TrustedOut>
         implements HandshakeTrustedOutStore {
 
-    public CacheableCryptoHandshakeTrustedOutStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
-        super(new CryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel, parrentDirectoryPath));
+    public CacheableCryptoHandshakeTrustedOutStore(FileHelper fileHelper, ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
+        super(new CryptoHandshakeTrustedOutStore(fileHelper, objectMapper, cryptoTunnel, parrentDirectoryPath));
     }
 }

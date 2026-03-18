@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfiledaemon.compress.CompressTunnelService;
@@ -34,5 +35,10 @@ public class DropFileDaemonConfiguration {
     @Bean
     public CompressTunnelService compressTunnelService(DaemonApplicationProperties daemonApplicationProperties) {
         return new ZstdCompressTunnelService(daemonApplicationProperties);
+    }
+
+    @Bean
+    public FileHelper fileHelper(DaemonApplicationProperties applicationProperties) {
+        return new FileHelper(applicationProperties.fileOperationsBufferSize);
     }
 }

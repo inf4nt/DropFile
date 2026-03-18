@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.util.function;
+package com.evolution.dropfile.common.function;
 
 @FunctionalInterface
 public interface IORunnable {

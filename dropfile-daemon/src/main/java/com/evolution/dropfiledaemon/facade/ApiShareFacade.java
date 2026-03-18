@@ -5,7 +5,6 @@ import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -22,8 +21,6 @@ import java.util.List;
 public class ApiShareFacade {
 
     private final ApplicationConfigStore applicationConfigStore;
-
-    private final FileHelper fileHelper;
 
     @SneakyThrows
     public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
@@ -71,7 +68,7 @@ public class ApiShareFacade {
                 id,
                 shareFileEntry.alias(),
                 shareFileEntry.absolutePath(),
-                fileHelper.toDisplaySize(shareFileEntry.size()),
+                CommonUtils.toDisplaySize(shareFileEntry.size()),
                 shareFileEntry.created()
         );
     }

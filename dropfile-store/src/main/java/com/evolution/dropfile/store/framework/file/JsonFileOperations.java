@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
+import com.evolution.dropfile.common.FileHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -20,11 +21,14 @@ import java.util.Map;
 
 public class JsonFileOperations<V> implements FileOperations<V> {
 
+    protected final FileHelper fileHelper;
+
     protected final ObjectMapper objectMapper;
 
     protected final TypeReference<Map<String, V>> typeReference;
 
-    public JsonFileOperations(ObjectMapper objectMapper, Class<V> classType) {
+    public JsonFileOperations(FileHelper fileHelper, ObjectMapper objectMapper, Class<V> classType) {
+        this.fileHelper = fileHelper;
         this.objectMapper = objectMapper;
         this.typeReference = new TypeReference<>() {
             @Override
@@ -70,7 +74,7 @@ public class JsonFileOperations<V> implements FileOperations<V> {
         try {
             byte[] bytes = serialize(values);
             temporaryFilePath = getOrCreateTemporaryFilePath(destination);
-            Files.write(temporaryFilePath, bytes);
+            fileHelper.write(temporaryFilePath, bytes);
             Files.move(temporaryFilePath, destination, StandardCopyOption.ATOMIC_MOVE);
         } finally {
             if (temporaryFilePath != null) {
@@ -102,7 +106,7 @@ public class JsonFileOperations<V> implements FileOperations<V> {
     }
 
     @SneakyThrows
-    protected Path getOrCreateTemporaryFilePath(Path destination) {
+    private Path getOrCreateTemporaryFilePath(Path destination) {
         String filename = destination.toFile().getName();
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(filename);
         Path parent = destination.getParent();

@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -20,11 +21,12 @@ public class CryptoFileOperations<V>
 
     private final CryptoTunnel cryptoTunnel;
 
-    public CryptoFileOperations(ObjectMapper objectMapper,
+    public CryptoFileOperations(FileHelper fileHelper,
+                                ObjectMapper objectMapper,
                                 Class<V> classType,
                                 FileProvider fileProvider,
                                 CryptoTunnel cryptoTunnel) {
-        super(objectMapper, classType);
+        super(fileHelper, objectMapper, classType);
         this.fileProvider = fileProvider;
         this.cryptoTunnel = cryptoTunnel;
     }

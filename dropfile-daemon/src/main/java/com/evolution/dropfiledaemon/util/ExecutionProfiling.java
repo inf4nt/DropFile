@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
-import com.evolution.dropfiledaemon.util.function.IORunnable;
+import com.evolution.dropfile.common.function.IORunnable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 

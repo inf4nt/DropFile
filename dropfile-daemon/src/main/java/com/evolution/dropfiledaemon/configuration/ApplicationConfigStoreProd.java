@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
@@ -53,6 +54,7 @@ class ApplicationConfigStoreProd
 
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher,
+                                      FileHelper fileHelper,
                                       ObjectMapper objectMapper,
                                       CryptoTunnel cryptoTunnel,
                                       DaemonApplicationProperties daemonApplicationProperties) {
@@ -61,7 +63,7 @@ class ApplicationConfigStoreProd
 
         keyValueStores = Map.of(
                 FileDownloadEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileFileDownloadEntryStore(objectMapper, Paths.get(configDirectory)),
+                        new CacheableJsonFileFileDownloadEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
                         new FileDownloadEntryStoreKeyValueStoreInitializationProcedure()
                 ),
                 AccessKeyStore.class, new AbstractMap.SimpleEntry<>(
@@ -69,15 +71,15 @@ class ApplicationConfigStoreProd
                         null
                 ),
                 ShareFileEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileShareFileEntryStore(objectMapper, Paths.get(configDirectory)),
+                        new CacheableJsonFileShareFileEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedOutStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedOutStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CacheableCryptoHandshakeTrustedOutStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedInStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedInStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CacheableCryptoHandshakeTrustedInStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeSessionOutStore.class, new AbstractMap.SimpleEntry<>(
@@ -91,7 +93,7 @@ class ApplicationConfigStoreProd
         );
         singleValueStores = Map.of(
                 DaemonSecretsStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoDaemonSecretsStore(objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CacheableCryptoDaemonSecretsStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         new DaemonSecretsStoreInitializationProcedure()
                 )
         );

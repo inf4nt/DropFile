@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.handshake.store.crypto;
 
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.file.CryptoFileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
@@ -14,11 +15,12 @@ public class CryptoHandshakeTrustedInStore
         extends SynchronizedFileKeyValueStore<HandshakeTrustedInStore.TrustedIn>
         implements HandshakeTrustedInStore {
 
-    public CryptoHandshakeTrustedInStore(ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
+    public CryptoHandshakeTrustedInStore(FileHelper fileHelper, ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
         FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "trustin.bin");
         super(
                 fileProvider,
                 new CryptoFileOperations<>(
+                        fileHelper,
                         objectMapper,
                         TrustedIn.class,
                         fileProvider,

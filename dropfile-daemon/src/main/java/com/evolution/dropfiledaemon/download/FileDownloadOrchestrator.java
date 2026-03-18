@@ -5,7 +5,6 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.util.SafeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +92,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 log.info("Exception occurred during download process operation {} fingerprint {} {}",
                         operationId, request.fingerprint(), exception.getMessage(), exception
                 );
-                SafeUtils.execute(() -> {
+                CommonUtils.executeSafety(() -> {
                     boolean stopped = isStopped(operationId);
                     DownloadFileEntry.DownloadFileEntryStatus status = stopped ?
                             DownloadFileEntry.DownloadFileEntryStatus.STOPPED : DownloadFileEntry.DownloadFileEntryStatus.ERROR;
@@ -110,8 +109,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 });
                 throw new RuntimeException(exception);
             } finally {
-                SafeUtils.execute(() -> downloadProcedures.remove(operationId));
-                SafeUtils.execute(() -> Files.deleteIfExists(temporaryFile.toPath()));
+                CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
+                CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFile.toPath()));
             }
         });
         return new FileDownloadResponse(operationId, request.fileId(), destinationFile.getAbsolutePath());

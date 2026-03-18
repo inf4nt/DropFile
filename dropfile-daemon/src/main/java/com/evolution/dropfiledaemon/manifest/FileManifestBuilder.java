@@ -1,20 +1,23 @@
 package com.evolution.dropfiledaemon.manifest;
 
+import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.util.FileHelper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.function.Consumer;
 
 @Component
 public class FileManifestBuilder {
@@ -25,20 +28,15 @@ public class FileManifestBuilder {
 
     private final Integer bufferSize;
 
-    private final FileHelper fileHelper;
-
     @Autowired
-    public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties,
-                               FileHelper fileHelper) {
-        this(daemonApplicationProperties.manifestBuildChunkSize, daemonApplicationProperties.manifestBuildBufferSize, fileHelper);
+    public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties) {
+        this(daemonApplicationProperties.manifestBuildChunkSize, daemonApplicationProperties.manifestBuildBufferSize);
     }
 
     FileManifestBuilder(Integer chunkSize,
-                        Integer bufferSize,
-                        FileHelper fileHelper) {
+                        Integer bufferSize) {
         this.chunkSize = Objects.requireNonNull(chunkSize, "chunkSize is null");
         this.bufferSize = Objects.requireNonNull(bufferSize, "bufferSize is null");
-        this.fileHelper = fileHelper;
     }
 
     public void validate(FileManifest fileManifest) {
@@ -94,7 +92,7 @@ public class FileManifestBuilder {
                     chunkToProcess = Math.toIntExact(leftOver);
                 }
 
-                int totalRead = fileHelper.read(fileChannel, processed, chunkToProcess, byteBuffer, buffer -> {
+                int totalRead = read(fileChannel, processed, chunkToProcess, byteBuffer, buffer -> {
                     manifestDigest.update(buffer.duplicate());
                     chunkDigest.update(buffer);
                 });
@@ -120,5 +118,36 @@ public class FileManifestBuilder {
                 totalSize,
                 chunkManifests
         );
+    }
+
+
+    int read(FileChannel fileChannel,
+                    long skip,
+                    int take,
+                    ByteBuffer byteBuffer,
+                    Consumer<ByteBuffer> consumer) throws IOException {
+        fileChannel.position(skip);
+        int totalRead = 0;
+        while (totalRead < take) {
+            CommonUtils.isInterrupted();
+
+            int leftOver = take - totalRead;
+            int toRead = Math.min(byteBuffer.capacity(), leftOver);
+            byteBuffer.limit(toRead);
+
+            int read = fileChannel.read(byteBuffer);
+            if (read == -1) {
+                break;
+            }
+
+            byteBuffer.flip();
+
+            consumer.accept(byteBuffer.asReadOnlyBuffer());
+
+            totalRead += read;
+
+            byteBuffer.clear();
+        }
+        return totalRead;
     }
 }

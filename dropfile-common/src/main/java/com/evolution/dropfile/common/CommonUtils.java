@@ -1,6 +1,7 @@
 package com.evolution.dropfile.common;
 
 
+import com.evolution.dropfile.common.function.IORunnable;
 import lombok.SneakyThrows;
 
 import java.net.URI;
@@ -8,6 +9,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Locale;
 import java.util.UUID;
 
 public class CommonUtils {
@@ -75,6 +77,51 @@ public class CommonUtils {
     public static void isInterrupted(String message) {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException(message);
+        }
+    }
+
+    public static String percent(long total, long downloaded) {
+        if (total == 0) {
+            return "0%";
+        }
+        if (downloaded == 0) {
+            return "0%";
+        }
+        if (total == downloaded) {
+            return "100%";
+        }
+
+        double value = (double) (downloaded * 100) / total;
+        return String.format(Locale.US, "%.2f%%", value);
+    }
+
+    public static String toDisplaySize(long size) {
+        if (size < 0) {
+            throw new IllegalArgumentException("Size cannot be negative");
+        }
+        if (size == 0) {
+            return "0B";
+        }
+        if (size < 1024) {
+            return String.format("%sB", size);
+        }
+        if (size < 1024 * 1024) {
+            double kb = size / 1024D;
+            return String.format(Locale.US, "%.2fKB", kb);
+        }
+        if (size < 1024 * 1024 * 1024) {
+            double mb = size / (1024 * 1024D);
+            return String.format(Locale.US, "%.2fMB", mb);
+        }
+        double gb = size / (1024 * 1024 * 1024D);
+        return String.format(Locale.US, "%.2fGB", gb);
+    }
+
+    public static void executeSafety(IORunnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
