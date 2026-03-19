@@ -9,7 +9,7 @@ public class DefaultSingleValueStore<V> implements SingleValueStore<V> {
 
     private final String storeName;
 
-    private final KeyValueStore<V> store;
+    protected final KeyValueStore<V> store;
 
     public DefaultSingleValueStore(String storeName,
                                    KeyValueStore<V> store) {
