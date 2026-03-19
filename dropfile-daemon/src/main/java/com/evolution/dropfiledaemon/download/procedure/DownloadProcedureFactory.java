@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.download;
+package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
@@ -32,11 +32,22 @@ public class DownloadProcedureFactory {
         int downloadProcedureChunkCallTimeoutMillis = daemonApplicationProperties.downloadProcedureChunkCallTimeoutMillis;
 
         return new DownloadProcedure(
-                tunnelClient, fileHelper, fileManifestBuilder,
-                downloadProcedureThreadSize,
-                downloadProcedureManifestCallTimeoutMillis,
-                downloadProcedureChunkCallTimeoutMillis,
-                operation, fingerprint, fileId, filename, destinationFile, temporaryFile
+                tunnelClient,
+                fileHelper,
+                fileManifestBuilder,
+                new DownloadProcedureConfiguration(
+                        downloadProcedureThreadSize,
+                        downloadProcedureManifestCallTimeoutMillis,
+                        downloadProcedureChunkCallTimeoutMillis
+                ),
+                new DownloadProcedureRequest(
+                        operation,
+                        fingerprint,
+                        fileId,
+                        filename,
+                        destinationFile,
+                        temporaryFile
+                )
         );
     }
 }

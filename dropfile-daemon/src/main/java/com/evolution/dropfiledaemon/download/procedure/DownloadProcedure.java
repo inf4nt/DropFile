@@ -1,7 +1,9 @@
-package com.evolution.dropfiledaemon.download;
+package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfiledaemon.download.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.exception.*;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
@@ -14,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.InputStream;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
@@ -45,23 +46,9 @@ public class DownloadProcedure {
 
     private final FileManifestBuilder fileManifestBuilder;
 
-    private final int maxThreadSize;
+    private final DownloadProcedureConfiguration configuration;
 
-    private final int manifestCallTimeoutMillis;
-
-    private final int chunkCallTimeoutMillis;
-
-    private final String operation;
-
-    private final String fingerprint;
-
-    private final String fileId;
-
-    private final String filename;
-
-    private final File destinationFile;
-
-    private final File temporaryFile;
+    private final DownloadProcedureRequest request;
 
     private ExecutorService executorService;
 
@@ -87,7 +74,7 @@ public class DownloadProcedure {
     private ExecutorService getExecutorService() {
         synchronized (isStopped) {
             if (isStopped.get()) {
-                throw new IllegalStateException("Download procedure already stopped: " + operation);
+                throw new IllegalStateException("Download procedure already stopped: " + request.operation());
             }
             if (this.executorService == null) {
                 this.executorService = Executors.newVirtualThreadPerTaskExecutor();
@@ -105,13 +92,13 @@ public class DownloadProcedure {
 
     private void runProcedure() {
         ExecutionProfiling.run(
-                String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s", operation,
-                        fingerprint, fileId),
+                String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s",
+                        request.operation(), request.fingerprint(), request.fileId()),
                 () -> {
 
                     ExecutionProfiling.run(
                             String.format("download-manifest operation: %s fingerprint %s fileId: %s",
-                                    operation, fingerprint, fileId),
+                                    request.operation(), request.fingerprint(), request.fileId()),
                             () -> downloadManifest()
                     );
 
@@ -119,24 +106,24 @@ public class DownloadProcedure {
 
                     ExecutionProfiling.run(
                             String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
-                                    operation, fingerprint, fileId, manifest.chunkManifests().size()
+                                    request.operation(), request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
                             ),
                             () -> downloadAndWriteChunks()
                     );
 
                     String actualSha256 = ExecutionProfiling.run(
                             String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
-                                    operation, fingerprint, fileId),
-                            () -> fileHelper.sha256(temporaryFile.toPath())
+                                    request.operation(), request.fingerprint(), request.fileId()),
+                            () -> fileHelper.sha256(request.temporaryFile().toPath())
                     );
 
                     if (!manifest.hash().equals(actualSha256)) {
-                        throw new TotalDigestMismatchException(operation, manifest.hash(), actualSha256);
+                        throw new TotalDigestMismatchException(request.operation(), manifest.hash(), actualSha256);
                     }
 
                     isInterrupted();
 
-                    Files.move(temporaryFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    Files.move(request.temporaryFile().toPath(), request.destinationFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
                 }
         );
     }
@@ -144,10 +131,10 @@ public class DownloadProcedure {
     public FileDownloadOrchestrator.DownloadProgress getProgress() {
         if (manifest == null) {
             return new FileDownloadOrchestrator.DownloadProgress(
-                    operation,
-                    fingerprint,
-                    fileId,
-                    destinationFile.getAbsolutePath(),
+                    request.operation(),
+                    request.fingerprint(),
+                    request.fileId(),
+                    request.destinationFile().getAbsolutePath(),
                     null,
                     0,
                     0,
@@ -161,10 +148,10 @@ public class DownloadProcedure {
         String percent = CommonUtils.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
-                operation,
-                fingerprint,
-                fileId,
-                destinationFile.getAbsolutePath(),
+                request.operation(),
+                request.fingerprint(),
+                request.fileId(),
+                request.destinationFile().getAbsolutePath(),
                 manifest.hash(),
                 manifest.size(),
                 totalDownloaded,
@@ -181,8 +168,8 @@ public class DownloadProcedure {
                                 return tunnelClient.send(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
-                                                .body(fileId)
-                                                .fingerprint(fingerprint)
+                                                .body(request.fileId())
+                                                .fingerprint(request.fingerprint())
                                                 .build(),
                                         FileManifest.class
                                 );
@@ -190,13 +177,13 @@ public class DownloadProcedure {
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
-                                operation, fingerprint, fileId, filename, attempt, exception.getMessage(), exception
+                                request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage(), exception
                         );
                     })
-                    .callTimeout(Duration.ofMillis(manifestCallTimeoutMillis))
+                    .callTimeout(Duration.ofMillis(configuration.manifestCallTimeoutMillis()))
                     .run();
         } catch (Exception e) {
-            throw new ManifestDownloadingFailedException(operation, fileId, filename, e);
+            throw new ManifestDownloadingFailedException(request.operation(), request.fileId(), request.filename(), e);
         }
     }
 
@@ -204,7 +191,7 @@ public class DownloadProcedure {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
         try (FileChannel fileChannel = FileChannel.open(
-                temporaryFile.toPath(),
+                request.temporaryFile().toPath(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
@@ -234,7 +221,7 @@ public class DownloadProcedure {
 
                 if (!iterator.hasNext()) {
                     CompletableFuture.allOf(activeFutures.toArray(new CompletableFuture[0])).join();
-                } else if (activeFutures.size() >= maxThreadSize) {
+                } else if (activeFutures.size() >= configuration.maxThreadSize()) {
                     CompletableFuture.anyOf(activeFutures.toArray(new CompletableFuture[0])).join();
                     activeFutures.removeIf(it -> it.isDone());
                 }
@@ -251,16 +238,16 @@ public class DownloadProcedure {
                                         TunnelClient.Request.builder()
                                                 .command("share-download-chunk-stream")
                                                 .body(new ShareDownloadChunkStreamTunnelRequest(
-                                                        fileId,
+                                                        request.fileId(),
                                                         chunkManifest.startPosition(),
                                                         chunkManifest.endPosition()
                                                 ))
-                                                .fingerprint(fingerprint)
+                                                .fingerprint(request.fingerprint())
                                                 .build())) {
                                     byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
                                     String sha256 = fileHelper.sha256(allBytes);
                                     if (!chunkManifest.hash().equals(sha256)) {
-                                        throw new ChunkDigestMismatchException(operation, chunkManifest.hash(),
+                                        throw new ChunkDigestMismatchException(request.operation(), chunkManifest.hash(),
                                                 sha256, chunkManifest.startPosition(), chunkManifest.endPosition()
                                         );
                                     }
@@ -270,14 +257,14 @@ public class DownloadProcedure {
                     )
                     .doOnError((attempt, exception) -> {
                         log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} start {} end {} exception: {}",
-                                operation, fingerprint, fileId, filename, attempt,
+                                request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception
                         );
                     })
-                    .callTimeout(Duration.ofMillis(chunkCallTimeoutMillis))
+                    .callTimeout(Duration.ofMillis(configuration.chunkCallTimeoutMillis()))
                     .run();
         } catch (Exception e) {
-            throw new ChunkDownloadingFailedException(operation, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
+            throw new ChunkDownloadingFailedException(request.operation(), chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);
         }
     }
 
@@ -305,12 +292,12 @@ public class DownloadProcedure {
                     })
                     .run();
         } catch (Exception exception) {
-            throw new ChunkWritingFailedException(operation, chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);
+            throw new ChunkWritingFailedException(request.operation(), chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), exception);
         }
     }
 
     @SneakyThrows
     private void isInterrupted() {
-        CommonUtils.isInterrupted("Downloading process has been interrupted: " + operation);
+        CommonUtils.isInterrupted("Downloading process has been interrupted: " + request.operation());
     }
 }
