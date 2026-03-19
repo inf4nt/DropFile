@@ -2,17 +2,17 @@ package com.evolution.dropfile.store.secret;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.store.framework.file.CacheableSynchronizedFileKeyValueStore;
 import com.evolution.dropfile.store.framework.file.CryptoFileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
-import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore;
-import com.evolution.dropfile.store.framework.single.DefaultSingleValueStore;
+import com.evolution.dropfile.store.framework.single.CacheableDefaultSingleValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
 
 public class CryptoDaemonSecretsStore
-        extends DefaultSingleValueStore<DaemonSecrets>
+        extends CacheableDefaultSingleValueStore<DaemonSecrets>
         implements DaemonSecretsStore {
 
     public CryptoDaemonSecretsStore(FileHelper fileHelper,
@@ -22,7 +22,7 @@ public class CryptoDaemonSecretsStore
         FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "daemon.secrets.bin");
         super(
                 "daemonSecrets",
-                new SynchronizedFileKeyValueStore<>(
+                new CacheableSynchronizedFileKeyValueStore<>(
                         fileProvider,
                         new CryptoFileOperations<>(
                                 fileHelper,

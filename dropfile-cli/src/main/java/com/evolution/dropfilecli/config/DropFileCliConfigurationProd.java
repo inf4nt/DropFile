@@ -2,7 +2,7 @@ package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.store.secret.CacheableCryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ public class DropFileCliConfigurationProd {
                                                  ObjectMapper objectMapper,
                                                  CryptoTunnel cryptoTunnel,
                                                  CliApplicationProperties cliApplicationProperties) {
-        return new CacheableCryptoDaemonSecretsStore(
+        return new CryptoDaemonSecretsStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,

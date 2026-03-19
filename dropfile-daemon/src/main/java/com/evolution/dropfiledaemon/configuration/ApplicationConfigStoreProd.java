@@ -4,16 +4,16 @@ import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.download.CacheableJsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.Cacheable;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
-import com.evolution.dropfile.store.secret.CacheableCryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.share.CacheableJsonFileShareFileEntryStore;
+import com.evolution.dropfile.store.share.JsonFileShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
@@ -21,8 +21,8 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CacheableCryptoHandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CacheableCryptoHandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,7 +63,7 @@ class ApplicationConfigStoreProd
 
         keyValueStores = Map.of(
                 FileDownloadEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileFileDownloadEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
+                        new JsonFileFileDownloadEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
                         new FileDownloadEntryStoreKeyValueStoreInitializationProcedure()
                 ),
                 AccessKeyStore.class, new AbstractMap.SimpleEntry<>(
@@ -71,15 +71,15 @@ class ApplicationConfigStoreProd
                         null
                 ),
                 ShareFileEntryStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableJsonFileShareFileEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
+                        new JsonFileShareFileEntryStore(fileHelper, objectMapper, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedOutStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedOutStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoHandshakeTrustedOutStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeTrustedInStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoHandshakeTrustedInStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoHandshakeTrustedInStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         null
                 ),
                 HandshakeSessionOutStore.class, new AbstractMap.SimpleEntry<>(
@@ -93,7 +93,7 @@ class ApplicationConfigStoreProd
         );
         singleValueStores = Map.of(
                 DaemonSecretsStore.class, new AbstractMap.SimpleEntry<>(
-                        new CacheableCryptoDaemonSecretsStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoDaemonSecretsStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
                         new DaemonSecretsStoreInitializationProcedure()
                 )
         );

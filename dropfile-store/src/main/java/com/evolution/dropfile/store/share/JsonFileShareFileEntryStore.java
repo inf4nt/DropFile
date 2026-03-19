@@ -1,15 +1,15 @@
 package com.evolution.dropfile.store.share;
 
 import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.store.framework.file.CacheableSynchronizedFileKeyValueStore;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.framework.file.JsonFileOperations;
-import com.evolution.dropfile.store.framework.file.SynchronizedFileKeyValueStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
 
 public class JsonFileShareFileEntryStore
-        extends SynchronizedFileKeyValueStore<ShareFileEntry>
+        extends CacheableSynchronizedFileKeyValueStore<ShareFileEntry>
         implements ShareFileEntryStore {
 
     public JsonFileShareFileEntryStore(FileHelper fileHelper, ObjectMapper objectMapper, Path parrentDirectoryPath) {
