@@ -24,9 +24,9 @@ public class CacheableSynchronizedFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier) {
+    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
         try {
-            return super.save(valuesSupplier);
+            return super.save(supplier, validatePolicy);
         } finally {
             reset();
         }

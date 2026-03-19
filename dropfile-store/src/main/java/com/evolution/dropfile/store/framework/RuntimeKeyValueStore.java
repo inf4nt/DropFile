@@ -9,26 +9,41 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     private final Map<String, V> store = new LinkedHashMap<>();
 
     @Override
-    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier) {
-        Map<String, V> values = valuesSupplier.get();
-
-        if (values == null || values.isEmpty()) {
+    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
+        Objects.requireNonNull(supplier);
+        Objects.requireNonNull(validatePolicy);
+        Map<String, V> newValues = supplier.get();
+        if (newValues == null || newValues.isEmpty()) {
             return Collections.emptyList();
         }
 
-        for (Map.Entry<String, V> entry : values.entrySet()) {
+        for (Map.Entry<String, V> entry : newValues.entrySet()) {
             Objects.requireNonNull(entry.getKey(), "key cannot be null");
             Objects.requireNonNull(entry.getValue(), "value cannot be null");
         }
 
-        for (Map.Entry<String, V> entry : values.entrySet()) {
-            validate(entry.getKey(), entry.getValue());
+        Map<String, V> toSave = new LinkedHashMap<>();
+        for (Map.Entry<String, V> entry : newValues.entrySet()) {
+            try {
+                validate(entry.getKey(), entry.getValue());
+                toSave.put(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                if (validatePolicy == ValidatePolicy.GENTLE) {
+                    continue;
+                } else if (validatePolicy == ValidatePolicy.STRICT) {
+                    throw e;
+                }
+                throw new IllegalArgumentException("Unknown validate policy " + validatePolicy);
+            }
         }
 
-        Map<String, V> newMap = new LinkedHashMap<>(getAll());
-        newMap.putAll(values);
-        store.putAll(newMap);
-        return Collections.unmodifiableCollection(values.values());
+        if (toSave.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        store.putAll(toSave);
+
+        return Collections.unmodifiableCollection(toSave.values());
     }
 
     @Override

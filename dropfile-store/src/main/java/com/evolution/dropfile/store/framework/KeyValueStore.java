@@ -6,7 +6,11 @@ import java.util.function.Supplier;
 
 public interface KeyValueStore<V> {
 
-    Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier);
+    Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy);
+
+    default Collection<V> save(Supplier<? extends Map<String, V>> supplier) {
+        return save(supplier, ValidatePolicy.STRICT);
+    }
 
     default V save(String key, Supplier<V> valueSupplier) {
         return save(() -> Map.of(key, valueSupplier.get())).iterator().next();
@@ -54,5 +58,10 @@ public interface KeyValueStore<V> {
             throw new RuntimeException(String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", list.size()));
         }
         return list.getFirst();
+    }
+
+    enum ValidatePolicy {
+        STRICT,
+        GENTLE
     }
 }

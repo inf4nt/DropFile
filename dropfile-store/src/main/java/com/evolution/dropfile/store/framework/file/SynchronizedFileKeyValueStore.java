@@ -25,28 +25,47 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> valuesSupplier) {
-        Map<String, V> values = valuesSupplier.get();
+    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
+        Objects.requireNonNull(supplier);
+        Objects.requireNonNull(validatePolicy);
 
-        if (values == null || values.isEmpty()) {
+        Map<String, V> newValues = supplier.get();
+
+        if (newValues == null || newValues.isEmpty()) {
             return Collections.emptyList();
         }
 
-        for (Map.Entry<String, V> entry : values.entrySet()) {
+        for (Map.Entry<String, V> entry : newValues.entrySet()) {
             Objects.requireNonNull(entry.getKey(), "key cannot be null");
             Objects.requireNonNull(entry.getValue(), "value cannot be null");
         }
 
-        Map<String, V> currentValues = Collections.unmodifiableMap(getAll());
-        for (Map.Entry<String, V> entry : values.entrySet()) {
-            validate(entry.getKey(), entry.getValue());
+        Map<String, V> toSave = new LinkedHashMap<>();
+        for (Map.Entry<String, V> entry : newValues.entrySet()) {
+            try {
+                validate(entry.getKey(), entry.getValue());
+                toSave.put(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                if (validatePolicy == ValidatePolicy.GENTLE) {
+                    continue;
+                } else if (validatePolicy == ValidatePolicy.STRICT) {
+                    throw e;
+                }
+                throw new IllegalArgumentException("Unknown validate policy " + validatePolicy);
+            }
         }
 
-        Map<String, V> newMap = new LinkedHashMap<>(currentValues);
-        newMap.putAll(values);
+        if (toSave.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, V> all = new LinkedHashMap<>(getAll());
+        all.putAll(toSave);
+
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, newMap);
-        return List.copyOf(values.values());
+        fileOperations.write(filePath, all);
+
+        return Collections.unmodifiableCollection(toSave.values());
     }
 
     @Override
