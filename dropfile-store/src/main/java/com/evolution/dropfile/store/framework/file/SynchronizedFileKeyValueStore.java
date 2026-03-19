@@ -69,14 +69,6 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized V update(String key, Function<V, V> updateFunction) {
-        V currentValue = getRequired(key).getValue();
-        V newValue = updateFunction.apply(currentValue);
-        validate(key, newValue);
-        return save(key, newValue);
-    }
-
-    @Override
     public synchronized V remove(String key) {
         Objects.requireNonNull(key, "key cannot be null");
 

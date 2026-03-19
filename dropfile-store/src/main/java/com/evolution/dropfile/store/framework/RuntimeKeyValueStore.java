@@ -47,15 +47,6 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized V update(String key, Function<V, V> updateFunction) {
-        V current = getRequired(key).getValue();
-        V newValue = updateFunction.apply(current);
-        validate(key, newValue);
-        store.put(key, newValue);
-        return newValue;
-    }
-
-    @Override
     public synchronized V remove(String key) {
         return store.remove(key);
     }

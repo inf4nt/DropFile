@@ -33,15 +33,6 @@ public class CacheableSynchronizedFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized V update(String key, Function<V, V> updateFunction) {
-        try {
-            return super.update(key, updateFunction);
-        } finally {
-            reset();
-        }
-    }
-
-    @Override
     public synchronized V remove(String key) {
         try {
             return super.remove(key);

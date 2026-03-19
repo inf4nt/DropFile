@@ -20,7 +20,18 @@ public interface KeyValueStore<V> {
         return save(() -> Map.of(key, value)).iterator().next();
     }
 
-    V update(String key, Function<V, V> updateFunction);
+    default V update(String key, Function<V, V> updateFunction) {
+        return save(
+                () -> {
+                    Map.Entry<String, V> current = getRequired(key);
+                    V newValue = updateFunction.apply(current.getValue());
+                    Objects.requireNonNull(newValue);
+                    validate(key, newValue);
+                    return Map.of(key, newValue);
+                },
+                ValidatePolicy.STRICT
+        ).iterator().next();
+    }
 
     V remove(String key);
 
