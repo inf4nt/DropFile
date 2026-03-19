@@ -57,7 +57,7 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
     @Override
     public synchronized Map<String, V> getAll() {
-        return Map.copyOf(store);
+        return Collections.unmodifiableMap(store);
     }
 
     @Override
