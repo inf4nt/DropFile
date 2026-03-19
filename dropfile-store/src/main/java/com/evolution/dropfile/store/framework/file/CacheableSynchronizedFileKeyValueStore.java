@@ -5,7 +5,6 @@ import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CacheableSynchronizedFileKeyValueStore<V>

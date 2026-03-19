@@ -4,7 +4,6 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
