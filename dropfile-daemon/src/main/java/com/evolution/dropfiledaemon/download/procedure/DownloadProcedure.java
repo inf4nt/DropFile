@@ -78,15 +78,17 @@ public class DownloadProcedure {
         if (isStopped.get()) {
             throw new IllegalStateException("Download procedure already stopped: " + request.operation());
         }
-        synchronized (this) {
-            if (isStopped.get()) {
-                throw new IllegalStateException("Download procedure already stopped: " + request.operation());
+        if (executorService == null) {
+            synchronized (this) {
+                if (isStopped.get()) {
+                    throw new IllegalStateException("Download procedure already stopped: " + request.operation());
+                }
+                if (this.executorService == null) {
+                    this.executorService = Executors.newVirtualThreadPerTaskExecutor();
+                }
             }
-            if (this.executorService == null) {
-                this.executorService = Executors.newVirtualThreadPerTaskExecutor();
-            }
-            return executorService;
         }
+        return executorService;
     }
 
     public void run() {
