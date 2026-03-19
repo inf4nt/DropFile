@@ -16,6 +16,7 @@ import org.springframework.util.ObjectUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
@@ -53,15 +54,15 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         }
 
         String operationId = CommonUtils.random();
-        File destinationFile = getDestinationFile(request);
-        File temporaryFile = getTemporaryFile(request);
+        Path destinationFilePath = getDestinationFilePath(request);
+        Path temporaryFilePath = getTemporaryFilePath(request);
         DownloadProcedure downloadProcedure = downloadProcedureFactory.get(
                 operationId,
                 request.fingerprint(),
                 request.fileId(),
                 request.filename(),
-                destinationFile,
-                temporaryFile
+                destinationFilePath,
+                temporaryFilePath
         );
         downloadProcedures.put(operationId, downloadProcedure);
 
@@ -72,8 +73,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                         new DownloadFileEntry(
                                 request.fingerprint(),
                                 request.fileId(),
-                                destinationFile.getAbsolutePath(),
-                                temporaryFile.getAbsolutePath(),
+                                destinationFilePath.toString(),
+                                temporaryFilePath.toString(),
                                 DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
                                 Instant.now(),
                                 Instant.now()
@@ -112,10 +113,10 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 throw new RuntimeException(exception);
             } finally {
                 CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
-                CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFile.toPath()));
+                CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
             }
         });
-        return new FileDownloadResponse(operationId, request.fileId(), destinationFile.getAbsolutePath());
+        return new FileDownloadResponse(operationId, request.fileId(), destinationFilePath.toString());
     }
 
     public Map<String, DownloadProgress> getDownloadProcedures() {
@@ -144,7 +145,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 .orElse(false);
     }
 
-    private File getDestinationFile(FileDownloadRequest request) throws IOException {
+    private Path getDestinationFilePath(FileDownloadRequest request) throws IOException {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
@@ -154,16 +155,16 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         }
 
         String downloadDirectory = daemonApplicationProperties.downloadDirectory;
-        File downloadFile = new File(downloadDirectory, request.filename()).getCanonicalFile();
+        Path downloadFilePath = Paths.get(downloadDirectory, request.filename()).toAbsolutePath();
 
-        if (Files.exists(downloadFile.toPath())) {
-            throw new IllegalArgumentException(String.format("file already exists: %s", downloadFile.getAbsolutePath()));
+        if (Files.exists(downloadFilePath)) {
+            throw new IllegalArgumentException(String.format("file already exists: %s", downloadFilePath));
         }
 
-        return downloadFile;
+        return downloadFilePath;
     }
 
-    private File getTemporaryFile(FileDownloadRequest request) throws IOException {
+    private Path getTemporaryFilePath(FileDownloadRequest request) throws IOException {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
@@ -173,13 +174,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
         String downloadDirectory = daemonApplicationProperties.downloadDirectory;
-        File tmpDownloadFile = new File(downloadDirectory, temporaryFileName).getCanonicalFile();
-
-        if (Files.notExists(tmpDownloadFile.toPath())) {
-            Files.createFile(tmpDownloadFile.toPath());
-        }
-
-        return tmpDownloadFile;
+        return Paths.get(downloadDirectory, temporaryFileName).toAbsolutePath();
     }
 
     @SneakyThrows

@@ -120,7 +120,7 @@ public class DownloadProcedure {
                     String actualSha256 = ExecutionProfiling.run(
                             String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
                                     request.operation(), request.fingerprint(), request.fileId()),
-                            () -> fileHelper.sha256(request.temporaryFile().toPath())
+                            () -> fileHelper.sha256(request.temporaryFilePath())
                     );
 
                     if (!manifest.hash().equals(actualSha256)) {
@@ -129,7 +129,7 @@ public class DownloadProcedure {
 
                     isInterrupted();
 
-                    Files.move(request.temporaryFile().toPath(), request.destinationFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    Files.move(request.temporaryFilePath(), request.destinationFilePath(), StandardCopyOption.ATOMIC_MOVE);
                 }
         );
     }
@@ -140,7 +140,7 @@ public class DownloadProcedure {
                     request.operation(),
                     request.fingerprint(),
                     request.fileId(),
-                    request.destinationFile().getAbsolutePath(),
+                    request.destinationFilePath().toAbsolutePath().toString(),
                     null,
                     0,
                     0,
@@ -157,7 +157,7 @@ public class DownloadProcedure {
                 request.operation(),
                 request.fingerprint(),
                 request.fileId(),
-                request.destinationFile().getAbsolutePath(),
+                request.destinationFilePath().toAbsolutePath().toString(),
                 manifest.hash(),
                 manifest.size(),
                 totalDownloaded,
@@ -197,7 +197,7 @@ public class DownloadProcedure {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
         try (FileChannel fileChannel = FileChannel.open(
-                request.temporaryFile().toPath(),
+                request.temporaryFilePath(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();

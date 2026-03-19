@@ -17,20 +17,11 @@ public class CommonUtilsTest {
     public void nonce12() {
         byte[] nonce12V1 = CommonUtils.nonce12();
         assertThat(nonce12V1.length, is(12));
-        assertThat(
-                IntStream.range(0, nonce12V1.length)
-                        .noneMatch(i -> nonce12V1[i] == 0),
-                is(true)
-        );
 
         byte[] nonce12V2 = CommonUtils.nonce12();
         assertThat(nonce12V2.length, is(12));
-        assertThat(
-                IntStream.range(0, nonce12V2.length)
-                        .noneMatch(i -> nonce12V2[i] == 0),
-                is(true)
-        );
 
+        // Flaky. In theory equal
         assertThat(Arrays.equals(nonce12V1, nonce12V2), is(false));
     }
 

@@ -1,11 +1,11 @@
 package com.evolution.dropfiledaemon.download.procedure;
 
-import java.io.File;
+import java.nio.file.Path;
 
 public record DownloadProcedureRequest(String operation,
                                        String fingerprint,
                                        String fileId,
                                        String filename,
-                                       File destinationFile,
-                                       File temporaryFile) {
+                                       Path destinationFilePath,
+                                       Path temporaryFilePath) {
 }

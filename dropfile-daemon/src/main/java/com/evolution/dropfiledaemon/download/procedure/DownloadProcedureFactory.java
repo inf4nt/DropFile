@@ -7,7 +7,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.nio.file.Path;
 
 @RequiredArgsConstructor
 @Component
@@ -25,8 +25,8 @@ public class DownloadProcedureFactory {
                                  String fingerprint,
                                  String fileId,
                                  String filename,
-                                 File destinationFile,
-                                 File temporaryFile) {
+                                 Path destinationFilePath,
+                                 Path temporaryFilePath) {
         int downloadProcedureThreadSize = daemonApplicationProperties.downloadProcedureThreadSize;
         int downloadProcedureManifestCallTimeoutMillis = daemonApplicationProperties.downloadProcedureManifestCallTimeoutMillis;
         int downloadProcedureChunkCallTimeoutMillis = daemonApplicationProperties.downloadProcedureChunkCallTimeoutMillis;
@@ -45,8 +45,8 @@ public class DownloadProcedureFactory {
                         fingerprint,
                         fileId,
                         filename,
-                        destinationFile,
-                        temporaryFile
+                        destinationFilePath,
+                        temporaryFilePath
                 )
         );
     }
