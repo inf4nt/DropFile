@@ -60,7 +60,10 @@ public class DownloadProcedure {
 
     @SneakyThrows
     public void stop() {
-        synchronized (isStopped) {
+        if (isStopped.get()) {
+            return;
+        }
+        synchronized (this) {
             if (isStopped.get()) {
                 return;
             }
@@ -72,7 +75,10 @@ public class DownloadProcedure {
     }
 
     private ExecutorService getExecutorService() {
-        synchronized (isStopped) {
+        if (isStopped.get()) {
+            throw new IllegalStateException("Download procedure already stopped: " + request.operation());
+        }
+        synchronized (this) {
             if (isStopped.get()) {
                 throw new IllegalStateException("Download procedure already stopped: " + request.operation());
             }
