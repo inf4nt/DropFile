@@ -43,8 +43,39 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
+    private int getAvailablePermits() {
+        int total = downloadProcedures.size() + waitingQueue.size();
+        return daemonApplicationProperties.downloadOrchestratorMaxQueueSize - total;
+    }
+
+    public synchronized FileDownloadResponseEnvelope start(List<FileDownloadRequest> requests, boolean force) {
+        int availablePermits = getAvailablePermits();
+        if (availablePermits - requests.size() < 0 && !force) {
+            throw new IllegalStateException(String.format("No available permits. Total: %s Requests %s", availablePermits, requests.size()));
+        }
+
+        List<FileDownloadResponse> responses = new ArrayList<>();
+        List<FileDownloadRequest> skipped = new ArrayList<>();
+        for (FileDownloadRequest request : requests) {
+            try {
+                FileDownloadResponse response = start(request);
+                responses.add(response);
+            } catch (Exception e) {
+                if (!force) {
+                    throw e;
+                }
+                skipped.add(request);
+            }
+        }
+
+        return new FileDownloadResponseEnvelope(
+                Collections.unmodifiableList(responses),
+                Collections.unmodifiableList(skipped)
+        );
+    }
+
     @SneakyThrows
-    public synchronized FileDownloadResponse start(FileDownloadRequest request) {
+    private FileDownloadResponse start(FileDownloadRequest request) {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.downloadOrchestratorMaxQueueSize;
         if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
             throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
@@ -65,7 +96,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
         tryToStartNext();
 
-        return new FileDownloadResponse(operationId, request.fileId(), destinationFilePath.toAbsolutePath().toString());
+        return new FileDownloadResponse(operationId, request.fingerprint(), request.fileId(), destinationFilePath.toAbsolutePath().toString());
     }
 
     private synchronized void tryToStartNext() {
