@@ -1,13 +1,12 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Component
@@ -69,10 +68,14 @@ public class DaemonApplicationProperties {
 
     @SneakyThrows
     private String getDownloadDirectory(String downloadDirectory) {
-        if (Files.notExists(Paths.get(downloadDirectory))) {
-            throw new FileNotFoundException(String.format("No %s found", downloadDirectory));
+        Path path = Paths.get(downloadDirectory);
+        if (Files.notExists(path)) {
+            throw new FileNotFoundException(String.format("No %s found", path));
         }
-        return downloadDirectory;
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Must be a directory " + path);
+        }
+        return path.toString();
     }
 
     @SneakyThrows

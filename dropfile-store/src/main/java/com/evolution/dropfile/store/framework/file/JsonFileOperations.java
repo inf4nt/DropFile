@@ -25,11 +25,14 @@ public class JsonFileOperations<V> implements FileOperations<V> {
 
     protected final ObjectMapper objectMapper;
 
+    protected final Class<V> classType;
+
     protected final TypeReference<Map<String, V>> typeReference;
 
     public JsonFileOperations(FileHelper fileHelper, ObjectMapper objectMapper, Class<V> classType) {
         this.fileHelper = fileHelper;
         this.objectMapper = objectMapper;
+        this.classType = classType;
         this.typeReference = new TypeReference<>() {
             @Override
             public Type getType() {

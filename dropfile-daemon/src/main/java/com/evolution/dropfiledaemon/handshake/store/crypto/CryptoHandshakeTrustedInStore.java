@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.handshake.store.crypto;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.framework.file.*;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,16 +13,16 @@ public class CryptoHandshakeTrustedInStore
         extends CacheableSynchronizedFileKeyValueStore<HandshakeTrustedInStore.TrustedIn>
         implements HandshakeTrustedInStore {
 
-    public CryptoHandshakeTrustedInStore(FileHelper fileHelper, ObjectMapper objectMapper, CryptoTunnel cryptoTunnel, Path parrentDirectoryPath) {
-        FileProvider fileProvider = new FileProviderImpl(parrentDirectoryPath, "trustin.bin");
+    public CryptoHandshakeTrustedInStore(FileHelper fileHelper, ObjectMapper objectMapper, CryptoTunnel cryptoTunnel,
+                                         ApplicationFingerprintSupplier applicationFingerprintSupplier, Path applicationConfigDirectoryPath) {
         super(
-                fileProvider,
+                new FileProviderImpl(applicationConfigDirectoryPath, ".trustin.bin"),
                 new CryptoFileOperations<>(
                         fileHelper,
                         objectMapper,
                         TrustedIn.class,
-                        fileProvider,
-                        cryptoTunnel
+                        cryptoTunnel,
+                        applicationFingerprintSupplier
                 )
         );
     }

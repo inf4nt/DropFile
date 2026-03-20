@@ -9,6 +9,7 @@ import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.Cacheable;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
@@ -57,6 +58,7 @@ class ApplicationConfigStoreProd
                                       FileHelper fileHelper,
                                       ObjectMapper objectMapper,
                                       CryptoTunnel cryptoTunnel,
+                                      ApplicationFingerprintSupplier applicationFingerprintSupplier,
                                       DaemonApplicationProperties daemonApplicationProperties) {
         this.eventPublisher = eventPublisher;
         String configDirectory = daemonApplicationProperties.configDirectory;
@@ -75,11 +77,23 @@ class ApplicationConfigStoreProd
                         null
                 ),
                 HandshakeTrustedOutStore.class, new AbstractMap.SimpleEntry<>(
-                        new CryptoHandshakeTrustedOutStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoHandshakeTrustedOutStore(
+                                fileHelper,
+                                objectMapper,
+                                cryptoTunnel,
+                                applicationFingerprintSupplier,
+                                Paths.get(configDirectory)
+                        ),
                         null
                 ),
                 HandshakeTrustedInStore.class, new AbstractMap.SimpleEntry<>(
-                        new CryptoHandshakeTrustedInStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoHandshakeTrustedInStore(
+                                fileHelper,
+                                objectMapper,
+                                cryptoTunnel,
+                                applicationFingerprintSupplier,
+                                Paths.get(configDirectory)
+                        ),
                         null
                 ),
                 HandshakeSessionOutStore.class, new AbstractMap.SimpleEntry<>(
@@ -93,7 +107,13 @@ class ApplicationConfigStoreProd
         );
         singleValueStores = Map.of(
                 DaemonSecretsStore.class, new AbstractMap.SimpleEntry<>(
-                        new CryptoDaemonSecretsStore(fileHelper, objectMapper, cryptoTunnel, Paths.get(configDirectory)),
+                        new CryptoDaemonSecretsStore(
+                                fileHelper,
+                                objectMapper,
+                                cryptoTunnel,
+                                applicationFingerprintSupplier,
+                                Paths.get(configDirectory)
+                        ),
                         new DaemonSecretsStoreInitializationProcedure()
                 )
         );
