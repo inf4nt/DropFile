@@ -4,7 +4,6 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfilecli.command.connections.share.ConnectionsShareDownloadCommand;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -145,8 +144,8 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareDownload(List<ConnectionsShareDownloadCommand.DownloadItem> downloadItems,
-                                                         boolean force) {
+    public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
+
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/download");
 
@@ -157,12 +156,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiConnectionsShareDownloadRequestDTO(
-                                downloadItems.stream()
-                                        .map(it -> new ApiConnectionsShareDownloadRequestDTO.DownloadItem(it.getId(), it.getFilename()))
-                                        .toList(),
-                                force
-                        )
+                        new ApiConnectionsShareDownloadRequestDTO(id, filename)
                 )))
                 .header("Content-Type", "application/json")
                 .build();
