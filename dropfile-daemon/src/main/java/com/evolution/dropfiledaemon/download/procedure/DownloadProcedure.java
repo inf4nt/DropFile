@@ -12,6 +12,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,14 +30,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RequiredArgsConstructor
 public class DownloadProcedure {
-
-    private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
     private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
 
@@ -48,26 +46,26 @@ public class DownloadProcedure {
 
     private final DownloadProcedureConfiguration configuration;
 
+    @Getter
     private final DownloadProcedureRequest request;
 
     private ExecutorService executorService;
 
     private FileManifest manifest;
 
-    public boolean isStopped() {
-        return isStopped.get();
-    }
+    @Getter
+    volatile private boolean stopped;
 
     @SneakyThrows
     public void stop() {
-        if (isStopped.get()) {
+        if (stopped) {
             return;
         }
         synchronized (this) {
-            if (isStopped.get()) {
+            if (stopped) {
                 return;
             }
-            isStopped.set(true);
+            stopped = true;
             if (executorService != null) {
                 executorService.shutdownNow();
             }
@@ -75,25 +73,33 @@ public class DownloadProcedure {
     }
 
     private ExecutorService getExecutorService() {
-        if (isStopped.get()) {
+        if (stopped) {
             throw new IllegalStateException("Download procedure already stopped: " + request.operation());
         }
         if (executorService == null) {
             synchronized (this) {
-                if (isStopped.get()) {
+                if (stopped) {
                     throw new IllegalStateException("Download procedure already stopped: " + request.operation());
                 }
-                if (this.executorService == null) {
-                    this.executorService = Executors.newVirtualThreadPerTaskExecutor();
+                if (executorService == null) {
+                    executorService = Executors.newVirtualThreadPerTaskExecutor();
                 }
             }
         }
         return executorService;
     }
 
-    public void run() {
+    public void run(Runnable beforeProcedureCallback,
+                    Runnable successCallback) {
         try (ExecutorService executorService = getExecutorService()) {
-            CompletableFuture.runAsync(() -> runProcedure(), executorService)
+            CompletableFuture.runAsync(
+                            () -> {
+                                beforeProcedureCallback.run();
+                                runProcedure();
+                                successCallback.run();
+                            },
+                            executorService
+                    )
                     .join();
         }
     }

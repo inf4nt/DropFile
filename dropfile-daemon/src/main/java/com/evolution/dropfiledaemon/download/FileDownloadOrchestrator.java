@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.download;
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedure;
@@ -13,20 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -37,20 +35,19 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final Map<String, DownloadProcedure> downloadProcedures = Collections.synchronizedMap(new LinkedHashMap<>());
 
+    private final Deque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
+
     private final DownloadProcedureFactory downloadProcedureFactory;
 
     private final ApplicationConfigStore applicationConfigStore;
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    // TODO add multi download
-
     @SneakyThrows
     public synchronized FileDownloadResponse start(FileDownloadRequest request) {
-        // TODO
-        int downloadOrchestratorThreadSize = 10;
-        if (downloadProcedures.size() >= downloadOrchestratorThreadSize) {
-            throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorThreadSize);
+        int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.downloadOrchestratorMaxQueueSize;
+        if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
+            throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
         }
 
         String operationId = CommonUtils.random();
@@ -64,41 +61,64 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 destinationFilePath,
                 temporaryFilePath
         );
-        downloadProcedures.put(operationId, downloadProcedure);
+        waitingQueue.add(new AbstractMap.SimpleEntry<>(operationId, downloadProcedure));
+
+        tryToStartNext();
+
+        return new FileDownloadResponse(operationId, request.fileId(), destinationFilePath.toAbsolutePath().toString());
+    }
+
+    private synchronized void tryToStartNext() {
+        int activeQueueSize = daemonApplicationProperties.downloadOrchestratorActiveQueueSize;
+
+        while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
+            Map.Entry<String, DownloadProcedure> nextTask = waitingQueue.pollFirst();
+            downloadProcedures.put(nextTask.getKey(), nextTask.getValue());
+
+            runDownload(nextTask.getKey(), nextTask.getValue());
+        }
+    }
+
+    private void runDownload(String operationId, DownloadProcedure downloadProcedure) {
+        String fingerprint = downloadProcedure.getProgress().fingerprint();
+        String fileId = downloadProcedure.getProgress().fileId();
+        Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
+        Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
 
         fileDownloadingExecutorService.execute(() -> {
             try {
-                applicationConfigStore.getFileDownloadEntryStore().save(
-                        operationId,
-                        new DownloadFileEntry(
-                                request.fingerprint(),
-                                request.fileId(),
-                                destinationFilePath.toString(),
-                                temporaryFilePath.toString(),
-                                DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
-                                Instant.now(),
-                                Instant.now()
-                        )
-                );
-                downloadProcedure.run();
-                applicationConfigStore.getFileDownloadEntryStore()
-                        .update(
+                downloadProcedure.run(
+                        () -> applicationConfigStore.getFileDownloadEntryStore().save(
                                 operationId,
-                                downloadFileEntry -> downloadFileEntry
-                                        .withHash(downloadProcedure.getProgress().hash())
-                                        .withTotal(downloadProcedure.getProgress().total())
-                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
-                                        .withUpdated(Instant.now())
-                        );
+                                new DownloadFileEntry(
+                                        fingerprint,
+                                        fileId,
+                                        destinationFilePath.toAbsolutePath().toString(),
+                                        temporaryFilePath.toAbsolutePath().toString(),
+                                        DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                                        Instant.now(),
+                                        Instant.now()
+                                )
+                        ),
+                        () -> applicationConfigStore.getFileDownloadEntryStore()
+                                .update(
+                                        operationId,
+                                        downloadFileEntry -> downloadFileEntry
+                                                .withHash(downloadProcedure.getProgress().hash())
+                                                .withTotal(downloadProcedure.getProgress().total())
+                                                .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                                .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
+                                                .withUpdated(Instant.now())
+                                )
+                );
             } catch (Exception exception) {
                 log.info("Exception occurred during download process operation {} fingerprint {} {}",
-                        operationId, request.fingerprint(), exception.getMessage(), exception
+                        operationId, fingerprint, exception.getMessage(), exception
                 );
                 CommonUtils.executeSafety(() -> {
-                    boolean stopped = isStopped(operationId);
-                    DownloadFileEntry.DownloadFileEntryStatus status = stopped ?
-                            DownloadFileEntry.DownloadFileEntryStatus.STOPPED : DownloadFileEntry.DownloadFileEntryStatus.ERROR;
+                    if (downloadProcedure.isStopped()) {
+                        return;
+                    }
                     applicationConfigStore.getFileDownloadEntryStore()
                             .update(
                                     operationId,
@@ -106,7 +126,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                             .withHash(downloadProcedure.getProgress().hash())
                                             .withTotal(downloadProcedure.getProgress().total())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withStatus(status)
+                                            .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
                                             .withUpdated(Instant.now())
                             );
                 });
@@ -114,9 +134,9 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             } finally {
                 CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
                 CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
+                CommonUtils.executeSafety(() -> tryToStartNext());
             }
         });
-        return new FileDownloadResponse(operationId, request.fileId(), destinationFilePath.toString());
     }
 
     public Map<String, DownloadProgress> getDownloadProcedures() {
@@ -132,20 +152,69 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         if (downloadProcedure == null) {
             throw new RuntimeException("No operation found: " + operation);
         }
-        downloadProcedure.stop();
+        downloadProcedures.remove(operation);
+        stop(Map.of(operation, downloadProcedure), Collections.emptyMap());
     }
 
     public void stopAll() {
-        downloadProcedures.values().forEach(it -> it.stop());
+        Map<String, DownloadProcedure> waitingQueueSnapshot = new LinkedHashMap<>();
+        while (!waitingQueue.isEmpty()) {
+            Map.Entry<String, DownloadProcedure> entry = waitingQueue.pollFirst();
+            waitingQueueSnapshot.put(entry.getKey(), entry.getValue());
+        }
+        Map<String, DownloadProcedure> proceduresSnapshot = new LinkedHashMap<>(downloadProcedures);
+        proceduresSnapshot.entrySet().forEach(key -> downloadProcedures.remove(key));
+        stop(proceduresSnapshot, waitingQueueSnapshot);
     }
 
-    private boolean isStopped(String operation) {
-        return Optional.ofNullable(downloadProcedures.get(operation))
-                .map(it -> it.isStopped())
-                .orElse(false);
+    private void stop(Map<String, DownloadProcedure> operations,
+                      Map<String, DownloadProcedure> waiting) {
+        operations.values().forEach(it -> it.stop());
+
+        FileDownloadEntryStore fileDownloadEntryStore = applicationConfigStore.getFileDownloadEntryStore();
+        fileDownloadEntryStore.save(
+                () -> Stream
+                        .concat(operations.entrySet().stream(), waiting.entrySet().stream())
+                        .map(downloadProcedureEntry -> {
+                            String operationId = downloadProcedureEntry.getKey();
+
+                            DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
+                                    .map(it -> it.getValue())
+                                    .orElse(null);
+
+                            DownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
+
+                            if (downloadFileEntry != null) {
+                                DownloadFileEntry updated = downloadFileEntry
+                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.STOPPED)
+                                        .withUpdated(Instant.now())
+                                        .withHash(downloadProcedure.getProgress().hash())
+                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                        .withTotal(downloadProcedure.getProgress().total());
+                                return new AbstractMap.SimpleEntry<>(operationId, updated);
+                            }
+                            DownloadFileEntry newOne = new DownloadFileEntry(
+                                    downloadProcedure.getRequest().fingerprint(),
+                                    downloadProcedure.getProgress().fileId(),
+                                    downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
+                                    downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
+                                    DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
+                                    Instant.now(),
+                                    Instant.now()
+                            );
+                            return new AbstractMap.SimpleEntry<>(operationId, newOne);
+                        })
+                        .collect(Collectors.toMap(
+                                x -> x.getKey(),
+                                x -> x.getValue(),
+                                (v1, v2) -> v2,
+                                () -> new LinkedHashMap<>()
+                        )),
+                KeyValueStore.ValidatePolicy.GENTLE
+        );
     }
 
-    private Path getDestinationFilePath(FileDownloadRequest request) throws IOException {
+    private Path getDestinationFilePath(FileDownloadRequest request) {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
@@ -164,7 +233,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         return downloadFilePath;
     }
 
-    private Path getTemporaryFilePath(FileDownloadRequest request) throws IOException {
+    private Path getTemporaryFilePath(FileDownloadRequest request) {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
@@ -197,6 +266,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             log.info("ShutdownNow main executor service completed");
         }
         fileDownloadingExecutorService.close();
+        log.info("Closed");
     }
 
     // TODO add ETA

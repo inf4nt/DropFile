@@ -21,11 +21,15 @@ public class DaemonApplicationProperties {
 
     public final int fileOperationsBufferSize;
 
-    public final int downloadProcedureThreadSize;
+    public final int downloadOrchestratorMaxQueueSize;
+
+    public final int downloadOrchestratorActiveQueueSize;
 
     public final int downloadProcedureManifestCallTimeoutMillis;
 
     public final int downloadProcedureChunkCallTimeoutMillis;
+
+    public final int downloadProcedureThreadSize;
 
     public final boolean tunnelCompressEnabled;
 
@@ -38,10 +42,12 @@ public class DaemonApplicationProperties {
     public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                        @Value("${dropfile.download.directory}") String downloadDirectory,
                                        @Value("${dropfile.daemon.port}") int daemonPort,
-                                       @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
-                                       @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
+                                       @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
+                                       @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
                                        @Value("${dropfile.download.procedure.manifest.call.timeout-millis}") int downloadProcedureManifestCallTimeoutMillis,
                                        @Value("${dropfile.download.procedure.chunk.call.timeout-millis}") int downloadProcedureChunkCallTimeoutMillis,
+                                       @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
+                                       @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
                                        @Value("${dropfile.tunnel.compress.enabled}") boolean tunnelCompressEnabled,
                                        @Value("${dropfile.tunnel.compress.level}") int tunnelCompressLevel,
                                        @Value("${dropfile.manifest-builder.chunk-size}") int manifestBuildChunkSize,
@@ -49,9 +55,11 @@ public class DaemonApplicationProperties {
         this.fileOperationsBufferSize = fileOperationsBufferSize;
         this.manifestBuildChunkSize = manifestBuildChunkSize;
         this.manifestBuildBufferSize = manifestBuildBufferSize;
-        this.downloadDirectory = getDownloadDirectory(applicationDirectory, downloadDirectory);
+        this.downloadDirectory = getDownloadDirectory(downloadDirectory);
         this.configDirectory = getConfigDirectory(applicationDirectory);
         this.daemonPort = daemonPort;
+        this.downloadOrchestratorMaxQueueSize = downloadOrchestratorMaxQueueSize;
+        this.downloadOrchestratorActiveQueueSize = downloadOrchestratorActiveQueueSize;
         this.downloadProcedureThreadSize = downloadProcedureThreadSize;
         this.downloadProcedureManifestCallTimeoutMillis = downloadProcedureManifestCallTimeoutMillis;
         this.downloadProcedureChunkCallTimeoutMillis = downloadProcedureChunkCallTimeoutMillis;
@@ -60,18 +68,11 @@ public class DaemonApplicationProperties {
     }
 
     @SneakyThrows
-    private String getDownloadDirectory(String applicationDirectory, @Nullable String downloadDirectory) {
-        String directory;
-        if (!ObjectUtils.isEmpty(downloadDirectory)) {
-            directory = Paths.get(downloadDirectory).toString();
-        } else {
-            directory = Paths.get(applicationDirectory, "downloads").toString();
-
+    private String getDownloadDirectory(String downloadDirectory) {
+        if (Files.notExists(Paths.get(downloadDirectory))) {
+            throw new FileNotFoundException(String.format("No %s found", downloadDirectory));
         }
-        if (Files.notExists(Paths.get(directory))) {
-            throw new FileNotFoundException(String.format("No %s found", directory));
-        }
-        return directory;
+        return downloadDirectory;
     }
 
     @SneakyThrows
