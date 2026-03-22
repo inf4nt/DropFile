@@ -34,9 +34,11 @@ public class DaemonApplicationProperties {
 
     public final int tunnelCompressLevel;
 
-    public final int manifestBuildChunkSize;
-
     public final int manifestBuildBufferSize;
+
+    public final int manifestChunkMaxSize;
+
+    public final int manifestManifestMaxSize;
 
     public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                        @Value("${dropfile.download.directory}") String downloadDirectory,
@@ -49,10 +51,10 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
                                        @Value("${dropfile.tunnel.compress.enabled}") boolean tunnelCompressEnabled,
                                        @Value("${dropfile.tunnel.compress.level}") int tunnelCompressLevel,
-                                       @Value("${dropfile.manifest-builder.chunk-size}") int manifestBuildChunkSize,
-                                       @Value("${dropfile.manifest-builder.buffer-size}") int manifestBuildBufferSize) {
+                                       @Value("${dropfile.manifest-builder.buffer-size}") int manifestBuildBufferSize,
+                                       @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize,
+                                       @Value("${dropfile.manifest.manifest-max-size}") int manifestManifestMaxSize) {
         this.fileOperationsBufferSize = fileOperationsBufferSize;
-        this.manifestBuildChunkSize = manifestBuildChunkSize;
         this.manifestBuildBufferSize = manifestBuildBufferSize;
         this.downloadDirectory = getDownloadDirectory(downloadDirectory);
         this.configDirectory = getConfigDirectory(applicationDirectory);
@@ -64,6 +66,8 @@ public class DaemonApplicationProperties {
         this.downloadProcedureChunkCallTimeoutMillis = downloadProcedureChunkCallTimeoutMillis;
         this.tunnelCompressEnabled = tunnelCompressEnabled;
         this.tunnelCompressLevel = tunnelCompressLevel;
+        this.manifestChunkMaxSize = manifestChunkMaxSize;
+        this.manifestManifestMaxSize = manifestManifestMaxSize;
     }
 
     @SneakyThrows

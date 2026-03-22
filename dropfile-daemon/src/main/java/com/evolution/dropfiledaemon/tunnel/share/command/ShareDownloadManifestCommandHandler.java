@@ -5,6 +5,7 @@ import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestCommandRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ import java.io.File;
 @RequiredArgsConstructor
 @Component
 public class ShareDownloadManifestCommandHandler
-        implements CommandHandler<String, FileManifest> {
+        implements CommandHandler<ShareDownloadManifestCommandRequest, FileManifest> {
 
     private final ApplicationConfigStore applicationConfigStore;
 
@@ -25,14 +26,17 @@ public class ShareDownloadManifestCommandHandler
     }
 
     @Override
-    public Class<String> getPayloadType() {
-        return String.class;
+    public Class<ShareDownloadManifestCommandRequest> getPayloadType() {
+        return ShareDownloadManifestCommandRequest.class;
     }
 
     @Override
-    public FileManifest handle(String id) {
+    public FileManifest handle(ShareDownloadManifestCommandRequest request) {
         ShareFileEntry fileEntry = applicationConfigStore.getShareFileEntryStore()
-                .getRequired(id).getValue();
-        return fileManifestBuilder.build(new File(fileEntry.absolutePath()));
+                .getRequired(request.fileId()).getValue();
+
+        int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
+
+        return fileManifestBuilder.build(new File(fileEntry.absolutePath()), chunkSize);
     }
 }

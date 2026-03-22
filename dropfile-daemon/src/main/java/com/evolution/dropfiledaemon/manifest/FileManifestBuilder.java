@@ -1,70 +1,116 @@
 package com.evolution.dropfiledaemon.manifest;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HexFormat;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Component
 public class FileManifestBuilder {
 
     private static final String SHA256 = "SHA-256";
 
-    private final Integer chunkSize;
+    private final int chunkMaxSize;
 
-    private final Integer bufferSize;
+    private final int bufferSize;
 
     @Autowired
     public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties) {
-        this(daemonApplicationProperties.manifestBuildChunkSize, daemonApplicationProperties.manifestBuildBufferSize);
+        this(daemonApplicationProperties.manifestChunkMaxSize, daemonApplicationProperties.manifestBuildBufferSize);
     }
 
-    FileManifestBuilder(Integer chunkSize,
-                        Integer bufferSize) {
-        this.chunkSize = Objects.requireNonNull(chunkSize, "chunkSize is null");
-        this.bufferSize = Objects.requireNonNull(bufferSize, "bufferSize is null");
+    FileManifestBuilder(int chunkMaxSize, int bufferSize) {
+        this.chunkMaxSize = chunkMaxSize;
+        this.bufferSize = bufferSize;
     }
 
     public void validate(FileManifest fileManifest) {
-        if (ObjectUtils.isEmpty(fileManifest.chunkManifests())) {
+        if (fileManifest.chunkManifests() == null || fileManifest.chunkManifests().isEmpty()) {
             throw new IllegalStateException("File manifest has no chunk manifests");
         }
-        List<ChunkManifest> zeroSizeChunks = fileManifest.chunkManifests().stream()
-                .filter(it -> it.size() <= 0)
-                .toList();
-        if (!zeroSizeChunks.isEmpty()) {
-            throw new RuntimeException("File manifest has chunk manifests size that are less or 0");
+
+        boolean zeroSizeChunk = fileManifest.chunkManifests().stream()
+                .anyMatch(it -> it.size() <= 0);
+        if (zeroSizeChunk) {
+            throw new RuntimeException("Found zero chunks size. Chunks size must be greater than zero");
         }
-        List<ChunkManifest> overSized = fileManifest.chunkManifests().stream()
-                .filter(it -> it.size() > chunkSize)
-                .toList();
-        if (!overSized.isEmpty()) {
-            throw new RuntimeException("File manifest has over sized chunk manifests");
+
+        long zeroStartPosition = fileManifest.chunkManifests().stream()
+                .filter(it -> it.startPosition() == 0)
+                .count();
+        if (zeroStartPosition != 1) {
+            throw new RuntimeException("Chunks must include one chunk with zero start position");
         }
-        List<ChunkManifest> startAfterEnd = fileManifest.chunkManifests().stream()
-                .filter(it -> it.startPosition() >= it.endPosition())
-                .toList();
-        if (!startAfterEnd.isEmpty()) {
-            throw new RuntimeException("File manifest has start after end chunk manifests");
+
+        boolean negativeStart = fileManifest.chunkManifests().stream()
+                .anyMatch(it -> it.startPosition() < 0 || it.endPosition() <= 0);
+        if (negativeStart) {
+            throw new RuntimeException("Chunks start must be greater or equal zero");
+        }
+
+        boolean negativeOrZeroEnd = fileManifest.chunkManifests().stream()
+                .anyMatch(it -> it.endPosition() <= 0);
+        if (negativeOrZeroEnd) {
+            throw new RuntimeException("Chunks end must be greater than zero");
+        }
+
+        boolean oversized = fileManifest.chunkManifests().stream()
+                .anyMatch(it -> it.size() > chunkMaxSize);
+        if (oversized) {
+            throw new RuntimeException("File manifest has oversized chunk manifests");
+        }
+
+        boolean theEndIsNotBeforeTheStart = fileManifest.chunkManifests().stream()
+                .anyMatch(it -> it.startPosition() >= it.endPosition());
+        if (theEndIsNotBeforeTheStart) {
+            throw new RuntimeException("The chunk end position must be after the start position");
+        }
+
+        long totalSizeByChunkSize = fileManifest.chunkManifests()
+                .stream().map(it -> it.size())
+                .collect(Collectors.summarizingLong(x -> x))
+                .getSum();
+        if (totalSizeByChunkSize != fileManifest.size()) {
+            throw new RuntimeException("File manifest size does not match chunks size");
+        }
+
+        long totalSizeByStartAndEnd = fileManifest.chunkManifests().stream()
+                .map(it -> {
+                    long start = it.startPosition();
+                    long end = it.endPosition();
+                    if (start == 0) {
+                        return end;
+                    }
+                    return end - start;
+                })
+                .collect(Collectors.summarizingLong(value -> value)).getSum();
+        if (totalSizeByStartAndEnd != fileManifest.size()) {
+            throw new RuntimeException("File manifest size does not match chunks start and end size");
         }
     }
 
     @SneakyThrows
-    public FileManifest build(File file) {
+    public FileManifest build(File file, int chunkSize) {
+        if (chunkSize <= 0) {
+            throw new IllegalArgumentException("Chunk size must be greater than zero");
+        }
+
         if (!Files.exists(file.toPath())) {
             throw new FileNotFoundException("No file found: " + file.getAbsolutePath());
         }
@@ -120,12 +166,15 @@ public class FileManifestBuilder {
         );
     }
 
+    public int getChunkSize(int requestChunkSize) {
+        return Math.min(requestChunkSize, chunkMaxSize);
+    }
 
     int read(FileChannel fileChannel,
-                    long skip,
-                    int take,
-                    ByteBuffer byteBuffer,
-                    Consumer<ByteBuffer> consumer) throws IOException {
+             long skip,
+             int take,
+             ByteBuffer byteBuffer,
+             Consumer<ByteBuffer> consumer) throws IOException {
         fileChannel.position(skip);
         int totalRead = 0;
         while (totalRead < take) {

@@ -88,6 +88,7 @@ public class HttpTunnelClient implements TunnelClient {
             try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey);
                  InputStream inputStream = compressTunnelService.decompress(decryptInputStream)) {
                 if (responseType.getType().equals(String.class)) {
+                    // TODO add method that limits inputStream size
                     return (T) new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                 }
                 return objectMapper.readValue(inputStream, responseType);

@@ -34,7 +34,7 @@ public class FileManifestBuilderTest {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         assertThrows(FileNotFoundException.class, () -> {
-            underTest.build(new File("fake-file.txt"));
+            underTest.build(new File("fake-file.txt"), Integer.MAX_VALUE);
         });
     }
 
@@ -44,15 +44,20 @@ public class FileManifestBuilderTest {
 
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> underTest.build(new File(""))
+                () -> underTest.build(new File(""), Integer.MAX_VALUE)
         );
     }
 
     @Test
     public void buildManifestChunkSize3() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, 4);
+        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file);
+        FileManifest actual = underTest.build(file, 3);
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(actual);
+        });
+
         assertThat(
                 actual.hash(),
                 is("c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646")
@@ -102,9 +107,14 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize3Buffer1() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, 1);
+        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 1);
 
-        FileManifest actual = underTest.build(file);
+        FileManifest actual = underTest.build(file, 3);
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(actual);
+        });
+
         assertThat(
                 actual.hash(),
                 is("c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646")
@@ -154,9 +164,14 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize3BufferMax() {
-        FileManifestBuilder underTest = new FileManifestBuilder(3, Integer.MAX_VALUE);
+        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-        FileManifest actual = underTest.build(file);
+        FileManifest actual = underTest.build(file, 3);
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(actual);
+        });
+
         assertThat(
                 actual.hash(),
                 is("c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646")
@@ -206,9 +221,14 @@ public class FileManifestBuilderTest {
 
     @Test
     public void buildManifestChunkSize9() {
-        FileManifestBuilder underTest = new FileManifestBuilder(9, 4);
+        FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file);
+        FileManifest actual = underTest.build(file, 9);
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(actual);
+        });
+
         assertThat(
                 actual.hash(),
                 is("c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646")
@@ -248,7 +268,12 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file);
+        FileManifest actual = underTest.build(file, Integer.MAX_VALUE);
+
+        assertDoesNotThrow(() -> {
+            underTest.validate(actual);
+        });
+
         assertThat(
                 actual.hash(),
                 is("c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646")
@@ -283,18 +308,15 @@ public class FileManifestBuilderTest {
         FileManifestBuilder underTest = new FileManifestBuilder(10, Integer.MAX_VALUE);
 
         assertDoesNotThrow(() -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 1, 1, 2)
+            underTest.validate(new FileManifest("filename", "hash", 2, List.of(
+                    new ChunkManifest("hash", 2, 0, 2)
             )));
         });
+
         assertDoesNotThrow(() -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 9, 1, 2)
-            )));
-        });
-        assertDoesNotThrow(() -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 10, 1, 2)
+            underTest.validate(new FileManifest("filename", "hash", 3, List.of(
+                    new ChunkManifest("hash", 2, 0, 2),
+                    new ChunkManifest("hash", 1, 2, 3)
             )));
         });
     }
@@ -306,31 +328,98 @@ public class FileManifestBuilderTest {
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
             )));
-        });
+        }, "Found zero chunks size. Chunks size must be greater than zero");
 
         assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 11, 1, 2)
+            underTest.validate(new FileManifest("filename", "hash", 2, List.of(
+                    new ChunkManifest("hash", 11, 0, 2)
             )));
-        });
+        }, "File manifest has oversized chunk manifests");
 
         assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+            underTest.validate(new FileManifest("filename", "hash", 1, List.of(
                     new ChunkManifest("hash", 0, 1, 2)
             )));
-        });
+        }, "Found zero chunks size. Chunks size must be greater than zero");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", 2, List.of(
+                    new ChunkManifest("hash", 2, 0, 2),
+                    new ChunkManifest("hash", 2, 2, 2)
+            )));
+        }, "The chunk end position must be after the start position");
 
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 5, 2, 2)
+                    new ChunkManifest("hash", 2, 0, 2),
+                    new ChunkManifest("hash", 2, 3, 2)
             )));
-        });
+        }, "The chunk end position must be after the start position");
 
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 5, 3, 2)
+                    new ChunkManifest("hash", 2, 0, 2),
+                    new ChunkManifest("hash", 3, 0, 3)
             )));
-        });
+        }, "The chunk end position must be after the start position");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 5, -1, 2)
+            )));
+        }, "Chunks start must be greater or equal zero");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
+                    new ChunkManifest("hash", 5, 0, -1)
+            )));
+        }, "Chunks end must be greater than zero");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", 6, List.of(
+                    new ChunkManifest("hash", 3, 0, 3),
+                    new ChunkManifest("hash", 7, 3, 10)
+            )));
+        }, "File manifest size does not match chunks start and end size");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", 6, List.of(
+                    new ChunkManifest("hash", 3, 0, 3),
+                    new ChunkManifest("hash", 10, 3, 6)
+            )));
+        }, "File manifest size does not match chunks size");
+    }
+
+    @Test
+    public void getChunkSize() {
+        int chunkMaxSize = 10;
+
+        FileManifestBuilder underTest = new FileManifestBuilder(chunkMaxSize, Integer.MAX_VALUE);
+
+        assertThat(
+                "Requesting more than chunk max size. The result is a maximum that the builder can handle",
+                underTest.getChunkSize(Integer.MAX_VALUE),
+                is(10)
+        );
+
+        assertThat(
+                "Requesting more than chunk max size. The result is a maximum that the builder can handle",
+                underTest.getChunkSize(11),
+                is(10)
+        );
+
+        assertThat(
+                "Requesting same number as chunk max size. The result the same as the builder can handle",
+                underTest.getChunkSize(10),
+                is(10)
+        );
+
+        assertThat(
+                "Requesting the less number than chunk max size. The result is the requested number, " +
+                        "because the requested number is less than the max number that the builder can handle",
+                underTest.getChunkSize(9),
+                is(9)
+        );
     }
 
     @Test

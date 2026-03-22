@@ -10,6 +10,7 @@ import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
+import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadManifestCommandRequest;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import lombok.Getter;
@@ -179,10 +180,18 @@ public class DownloadProcedure {
             manifest = RetryExecutor.call(
                             () -> {
                                 isInterrupted();
+                                int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
+
+                                // TODO add manifestManifestMaxSize as a max size of inputStream
+                                int manifestManifestMaxSize = configuration.manifestManifestMaxSize();
+
                                 return tunnelClient.send(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
-                                                .body(request.fileId())
+                                                .body(new ShareDownloadManifestCommandRequest(
+                                                        request.fileId(),
+                                                        manifestChunkMaxSize
+                                                ))
                                                 .fingerprint(request.fingerprint())
                                                 .build(),
                                         FileManifest.class
