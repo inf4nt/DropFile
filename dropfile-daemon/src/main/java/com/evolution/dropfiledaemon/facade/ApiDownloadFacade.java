@@ -36,6 +36,7 @@ public class ApiDownloadFacade {
                         progress,
                         speedPerSecond,
                         status,
+                        entry.getValue().created(),
                         entry.getValue().updated()
                 ));
             } else {
@@ -50,6 +51,7 @@ public class ApiDownloadFacade {
                         progress,
                         null,
                         status,
+                        downloadFileEntry.created(),
                         downloadFileEntry.updated()
                 ));
             }

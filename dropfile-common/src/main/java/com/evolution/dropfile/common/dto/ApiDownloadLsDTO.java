@@ -10,6 +10,7 @@ public class ApiDownloadLsDTO {
                            String progress,
                            String speed,
                            ApiDownloadLsDTO.Status status,
+                           Instant created,
                            Instant updated) {
 
     }
