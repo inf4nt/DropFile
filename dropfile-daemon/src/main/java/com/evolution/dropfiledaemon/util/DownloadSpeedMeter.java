@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 public class DownloadSpeedMeter {
 
-    private final int windowMs = 5000;
+    private static final int WINDOW_MILLIS = 5_000;
 
     private final ConcurrentLinkedQueue<ChunkSample> samples = new ConcurrentLinkedQueue<>();
 
@@ -23,7 +23,7 @@ public class DownloadSpeedMeter {
                 .mapToLong(ChunkSample::size)
                 .sum();
 
-        return totalBytes / (windowMs / 1000);
+        return totalBytes / (WINDOW_MILLIS / 1_000);
     }
 
     public long getTotalDownloaded() {
@@ -31,7 +31,7 @@ public class DownloadSpeedMeter {
     }
 
     private void cleanup() {
-        long horizon = System.currentTimeMillis() - windowMs;
+        long horizon = System.currentTimeMillis() - WINDOW_MILLIS;
         while (!samples.isEmpty() && samples.peek().time < horizon) {
             samples.poll();
         }
