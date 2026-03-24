@@ -17,6 +17,12 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class RetryExecutor<T> {
 
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newVirtualThreadPerTaskExecutor();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> EXECUTOR_SERVICE.shutdownNow()));
+    }
+
     private final Callable<T> callable;
 
     private final BiConsumer<Integer, Exception> doOnError;
@@ -78,11 +84,8 @@ public class RetryExecutor<T> {
 
     @SneakyThrows
     private T callWithTimeout() {
-        ExecutorService executor = null;
-        CompletableFuture<T> future = null;
         try {
-            executor = Executors.newVirtualThreadPerTaskExecutor();
-            future = CompletableFuture
+            CompletableFuture<T> future = CompletableFuture
                     .supplyAsync(
                             new Supplier<T>() {
                                 @Override
@@ -91,26 +94,16 @@ public class RetryExecutor<T> {
                                     return callable.call();
                                 }
                             },
-                            executor
+                            EXECUTOR_SERVICE
                     );
             long millis = callTimeout.toMillis();
             return future.get(millis, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            if (future != null) {
-                future.cancel(true);
-            }
-            if (executor != null) {
-                executor.shutdownNow();
-            }
             if (e instanceof ExecutionException executionException
                     && executionException.getCause() != null) {
                 throw executionException.getCause();
             }
             throw e;
-        } finally {
-            if (executor != null) {
-                executor.close();
-            }
         }
     }
 
