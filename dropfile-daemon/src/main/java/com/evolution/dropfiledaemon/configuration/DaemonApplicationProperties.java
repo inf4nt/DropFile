@@ -28,13 +28,15 @@ public class DaemonApplicationProperties {
 
     public final boolean tunnelClientCompressEnabled;
 
-    public final int tunnelServerCompressLevel;
-
     public final int tunnelClientStreamMaxSize;
 
     public final int tunnelClientStreamDeadlineTimeoutMillis;
 
     public final int tunnelClientHttpRequestTimeoutMillis;
+
+    public final int tunnelServerCompressLevel;
+
+    public final int tunnelServerPayloadLifeTime;
 
     public final int manifestBuildBufferSize;
 
@@ -48,15 +50,17 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
                                        @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
                                        @Value("${dropfile.tunnel.client.compress.enabled}") boolean tunnelClientCompressEnabled,
-                                       @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
                                        @Value("${dropfile.tunnel.client.stream.max-size}") int tunnelClientStreamMaxSize,
                                        @Value("${dropfile.tunnel.client.stream.deadline-timeout-millis}") int tunnelClientStreamDeadlineTimeoutMillis,
                                        @Value("${dropfile.tunnel.client.http.request-timeout-millis}") int tunnelClientHttpRequestTimeoutMillis,
+                                       @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
+                                       @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
                                        @Value("${dropfile.manifest.builder.buffer-size}") int manifestBuildBufferSize,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
         this.fileOperationsBufferSize = fileOperationsBufferSize;
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
+        this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
         this.manifestBuildBufferSize = manifestBuildBufferSize;
         this.downloadDirectory = getDownloadDirectory(downloadDirectory);
         this.configDirectory = getConfigDirectory(applicationDirectory);

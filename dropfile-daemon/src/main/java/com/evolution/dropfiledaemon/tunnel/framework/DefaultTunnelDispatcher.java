@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,7 @@ import java.io.OutputStream;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
-    // TODO add param to configuration
-    private static final int MAX_PAYLOAD_LIFETIME = 30_000;
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final ApplicationConfigStore applicationConfigStore;
 
@@ -41,11 +41,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         TunnelRequestDTO.TunnelRequestPayload payload = decrypt(requestDTO, secretKey);
 
         long requestTime = Math.abs(System.currentTimeMillis() - payload.timestamp());
-        if (requestTime > MAX_PAYLOAD_LIFETIME) {
+        int tunnelServerPayloadLifeTime = daemonApplicationProperties.tunnelServerPayloadLifeTime;
+        if (requestTime > tunnelServerPayloadLifeTime) {
             throw new RuntimeException(
                     String.format(
                             "Tunnel request timeout exception. Expected %s actual %s",
-                            MAX_PAYLOAD_LIFETIME, requestTime
+                            tunnelServerPayloadLifeTime, requestTime
                     )
             );
         }
