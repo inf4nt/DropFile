@@ -11,9 +11,9 @@ public class DownloadSpeedMeter {
 
     private final LongAdder downloaded = new LongAdder();
 
-    public void addChunk(long bytes) {
-        samples.add(new ChunkSample(System.currentTimeMillis(), bytes));
-        downloaded.add(bytes);
+    public void addChunk(long size) {
+        samples.add(new ChunkSample(System.currentTimeMillis(), size));
+        downloaded.add(size);
         cleanup();
     }
 
