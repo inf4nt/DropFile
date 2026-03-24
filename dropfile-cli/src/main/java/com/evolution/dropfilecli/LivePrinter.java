@@ -7,17 +7,21 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class LivePrinter {
 
+    private static final int MAX_LIVE_ITERATION = 1_200;
+
     private static final AtomicReference<String> PROGRESS_INDICATOR = new AtomicReference<>("/");
 
     private static String PREV_LIVE;
 
     private static String NEXT_LIVE;
 
-    @SneakyThrows
     public static void live(Runnable runnable) {
         boolean first = true;
-        // TODO add live timeout. 5 min is ok
-        while (!Thread.currentThread().isInterrupted()) {
+
+        int iteration = 0;
+        while (!Thread.currentThread().isInterrupted() && iteration <= MAX_LIVE_ITERATION) {
+            iteration++;
+
             runnable.run();
             Spinner.stop();
             if (first) {
@@ -36,7 +40,11 @@ public class LivePrinter {
 
             System.out.println(NEXT_LIVE);
             System.out.println("Press CTR+C to stop the process");
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
         }
     }
 
@@ -46,7 +54,7 @@ public class LivePrinter {
         NEXT_LIVE = callable.call();
     }
 
-    public static String getProgressIndicator() {
+    private static String getProgressIndicator() {
         if (PROGRESS_INDICATOR.get().equals("/")) {
             PROGRESS_INDICATOR.set("\\");
         } else {
