@@ -45,7 +45,7 @@ public class RetryExecutor<T> {
             try {
                 CommonUtils.isInterrupted();
 
-                T call = callWithTimeout();
+                T call = callWithTimeoutIfPresent();
 
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
                 if (!continueRetry) {
@@ -83,7 +83,11 @@ public class RetryExecutor<T> {
     }
 
     @SneakyThrows
-    private T callWithTimeout() {
+    private T callWithTimeoutIfPresent() {
+        if (callTimeout == null) {
+            return callable.call();
+        }
+
         try {
             CompletableFuture<T> future = CompletableFuture
                     .supplyAsync(
@@ -126,7 +130,7 @@ public class RetryExecutor<T> {
 
         private Duration delay = Duration.ofSeconds(1);
 
-        private Duration callTimeout = Duration.ofSeconds(60);
+        private Duration callTimeout;
 
         public RetryExecutorBuilder<T> attempts(int attempts) {
             if (attempts <= 0) {
