@@ -40,7 +40,7 @@ public class CommandHandlerExecutor {
         Objects.requireNonNull(
                 result,
                 String.format(
-                        "Tunnel command handler %s returned null", commandHandler.getCommandName()
+                        "Tunnel command handler %s result is null", commandHandler.getCommandName()
                 )
         );
         return result;

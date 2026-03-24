@@ -16,14 +16,8 @@
     <description>dropfile-common</description>
     <properties>
         <java.version>25</java.version>
-        <commons.io.version>2.21.0</commons.io.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons.io.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

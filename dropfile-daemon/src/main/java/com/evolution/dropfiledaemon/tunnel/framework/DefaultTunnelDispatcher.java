@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -19,6 +20,7 @@ import java.io.OutputStream;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
+    // TODO add param to configuration
     private static final int MAX_PAYLOAD_LIFETIME = 30_000;
 
     private final ApplicationConfigStore applicationConfigStore;
@@ -52,10 +54,17 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
              OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(outputStream, secretKey);
-             OutputStream compressOutputStream = compressTunnelService.compressWrapper(encryptOutputStream)) {
+             OutputStream compressOutputStream = getCompressOutputStream(payload, encryptOutputStream)) {
             inputStreamResult.transferTo(compressOutputStream);
             compressOutputStream.flush();
         }
+    }
+
+    private OutputStream getCompressOutputStream(TunnelRequestDTO.TunnelRequestPayload payload, OutputStream outputStream) throws IOException {
+        if (payload.configuration().compress()) {
+            return compressTunnelService.compressWrapper(outputStream);
+        }
+        return outputStream;
     }
 
     @SneakyThrows

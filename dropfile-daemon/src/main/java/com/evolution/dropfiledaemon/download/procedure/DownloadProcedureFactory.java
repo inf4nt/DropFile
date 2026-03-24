@@ -28,11 +28,7 @@ public class DownloadProcedureFactory {
                                  Path destinationFilePath,
                                  Path temporaryFilePath) {
         int downloadProcedureThreadSize = daemonApplicationProperties.downloadProcedureThreadSize;
-        int downloadProcedureManifestCallTimeoutMillis = daemonApplicationProperties.downloadProcedureManifestCallTimeoutMillis;
-        int downloadProcedureChunkCallTimeoutMillis = daemonApplicationProperties.downloadProcedureChunkCallTimeoutMillis;
-
         int manifestChunkMaxSize = daemonApplicationProperties.manifestChunkMaxSize;
-        int manifestManifestMaxSize = daemonApplicationProperties.manifestManifestMaxSize;
 
         return new DownloadProcedure(
                 tunnelClient,
@@ -40,10 +36,7 @@ public class DownloadProcedureFactory {
                 fileManifestBuilder,
                 new DownloadProcedureConfiguration(
                         downloadProcedureThreadSize,
-                        downloadProcedureManifestCallTimeoutMillis,
-                        downloadProcedureChunkCallTimeoutMillis,
-                        manifestChunkMaxSize,
-                        manifestManifestMaxSize
+                        manifestChunkMaxSize
                 ),
                 new DownloadProcedureRequest(
                         operation,

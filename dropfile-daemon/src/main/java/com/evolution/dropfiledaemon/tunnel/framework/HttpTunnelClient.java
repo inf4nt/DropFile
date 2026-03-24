@@ -1,11 +1,13 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.http.HttpClient;
@@ -30,7 +33,7 @@ import java.util.Map;
 @Component
 public class HttpTunnelClient implements TunnelClient {
 
-    private static final Duration HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(60);
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final ApplicationConfigStore applicationConfigStore;
 
@@ -70,7 +73,7 @@ public class HttpTunnelClient implements TunnelClient {
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
                     .header("Content-Type", "application/json")
-                    .timeout(HTTP_REQUEST_TIMEOUT)
+                    .timeout(Duration.ofMillis(daemonApplicationProperties.tunnelClientHttpRequestTimeoutMillis))
                     .build();
 
             httpResponse = httpClient
@@ -80,15 +83,12 @@ public class HttpTunnelClient implements TunnelClient {
             }
 
             if (isInputStream(responseType)) {
-                InputStream decrypt = cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-                InputStream decompress = compressTunnelService.decompress(decrypt);
-                return (T) decompress;
+                InputStream inputStream = getInputStreamResponse(httpResponse, secretKey);
+                return (T) inputStream;
             }
 
-            try (InputStream decryptInputStream = cryptoTunnel.decrypt(httpResponse.body(), secretKey);
-                 InputStream inputStream = compressTunnelService.decompress(decryptInputStream)) {
+            try (InputStream inputStream = getInputStreamResponse(httpResponse, secretKey)) {
                 if (responseType.getType().equals(String.class)) {
-                    // TODO add method that limits inputStream size
                     return (T) new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                 }
                 return objectMapper.readValue(inputStream, responseType);
@@ -105,6 +105,23 @@ public class HttpTunnelClient implements TunnelClient {
         }
     }
 
+    private InputStream getInputStreamResponse(HttpResponse<InputStream> httpResponse,
+                                               SecretKey secretKey) throws IOException {
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(
+                httpResponse.body(),
+                daemonApplicationProperties.tunnelClientStreamMaxSize,
+                Duration.ofMillis(daemonApplicationProperties.tunnelClientStreamDeadlineTimeoutMillis)
+        );
+        InputStream decrypt = cryptoTunnel.decrypt(
+                watchdogInputStream,
+                secretKey
+        );
+        if (daemonApplicationProperties.tunnelClientCompressEnabled) {
+            return compressTunnelService.decompress(decrypt);
+        }
+        return decrypt;
+    }
+
     private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
         byte[] payload = switch (request.getBody()) {
             case null -> null;
@@ -118,6 +135,9 @@ public class HttpTunnelClient implements TunnelClient {
                         new TunnelRequestDTO.TunnelRequestPayload(
                                 request.getCommand(),
                                 payload,
+                                new TunnelRequestDTO.TunnelRequestConfiguration(
+                                        daemonApplicationProperties.tunnelClientCompressEnabled
+                                ),
                                 System.currentTimeMillis()
                         )
                 ),

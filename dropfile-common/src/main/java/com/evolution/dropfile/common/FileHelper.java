@@ -1,7 +1,5 @@
 package com.evolution.dropfile.common;
 
-import org.apache.commons.io.input.BoundedInputStream;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,10 +31,7 @@ public class FileHelper {
             fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
             fileChannel.position(skip);
             InputStream inputStream = Channels.newInputStream(fileChannel);
-            return BoundedInputStream.builder()
-                    .setInputStream(inputStream)
-                    .setMaxCount(take)
-                    .get();
+            return new WatchdogInputStream(inputStream, take);
         } catch (IOException e) {
             if (fileChannel != null) {
                 fileChannel.close();

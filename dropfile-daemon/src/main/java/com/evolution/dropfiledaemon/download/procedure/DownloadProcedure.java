@@ -24,7 +24,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -182,9 +181,6 @@ public class DownloadProcedure {
                                 isInterrupted();
                                 int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
 
-                                // TODO add manifestManifestMaxSize as a max size of inputStream
-                                int manifestManifestMaxSize = configuration.manifestManifestMaxSize();
-
                                 return tunnelClient.send(
                                         TunnelClient.Request.builder()
                                                 .command("share-download-manifest")
@@ -203,7 +199,6 @@ public class DownloadProcedure {
                                 request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage(), exception
                         );
                     })
-                    .callTimeout(Duration.ofMillis(configuration.manifestCallTimeoutMillis()))
                     .run();
         } catch (Exception e) {
             throw new ManifestDownloadingFailedException(request.operation(), request.fileId(), request.filename(), e);
@@ -284,7 +279,6 @@ public class DownloadProcedure {
                                 chunkManifest.startPosition(), chunkManifest.endPosition(), exception.getMessage(), exception
                         );
                     })
-                    .callTimeout(Duration.ofMillis(configuration.chunkCallTimeoutMillis()))
                     .run();
         } catch (Exception e) {
             throw new ChunkDownloadingFailedException(request.operation(), chunkManifest.hash(), chunkManifest.startPosition(), chunkManifest.endPosition(), e);

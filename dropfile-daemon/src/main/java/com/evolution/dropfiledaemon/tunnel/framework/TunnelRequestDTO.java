@@ -6,6 +6,10 @@ public record TunnelRequestDTO(String fingerprint,
 
     public record TunnelRequestPayload(String command,
                                        byte[] payload,
+                                       TunnelRequestConfiguration configuration,
                                        long timestamp) {
+    }
+
+    public record TunnelRequestConfiguration(boolean compress) {
     }
 }

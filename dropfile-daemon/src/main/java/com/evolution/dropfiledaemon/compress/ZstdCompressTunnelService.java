@@ -17,17 +17,11 @@ public class ZstdCompressTunnelService
 
     @Override
     public OutputStream compressWrapper(OutputStream outputStream) throws IOException {
-        if (!daemonApplicationProperties.tunnelCompressEnabled) {
-            return outputStream;
-        }
-        return new ZstdOutputStream(outputStream, daemonApplicationProperties.tunnelCompressLevel);
+        return new ZstdOutputStream(outputStream, daemonApplicationProperties.tunnelServerCompressLevel);
     }
 
     @Override
     public InputStream decompress(InputStream inputStream) throws IOException {
-        if (!daemonApplicationProperties.tunnelCompressEnabled) {
-            return inputStream;
-        }
         return new ZstdInputStream(inputStream);
     }
 }
