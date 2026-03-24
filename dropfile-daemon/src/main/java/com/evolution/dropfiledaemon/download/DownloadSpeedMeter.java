@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.download;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
 
+// TODO move it to UTILS
 public class DownloadSpeedMeter {
 
     private final int windowMs = 5000;

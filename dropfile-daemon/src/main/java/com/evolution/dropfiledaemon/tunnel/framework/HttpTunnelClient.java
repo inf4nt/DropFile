@@ -10,6 +10,7 @@ import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,8 @@ public class HttpTunnelClient implements TunnelClient {
     private final CryptoTunnel cryptoTunnel;
 
     private final CompressTunnelService compressTunnelService;
+
+    private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
     private final HttpClient httpClient;
 
@@ -83,11 +86,11 @@ public class HttpTunnelClient implements TunnelClient {
             }
 
             if (isInputStream(responseType)) {
-                InputStream inputStream = getInputStreamResponse(httpResponse, secretKey);
+                InputStream inputStream = getInputStreamResponse(httpResponse, fingerprint, secretKey);
                 return (T) inputStream;
             }
 
-            try (InputStream inputStream = getInputStreamResponse(httpResponse, secretKey)) {
+            try (InputStream inputStream = getInputStreamResponse(httpResponse, fingerprint, secretKey)) {
                 if (responseType.getType().equals(String.class)) {
                     return (T) new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                 }
@@ -106,14 +109,16 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private InputStream getInputStreamResponse(HttpResponse<InputStream> httpResponse,
+                                               String fingerprint,
                                                SecretKey secretKey) throws IOException {
         WatchdogInputStream watchdogInputStream = new WatchdogInputStream(
                 httpResponse.body(),
                 daemonApplicationProperties.tunnelClientStreamMaxSize,
                 Duration.ofMillis(daemonApplicationProperties.tunnelClientStreamDeadlineTimeoutMillis)
         );
+        InputStream tunnelTrafficMonitorInputStream = tunnelTrafficMonitor.inputStreamWrapper(fingerprint, watchdogInputStream);
         InputStream decrypt = cryptoTunnel.decrypt(
-                watchdogInputStream,
+                tunnelTrafficMonitorInputStream,
                 secretKey
         );
         if (daemonApplicationProperties.tunnelClientCompressEnabled) {

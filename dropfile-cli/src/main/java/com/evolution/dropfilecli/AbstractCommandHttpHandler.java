@@ -132,7 +132,11 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
             return;
         }
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
-        System.out.println(json);
+        if (live) {
+            LivePrinter.printLive(() -> json);
+        } else {
+            System.out.println(json);
+        }
     }
 
     protected void printTable(Object object) {

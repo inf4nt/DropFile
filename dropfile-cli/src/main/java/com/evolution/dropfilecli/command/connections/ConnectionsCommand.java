@@ -20,7 +20,8 @@ import picocli.CommandLine;
                 RevokeCommand.class,
                 AccessCommand.class,
                 StatusConnectionCommand.class,
-                ConnectionsShareCommand.class
+                ConnectionsShareCommand.class,
+                TrafficCommand.class
         }
 )
 public class ConnectionsCommand implements SimpleCommandHandler {

@@ -49,7 +49,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectCurrent() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/disconnect/current");
 
@@ -67,7 +66,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsDisconnectAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/disconnect/all");
 
@@ -85,7 +83,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevoke(String fingerprint) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/revoke/fingerprint/")
                 .resolve(fingerprint);
@@ -104,7 +101,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsRevokeAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/revoke/all");
 
@@ -121,8 +117,24 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
+    public HttpResponse<byte[]> connectionsTraffic() {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/connections/traffic");
 
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/ls");
 
@@ -145,7 +157,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/download");
 
@@ -166,7 +177,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsShareCat(String id) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/cat/")
                 .resolve(id);
@@ -185,7 +195,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareLs() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/ls");
 
@@ -203,7 +212,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareAdd(String alias, String absoluteFilePath) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/add");
 
@@ -226,7 +234,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRm(String id) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/rm/")
                 .resolve(id);
@@ -245,7 +252,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> shareRmAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/share/rm-all");
 
@@ -263,7 +269,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/generate");
 
@@ -286,7 +291,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessLs() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/ls");
 
@@ -304,7 +308,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRm(String id) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/rm/")
                 .resolve(id);
@@ -323,7 +326,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> connectionsAccessRmAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/access/rm-all");
 
@@ -341,7 +343,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonInfo() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/info");
 
@@ -359,7 +360,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustIn() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/in");
 
@@ -376,7 +376,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustOut() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/out");
 
@@ -393,7 +392,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> getTrustLatest() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/trust/out/latest");
 
@@ -410,7 +408,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonShutdown() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/shutdown");
 
@@ -428,7 +425,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> daemonCacheReset() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/cache-reset");
 
@@ -447,7 +443,6 @@ public class DaemonClient {
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI address,
                                           String key) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake");
 
@@ -471,7 +466,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeReconnect(URI address) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/reconnect");
 
@@ -494,7 +488,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshakeStatus() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake/status");
 
@@ -512,7 +505,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/ls");
 
@@ -536,7 +528,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStop(String operation) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/stop/")
                 .resolve(operation);
@@ -555,7 +546,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadStopAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/stop-all");
 
@@ -573,7 +563,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRm(String operationId) {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/rm/")
                 .resolve(operationId);
@@ -592,7 +581,6 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> downloadRmAll() {
-
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/download/rm-all");
 

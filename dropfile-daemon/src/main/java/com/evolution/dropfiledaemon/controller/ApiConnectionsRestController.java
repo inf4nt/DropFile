@@ -1,12 +1,10 @@
 package com.evolution.dropfiledaemon.controller;
 
+import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/connections")
@@ -47,5 +45,10 @@ public class ApiConnectionsRestController {
     public ResponseEntity<Void> disconnectAll() {
         apiFacade.disconnectAll();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/traffic")
+    public TunnelTrafficResponseDTO getTraffic() {
+        return apiFacade.getTraffic();
     }
 }

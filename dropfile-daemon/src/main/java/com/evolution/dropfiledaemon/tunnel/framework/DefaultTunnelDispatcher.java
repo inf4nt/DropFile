@@ -6,6 +6,7 @@ import com.evolution.dropfiledaemon.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
+import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -31,6 +32,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final CompressTunnelService compressTunnelService;
 
+    private final TunnelTrafficMonitor tunnelTrafficMonitor;
+
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
@@ -54,7 +57,11 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         Object handlerResult = commandHandlerExecutor.handle(payload);
 
         try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
-             OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(outputStream, secretKey);
+             OutputStream  tunnelTrafficMonitorOutputStream = tunnelTrafficMonitor.outputStreamWrapper(
+                     requestDTO.fingerprint(),
+                     outputStream
+             );
+             OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(tunnelTrafficMonitorOutputStream, secretKey);
              OutputStream compressOutputStream = getCompressOutputStream(payload, encryptOutputStream)) {
             inputStreamResult.transferTo(compressOutputStream);
             compressOutputStream.flush();
