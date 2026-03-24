@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.download.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

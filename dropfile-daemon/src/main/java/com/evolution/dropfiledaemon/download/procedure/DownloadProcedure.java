@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.FileHelper;
-import com.evolution.dropfiledaemon.download.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.exception.*;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;

@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
-import com.evolution.dropfiledaemon.download.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
