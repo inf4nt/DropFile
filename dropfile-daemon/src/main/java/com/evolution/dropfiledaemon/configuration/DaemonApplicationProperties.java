@@ -52,7 +52,7 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.client.stream.max-size}") int tunnelClientStreamMaxSize,
                                        @Value("${dropfile.tunnel.client.stream.deadline-timeout-millis}") int tunnelClientStreamDeadlineTimeoutMillis,
                                        @Value("${dropfile.tunnel.client.http.request-timeout-millis}") int tunnelClientHttpRequestTimeoutMillis,
-                                       @Value("${dropfile.manifest-builder.buffer-size}") int manifestBuildBufferSize,
+                                       @Value("${dropfile.manifest.builder.buffer-size}") int manifestBuildBufferSize,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
         this.fileOperationsBufferSize = fileOperationsBufferSize;
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
