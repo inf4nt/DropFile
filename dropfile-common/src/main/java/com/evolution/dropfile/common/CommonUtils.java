@@ -7,10 +7,10 @@ import lombok.SneakyThrows;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.HexFormat;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class CommonUtils {
 
@@ -123,5 +123,55 @@ public class CommonUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static <T> T requireOne(Collection<T> source) {
+        return requireOne(source, null, null);
+    }
+
+    public static <T> T requireOne(Collection<T> source,
+                                   Predicate<T> test) {
+        return requireOne(source, test, null);
+    }
+
+    public static <T> T requireOne(Collection<T> source,
+                                   Predicate<T> test,
+                                   Supplier<String> prefixErrorMessageSupplier) {
+        Stream<T> stream = source.stream();
+        if (test != null) {
+            stream = stream.filter(test);
+        }
+        List<T> elements = stream
+                .toList();
+        if (elements.isEmpty()) {
+            String message = concatIfNotEmpty(
+                    prefixErrorMessageSupplier,
+                    "No items found"
+            );
+            throw new RuntimeException(message);
+        }
+        if (elements.size() != 1) {
+            String message = concatIfNotEmpty(
+                    prefixErrorMessageSupplier,
+                    String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", elements.size())
+            );
+            throw new RuntimeException(message);
+        }
+        return elements.getFirst();
+    }
+
+    private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {
+        if (prefixSupplier == null) {
+            return message;
+        }
+        String prefix = prefixSupplier.get();
+        if (prefix == null) {
+            return message;
+        }
+        prefix = prefix.trim();
+        if (prefix.isEmpty()) {
+            return message;
+        }
+        return prefix + ". " + message;
     }
 }

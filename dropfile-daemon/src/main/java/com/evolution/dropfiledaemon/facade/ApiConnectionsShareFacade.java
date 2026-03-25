@@ -76,16 +76,7 @@ public class ApiConnectionsShareFacade {
         List<ApiConnectionsShareLsResponseDTO> responses = ls(
                 fingerprintConnection, new ApiConnectionsShareLsRequestDTO(List.of(requestDTO.fileId()))
         );
-        if (responses.isEmpty()) {
-            throw new RuntimeException("No files to download were found");
-        }
-        if (responses.size() > 1) {
-            List<String> ids = responses.stream().map(it -> it.id()).toList();
-            throw new RuntimeException(String.format(
-                    "Multiple files %s to download were found. Specify only one file to download", ids
-            ));
-        }
-        ApiConnectionsShareLsResponseDTO response = responses.getFirst();
+        ApiConnectionsShareLsResponseDTO response = CommonUtils.requireOne(responses);
         return new FileDownloadRequest(
                 fingerprintConnection,
                 response.id(),

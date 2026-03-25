@@ -1,5 +1,7 @@
 package com.evolution.dropfile.store.framework;
 
+import com.evolution.dropfile.common.CommonUtils;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -58,17 +60,11 @@ public interface KeyValueStore<V> {
     }
 
     default Map.Entry<String, V> getRequiredByKeyStartWith(String stringKey) {
-        List<Map.Entry<String, V>> list = getAll().entrySet().stream()
-                .filter(it -> it.getKey().startsWith(stringKey)).toList();
-        if (list.isEmpty()) {
-            throw new RuntimeException(String.format(
-                    "Store %s. No found by criteria(key.startWith(%s))", getClass().getName(), stringKey
-            ));
-        }
-        if (list.size() != 1) {
-            throw new RuntimeException(String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", list.size()));
-        }
-        return list.getFirst();
+        return CommonUtils.requireOne(
+                getAll().entrySet(),
+                entry -> entry.getKey().startsWith(stringKey),
+                () -> String.format("Store %s", getClass().getName())
+        );
     }
 
     enum ValidatePolicy {
