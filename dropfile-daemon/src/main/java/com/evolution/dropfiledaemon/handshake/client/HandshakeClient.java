@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.handshake.client;
 
+import com.evolution.dropfiledaemon.handshake.HandshakeRestController;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
@@ -29,7 +30,7 @@ public class HandshakeClient {
                                           HandshakeRequestDTO handshakeRequestDTO) {
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
-                .uri(addressURI.resolve("/handshake"))
+                .uri(addressURI.resolve(HandshakeRestController.HANDSHAKE_ENDPOINT))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(handshakeRequestDTO))
                 )
@@ -46,7 +47,7 @@ public class HandshakeClient {
                                                         HandshakeSessionDTO.Session session) {
         HttpRequest httpRequest = HttpRequest
                 .newBuilder()
-                .uri(addressURI.resolve("/handshake/session"))
+                .uri(addressURI.resolve(HandshakeRestController.HANDSHAKE_SESSION_ENDPOINT))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(session))
                 )

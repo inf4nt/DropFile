@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.tunnel;
 
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,16 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/tunnel")
+@RequestMapping(TunnelRestController.TUNNEL_ENDPOINT)
 public class TunnelRestController {
 
-    private final TunnelDispatcher tunnelDispatcher;
+    public static final String TUNNEL_ENDPOINT = "public/tunnel";
 
-    @Autowired
-    public TunnelRestController(TunnelDispatcher tunnelDispatcher) {
-        this.tunnelDispatcher = tunnelDispatcher;
-    }
+    private final TunnelDispatcher tunnelDispatcher;
 
     @SneakyThrows
     @PostMapping

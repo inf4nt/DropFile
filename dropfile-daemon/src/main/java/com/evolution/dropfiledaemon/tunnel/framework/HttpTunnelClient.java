@@ -10,6 +10,7 @@ import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.tunnel.TunnelRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -71,7 +72,7 @@ public class HttpTunnelClient implements TunnelClient {
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(trustedOut.addressURI().resolve("/tunnel"))
+                    .uri(trustedOut.addressURI().resolve(TunnelRestController.TUNNEL_ENDPOINT))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
