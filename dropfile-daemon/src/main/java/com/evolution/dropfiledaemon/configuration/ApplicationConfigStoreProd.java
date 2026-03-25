@@ -12,6 +12,8 @@ import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedu
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
+import com.evolution.dropfile.store.link.LinkShareEntryStore;
+import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.JsonFileShareFileEntryStore;
@@ -102,6 +104,10 @@ class ApplicationConfigStoreProd
                 ),
                 HandshakeSessionInStore.class, new AbstractMap.SimpleEntry<>(
                         new RuntimeHandshakeSessionInStore(),
+                        null
+                ),
+                LinkShareEntryStore.class, new AbstractMap.SimpleEntry<>(
+                        new RuntimeLinkShareEntryStore(),
                         null
                 )
         );

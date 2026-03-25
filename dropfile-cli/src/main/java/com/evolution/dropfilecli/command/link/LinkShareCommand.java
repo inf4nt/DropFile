@@ -10,12 +10,12 @@ import picocli.CommandLine;
         description = "Link commands",
         aliases = {"-l", "--l"},
         subcommands = {
-                LinkAddCommand.class,
-                LinkLsCommand.class,
-                LinkRmCommand.class
+                LinkShareAddCommand.class,
+                LinkShareLsCommand.class,
+                LinkShareRmCommand.class
         }
 )
-public class LinkCommand implements SimpleCommandHandler {
+public class LinkShareCommand implements SimpleCommandHandler {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 

@@ -16,6 +16,7 @@
     <properties>
         <java.version>25</java.version>
         <zstd-jni.version>1.5.7-7</zstd-jni.version>
+        <zip4j.version>2.11.5</zip4j.version>
         <dropfile.common.version>1.2.0</dropfile.common.version>
         <dropfile.store.version>1.2.0</dropfile.store.version>
     </properties>
@@ -38,6 +39,11 @@
             <artifactId>zstd-jni</artifactId>
             <version>${zstd-jni.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.lingala.zip4j</groupId>
+            <artifactId>zip4j</artifactId>
+            <version>${zip4j.version}</version>
         </dependency>
 
         <dependency>

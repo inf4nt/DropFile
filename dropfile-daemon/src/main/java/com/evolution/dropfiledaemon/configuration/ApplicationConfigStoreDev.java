@@ -6,6 +6,8 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
+import com.evolution.dropfile.store.link.LinkShareEntryStore;
+import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
@@ -19,7 +21,6 @@ import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSess
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -29,11 +30,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 @Profile("dev")
@@ -61,7 +57,8 @@ class ApplicationConfigStoreDev
                 HandshakeTrustedOutStore.class, new RuntimeHandshakeTrustedOutStore(),
                 HandshakeTrustedInStore.class, new RuntimeHandshakeTrustedInStore(),
                 HandshakeSessionOutStore.class, new RuntimeHandshakeSessionOutStore(),
-                HandshakeSessionInStore.class, new RuntimeHandshakeSessionInStore()
+                HandshakeSessionInStore.class, new RuntimeHandshakeSessionInStore(),
+                LinkShareEntryStore.class, new RuntimeLinkShareEntryStore()
         );
         singleValueStores = Map.of(
                 DaemonSecretsStore.class, new ImmutableDaemonSecretsStore(() -> {

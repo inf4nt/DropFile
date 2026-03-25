@@ -596,6 +596,78 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @SneakyThrows
+    public HttpResponse<byte[]> linkShareAdd(String fileId) {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/link-share/add");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
+                        new ApiLinkShareAddRequestDTO(fileId)
+                )))
+                .header("Content-Type", "application/json")
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> linkShareLs() {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/link-share/ls");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> linkShareRmAll() {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/link-share/rm-all");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    @SneakyThrows
+    public HttpResponse<byte[]> linkShareRm(String id) {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/link-share/rm/")
+                .resolve(id);
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .DELETE()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
     private String getDaemonAuthorizationToken() {
         DaemonSecrets daemonSecrets = daemonSecretsStore.getRequired();
         String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());

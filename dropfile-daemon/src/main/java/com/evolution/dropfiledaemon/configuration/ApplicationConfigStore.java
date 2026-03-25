@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
+import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
@@ -49,6 +50,10 @@ public interface ApplicationConfigStore {
 
     default HandshakeSessionInStore getHandshakeSessionInStore() {
         return requiredStore(HandshakeSessionInStore.class);
+    }
+
+    default LinkShareEntryStore getLinkShareStore() {
+        return requiredStore(LinkShareEntryStore.class);
     }
 
     void cacheReset();

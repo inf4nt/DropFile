@@ -2,20 +2,19 @@ package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
 
-@Deprecated
-// TODO use KeyEnvelopeUtils
-public class AccessKeyUtils {
-
-    public static AccessKeyEnvelope generate() {
+public class KeyEnvelopeUtils {
+    
+    public static KeyEnvelope generate() {
         String key = CommonUtils.generateSecretNonce12();
         String id = getId(key);
-        return new AccessKeyEnvelope(id, key);
+        return new KeyEnvelope(id, key);
     }
 
     public static String getId(String key) {
         return CommonUtils.getFingerprint(key.getBytes()).substring(0, 16);
     }
 
-    public record AccessKeyEnvelope(String id, String key) {
+    public record KeyEnvelope(String id, String key) {
     }
+
 }

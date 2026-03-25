@@ -25,9 +25,9 @@ public class TunnelRestController {
 
     @SneakyThrows
     @PostMapping
-    public ResponseEntity<StreamingResponseBody> stream(@RequestBody TunnelRequestDTO requestDTO) {
+    public ResponseEntity<StreamingResponseBody> stream() {
         StreamingResponseBody stream = outputStream -> {
-            tunnelDispatcher.dispatchStream(requestDTO, outputStream);
+            // Send output
         };
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
