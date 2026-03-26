@@ -14,6 +14,7 @@ import java.util.Map;
 
 public class HandshakeUtils {
 
+    // TODO add configuration
     private static final int MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT = 30_000;
 
     public static void validateHandshakeLiveTimeout(Long timestamp) {

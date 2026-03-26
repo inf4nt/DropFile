@@ -19,6 +19,7 @@ import java.time.Duration;
 @Component
 public class HandshakeClient {
 
+    // TODO add configuration
     private static final Duration HANDSHAKE_HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
     private final HttpClient httpClient;

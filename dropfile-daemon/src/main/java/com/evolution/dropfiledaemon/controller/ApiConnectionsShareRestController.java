@@ -5,22 +5,19 @@ import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsShareFacade;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/connections/share")
 public class ApiConnectionsShareRestController {
 
     private final ApiConnectionsShareFacade apiFacade;
-
-    @Autowired
-    public ApiConnectionsShareRestController(ApiConnectionsShareFacade apiFacade) {
-        this.apiFacade = apiFacade;
-    }
 
     @PostMapping("/ls")
     public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> ls(@RequestBody ApiConnectionsShareLsRequestDTO requestDTO) {

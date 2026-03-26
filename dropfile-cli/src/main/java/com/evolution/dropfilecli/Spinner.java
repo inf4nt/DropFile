@@ -8,8 +8,6 @@ public class Spinner {
 
     private static final AtomicReference<String> PROGRESS_INDICATOR = new AtomicReference<>("/");
 
-    private static final AtomicReference<Long> START = new AtomicReference<>(0L);
-
     private static final AtomicReference<Boolean> EXECUTING = new AtomicReference<>(false);
 
     public static void start() {
@@ -18,7 +16,6 @@ public class Spinner {
             @Override
             @SneakyThrows
             public void run() {
-                START.set(System.currentTimeMillis());
                 while (EXECUTING.get() && !Thread.currentThread().isInterrupted()) {
                     String progressIndicator = getProgressIndicator();
                     if (EXECUTING.get()) {

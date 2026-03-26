@@ -3,22 +3,18 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiShareFacade;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/share")
 public class ApiShareRestController {
 
     private final ApiShareFacade apiFacade;
-
-    @Autowired
-    public ApiShareRestController(ApiShareFacade apiFacade) {
-        this.apiFacade = apiFacade;
-    }
 
     @PostMapping("/add")
     public ApiShareInfoResponseDTO add(@RequestBody ApiShareAddRequestDTO requestDTO) {

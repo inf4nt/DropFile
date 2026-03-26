@@ -11,6 +11,8 @@ import java.io.*;
 
 public class SecureZipUtils {
 
+    private static final String INNER_ZIP_NAME = "inner.zip";
+
     public static void zip(OutputStream outputStream,
                            File file,
                            String aliasFileName,
@@ -19,7 +21,7 @@ public class SecureZipUtils {
         try (ZipOutputStream outerZos = new ZipOutputStream(outputStream, password.toCharArray())) {
 
             ZipParameters outerParams = new ZipParameters();
-            outerParams.setFileNameInZip("inner.zip");
+            outerParams.setFileNameInZip(INNER_ZIP_NAME);
             outerParams.setEncryptionMethod(EncryptionMethod.AES);
             outerParams.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
             outerParams.setCompressionMethod(CompressionMethod.DEFLATE);

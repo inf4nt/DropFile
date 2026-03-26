@@ -2,20 +2,17 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/connections")
 public class ApiConnectionsRestController {
 
     private final ApiConnectionsFacade apiFacade;
-
-    @Autowired
-    public ApiConnectionsRestController(ApiConnectionsFacade apiFacade) {
-        this.apiFacade = apiFacade;
-    }
 
     @PostMapping("/revoke/fingerprint/{fingerprint}")
     public ResponseEntity<Void> revoke(@PathVariable String fingerprint) {
