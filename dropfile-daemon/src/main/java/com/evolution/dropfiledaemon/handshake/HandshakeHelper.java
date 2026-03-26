@@ -3,33 +3,41 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import jakarta.annotation.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 
-public class HandshakeUtils {
+@Component
+public class HandshakeHelper {
 
-    // TODO add configuration
-    private static final int MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT = 30_000;
+    private final int handshakeServerPayloadLiveTime;
 
-    public static void validateHandshakeLiveTimeout(Long timestamp) {
+    @Autowired
+    public HandshakeHelper(DaemonApplicationProperties daemonApplicationProperties) {
+        this.handshakeServerPayloadLiveTime = daemonApplicationProperties.handshakeServerPayloadLiveTime;
+    }
+
+    public void validateHandshakeLiveTimeout(Long timestamp) {
         if (timestamp == null) {
             throw new NullPointerException("timestamp is null");
         }
         if (timestamp <= 0) {
             throw new IllegalArgumentException("timeout must be greater than 0");
         }
-        if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_HANDSHAKE_PAYLOAD_LIVE_TIMEOUT) {
+        if (Math.abs(System.currentTimeMillis() - timestamp) > handshakeServerPayloadLiveTime) {
             throw new RuntimeException("Timed out");
         }
     }
 
-    public static void matchFingerprint(String fingerprint, PublicKey publicKey) {
+    public void matchFingerprint(String fingerprint, PublicKey publicKey) {
         String fingerprintExpected = CommonUtils.getFingerprint(publicKey.getEncoded());
         if (!fingerprintExpected.equals(fingerprint)) {
             throw new IllegalStateException(String.format(
@@ -38,8 +46,8 @@ public class HandshakeUtils {
         }
     }
 
-    public static List<HandshakeApiTrustOutResponseDTO> mapToHandshakeApiTrustOutResponseDTOList(Map<String, HandshakeTrustedOutStore.TrustedOut> trusts,
-                                                                                                 Map<String, HandshakeSessionStore.SessionValue> sessions) {
+    public List<HandshakeApiTrustOutResponseDTO> mapToHandshakeApiTrustOutResponseDTOList(Map<String, HandshakeTrustedOutStore.TrustedOut> trusts,
+                                                                                          Map<String, HandshakeSessionStore.SessionValue> sessions) {
         return trusts.entrySet()
                 .stream()
                 .map(entry -> {
@@ -50,9 +58,9 @@ public class HandshakeUtils {
                 .toList();
     }
 
-    public static HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String fingerprint,
-                                                                                       HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                                                                       @Nullable HandshakeSessionStore.SessionValue sessionValue) {
+    public HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String fingerprint,
+                                                                                HandshakeTrustedOutStore.TrustedOut trustedOut,
+                                                                                @Nullable HandshakeSessionStore.SessionValue sessionValue) {
         return new HandshakeApiTrustOutResponseDTO(
                 fingerprint,
                 CommonUtils.encodeBase64(trustedOut.publicRSA()),
@@ -65,8 +73,8 @@ public class HandshakeUtils {
         );
     }
 
-    public static List<HandshakeApiTrustInResponseDTO> mapToHandshakeApiTrustInResponseDTOList(Map<String, HandshakeTrustedInStore.TrustedIn> trusts,
-                                                                                               Map<String, HandshakeSessionStore.SessionValue> sessions) {
+    public List<HandshakeApiTrustInResponseDTO> mapToHandshakeApiTrustInResponseDTOList(Map<String, HandshakeTrustedInStore.TrustedIn> trusts,
+                                                                                        Map<String, HandshakeSessionStore.SessionValue> sessions) {
         return trusts.entrySet()
                 .stream()
                 .map(entry -> {
@@ -77,9 +85,9 @@ public class HandshakeUtils {
                 .toList();
     }
 
-    public static HandshakeApiTrustInResponseDTO mapToHandshakeApiTrustInResponseDTO(String fingerprint,
-                                                                                      HandshakeTrustedInStore.TrustedIn trustedIn,
-                                                                                      @Nullable HandshakeSessionStore.SessionValue sessionValue) {
+    public HandshakeApiTrustInResponseDTO mapToHandshakeApiTrustInResponseDTO(String fingerprint,
+                                                                              HandshakeTrustedInStore.TrustedIn trustedIn,
+                                                                              @Nullable HandshakeSessionStore.SessionValue sessionValue) {
         return new HandshakeApiTrustInResponseDTO(
                 fingerprint,
                 CommonUtils.encodeBase64(trustedIn.publicRSA()),

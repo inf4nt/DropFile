@@ -29,6 +29,8 @@ public class HandshakeFacade {
 
     private final ApplicationConfigStore applicationConfigStore;
 
+    private final HandshakeHelper handshakeHelper;
+
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
@@ -54,7 +56,7 @@ public class HandshakeFacade {
                 requestDTO.signature(),
                 CryptoRSA.getPublicKey(requestPayload.publicKeyRSA())
         );
-        HandshakeUtils.validateHandshakeLiveTimeout(requestPayload.timestamp());
+        handshakeHelper.validateHandshakeLiveTimeout(requestPayload.timestamp());
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -113,7 +115,7 @@ public class HandshakeFacade {
                 .getRequired(sessionDTO.fingerprint())
                 .getValue();
         String remoteFingerprint = sessionDTO.fingerprint();
-        HandshakeUtils.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedIn.remoteRSA()));
+        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedIn.remoteRSA()));
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
 
@@ -126,7 +128,7 @@ public class HandshakeFacade {
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(
                 sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
         );
-        HandshakeUtils.validateHandshakeLiveTimeout(sessionPayload.timestamp());
+        handshakeHelper.validateHandshakeLiveTimeout(sessionPayload.timestamp());
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 

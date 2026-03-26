@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.handshake.client;
 
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.HandshakeRestController;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
@@ -19,8 +20,7 @@ import java.time.Duration;
 @Component
 public class HandshakeClient {
 
-    // TODO add configuration
-    private static final Duration HANDSHAKE_HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(60);
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final HttpClient httpClient;
 
@@ -36,7 +36,7 @@ public class HandshakeClient {
                         objectMapper.writeValueAsBytes(handshakeRequestDTO))
                 )
                 .header("Content-Type", "application/json")
-                .timeout(HANDSHAKE_HTTP_REQUEST_TIMEOUT)
+                .timeout(Duration.ofMillis(daemonApplicationProperties.handshakeClientHttpRequestTimeoutMillis))
                 .build();
 
         HttpResponse<byte[]> httpResponse = execute(httpRequest);
@@ -52,7 +52,7 @@ public class HandshakeClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(session))
                 )
-                .timeout(HANDSHAKE_HTTP_REQUEST_TIMEOUT)
+                .timeout(Duration.ofMillis(daemonApplicationProperties.handshakeClientHttpRequestTimeoutMillis))
                 .header("Content-Type", "application/json")
                 .build();
 

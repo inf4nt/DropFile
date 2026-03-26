@@ -42,6 +42,10 @@ public class DaemonApplicationProperties {
 
     public final int manifestChunkMaxSize;
 
+    public final int handshakeClientHttpRequestTimeoutMillis;
+
+    public final int handshakeServerPayloadLiveTime;
+
     public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                        @Value("${dropfile.download.directory}") String downloadDirectory,
                                        @Value("${dropfile.daemon.port}") int daemonPort,
@@ -49,6 +53,8 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
                                        @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
+                                       @Value("${dropfile.handshake.client.http.request-timeout-millis}") int handshakeClientHttpRequestTimeoutMillis,
+                                       @Value("${dropfile.handshake.server.payload.life-time}") int handshakeServerPayloadLiveTime,
                                        @Value("${dropfile.tunnel.client.compress.enabled}") boolean tunnelClientCompressEnabled,
                                        @Value("${dropfile.tunnel.client.stream.max-size}") int tunnelClientStreamMaxSize,
                                        @Value("${dropfile.tunnel.client.stream.deadline-timeout-millis}") int tunnelClientStreamDeadlineTimeoutMillis,
@@ -68,6 +74,8 @@ public class DaemonApplicationProperties {
         this.downloadOrchestratorMaxQueueSize = downloadOrchestratorMaxQueueSize;
         this.downloadOrchestratorActiveQueueSize = downloadOrchestratorActiveQueueSize;
         this.downloadProcedureThreadSize = downloadProcedureThreadSize;
+        this.handshakeClientHttpRequestTimeoutMillis = handshakeClientHttpRequestTimeoutMillis;
+        this.handshakeServerPayloadLiveTime = handshakeServerPayloadLiveTime;
         this.tunnelClientCompressEnabled = tunnelClientCompressEnabled;
         this.tunnelServerCompressLevel = tunnelServerCompressLevel;
         this.manifestChunkMaxSize = manifestChunkMaxSize;
