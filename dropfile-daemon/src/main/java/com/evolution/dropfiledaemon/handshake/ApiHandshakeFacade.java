@@ -14,7 +14,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.util.AccessKeyUtils;
+import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -76,7 +76,7 @@ public class ApiHandshakeFacade {
                 rsaKeyPair.getPrivate()
         );
 
-        String requestId = AccessKeyUtils.getId(secret);
+        String requestId = KeyEnvelopeUtils.getId(secret);
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
                 secureEnvelope.payload(),

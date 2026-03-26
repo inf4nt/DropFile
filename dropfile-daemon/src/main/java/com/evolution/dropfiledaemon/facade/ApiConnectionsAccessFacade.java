@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
-import com.evolution.dropfiledaemon.util.AccessKeyUtils;
+import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,14 +19,14 @@ public class ApiConnectionsAccessFacade {
     private final ApplicationConfigStore applicationConfigStore;
 
     public ApiConnectionsAccessInfoResponseDTO generate(ApiConnectionsAccessGenerateRequestDTO requestDTO) {
-        AccessKeyUtils.AccessKeyEnvelope accessKeyEnvelope = AccessKeyUtils.generate();
+        KeyEnvelopeUtils.KeyEnvelope keyEnvelope = KeyEnvelopeUtils.generate();
 
         AccessKey accessKey = applicationConfigStore.getAccessKeyStore().save(
-                accessKeyEnvelope.id(),
-                new AccessKey(accessKeyEnvelope.key(), Instant.now())
+                keyEnvelope.id(),
+                new AccessKey(keyEnvelope.key(), Instant.now())
         );
 
-        return toAccessKeyInfoResponseDTO(accessKeyEnvelope.id(), accessKey);
+        return toAccessKeyInfoResponseDTO(keyEnvelope.id(), accessKey);
     }
 
     public List<ApiConnectionsAccessInfoResponseDTO> ls() {
