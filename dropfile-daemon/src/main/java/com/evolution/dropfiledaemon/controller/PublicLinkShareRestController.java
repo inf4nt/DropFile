@@ -43,6 +43,7 @@ public class PublicLinkShareRestController {
 
         response.setContentType("application/zip");
         response.setHeader("Content-Disposition", "attachment; filename=" + zipName);
+        response.setStatus(200);
 
         StreamingResponseBody stream = outputStream -> SecureZipUtils.zip(
                 outputStream,
