@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(TunnelRestController.TUNNEL_ENDPOINT)
+@RequestMapping
 public class TunnelRestController {
 
     public static final String TUNNEL_ENDPOINT = "public/tunnel";
@@ -22,7 +22,7 @@ public class TunnelRestController {
     private final TunnelDispatcher tunnelDispatcher;
 
     @SneakyThrows
-    @PostMapping
+    @PostMapping(TunnelRestController.TUNNEL_ENDPOINT)
     public ResponseEntity<StreamingResponseBody> stream(@RequestBody TunnelRequestDTO requestDTO) {
         StreamingResponseBody stream = outputStream -> {
             tunnelDispatcher.dispatchStream(requestDTO, outputStream);

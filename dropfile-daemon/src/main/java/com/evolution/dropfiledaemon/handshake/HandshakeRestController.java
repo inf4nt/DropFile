@@ -11,16 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(HandshakeRestController.HANDSHAKE_ENDPOINT)
+@RequestMapping
 public class HandshakeRestController {
 
     public static final String HANDSHAKE_ENDPOINT = "public/handshake";
 
-    public static final String HANDSHAKE_SESSION_ENDPOINT = "public/handshake";
+    public static final String HANDSHAKE_SESSION_ENDPOINT = "public/handshake/session";
 
     private final HandshakeFacade handshakeFacade;
 
-    @PostMapping
+    @PostMapping(HandshakeRestController.HANDSHAKE_ENDPOINT)
     public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
