@@ -14,31 +14,31 @@ public class ApiConnectionsFacade {
 
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
-    public void revoke(String fingerprint) {
+    public synchronized void revoke(String fingerprint) {
         String key = applicationConfigStore.getHandshakeTrustedInStore().getRequiredByKeyStartWith(fingerprint)
                 .getKey();
         applicationConfigStore.getHandshakeSessionInStore().remove(key);
         applicationConfigStore.getHandshakeTrustedInStore().remove(key);
     }
 
-    public void revokeAll() {
+    public synchronized void revokeAll() {
         applicationConfigStore.getHandshakeSessionInStore().removeAll();
         applicationConfigStore.getHandshakeTrustedInStore().removeAll();
     }
 
-    public void disconnect(String fingerprint) {
+    public synchronized void disconnect(String fingerprint) {
         String key = applicationConfigStore.getHandshakeTrustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
         applicationConfigStore.getHandshakeSessionOutStore().remove(key);
         applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
     }
 
-    public void disconnectCurrent() {
+    public synchronized void disconnectCurrent() {
         String key = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated().getKey();
         applicationConfigStore.getHandshakeSessionOutStore().remove(key);
         applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
     }
 
-    public void disconnectAll() {
+    public synchronized void disconnectAll() {
         applicationConfigStore.getHandshakeSessionOutStore().removeAll();
         applicationConfigStore.getHandshakeTrustedOutStore().removeAll();
     }
