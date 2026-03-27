@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Component
 @CommandLine.Command(
@@ -23,7 +24,7 @@ public class TrafficCommand extends AbstractCommandHttpHandler {
 
     @Override
     protected TypeReference<?> getTypeReference() {
-        return new TypeReference<TunnelTrafficResponseDTO>() {
+        return new TypeReference<List<TunnelTrafficResponseDTO>>() {
         };
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/connections")
@@ -45,7 +47,7 @@ public class ApiConnectionsRestController {
     }
 
     @GetMapping("/traffic")
-    public TunnelTrafficResponseDTO getTraffic() {
+    public List<TunnelTrafficResponseDTO> getTraffic() {
         return apiFacade.getTraffic();
     }
 }

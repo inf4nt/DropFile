@@ -6,6 +6,9 @@ import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 @RequiredArgsConstructor
 @Component
 public class ApiConnectionsFacade {
@@ -43,11 +46,14 @@ public class ApiConnectionsFacade {
         applicationConfigStore.getHandshakeTrustedOutStore().removeAll();
     }
 
-    public TunnelTrafficResponseDTO getTraffic() {
+    public List<TunnelTrafficResponseDTO> getTraffic() {
         TunnelTrafficMonitor.Traffic traffic = tunnelTrafficMonitor.getTraffic();
-        return new TunnelTrafficResponseDTO(
-                traffic.download(),
-                traffic.upload()
-        );
+        return Stream.concat(traffic.download().keySet().stream(), traffic.upload().keySet().stream())
+                .map(fingerprint -> {
+                    String download = traffic.download().get(fingerprint);
+                    String upload = traffic.upload().get(fingerprint);
+                    return new TunnelTrafficResponseDTO(fingerprint, download, upload);
+                })
+                .toList();
     }
 }
