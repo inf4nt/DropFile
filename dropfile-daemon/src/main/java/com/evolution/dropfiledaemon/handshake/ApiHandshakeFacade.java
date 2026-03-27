@@ -7,6 +7,7 @@ import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
@@ -35,6 +36,8 @@ public class ApiHandshakeFacade {
 
     private final ApplicationConfigStore applicationConfigStore;
 
+    private final ApiConnectionsFacade apiConnectionsFacade;
+
     private final HandshakeClient handshakeClient;
 
     private final HandshakeHelper handshakeHelper;
@@ -50,10 +53,13 @@ public class ApiHandshakeFacade {
                 .getByAddressURI(addressURI)
                 .orElse(null);
         if (existingAddressURI != null) {
-            throw new RuntimeException(String.format(
-                    "Unable to process handshake request. Duplicate address URI %s fingerprint %s. Try to perform disconnect",
-                    addressURI, existingAddressURI.getKey()
-            ));
+            if (!requestDTO.force()) {
+                throw new RuntimeException(String.format(
+                        "Unable to process handshake request. Duplicate address URI %s fingerprint %s. Try to perform disconnect",
+                        addressURI, existingAddressURI.getKey()
+                ));
+            }
+            apiConnectionsFacade.disconnect(existingAddressURI.getKey());
         }
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();

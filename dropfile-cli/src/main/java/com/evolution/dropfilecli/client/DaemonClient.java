@@ -442,7 +442,8 @@ public class DaemonClient {
 
     @SneakyThrows
     public HttpResponse<byte[]> handshake(URI address,
-                                          String key) {
+                                          String key,
+                                          boolean force) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/handshake");
 
@@ -455,7 +456,8 @@ public class DaemonClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(new ApiHandshakeRequestDTO(
                                 address.toString(),
-                                key
+                                key,
+                                force
                         ))
                 ))
                 .header("Content-Type", "application/json")

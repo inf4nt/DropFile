@@ -24,10 +24,13 @@ public class ConnectCommand extends AbstractCommandHttpHandler {
     @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
+    @CommandLine.Option(names = {"-force", "--force", "-f", "--f"}, defaultValue = "false")
+    private boolean force;
+
     @Override
     public HttpResponse<byte[]> execute() {
         if (!ObjectUtils.isEmpty(key)) {
-            return daemonClient.handshake(CommonUtils.toURI(address), key);
+            return daemonClient.handshake(CommonUtils.toURI(address), key, force);
         }
         return daemonClient.handshakeReconnect(CommonUtils.toURI(address));
     }
