@@ -41,6 +41,7 @@ public class ApiDownloadFacade {
 
             responseMap.put(operationId, new ApiDownloadLsDTO.Response(
                     operationId,
+                    downloadFileEntry.fingerprint(),
                     downloadFileEntry.fileId(),
                     downloadFileEntry.destinationFile(),
                     progress,
@@ -61,6 +62,7 @@ public class ApiDownloadFacade {
 
             responseMap.put(operationId, new ApiDownloadLsDTO.Response(
                     operationId,
+                    downloadProgress.fingerprint(),
                     downloadProgress.fileId(),
                     downloadProgress.filename(),
                     null,

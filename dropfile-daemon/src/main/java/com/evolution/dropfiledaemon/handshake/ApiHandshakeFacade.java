@@ -55,7 +55,7 @@ public class ApiHandshakeFacade {
         if (existingAddressURI != null) {
             if (!requestDTO.force()) {
                 throw new RuntimeException(String.format(
-                        "Unable to process handshake request. Duplicate address URI %s fingerprint %s. Try to perform disconnect",
+                        "Unable to process handshake request. Duplicate address URI %s fingerprint %s. Try to perform disconnect or --force option",
                         addressURI, existingAddressURI.getKey()
                 ));
             }
