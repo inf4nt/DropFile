@@ -15,13 +15,16 @@ import java.util.List;
 )
 public class DownloadLsCommand extends AbstractCommandHttpHandler {
 
-    @CommandLine.ArgGroup(multiplicity = "0..1")
+    @CommandLine.ArgGroup
     private Exclusive status;
 
     @CommandLine.Option(names = {"-limit", "--limit"}, description = "Limit", defaultValue = "0")
     private Integer limit;
 
     private static class Exclusive {
+        @CommandLine.Option(names = {"-queue", "--queue", "-q", "--q"}, description = "Find by queue")
+        private boolean queue;
+
         @CommandLine.Option(names = {"-downloading", "--downloading", "-d", "--d"}, description = "Find by downloading")
         private boolean downloading;
 
@@ -46,6 +49,9 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler {
             return null;
         }
 
+        if (status.queue) {
+            return ApiDownloadLsDTO.Status.QUEUE;
+        }
         if (status.downloading) {
             return ApiDownloadLsDTO.Status.DOWNLOADING;
         }

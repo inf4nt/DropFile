@@ -24,6 +24,7 @@ public class ApiDownloadLsDTO {
         COMPLETED,
         STOPPED,
         ERROR,
-        INTERRUPTED
+        INTERRUPTED,
+        QUEUE
     }
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Component
@@ -19,43 +20,59 @@ public class ApiDownloadFacade {
     private final ApplicationConfigStore applicationConfigStore;
 
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
-        List<ApiDownloadLsDTO.Response> responses = new ArrayList<>();
-        Map<String, DownloadFileEntry> entryMap = applicationConfigStore.getFileDownloadEntryStore().getAll();
-        for (Map.Entry<String, DownloadFileEntry> entry : entryMap.entrySet()) {
-            FileDownloadOrchestrator.DownloadProgress downloadProgress = fileDownloadOrchestrator
-                    .getDownloadProcedures()
-                    .get(entry.getKey());
-            if (downloadProgress != null) {
-                ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.DOWNLOADING;
-                String progress = getProgress(downloadProgress.total(), downloadProgress.downloaded());
-                String speedPerSecond = CommonUtils.toDisplaySize(downloadProgress.speedBytesPerSec());
-                responses.add(new ApiDownloadLsDTO.Response(
-                        downloadProgress.operationId(),
-                        downloadProgress.fileId(),
-                        entry.getValue().destinationFile(),
-                        progress,
-                        speedPerSecond,
-                        status,
-                        entry.getValue().created(),
-                        entry.getValue().updated()
-                ));
-            } else {
-                String operation = entry.getKey();
-                DownloadFileEntry downloadFileEntry = entry.getValue();
-                ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFileEntry.status().name());
-                String progress = getProgress(downloadFileEntry.total(), downloadFileEntry.downloaded());
-                responses.add(new ApiDownloadLsDTO.Response(
-                        operation,
-                        downloadFileEntry.fileId(),
-                        downloadFileEntry.destinationFile(),
-                        progress,
-                        null,
-                        status,
-                        downloadFileEntry.created(),
-                        downloadFileEntry.updated()
-                ));
-            }
+        Map<String, ApiDownloadLsDTO.Response> responseMap = new LinkedHashMap<>();
+
+        Map<String, FileDownloadOrchestrator.DownloadProgress> downloadProcedures = fileDownloadOrchestrator.getDownloadProcedures();
+        Map<String, FileDownloadOrchestrator.DownloadProgress> waitingQueue = fileDownloadOrchestrator.getWaitingQueue();
+        Map<String, DownloadFileEntry> getFileDownloadEntryStoreMap = applicationConfigStore.getFileDownloadEntryStore().getAll();
+
+        for (Map.Entry<String, DownloadFileEntry> entry : getFileDownloadEntryStoreMap.entrySet()) {
+            String operationId = entry.getKey();
+            DownloadFileEntry downloadFileEntry = entry.getValue();
+
+            ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFileEntry.status().name());
+
+            String progress = Optional.ofNullable(downloadProcedures.get(operationId))
+                    .map(it -> getProgress(it.total(), it.downloaded()))
+                    .orElse(getProgress(downloadFileEntry.total(), downloadFileEntry.downloaded()));
+            String speedPerSecond = Optional.ofNullable(downloadProcedures.get(operationId))
+                    .map(it -> CommonUtils.toDisplaySize(it.speedBytesPerSec()))
+                    .orElse(null);
+
+            responseMap.put(operationId, new ApiDownloadLsDTO.Response(
+                    operationId,
+                    downloadFileEntry.fileId(),
+                    downloadFileEntry.destinationFile(),
+                    progress,
+                    speedPerSecond,
+                    status,
+                    downloadFileEntry.created(),
+                    downloadFileEntry.updated()
+            ));
         }
+
+        for (Map.Entry<String, FileDownloadOrchestrator.DownloadProgress> entry : waitingQueue.entrySet()) {
+            String operationId = entry.getKey();
+            if (responseMap.containsKey(operationId)) {
+                continue;
+            }
+
+            FileDownloadOrchestrator.DownloadProgress downloadProgress = entry.getValue();
+
+            responseMap.put(operationId, new ApiDownloadLsDTO.Response(
+                    operationId,
+                    downloadProgress.fileId(),
+                    downloadProgress.filename(),
+                    null,
+                    null,
+                    ApiDownloadLsDTO.Status.QUEUE,
+                    null,
+                    null
+            ));
+        }
+
+        List<ApiDownloadLsDTO.Response> responses = responseMap.values().stream()
+                .toList();
 
         int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
         if (request.status() == null) {
@@ -103,11 +120,16 @@ public class ApiDownloadFacade {
     }
 
     private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
-        return source.stream()
+        Stream<ApiDownloadLsDTO.Response> responseStream = source.stream()
                 .filter(it -> it.status() == status)
-                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
-                .limit(limit)
-                .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated))
+                .limit(limit);
+        if (status != ApiDownloadLsDTO.Status.QUEUE) {
+            responseStream = responseStream.
+                    sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
+                    .limit(limit)
+                    .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated));
+        }
+        return responseStream
                 .toList();
     }
 }

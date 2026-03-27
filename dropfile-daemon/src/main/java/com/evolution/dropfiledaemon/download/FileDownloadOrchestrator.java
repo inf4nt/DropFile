@@ -139,11 +139,24 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         });
     }
 
+    public Map<String, DownloadProgress> getWaitingQueue() {
+        return waitingQueue
+                .stream()
+                .collect(Collectors.toMap(
+                        x -> x.getKey(),
+                        x -> x.getValue().getProgress(),
+                        (o, o2) -> o2,
+                        () -> new LinkedHashMap<>()
+                ));
+    }
+
     public Map<String, DownloadProgress> getDownloadProcedures() {
         return downloadProcedures.entrySet().stream()
                 .collect(Collectors.toMap(
-                        it -> it.getKey(),
-                        it -> it.getValue().getProgress()
+                        x -> x.getKey(),
+                        x -> x.getValue().getProgress(),
+                        (o, o2) -> o2,
+                        () -> new LinkedHashMap<>()
                 ));
     }
 
