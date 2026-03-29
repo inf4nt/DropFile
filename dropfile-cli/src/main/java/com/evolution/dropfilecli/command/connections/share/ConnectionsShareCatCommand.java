@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
 )
 public class ConnectionsShareCatCommand extends AbstractCommandHttpHandler {
 
-    @CommandLine.Parameters(index = "0", description = "File id")
+    @CommandLine.Option(names = {"-id", "--id"}, description = "File id", required = true)
     private String id;
 
     @Override

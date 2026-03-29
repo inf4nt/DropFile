@@ -49,16 +49,10 @@ public class ApiConnectionsAccessFacade {
     }
 
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
-        InetAddressUtils.BestLocalAddress bestLocalAddress = InetAddressUtils.getBestLocalAddress();
-
         return new ApiConnectionsAccessInfoResponseDTO(
                 id,
                 CommonUtils.encodeBase64(accessKey.key().getBytes()),
-                accessKey.created(),
-                Map.of(
-                        bestLocalAddress.name(),
-                        bestLocalAddress.inetAddress().getHostAddress()
-                )
+                accessKey.created()
         );
     }
 }

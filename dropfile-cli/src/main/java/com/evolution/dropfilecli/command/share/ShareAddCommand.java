@@ -16,9 +16,7 @@ import java.net.http.HttpResponse;
 )
 public class ShareAddCommand extends AbstractCommandHttpHandler {
 
-    // TODO add multi share add command
-
-    @CommandLine.Parameters(index = "0", description = "File path")
+    @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;
 
     @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")

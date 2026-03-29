@@ -5,6 +5,5 @@ import java.util.Map;
 
 public record ApiConnectionsAccessInfoResponseDTO(String id,
                                                   String key,
-                                                  Instant created,
-                                                  Map<String, String> connectionKeys) {
+                                                  Instant created) {
 }
