@@ -95,3 +95,19 @@ $ dropfile connections access generate
 
 $ dropfile connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
 ```
+
+# Docker build
+Download sources, go to release dir. Execute build script.
+Once the build finishes, in the "release" dir, there will be an archive dropfile-windows-x64.tar.gz
+Windows
+```
+$ ./release.windows.x64.bat
+```
+Linux
+```
+$ ./release.linux.x64.sh
+```
+MacOS
+```
+$ ./release.macos.x64.sh
+```
