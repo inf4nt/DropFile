@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 
 public class TablePrinter {
 
-    private static final int MAX_TABLE_WIDTH = 180;
+    private static final int MAX_TABLE_WIDTH = 190;
 
     private static final int MAX_LINES = 5;
 

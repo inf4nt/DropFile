@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collection;
@@ -81,9 +82,12 @@ public class ApiLinkShareFacade {
 
     private String buildDownloadLink(String id) {
         Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
-        String hostAddress = InetAddressUtils.getBestLocalAddress().getHostAddress();
+        InetAddressUtils.BestLocalAddress bestLocalAddress = InetAddressUtils.getBestLocalAddress();
+
+        InetAddress inetAddress = bestLocalAddress.inetAddress();
+        String hostAddress = inetAddress.getHostAddress();
         URI uri = CommonUtils.toURI(hostAddress, serverPort);
         String relativeDownloadLink = buildRelativeDownloadLink(id);
-        return String.format("%s/%s", uri, relativeDownloadLink);
+        return String.format("%s|%s/%s", bestLocalAddress.name(), uri, relativeDownloadLink);
     }
 }

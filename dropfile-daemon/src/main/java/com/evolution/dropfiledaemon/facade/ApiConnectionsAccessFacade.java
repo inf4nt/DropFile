@@ -5,12 +5,14 @@ import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.util.InetAddressUtils;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
@@ -47,10 +49,16 @@ public class ApiConnectionsAccessFacade {
     }
 
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
+        InetAddressUtils.BestLocalAddress bestLocalAddress = InetAddressUtils.getBestLocalAddress();
+
         return new ApiConnectionsAccessInfoResponseDTO(
                 id,
                 CommonUtils.encodeBase64(accessKey.key().getBytes()),
-                accessKey.created()
+                accessKey.created(),
+                Map.of(
+                        bestLocalAddress.name(),
+                        bestLocalAddress.inetAddress().getHostAddress()
+                )
         );
     }
 }
