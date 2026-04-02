@@ -96,11 +96,13 @@ public class ApiDownloadFacade {
     }
 
     public void rm(String operationId) {
+        CommonUtils.executeSafety(() -> stop(operationId));
         String key = applicationConfigStore.getFileDownloadEntryStore().getRequiredByKeyStartWith(operationId).getKey();
         applicationConfigStore.getFileDownloadEntryStore().remove(key);
     }
 
     public void rmAll() {
+        stopAll();
         applicationConfigStore.getFileDownloadEntryStore().removeAll();
     }
 
