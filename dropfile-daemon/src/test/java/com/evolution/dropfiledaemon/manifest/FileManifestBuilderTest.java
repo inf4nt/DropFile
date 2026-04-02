@@ -80,26 +80,22 @@ public class FileManifestBuilderTest {
                         new ChunkManifest(
                                 "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
                                 3,
-                                0,
-                                3
+                                0
                         ),
                         new ChunkManifest(
                                 "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0",
                                 3,
-                                3,
-                                6
+                                3
                         ),
                         new ChunkManifest(
                                 "35a9e381b1a27567549b5f8a6f783c167ebf809f1c4d6a9e367240484d8ce281",
                                 3,
-                                6,
-                                9
+                                6
                         ),
                         new ChunkManifest(
                                 "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
                                 1,
-                                9,
-                                10
+                                9
                         )
                 )
         );
@@ -137,26 +133,22 @@ public class FileManifestBuilderTest {
                         new ChunkManifest(
                                 "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
                                 3,
-                                0,
-                                3
+                                0
                         ),
                         new ChunkManifest(
                                 "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0",
                                 3,
-                                3,
-                                6
+                                3
                         ),
                         new ChunkManifest(
                                 "35a9e381b1a27567549b5f8a6f783c167ebf809f1c4d6a9e367240484d8ce281",
                                 3,
-                                6,
-                                9
+                                6
                         ),
                         new ChunkManifest(
                                 "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
                                 1,
-                                9,
-                                10
+                                9
                         )
                 )
         );
@@ -194,26 +186,22 @@ public class FileManifestBuilderTest {
                         new ChunkManifest(
                                 "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
                                 3,
-                                0,
-                                3
+                                0
                         ),
                         new ChunkManifest(
                                 "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0",
                                 3,
-                                3,
-                                6
+                                3
                         ),
                         new ChunkManifest(
                                 "35a9e381b1a27567549b5f8a6f783c167ebf809f1c4d6a9e367240484d8ce281",
                                 3,
-                                6,
-                                9
+                                6
                         ),
                         new ChunkManifest(
                                 "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
                                 1,
-                                9,
-                                10
+                                9
                         )
                 )
         );
@@ -251,14 +239,12 @@ public class FileManifestBuilderTest {
                         new ChunkManifest(
                                 "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225",
                                 9,
-                                0,
-                                9
+                                0
                         ),
                         new ChunkManifest(
                                 "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
                                 1,
-                                9,
-                                10
+                                9
                         )
                 )
         );
@@ -296,8 +282,7 @@ public class FileManifestBuilderTest {
                         new ChunkManifest(
                                 "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
                                 10,
-                                0,
-                                10
+                                0
                         )
                 )
         );
@@ -309,14 +294,14 @@ public class FileManifestBuilderTest {
 
         assertDoesNotThrow(() -> {
             underTest.validate(new FileManifest("filename", "hash", 2, List.of(
-                    new ChunkManifest("hash", 2, 0, 2)
+                    new ChunkManifest("hash", 2, 0)
             )));
         });
 
         assertDoesNotThrow(() -> {
             underTest.validate(new FileManifest("filename", "hash", 3, List.of(
-                    new ChunkManifest("hash", 2, 0, 2),
-                    new ChunkManifest("hash", 1, 2, 3)
+                    new ChunkManifest("hash", 2, 0),
+                    new ChunkManifest("hash", 1, 2)
             )));
         });
     }
@@ -332,60 +317,33 @@ public class FileManifestBuilderTest {
 
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", 2, List.of(
-                    new ChunkManifest("hash", 11, 0, 2)
+                    new ChunkManifest("hash", 1, 0),
+                    new ChunkManifest("hash", 1, 0)
+            )));
+        }, "Chunks must include one chunk with zero position");
+
+        assertThrows(RuntimeException.class, () -> {
+            underTest.validate(new FileManifest("filename", "hash", 2, List.of(
+                    new ChunkManifest("hash", 11, 0)
             )));
         }, "File manifest has oversized chunk manifests");
 
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", 1, List.of(
-                    new ChunkManifest("hash", 0, 1, 2)
+                    new ChunkManifest("hash", 0, 1)
             )));
         }, "Found zero chunks size. Chunks size must be greater than zero");
 
         assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", 2, List.of(
-                    new ChunkManifest("hash", 2, 0, 2),
-                    new ChunkManifest("hash", 2, 2, 2)
-            )));
-        }, "The chunk end position must be after the start position");
-
-        assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 2, 0, 2),
-                    new ChunkManifest("hash", 2, 3, 2)
+                    new ChunkManifest("hash", 5, -1)
             )));
-        }, "The chunk end position must be after the start position");
-
-        assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 2, 0, 2),
-                    new ChunkManifest("hash", 3, 0, 3)
-            )));
-        }, "The chunk end position must be after the start position");
-
-        assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 5, -1, 2)
-            )));
-        }, "Chunks start must be greater or equal zero");
-
-        assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", Integer.MAX_VALUE, List.of(
-                    new ChunkManifest("hash", 5, 0, -1)
-            )));
-        }, "Chunks end must be greater than zero");
+        }, "Chunks position must be greater or equal zero");
 
         assertThrows(RuntimeException.class, () -> {
             underTest.validate(new FileManifest("filename", "hash", 6, List.of(
-                    new ChunkManifest("hash", 3, 0, 3),
-                    new ChunkManifest("hash", 7, 3, 10)
-            )));
-        }, "File manifest size does not match chunks start and end size");
-
-        assertThrows(RuntimeException.class, () -> {
-            underTest.validate(new FileManifest("filename", "hash", 6, List.of(
-                    new ChunkManifest("hash", 3, 0, 3),
-                    new ChunkManifest("hash", 10, 3, 6)
+                    new ChunkManifest("hash", 3, 0),
+                    new ChunkManifest("hash", 10, 3)
             )));
         }, "File manifest size does not match chunks size");
     }

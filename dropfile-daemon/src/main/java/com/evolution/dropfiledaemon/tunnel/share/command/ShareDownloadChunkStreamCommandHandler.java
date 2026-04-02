@@ -39,16 +39,9 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getValue();
 
         File file = new File(shareFileEntry.absolutePath());
-        long skip = request.startPosition();
-        int take = toInt(request.endPosition() - request.startPosition());
+        long skip = request.position();
+        int take = request.size();
 
         return fileHelper.readStream(file, skip, take);
-    }
-
-    private int toInt(long value) {
-        if (Integer.MAX_VALUE < value) {
-            throw new IllegalArgumentException("Long value is greater than: " + Integer.MAX_VALUE);
-        }
-        return Math.toIntExact(value);
     }
 }

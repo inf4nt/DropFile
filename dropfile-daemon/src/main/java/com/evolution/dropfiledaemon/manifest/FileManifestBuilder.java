@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -51,35 +52,23 @@ public class FileManifestBuilder {
             throw new RuntimeException("Found zero chunks size. Chunks size must be greater than zero");
         }
 
-        long zeroStartPosition = fileManifest.chunkManifests().stream()
-                .filter(it -> it.startPosition() == 0)
+        long zeroPosition = fileManifest.chunkManifests().stream()
+                .filter(it -> it.position() == 0)
                 .count();
-        if (zeroStartPosition != 1) {
-            throw new RuntimeException("Chunks must include one chunk with zero start position");
+        if (zeroPosition != 1) {
+            throw new RuntimeException("Chunks must include one chunk with zero position");
         }
 
         boolean negativeStart = fileManifest.chunkManifests().stream()
-                .anyMatch(it -> it.startPosition() < 0 || it.endPosition() <= 0);
+                .anyMatch(it -> it.position() < 0);
         if (negativeStart) {
-            throw new RuntimeException("Chunks start must be greater or equal zero");
-        }
-
-        boolean negativeOrZeroEnd = fileManifest.chunkManifests().stream()
-                .anyMatch(it -> it.endPosition() <= 0);
-        if (negativeOrZeroEnd) {
-            throw new RuntimeException("Chunks end must be greater than zero");
+            throw new RuntimeException("Chunks position must be greater or equal zero");
         }
 
         boolean oversized = fileManifest.chunkManifests().stream()
                 .anyMatch(it -> it.size() > chunkMaxSize);
         if (oversized) {
             throw new RuntimeException("File manifest has oversized chunk manifests");
-        }
-
-        boolean theEndIsNotBeforeTheStart = fileManifest.chunkManifests().stream()
-                .anyMatch(it -> it.startPosition() >= it.endPosition());
-        if (theEndIsNotBeforeTheStart) {
-            throw new RuntimeException("The chunk end position must be after the start position");
         }
 
         long totalSizeByChunkSize = fileManifest.chunkManifests()
@@ -90,18 +79,10 @@ public class FileManifestBuilder {
             throw new RuntimeException("File manifest size does not match chunks size");
         }
 
-        long totalSizeByStartAndEnd = fileManifest.chunkManifests().stream()
-                .map(it -> {
-                    long start = it.startPosition();
-                    long end = it.endPosition();
-                    if (start == 0) {
-                        return end;
-                    }
-                    return end - start;
-                })
-                .collect(Collectors.summarizingLong(value -> value)).getSum();
-        if (totalSizeByStartAndEnd != fileManifest.size()) {
-            throw new RuntimeException("File manifest size does not match chunks start and end size");
+        List<Long> positionsBasedOnChunkSize = getPositionsBasedOnChunkSize(fileManifest.chunkManifests());
+        List<Long> actual = fileManifest.chunkManifests().stream().map(it -> it.position()).toList();
+        if (!positionsBasedOnChunkSize.equals(actual)) {
+            throw new RuntimeException("Chunk positions are invalid");
         }
     }
 
@@ -145,8 +126,7 @@ public class FileManifestBuilder {
                 ChunkManifest chunkManifest = new ChunkManifest(
                         HexFormat.of().formatHex(chunkDigest.digest()),
                         totalRead,
-                        processed,
-                        processed + chunkToProcess
+                        processed
                 );
                 chunkManifests.add(chunkManifest);
 
@@ -198,5 +178,12 @@ public class FileManifestBuilder {
             byteBuffer.clear();
         }
         return totalRead;
+    }
+
+    List<Long> getPositionsBasedOnChunkSize(List<ChunkManifest> chunkManifests) {
+        AtomicLong offset = new AtomicLong(0);
+        return chunkManifests.stream()
+                .map(chunk -> offset.getAndAdd(chunk.size()))
+                .toList();
     }
 }
