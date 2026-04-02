@@ -31,11 +31,13 @@ import java.util.stream.Stream;
 @Component
 public class FileDownloadOrchestrator implements AutoCloseable {
 
+    volatile private boolean closed;
+
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Map<String, DownloadProcedure> downloadProcedures = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    private final Deque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
+    private final ArrayDeque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
 
     private final DownloadProcedureFactory downloadProcedureFactory;
 
@@ -44,39 +46,52 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     private final DaemonApplicationProperties daemonApplicationProperties;
 
     @SneakyThrows
-    public synchronized FileDownloadResponse start(FileDownloadRequest request) {
+    public FileDownloadResponse start(FileDownloadRequest request) {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.downloadOrchestratorMaxQueueSize;
-        if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
-            throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
-        }
+        DownloadProcedure downloadProcedure;
+        synchronized (this) {
+            if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
+                throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
+            }
 
-        String operationId = CommonUtils.random();
-        Path destinationFilePath = getDestinationFilePath(request);
-        Path temporaryFilePath = getTemporaryFilePath(request);
-        DownloadProcedure downloadProcedure = downloadProcedureFactory.get(
-                operationId,
-                request.fingerprint(),
-                request.fileId(),
-                request.filename(),
-                destinationFilePath,
-                temporaryFilePath
-        );
-        waitingQueue.add(new AbstractMap.SimpleEntry<>(operationId, downloadProcedure));
+            String operationId = CommonUtils.random();
+            Path destinationFilePath = getDestinationFilePath(request);
+            Path temporaryFilePath = getTemporaryFilePath(request);
+            downloadProcedure = downloadProcedureFactory.get(
+                    operationId,
+                    request.fingerprint(),
+                    request.fileId(),
+                    request.filename(),
+                    destinationFilePath,
+                    temporaryFilePath
+            );
+            waitingQueue.add(new AbstractMap.SimpleEntry<>(operationId, downloadProcedure));
+        }
 
         tryToStartNext();
 
-        return new FileDownloadResponse(operationId, request.fileId(), destinationFilePath.toAbsolutePath().toString());
+        return new FileDownloadResponse(
+                downloadProcedure.getRequest().operation(),
+                downloadProcedure.getRequest().fileId(),
+                downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString()
+        );
     }
 
-    private synchronized void tryToStartNext() {
+    private void tryToStartNext() {
         int activeQueueSize = daemonApplicationProperties.downloadOrchestratorActiveQueueSize;
 
-        while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
-            Map.Entry<String, DownloadProcedure> nextTask = waitingQueue.pollFirst();
-            downloadProcedures.put(nextTask.getKey(), nextTask.getValue());
+        Map<String, DownloadProcedure> toStart = new LinkedHashMap<>();
+        synchronized (this) {
+            while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
+                checkIfClosed();
 
-            runDownload(nextTask.getKey(), nextTask.getValue());
+                Map.Entry<String, DownloadProcedure> nextTask = waitingQueue.pollFirst();
+                downloadProcedures.put(nextTask.getKey(), nextTask.getValue());
+                toStart.put(nextTask.getKey(), nextTask.getValue());
+            }
         }
+
+        toStart.forEach((operation, downloadProcedure) -> runDownload(operation, downloadProcedure));
     }
 
     private void runDownload(String operationId, DownloadProcedure downloadProcedure) {
@@ -85,6 +100,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
         Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
 
+        checkIfClosed();
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run(
@@ -161,22 +177,40 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     }
 
     public void stop(String operation) {
-        DownloadProcedure downloadProcedure = downloadProcedures.get(operation);
-        if (downloadProcedure == null) {
-            throw new RuntimeException("No operation found: " + operation);
+        DownloadProcedure downloadProcedure;
+        synchronized (this) {
+            downloadProcedure = downloadProcedures.get(operation);
+            if (downloadProcedure != null) {
+                downloadProcedures.remove(operation);
+            } else {
+                downloadProcedure = waitingQueue.stream()
+                        .filter(it -> it.getKey().equals(operation))
+                        .map(it -> it.getValue())
+                        .findAny()
+                        .orElseThrow(() -> new RuntimeException("No operation found: " + operation));
+                waitingQueue.removeIf(it -> it.getKey().equals(operation));
+            }
         }
-        downloadProcedures.remove(operation);
+
         stop(Map.of(operation, downloadProcedure), Collections.emptyMap());
     }
 
     public void stopAll() {
-        Map<String, DownloadProcedure> waitingQueueSnapshot = new LinkedHashMap<>();
-        while (!waitingQueue.isEmpty()) {
-            Map.Entry<String, DownloadProcedure> entry = waitingQueue.pollFirst();
-            waitingQueueSnapshot.put(entry.getKey(), entry.getValue());
+        Map<String, DownloadProcedure> waitingQueueSnapshot;
+        Map<String, DownloadProcedure> proceduresSnapshot;
+
+        synchronized (this) {
+            waitingQueueSnapshot = waitingQueue.stream().collect(Collectors.toMap(
+                    x -> x.getKey(),
+                    x -> x.getValue(),
+                    (o, o2) -> o2,
+                    () -> new LinkedHashMap<>()
+            ));
+            waitingQueue.clear();
+            proceduresSnapshot = new LinkedHashMap<>(downloadProcedures);
+            downloadProcedures.clear();
         }
-        Map<String, DownloadProcedure> proceduresSnapshot = new LinkedHashMap<>(downloadProcedures);
-        proceduresSnapshot.entrySet().forEach(key -> downloadProcedures.remove(key));
+
         stop(proceduresSnapshot, waitingQueueSnapshot);
     }
 
@@ -263,12 +297,12 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     @Override
     public void close() {
         log.info("Closing FileDownloadOrchestrator");
+        closed = true;
+
         log.info("Stop All download procedures");
         stopAll();
         log.info("Stop All download procedures completed");
 
-        log.info("Shutdown main executor service");
-        fileDownloadingExecutorService.shutdown();
         log.info("Shutdown main executor service completed");
         log.info("AwaitTermination main executor service");
         boolean finishedCleanly = fileDownloadingExecutorService.awaitTermination(10, TimeUnit.SECONDS);
@@ -280,6 +314,12 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         }
         fileDownloadingExecutorService.close();
         log.info("Closed");
+    }
+
+    private void checkIfClosed() {
+        if (closed) {
+            throw new RuntimeException("Closed");
+        }
     }
 
     // TODO add ETA
