@@ -83,8 +83,6 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         Map<String, DownloadProcedure> toStart = new LinkedHashMap<>();
         synchronized (this) {
             while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
-                checkIfClosed();
-
                 Map.Entry<String, DownloadProcedure> nextTask = waitingQueue.pollFirst();
                 downloadProcedures.put(nextTask.getKey(), nextTask.getValue());
                 toStart.put(nextTask.getKey(), nextTask.getValue());
