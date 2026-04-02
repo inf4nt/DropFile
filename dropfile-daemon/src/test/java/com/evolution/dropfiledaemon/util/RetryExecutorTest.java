@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.util;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -464,5 +465,99 @@ public class RetryExecutorTest {
                 exceptions.stream().allMatch(it -> it instanceof TimeoutException),
                 is(true)
         );
+    }
+
+    @Test
+    public void doNotRetryInterruptedException() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        assertThrows(InterruptedException.class, () -> {
+            RetryExecutor
+                    .call(() -> {
+                        if (callCounter.get() <= 5) {
+                            callCounter.incrementAndGet();
+                            return 1;
+                        }
+                        throw new InterruptedException();
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .retryIf(it -> true)
+                    .run();
+        });
+
+        assertThat(callCounter.get(), is(6));
+    }
+
+    @Test
+    public void doNotRetryCauseInterruptedException() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        try {
+            RetryExecutor
+                    .call(() -> {
+                        if (callCounter.get() <= 5) {
+                            callCounter.incrementAndGet();
+                            return 1;
+                        }
+                        throw new UnsupportedOperationException(new InterruptedException());
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .retryIf(it -> true)
+                    .run();
+            fail("Exception not thrown");
+        } catch (UnsupportedOperationException e) {
+            assertThat(e.getCause(), isA(InterruptedException.class));
+        }
+
+        assertThat(callCounter.get(), is(6));
+    }
+
+    @Test
+    public void doNotRetryClosedChannelException() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        assertThrows(ClosedChannelException.class, () -> {
+            RetryExecutor
+                    .call(() -> {
+                        if (callCounter.get() <= 5) {
+                            callCounter.incrementAndGet();
+                            return 1;
+                        }
+                        throw new ClosedChannelException();
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .retryIf(it -> true)
+                    .run();
+        });
+
+        assertThat(callCounter.get(), is(6));
+    }
+
+    @Test
+    public void doNotRetryCauseClosedChannelException() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        try {
+            RetryExecutor
+                    .call(() -> {
+                        if (callCounter.get() <= 5) {
+                            callCounter.incrementAndGet();
+                            return 1;
+                        }
+                        throw new UnsupportedOperationException(new ClosedChannelException());
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .retryIf(it -> true)
+                    .run();
+            fail("Exception not thrown");
+        } catch (UnsupportedOperationException e) {
+            assertThat(e.getCause(), isA(ClosedChannelException.class));
+        }
+
+        assertThat(callCounter.get(), is(6));
     }
 }

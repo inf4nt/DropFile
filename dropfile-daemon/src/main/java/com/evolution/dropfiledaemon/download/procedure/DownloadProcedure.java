@@ -19,7 +19,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -291,12 +290,6 @@ public class DownloadProcedure {
                     log.info("Retry 'write-chunk'. Attempt: {} size {} position {} exception {}",
                             attempt, chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
                     );
-                })
-                .retryIf(it -> {
-                    if (it.exception() instanceof ClosedChannelException) {
-                        return false;
-                    }
-                    return it.exception() != null;
                 })
                 .run();
     }

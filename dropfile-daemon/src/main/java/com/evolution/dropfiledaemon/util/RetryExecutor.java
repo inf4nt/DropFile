@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,10 @@ public class RetryExecutor<T> {
                     return call;
                 }
             } catch (Exception e) {
-                if (e instanceof InterruptedException || e.getCause() instanceof InterruptedException) {
+                if (e instanceof InterruptedException
+                        || e.getCause() instanceof InterruptedException
+                        || e instanceof ClosedChannelException
+                        || e.getCause() instanceof ClosedChannelException) {
                     throw e;
                 }
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
