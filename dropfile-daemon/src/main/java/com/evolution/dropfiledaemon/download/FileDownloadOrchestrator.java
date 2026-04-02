@@ -174,7 +174,16 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 ));
     }
 
-    public void stop(String operation) {
+    public void stop(String startWithOperationId) {
+        String operation = CommonUtils.requireOne(
+                Stream.concat(
+                                getWaitingQueue().keySet().stream(),
+                                getDownloadProcedures().keySet().stream()
+                        )
+                        .collect(Collectors.toSet()),
+                it -> it.startsWith(startWithOperationId)
+        );
+
         DownloadProcedure downloadProcedure;
         synchronized (this) {
             downloadProcedure = downloadProcedures.get(operation);

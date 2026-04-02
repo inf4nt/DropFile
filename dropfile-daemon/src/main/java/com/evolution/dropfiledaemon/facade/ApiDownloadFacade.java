@@ -88,11 +88,7 @@ public class ApiDownloadFacade {
     }
 
     public void stop(String operationId) {
-        String id = CommonUtils.requireOne(
-                fileDownloadOrchestrator.getDownloadProcedures().keySet(),
-                it -> it.startsWith(operationId)
-        );
-        fileDownloadOrchestrator.stop(id);
+        fileDownloadOrchestrator.stop(operationId);
     }
 
     public void stopAll() {
