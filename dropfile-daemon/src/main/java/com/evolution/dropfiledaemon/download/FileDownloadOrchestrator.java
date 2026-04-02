@@ -303,6 +303,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         stopAll();
         log.info("Stop All download procedures completed");
 
+        log.info("Shutdown main executor service");
+        fileDownloadingExecutorService.shutdown();
         log.info("Shutdown main executor service completed");
         log.info("AwaitTermination main executor service");
         boolean finishedCleanly = fileDownloadingExecutorService.awaitTermination(10, TimeUnit.SECONDS);
