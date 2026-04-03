@@ -128,7 +128,7 @@ public class DownloadProcedure {
                     ExecutionProfiling.run(
                             String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
                                     request.operation(), request.fingerprint(), request.fileId()),
-                            () -> finalDigestHandler()
+                            () -> totalDigestHandler()
                     );
 
                     isInterrupted();
@@ -306,7 +306,7 @@ public class DownloadProcedure {
                 .run();
     }
 
-    private void finalDigestHandler() throws NoSuchAlgorithmException, IOException {
+    private void totalDigestHandler() throws NoSuchAlgorithmException, IOException {
         String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
         if (!manifest.hash().equals(actualSha256)) {
             ProcedureExceptions.totalDigestMismatchException(request.operation(), manifest.hash(), actualSha256);
