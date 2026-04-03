@@ -175,26 +175,24 @@ public class DownloadProcedure {
     }
 
     private void downloadManifest() {
-        manifest = RetryExecutor.call(
-                        () -> {
-                            isInterrupted();
-                            int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
+        manifest = RetryExecutor.call(() -> {
+                    isInterrupted();
+                    int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
 
-                            FileManifest fileManifest = tunnelClient.send(
-                                    TunnelClient.Request.builder()
-                                            .command("share-download-manifest")
-                                            .body(new ShareDownloadManifestCommandRequest(
-                                                    request.fileId(),
-                                                    manifestChunkMaxSize
-                                            ))
-                                            .fingerprint(request.fingerprint())
-                                            .build(),
-                                    FileManifest.class
-                            );
-                            fileManifestBuilder.validate(fileManifest);
-                            return fileManifest;
-                        }
-                )
+                    FileManifest fileManifest = tunnelClient.send(
+                            TunnelClient.Request.builder()
+                                    .command("share-download-manifest")
+                                    .body(new ShareDownloadManifestCommandRequest(
+                                            request.fileId(),
+                                            manifestChunkMaxSize
+                                    ))
+                                    .fingerprint(request.fingerprint())
+                                    .build(),
+                            FileManifest.class
+                    );
+                    fileManifestBuilder.validate(fileManifest);
+                    return fileManifest;
+                })
                 .doOnError((attempt, exception) -> {
                     log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage(), exception
@@ -264,30 +262,28 @@ public class DownloadProcedure {
     }
 
     private byte[] chunkDownload(ChunkManifest chunkManifest) {
-        return RetryExecutor.call(
-                        () -> {
-                            isInterrupted();
-                            try (InputStream inputStream = tunnelClient.stream(
-                                    TunnelClient.Request.builder()
-                                            .command("share-download-chunk-stream")
-                                            .body(new ShareDownloadChunkStreamTunnelRequest(
-                                                    request.fileId(),
-                                                    chunkManifest.size(),
-                                                    chunkManifest.position()
-                                            ))
-                                            .fingerprint(request.fingerprint())
-                                            .build())) {
-                                byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
-                                String sha256 = fileHelper.sha256(allBytes);
-                                if (!chunkManifest.hash().equals(sha256)) {
-                                    ProcedureExceptions.chunkDigestMismatchException(
-                                            request.operation(), chunkManifest.hash(), sha256, chunkManifest.size(), chunkManifest.position()
-                                    );
-                                }
-                                return allBytes;
-                            }
+        return RetryExecutor.call(() -> {
+                    isInterrupted();
+                    try (InputStream inputStream = tunnelClient.stream(
+                            TunnelClient.Request.builder()
+                                    .command("share-download-chunk-stream")
+                                    .body(new ShareDownloadChunkStreamTunnelRequest(
+                                            request.fileId(),
+                                            chunkManifest.size(),
+                                            chunkManifest.position()
+                                    ))
+                                    .fingerprint(request.fingerprint())
+                                    .build())) {
+                        byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
+                        String sha256 = fileHelper.sha256(allBytes);
+                        if (!chunkManifest.hash().equals(sha256)) {
+                            ProcedureExceptions.chunkDigestMismatchException(
+                                    request.operation(), chunkManifest.hash(), sha256, chunkManifest.size(), chunkManifest.position()
+                            );
                         }
-                )
+                        return allBytes;
+                    }
+                })
                 .doOnError((attempt, exception) -> {
                     log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
@@ -300,13 +296,12 @@ public class DownloadProcedure {
     private void writeChunkToFile(FileChannel writeToFileChannel,
                                   byte[] chunkBytes,
                                   ChunkManifest chunkManifest) {
-        RetryExecutor.call(
-                        () -> {
-                            isInterrupted();
-                            fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.position());
-                            return 1;
-                        }
-                )
+        RetryExecutor
+                .call(() -> {
+                    isInterrupted();
+                    fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.position());
+                    return 1;
+                })
                 .doOnError((attempt, exception) -> {
                     log.info("Retry 'write-chunk'. Attempt: {} size {} position {} exception {}",
                             attempt, chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
