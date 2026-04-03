@@ -7,5 +7,6 @@ public record DownloadProcedureRequest(String operation,
                                        String fileId,
                                        String filename,
                                        Path destinationFilePath,
-                                       Path temporaryFilePath) {
+                                       Path temporaryFilePath,
+                                       Path manifestFilePath) {
 }

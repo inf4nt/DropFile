@@ -6,12 +6,15 @@ import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
 
 @RequiredArgsConstructor
 @Component
 public class DownloadProcedureFactory {
+
+    private final ObjectMapper objectMapper;
 
     private final TunnelClient tunnelClient;
 
@@ -26,11 +29,13 @@ public class DownloadProcedureFactory {
                                  String fileId,
                                  String filename,
                                  Path destinationFilePath,
-                                 Path temporaryFilePath) {
+                                 Path temporaryFilePath,
+                                 Path manifestFilePath) {
         int downloadProcedureThreadSize = daemonApplicationProperties.downloadProcedureThreadSize;
         int manifestChunkMaxSize = daemonApplicationProperties.manifestChunkMaxSize;
 
         return new DownloadProcedure(
+                objectMapper,
                 tunnelClient,
                 fileHelper,
                 fileManifestBuilder,
@@ -44,7 +49,8 @@ public class DownloadProcedureFactory {
                         fileId,
                         filename,
                         destinationFilePath,
-                        temporaryFilePath
+                        temporaryFilePath,
+                        manifestFilePath
                 )
         );
     }

@@ -54,16 +54,19 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                 throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
             }
 
-            String operationId = CommonUtils.random();
             Path destinationFilePath = getDestinationFilePath(request);
+            Path manifestFilePath = getManifestFilePath(destinationFilePath);
             Path temporaryFilePath = getTemporaryFilePath(request);
+
+            String operationId = CommonUtils.random();
             downloadProcedure = downloadProcedureFactory.get(
                     operationId,
                     request.fingerprint(),
                     request.fileId(),
                     request.filename(),
                     destinationFilePath,
-                    temporaryFilePath
+                    temporaryFilePath,
+                    manifestFilePath
             );
             waitingQueue.add(new AbstractMap.SimpleEntry<>(operationId, downloadProcedure));
         }
@@ -96,6 +99,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         String fingerprint = downloadProcedure.getProgress().fingerprint();
         String fileId = downloadProcedure.getProgress().fileId();
         Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
+        Path manifestFilePath = downloadProcedure.getRequest().manifestFilePath();
         Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
 
         checkIfClosed();
@@ -109,6 +113,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                         fileId,
                                         destinationFilePath.toAbsolutePath().toString(),
                                         temporaryFilePath.toAbsolutePath().toString(),
+                                        manifestFilePath.toAbsolutePath().toString(),
                                         DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
                                         Instant.now(),
                                         Instant.now()
@@ -252,6 +257,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                     downloadProcedure.getProgress().fileId(),
                                     downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
                                     downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
+                                    downloadProcedure.getRequest().manifestFilePath().toAbsolutePath().toString(),
                                     DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
                                     Instant.now(),
                                     Instant.now()
@@ -268,11 +274,21 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         );
     }
 
+    private Path getManifestFilePath(Path destinationFilePath) {
+        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
+        Path manifestPath = Paths.get(downloadDirectory, String.format("%s%s%s", "manifest.", destinationFilePath.getFileName().toString(), ".json"));
+
+        if (Files.exists(manifestPath)) {
+            throw new IllegalArgumentException(String.format("file already exists: %s", manifestPath));
+        }
+
+        return manifestPath;
+    }
+
     private Path getDestinationFilePath(FileDownloadRequest request) {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
-
         if (Paths.get(request.filename()).isAbsolute()) {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
@@ -280,21 +296,26 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         String downloadDirectory = daemonApplicationProperties.downloadDirectory;
         Path downloadFilePath = Paths.get(downloadDirectory, request.filename()).toAbsolutePath();
 
+        Map.Entry<String, DownloadProgress> duplicate = Stream.concat(getWaitingQueue().entrySet().stream(), getDownloadProcedures().entrySet().stream())
+                .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
+                .findAny()
+                .orElse(null);
+
+        if (duplicate != null) {
+            throw new RuntimeException(String.format(
+                    "Duplicate destination file %s operation %s",
+                    duplicate.getValue().filename(), duplicate.getKey()
+            ));
+        }
+
         if (Files.exists(downloadFilePath)) {
-            throw new IllegalArgumentException(String.format("file already exists: %s", downloadFilePath));
+            throw new IllegalArgumentException(String.format("File already exists: %s", downloadFilePath));
         }
 
         return downloadFilePath;
     }
 
     private Path getTemporaryFilePath(FileDownloadRequest request) {
-        if (ObjectUtils.isEmpty(request.filename())) {
-            throw new IllegalArgumentException("filename must not be empty");
-        }
-        if (Paths.get(request.filename()).isAbsolute()) {
-            throw new UnsupportedOperationException("filename must not be absolute. Unsupported yet: " + request.filename());
-        }
-
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
         String downloadDirectory = daemonApplicationProperties.downloadDirectory;
         return Paths.get(downloadDirectory, temporaryFileName).toAbsolutePath();

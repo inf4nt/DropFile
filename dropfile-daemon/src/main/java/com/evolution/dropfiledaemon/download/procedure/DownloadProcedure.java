@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -36,6 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DownloadProcedure {
 
     private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
+
+    private final ObjectMapper objectMapper;
 
     private final TunnelClient tunnelClient;
 
@@ -198,6 +201,24 @@ public class DownloadProcedure {
                     );
                 })
                 .run();
+
+        RetryExecutor
+                .call(() -> {
+                    try (FileChannel fileChannel = FileChannel.open(
+                            request.manifestFilePath(),
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.WRITE)) {
+                        byte[] bytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest);
+                        fileHelper.write(fileChannel, bytes, 0);
+                    }
+                    return 1;
+                })
+                .doOnError((attempt, exception) -> {
+                    log.info("Retry 'write-file-manifest'. Operation: {} fingerprint {} manifest: {} attempt: {} exception: {}",
+                            request.operation(), request.fingerprint(), request.manifestFilePath().toAbsolutePath(), attempt, exception.getMessage(), exception
+                    );
+                })
+                .run();
     }
 
     private void downloadAndWriteChunks() throws Exception {
@@ -283,7 +304,7 @@ public class DownloadProcedure {
                         () -> {
                             isInterrupted();
                             fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.position());
-                            return chunkBytes;
+                            return 1;
                         }
                 )
                 .doOnError((attempt, exception) -> {
