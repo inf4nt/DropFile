@@ -19,11 +19,13 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -110,29 +112,23 @@ public class DownloadProcedure {
                 String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s",
                         request.operation(), request.fingerprint(), request.fileId()),
                 () -> {
-
                     ExecutionProfiling.run(
                             String.format("download-manifest operation: %s fingerprint %s fileId: %s",
                                     request.operation(), request.fingerprint(), request.fileId()),
-                            () -> downloadManifest()
+                            () -> manifestHandler()
                     );
 
                     ExecutionProfiling.run(
                             String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
                                     request.operation(), request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
                             ),
-                            () -> downloadAndWriteChunks()
+                            () -> chunksHandler()
                     );
 
                     ExecutionProfiling.run(
                             String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
                                     request.operation(), request.fingerprint(), request.fileId()),
-                            () -> {
-                                String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
-                                if (!manifest.hash().equals(actualSha256)) {
-                                    ProcedureExceptions.totalDigestMismatchException(request.operation(), manifest.hash(), actualSha256);
-                                }
-                            }
+                            () -> finalDigestHandler()
                     );
 
                     isInterrupted();
@@ -174,7 +170,7 @@ public class DownloadProcedure {
         );
     }
 
-    private void downloadManifest() {
+    private void manifestHandler() {
         manifest = RetryExecutor.call(() -> {
                     isInterrupted();
                     int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
@@ -219,7 +215,7 @@ public class DownloadProcedure {
                 .run();
     }
 
-    private void downloadAndWriteChunks() throws Exception {
+    private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
         try (FileChannel fileChannel = FileChannel.open(
@@ -241,8 +237,8 @@ public class DownloadProcedure {
                             }
                             try {
                                 byte[] chunkBytes = chunkDownload(chunkManifest);
-                                downloadSpeedMeter.addChunk(chunkManifest.size());
                                 writeChunkToFile(fileChannel, chunkBytes, chunkManifest);
+                                downloadSpeedMeter.addChunk(chunkManifest.size());
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             }
@@ -308,6 +304,13 @@ public class DownloadProcedure {
                     );
                 })
                 .run();
+    }
+
+    private void finalDigestHandler() throws NoSuchAlgorithmException, IOException {
+        String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
+        if (!manifest.hash().equals(actualSha256)) {
+            ProcedureExceptions.totalDigestMismatchException(request.operation(), manifest.hash(), actualSha256);
+        }
     }
 
     @SneakyThrows
