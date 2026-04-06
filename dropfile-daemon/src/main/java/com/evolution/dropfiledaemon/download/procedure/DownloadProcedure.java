@@ -196,23 +196,23 @@ public class DownloadProcedure {
                 })
                 .run();
 
-        RetryExecutor
-                .call(() -> {
-                    try (FileChannel fileChannel = FileChannel.open(
-                            request.manifestFilePath(),
-                            StandardOpenOption.CREATE,
-                            StandardOpenOption.WRITE)) {
-                        byte[] bytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest);
-                        fileHelper.write(fileChannel, bytes, 0);
-                    }
-                    return 1;
-                })
-                .doOnError((attempt, exception) -> {
-                    log.info("Retry 'write-file-manifest'. Operation: {} fingerprint {} manifest: {} attempt: {} exception: {}",
-                            request.operation(), request.fingerprint(), request.manifestFilePath().toAbsolutePath(), attempt, exception.getMessage(), exception
-                    );
-                })
-                .run();
+//        RetryExecutor
+//                .call(() -> {
+//                    try (FileChannel fileChannel = FileChannel.open(
+//                            request.manifestFilePath(),
+//                            StandardOpenOption.CREATE,
+//                            StandardOpenOption.WRITE)) {
+//                        byte[] bytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest);
+//                        fileHelper.write(fileChannel, bytes, 0);
+//                    }
+//                    return 1;
+//                })
+//                .doOnError((attempt, exception) -> {
+//                    log.info("Retry 'write-file-manifest'. Operation: {} fingerprint {} manifest: {} attempt: {} exception: {}",
+//                            request.operation(), request.fingerprint(), request.manifestFilePath().toAbsolutePath(), attempt, exception.getMessage(), exception
+//                    );
+//                })
+//                .run();
     }
 
     private void chunksHandler() throws Exception {
