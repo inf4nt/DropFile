@@ -53,9 +53,9 @@ public class DownloadProcedure {
     @Getter
     private final DownloadProcedureRequest request;
 
-    private ExecutorService executorService;
-
     private FileManifest manifest;
+
+    volatile private ExecutorService executorService;
 
     @Getter
     volatile private boolean stopped;
