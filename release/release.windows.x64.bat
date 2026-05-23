@@ -11,5 +11,4 @@ if %ERRORLEVEL% NEQ 0 (
 
 docker run --rm -v "%cd%:/out" %RELEASE_BUILD_IMAGE%
 
-echo [SUCCESS] Done!
 pause

@@ -5,8 +5,11 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 
 @Component
 @CommandLine.Command(
@@ -20,6 +23,9 @@ public class StartCommand implements SimpleCommandHandler {
         Path binPath = getBinPath();
         Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
                 : binPath.resolve("dropfile-daemon");
+        if (Files.notExists(executable)) {
+            throw new RuntimeException(new FileNotFoundException(executable.toAbsolutePath().toString()));
+        }
         execute(executable);
     }
 
@@ -38,9 +44,20 @@ public class StartCommand implements SimpleCommandHandler {
 
     @SneakyThrows
     private void execute(Path executablePath) {
-        ProcessBuilder processBuilder = new ProcessBuilder(executablePath.toString());
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-        processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
-        processBuilder.start();
+        System.out.println("Executing " + executablePath.toString());
+        ProcessBuilder pb = new ProcessBuilder(executablePath.toString());
+
+        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+
+        Process process = pb.start();
+
+        boolean exited = process.waitFor(Duration.ofSeconds(5));
+
+        if (!exited) {
+            System.out.println("Command completed successfully. To get daemon execution status execute $dropfile daemon status");
+        } else {
+            System.out.println("Process exited with code " + process.exitValue());
+        }
     }
 }

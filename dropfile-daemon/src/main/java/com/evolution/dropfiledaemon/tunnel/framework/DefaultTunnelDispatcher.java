@@ -57,7 +57,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         Object handlerResult = commandHandlerExecutor.handle(payload);
 
         try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
-             OutputStream  tunnelTrafficMonitorOutputStream = tunnelTrafficMonitor.outputStreamWrapper(
+             OutputStream tunnelTrafficMonitorOutputStream = tunnelTrafficMonitor.outputStreamWrapper(
                      requestDTO.fingerprint(),
                      outputStream
              );

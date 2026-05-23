@@ -6,7 +6,6 @@ import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedu
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,7 +25,7 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
                     )
                     .collect(Collectors.toMap(
                             it -> it.getKey(),
-                               it -> it.getValue()
+                            it -> it.getValue()
                                     .withStatus(DownloadFileEntry.DownloadFileEntryStatus.INTERRUPTED)
                     ));
 
@@ -36,9 +35,7 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
 
             log.info("Found {} invalid file download entries {}", staleDownloads.size(), staleDownloads.keySet());
 
-            Map<String, DownloadFileEntry> all = new LinkedHashMap<>(currentValues);
-            all.putAll(staleDownloads);
-            return all;
+            return staleDownloads;
         });
 
     }
