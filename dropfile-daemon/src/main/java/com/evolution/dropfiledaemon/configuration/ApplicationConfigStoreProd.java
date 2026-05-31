@@ -11,14 +11,14 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
-import com.evolution.dropfile.store.framework.single.StoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.share.JsonFileShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
@@ -54,7 +54,7 @@ class ApplicationConfigStoreProd
 
     private final Map<Class, Map.Entry<? extends KeyValueStore, ? extends KeyValueStoreInitializationProcedure>> keyValueStores;
 
-    private final Map<Class, Map.Entry<SingleValueStore, StoreInitializationProcedure>> singleValueStores;
+    private final Map<Class, Map.Entry<SingleValueStore, SingleValueStoreInitializationProcedure>> singleValueStores;
 
     @Autowired
     public ApplicationConfigStoreProd(ApplicationEventPublisher eventPublisher,
@@ -121,7 +121,7 @@ class ApplicationConfigStoreProd
                                 applicationFingerprintSupplier,
                                 Paths.get(configDirectory)
                         ),
-                        new DaemonSecretsStoreInitializationProcedure()
+                        new DaemonSecretsSingleValueStoreInitializationProcedure()
                 )
         );
     }
@@ -136,7 +136,7 @@ class ApplicationConfigStoreProd
                 cacheable.reset();
             }
         }
-        for (Map.Entry<SingleValueStore, StoreInitializationProcedure> value : singleValueStores.values()) {
+        for (Map.Entry<SingleValueStore, SingleValueStoreInitializationProcedure> value : singleValueStores.values()) {
             SingleValueStore singleValueStore = value.getKey();
             if (singleValueStore instanceof Cacheable cacheable) {
                 log.info("Cache reset {}", singleValueStore.getClass().getName());
@@ -157,12 +157,12 @@ class ApplicationConfigStoreProd
                 initializationProcedure.init(store);
             }
         }
-        for (Map.Entry<SingleValueStore, StoreInitializationProcedure> value : singleValueStores.values()) {
+        for (Map.Entry<SingleValueStore, SingleValueStoreInitializationProcedure> value : singleValueStores.values()) {
             SingleValueStore store = value.getKey();
             log.info("Store initialization {}", store.getClass().getName());
             store.init();
 
-            StoreInitializationProcedure initializationProcedure = value.getValue();
+            SingleValueStoreInitializationProcedure initializationProcedure = value.getValue();
             initializationProcedure.init(store);
         }
 
@@ -184,7 +184,7 @@ class ApplicationConfigStoreProd
     @Override
     public <T extends SingleValueStore> T requiredSingleStore(Class<T> clazz) {
         checkInitialized();
-        Map.Entry<SingleValueStore, StoreInitializationProcedure> entry = singleValueStores.get(clazz);
+        Map.Entry<SingleValueStore, SingleValueStoreInitializationProcedure> entry = singleValueStores.get(clazz);
         if (entry == null) {
             throw new RuntimeException("No store found for " + clazz.getName());
         }
