@@ -12,6 +12,7 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 
+@Deprecated
 public interface ApplicationConfigStore {
 
     @SuppressWarnings("rawtypes")

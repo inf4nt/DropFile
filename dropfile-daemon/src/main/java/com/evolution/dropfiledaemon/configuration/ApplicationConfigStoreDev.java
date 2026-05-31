@@ -32,6 +32,7 @@ import org.springframework.core.env.Environment;
 
 import java.util.Map;
 
+@Deprecated
 @Profile("dev")
 @Slf4j
 @Configuration

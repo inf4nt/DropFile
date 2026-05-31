@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Map;
 
+@Deprecated
 @Slf4j
 @Profile("prod")
 @Configuration
