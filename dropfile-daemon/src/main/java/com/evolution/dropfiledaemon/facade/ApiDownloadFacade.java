@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,14 +17,14 @@ public class ApiDownloadFacade {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final FileDownloadEntryStore fileDownloadEntryStore;
 
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
         Map<String, ApiDownloadLsDTO.Response> responseMap = new LinkedHashMap<>();
 
         Map<String, FileDownloadOrchestrator.DownloadProgress> downloadProcedures = fileDownloadOrchestrator.getDownloadProcedures();
         Map<String, FileDownloadOrchestrator.DownloadProgress> waitingQueue = fileDownloadOrchestrator.getWaitingQueue();
-        Map<String, DownloadFileEntry> getFileDownloadEntryStoreMap = applicationConfigStore.getFileDownloadEntryStore().getAll();
+        Map<String, DownloadFileEntry> getFileDownloadEntryStoreMap = fileDownloadEntryStore.getAll();
 
         for (Map.Entry<String, DownloadFileEntry> entry : getFileDownloadEntryStoreMap.entrySet()) {
             String operationId = entry.getKey();
@@ -97,13 +97,13 @@ public class ApiDownloadFacade {
 
     public void rm(String operationId) {
         CommonUtils.executeSafety(() -> stop(operationId));
-        String key = applicationConfigStore.getFileDownloadEntryStore().getRequiredByKeyStartWith(operationId).getKey();
-        applicationConfigStore.getFileDownloadEntryStore().remove(key);
+        String key = fileDownloadEntryStore.getRequiredByKeyStartWith(operationId).getKey();
+        fileDownloadEntryStore.remove(key);
     }
 
     public void rmAll() {
         stopAll();
-        applicationConfigStore.getFileDownloadEntryStore().removeAll();
+        fileDownloadEntryStore.removeAll();
     }
 
     private String getProgress(long total, long downloaded) {

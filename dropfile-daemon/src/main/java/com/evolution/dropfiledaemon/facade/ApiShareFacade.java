@@ -4,7 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 public class ApiShareFacade {
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @SneakyThrows
     public ApiShareInfoResponseDTO add(ApiShareAddRequestDTO requestDTO) {
@@ -34,7 +34,7 @@ public class ApiShareFacade {
         }
 
         String id = CommonUtils.random();
-        ShareFileEntry entry = applicationConfigStore.getShareFileEntryStore().save(
+        ShareFileEntry entry = shareFileEntryStore.save(
                 id,
                 new ShareFileEntry(
                         alias,
@@ -47,7 +47,7 @@ public class ApiShareFacade {
     }
 
     public List<ApiShareInfoResponseDTO> ls() {
-        return applicationConfigStore.getShareFileEntryStore().getAll()
+        return shareFileEntryStore.getAll()
                 .entrySet()
                 .stream()
                 .map(it -> toApiFileInfoResponseDTO(it.getKey(), it.getValue()))
@@ -55,12 +55,12 @@ public class ApiShareFacade {
     }
 
     public void rm(String id) {
-        String key = applicationConfigStore.getShareFileEntryStore().getRequiredByKeyStartWith(id).getKey();
-        applicationConfigStore.getShareFileEntryStore().remove(key);
+        String key = shareFileEntryStore.getRequiredByKeyStartWith(id).getKey();
+        shareFileEntryStore.remove(key);
     }
 
     public void rmAll() {
-        applicationConfigStore.getShareFileEntryStore().removeAll();
+        shareFileEntryStore.removeAll();
     }
 
     private ApiShareInfoResponseDTO toApiFileInfoResponseDTO(String id, ShareFileEntry shareFileEntry) {

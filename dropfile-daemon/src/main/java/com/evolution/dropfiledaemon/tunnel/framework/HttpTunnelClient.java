@@ -6,8 +6,8 @@ import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.compress.CompressTunnelService;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelRestController;
@@ -37,8 +37,6 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final CryptoTunnel cryptoTunnel;
 
     private final CompressTunnelService compressTunnelService;
@@ -48,6 +46,10 @@ public class HttpTunnelClient implements TunnelClient {
     private final HttpClient httpClient;
 
     private final ObjectMapper objectMapper;
+
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     @SneakyThrows
     @Override
@@ -153,10 +155,10 @@ public class HttpTunnelClient implements TunnelClient {
 
     private Map.Entry<String, HandshakeSessionStore.SessionValue> getSession(Request request) {
         if (ObjectUtils.isEmpty(request.getFingerprint())) {
-            return applicationConfigStore.getHandshakeSessionOutStore()
+            return handshakeSessionOutStore
                     .getRequiredLatestUpdated();
         }
-        return applicationConfigStore.getHandshakeSessionOutStore()
+        return handshakeSessionOutStore
                 .getRequired(request.getFingerprint());
     }
 
@@ -169,7 +171,7 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
-        return applicationConfigStore.getHandshakeTrustedOutStore().getRequired(fingerprint)
+        return handshakeTrustedOutStore.getRequired(fingerprint)
                 .getValue();
     }
 

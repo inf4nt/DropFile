@@ -2,8 +2,9 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.link.LinkShareEntry;
+import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.util.SecureZipUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +25,22 @@ public class PublicLinkShareRestController {
 
     public static final String LINK_ENDPOINT = "public/link";
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final LinkShareEntryStore linkShareEntryStore;
+
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @GetMapping("/{id}")
     public WebAsyncTask<StreamingResponseBody> download(@PathVariable String id, HttpServletResponse response) {
-        LinkShareEntry linkShareEntry = applicationConfigStore.getLinkShareStore()
+        LinkShareEntry linkShareEntry = linkShareEntryStore
                 .getRequired(id, value -> !value.used())
                 .getValue();
-        applicationConfigStore.getLinkShareStore()
+        linkShareEntryStore
                 .update(id, value -> value
                         .withUsed(true)
                         .withUpdated(Instant.now())
                 );
 
-        ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore().getRequired(linkShareEntry.fileId()).getValue();
+        ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(linkShareEntry.fileId()).getValue();
         File file = new File(shareFileEntry.absolutePath());
         String zipName = String.format("%s-%s.zip", "secure", CommonUtils.random());
 

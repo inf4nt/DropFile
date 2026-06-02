@@ -6,15 +6,12 @@ import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.*;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +31,6 @@ import java.util.Map;
 @Component
 public class ApiHandshakeFacade {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final ApiConnectionsFacade apiConnectionsFacade;
 
     private final HandshakeClient handshakeClient;
@@ -46,10 +41,18 @@ public class ApiHandshakeFacade {
 
     private final ObjectMapper objectMapper;
 
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
+
+    private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
+
     @SneakyThrows
     public synchronized ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
         URI addressURI = CommonUtils.toURI(requestDTO.address());
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = applicationConfigStore.getHandshakeTrustedOutStore()
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
                 .getByAddressURI(addressURI)
                 .orElse(null);
         if (existingAddressURI != null) {
@@ -115,7 +118,7 @@ public class ApiHandshakeFacade {
 
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
 
-        applicationConfigStore.getHandshakeTrustedOutStore()
+        handshakeTrustedOutStore
                 .save(
                         remoteFingerprint,
                         new HandshakeTrustedOutStore.TrustedOut(
@@ -126,7 +129,7 @@ public class ApiHandshakeFacade {
                                 Instant.now()
                         )
                 );
-        applicationConfigStore.getHandshakeSessionOutStore()
+        handshakeSessionOutStore
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -145,7 +148,7 @@ public class ApiHandshakeFacade {
     @SneakyThrows
     public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
         URI addressURI = CommonUtils.toURI(requestDTO.address());
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = applicationConfigStore.getHandshakeTrustedOutStore()
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = handshakeTrustedOutStore
                 .getRequiredByAddressURI(addressURI);
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
@@ -173,7 +176,7 @@ public class ApiHandshakeFacade {
         String remoteFingerprint = sessionResponse.fingerprint();
         handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOutEntry.getValue().remoteRSA()));
 
-        applicationConfigStore.getHandshakeSessionOutStore()
+        handshakeSessionOutStore
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -191,9 +194,9 @@ public class ApiHandshakeFacade {
     }
 
     public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
-        String currentConnectionFingerprint = applicationConfigStore.getHandshakeSessionOutStore()
+        String currentConnectionFingerprint = handshakeSessionOutStore
                 .getRequiredLatestUpdated().getKey();
-        URI addressURI = applicationConfigStore.getHandshakeTrustedOutStore()
+        URI addressURI = handshakeTrustedOutStore
                 .getRequired(currentConnectionFingerprint)
                 .getValue()
                 .addressURI();
@@ -201,21 +204,21 @@ public class ApiHandshakeFacade {
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
-        Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = applicationConfigStore.getHandshakeTrustedOutStore().getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeSessionOutStore().getAll();
+        Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = handshakeTrustedOutStore.getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = handshakeSessionOutStore.getAll();
         return handshakeHelper.mapToHandshakeApiTrustOutResponseDTOList(trusts, sessions);
     }
 
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
-        Map<String, HandshakeTrustedInStore.TrustedIn> trusts = applicationConfigStore.getHandshakeTrustedInStore().getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = applicationConfigStore.getHandshakeSessionInStore().getAll();
+        Map<String, HandshakeTrustedInStore.TrustedIn> trusts = handshakeTrustedInStore.getAll();
+        Map<String, HandshakeSessionStore.SessionValue> sessions = handshakeSessionInStore.getAll();
         return handshakeHelper.mapToHandshakeApiTrustInResponseDTOList(trusts, sessions);
     }
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
-        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = applicationConfigStore.getHandshakeSessionOutStore()
+        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = handshakeSessionOutStore
                 .getRequiredLatestUpdated();
-        HandshakeTrustedOutStore.TrustedOut trustedOut = applicationConfigStore.getHandshakeTrustedOutStore().getRequired(sessionEntry.getKey())
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(sessionEntry.getKey())
                 .getValue();
         return handshakeHelper.mapToHandshakeApiTrustOutResponseDTO(sessionEntry.getKey(), trustedOut, sessionEntry.getValue());
     }

@@ -1,7 +1,10 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,37 +16,43 @@ import java.util.stream.Stream;
 @Component
 public class ApiConnectionsFacade {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
+    private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
+
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
+
     public synchronized void revoke(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeTrustedInStore().getRequiredByKeyStartWith(fingerprint)
+        String key = handshakeTrustedInStore.getRequiredByKeyStartWith(fingerprint)
                 .getKey();
-        applicationConfigStore.getHandshakeSessionInStore().remove(key);
-        applicationConfigStore.getHandshakeTrustedInStore().remove(key);
+        handshakeSessionInStore.remove(key);
+        handshakeTrustedInStore.remove(key);
     }
 
     public synchronized void revokeAll() {
-        applicationConfigStore.getHandshakeSessionInStore().removeAll();
-        applicationConfigStore.getHandshakeTrustedInStore().removeAll();
+        handshakeSessionInStore.removeAll();
+        handshakeTrustedInStore.removeAll();
     }
 
     public synchronized void disconnect(String fingerprint) {
-        String key = applicationConfigStore.getHandshakeTrustedOutStore().getRequiredByKeyStartWith(fingerprint).getKey();
-        applicationConfigStore.getHandshakeSessionOutStore().remove(key);
-        applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
+        String key = handshakeTrustedOutStore.getRequiredByKeyStartWith(fingerprint).getKey();
+        handshakeSessionOutStore.remove(key);
+        handshakeTrustedOutStore.remove(key);
     }
 
     public synchronized void disconnectCurrent() {
-        String key = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated().getKey();
-        applicationConfigStore.getHandshakeSessionOutStore().remove(key);
-        applicationConfigStore.getHandshakeTrustedOutStore().remove(key);
+        String key = handshakeSessionOutStore.getRequiredLatestUpdated().getKey();
+        handshakeSessionOutStore.remove(key);
+        handshakeTrustedOutStore.remove(key);
     }
 
     public synchronized void disconnectAll() {
-        applicationConfigStore.getHandshakeSessionOutStore().removeAll();
-        applicationConfigStore.getHandshakeTrustedOutStore().removeAll();
+        handshakeSessionOutStore.removeAll();
+        handshakeTrustedOutStore.removeAll();
     }
 
     public List<TunnelTrafficResponseDTO> getTraffic() {

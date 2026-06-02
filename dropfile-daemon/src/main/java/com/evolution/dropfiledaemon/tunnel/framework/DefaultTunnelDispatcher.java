@@ -3,8 +3,8 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.compress.CompressTunnelService;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +24,6 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final CommandHandlerExecutor commandHandlerExecutor;
 
     private final CryptoTunnel cryptoTunnel;
@@ -35,6 +33,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
     private final ObjectMapper objectMapper;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
 
     @SneakyThrows
     @Override
@@ -92,7 +92,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(String fingerprint) {
-        HandshakeSessionStore.SessionValue session = applicationConfigStore.getHandshakeSessionInStore()
+        HandshakeSessionStore.SessionValue session = handshakeSessionInStore
                 .getRequired(fingerprint)
                 .getValue();
         byte[] secret = CryptoECDH.getSecretKey(

@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareDownloadChunkStreamTunnelRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +17,9 @@ import java.io.InputStream;
 public class ShareDownloadChunkStreamCommandHandler
         implements CommandHandler<ShareDownloadChunkStreamTunnelRequest, InputStream> {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final FileHelper fileHelper;
+
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
@@ -34,7 +34,7 @@ public class ShareDownloadChunkStreamCommandHandler
     @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
-        ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore()
+        ShareFileEntry shareFileEntry = shareFileEntryStore
                 .getRequired(request.id())
                 .getValue();
 

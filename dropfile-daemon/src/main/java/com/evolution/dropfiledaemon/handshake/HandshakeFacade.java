@@ -3,15 +3,16 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.store.access.AccessKey;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -27,21 +28,25 @@ import java.time.Instant;
 @Component
 public class HandshakeFacade {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final HandshakeHelper handshakeHelper;
 
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
 
+    private final AccessKeyStore accessKeyStore;
+
+    private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
+
     @SneakyThrows
     public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
-        AccessKey accessKey = applicationConfigStore.getAccessKeyStore()
+        AccessKey accessKey = accessKeyStore
                 .getRequired(accessKeyId)
                 .getValue();
-        applicationConfigStore.getAccessKeyStore().remove(requestDTO.id());
+        accessKeyStore.remove(requestDTO.id());
 
         SecretKey secretKey = cryptoTunnel.secretKey(accessKey.key().getBytes());
         byte[] decryptMessage = cryptoTunnel.decrypt(
@@ -84,7 +89,7 @@ public class HandshakeFacade {
 
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
-        applicationConfigStore.getHandshakeTrustedInStore()
+        handshakeTrustedInStore
                 .save(
                         remoteFingerprint,
                         new HandshakeTrustedInStore.TrustedIn(
@@ -96,7 +101,7 @@ public class HandshakeFacade {
                 );
 
         byte[] publicKeyDH = requestPayload.publicKeyDH();
-        applicationConfigStore.getHandshakeSessionInStore()
+        handshakeSessionInStore
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(
@@ -111,7 +116,7 @@ public class HandshakeFacade {
 
     @SneakyThrows
     public synchronized HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
-        HandshakeTrustedInStore.TrustedIn trustedIn = applicationConfigStore.getHandshakeTrustedInStore()
+        HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore
                 .getRequired(sessionDTO.fingerprint())
                 .getValue();
         String remoteFingerprint = sessionDTO.fingerprint();
@@ -144,7 +149,7 @@ public class HandshakeFacade {
                 signature
         );
 
-        applicationConfigStore.getHandshakeSessionInStore()
+        handshakeSessionInStore
                 .save(
                         remoteFingerprint,
                         new HandshakeSessionStore.SessionValue(

@@ -1,7 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,11 +17,13 @@ import java.util.stream.Collectors;
 @Component
 public class TunnelTrafficMonitor {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final Map<String, DownloadSpeedMeter> inputStreams = new ConcurrentHashMap<>();
 
     private final Map<String, DownloadSpeedMeter> outputStreams = new ConcurrentHashMap<>();
+
+    private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     public Traffic getTraffic() {
         cleanup();
@@ -60,13 +63,13 @@ public class TunnelTrafficMonitor {
 
     private void cleanup() {
         new HashSet<>(outputStreams.keySet()).forEach(fingerprint -> {
-            boolean empty = applicationConfigStore.getHandshakeTrustedInStore().get(fingerprint).isEmpty();
+            boolean empty = handshakeTrustedInStore.get(fingerprint).isEmpty();
             if (empty) {
                 outputStreams.remove(fingerprint);
             }
         });
         new HashSet<>(inputStreams.keySet()).forEach(fingerprint -> {
-            boolean empty = applicationConfigStore.getHandshakeSessionOutStore().get(fingerprint).isEmpty();
+            boolean empty = handshakeSessionOutStore.get(fingerprint).isEmpty();
             if (empty) {
                 inputStreams.remove(fingerprint);
             }

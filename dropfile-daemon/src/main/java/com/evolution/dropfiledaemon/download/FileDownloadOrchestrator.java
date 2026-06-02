@@ -5,7 +5,6 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
@@ -41,9 +40,9 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final DownloadProcedureFactory downloadProcedureFactory;
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final DaemonApplicationProperties daemonApplicationProperties;
+
+    private final FileDownloadEntryStore fileDownloadEntryStore;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -106,7 +105,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run(
-                        () -> applicationConfigStore.getFileDownloadEntryStore().save(
+                        () -> fileDownloadEntryStore.save(
                                 operationId,
                                 new DownloadFileEntry(
                                         fingerprint,
@@ -119,7 +118,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                         Instant.now()
                                 )
                         ),
-                        () -> applicationConfigStore.getFileDownloadEntryStore()
+                        () -> fileDownloadEntryStore
                                 .update(
                                         operationId,
                                         downloadFileEntry -> downloadFileEntry
@@ -138,7 +137,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                     if (downloadProcedure.isStopped()) {
                         return;
                     }
-                    applicationConfigStore.getFileDownloadEntryStore()
+                    fileDownloadEntryStore
                             .update(
                                     operationId,
                                     downloadFileEntry -> downloadFileEntry
@@ -230,7 +229,6 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                       Map<String, DownloadProcedure> waiting) {
         operations.values().forEach(it -> it.stop());
 
-        FileDownloadEntryStore fileDownloadEntryStore = applicationConfigStore.getFileDownloadEntryStore();
         fileDownloadEntryStore.save(
                 () -> Stream
                         .concat(operations.entrySet().stream(), waiting.entrySet().stream())

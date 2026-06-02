@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,7 +19,7 @@ public class ShareCatCommandHandler implements CommandHandler<String, InputStrea
 
     private static final Integer MAX_CAT_FILE_SIZE = 10 * 1024 * 1024;
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
@@ -34,7 +34,7 @@ public class ShareCatCommandHandler implements CommandHandler<String, InputStrea
     @SneakyThrows
     @Override
     public InputStream handle(String id) {
-        ShareFileEntry shareFileEntry = applicationConfigStore.getShareFileEntryStore().getRequired(id)
+        ShareFileEntry shareFileEntry = shareFileEntryStore.getRequired(id)
                 .getValue();
 
         Path filePath = Paths.get(shareFileEntry.absolutePath());

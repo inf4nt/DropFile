@@ -10,6 +10,11 @@ public class DaemonSecretsSingleValueStoreInitializationProcedure
         implements SingleValueStoreInitializationProcedure<DaemonSecretsStore> {
 
     @Override
+    public Class<DaemonSecretsStore> getStoreClass() {
+        return DaemonSecretsStore.class;
+    }
+
+    @Override
     public void init(DaemonSecretsStore store) {
         DaemonSecrets value = new DaemonSecrets(UUID.randomUUID().toString());
         store.save(value);

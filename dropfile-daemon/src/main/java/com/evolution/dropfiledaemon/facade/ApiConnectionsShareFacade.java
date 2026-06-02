@@ -5,10 +5,10 @@ import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
@@ -25,14 +25,14 @@ import java.util.List;
 @Component
 public class ApiConnectionsShareFacade {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final TunnelClient tunnelClient;
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
+
     public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
-        String fingerprintConnection = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
+        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
                 .getKey();
         return ls(fingerprintConnection, requestDTO);
     }
@@ -64,7 +64,7 @@ public class ApiConnectionsShareFacade {
                         .command("share-cat")
                         .body(id)
                         .fingerprint(
-                                applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
+                                handshakeSessionOutStore.getRequiredLatestUpdated()
                                         .getKey()
                         )
                         .build(),
@@ -85,7 +85,7 @@ public class ApiConnectionsShareFacade {
     }
 
     public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        String fingerprintConnection = applicationConfigStore.getHandshakeSessionOutStore().getRequiredLatestUpdated()
+        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
                 .getKey();
 
         FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);

@@ -4,7 +4,8 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiLinkShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiLinkShareLsResponseDTO;
 import com.evolution.dropfile.store.link.LinkShareEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.link.LinkShareEntryStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.controller.PublicLinkShareRestController;
 import com.evolution.dropfiledaemon.util.InetAddressUtils;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
@@ -26,13 +27,15 @@ public class ApiLinkShareFacade {
 
     private final Environment environment;
 
-    private final ApplicationConfigStore applicationConfigStore;
+    private final ShareFileEntryStore shareFileEntryStore;
+
+    private final LinkShareEntryStore linkShareEntryStore;
 
     public ApiLinkShareLsResponseDTO add(ApiLinkShareAddRequestDTO requestDTO) {
-        String shareFileId = applicationConfigStore.getShareFileEntryStore().getRequiredByKeyStartWith(requestDTO.fileId()).getKey();
+        String shareFileId = shareFileEntryStore.getRequiredByKeyStartWith(requestDTO.fileId()).getKey();
 
         KeyEnvelopeUtils.KeyEnvelope keyEnvelope = KeyEnvelopeUtils.generate();
-        LinkShareEntry linkShareEntry = applicationConfigStore.getLinkShareStore().save(keyEnvelope.id(), () -> new LinkShareEntry(
+        LinkShareEntry linkShareEntry = linkShareEntryStore.save(keyEnvelope.id(), () -> new LinkShareEntry(
                 shareFileId,
                 keyEnvelope.key(),
                 false,
@@ -43,17 +46,17 @@ public class ApiLinkShareFacade {
     }
 
     public List<ApiLinkShareLsResponseDTO> ls() {
-        Set<Map.Entry<String, LinkShareEntry>> entries = applicationConfigStore.getLinkShareStore().getAll().entrySet();
+        Set<Map.Entry<String, LinkShareEntry>> entries = linkShareEntryStore.getAll().entrySet();
         return map(entries);
     }
 
     public void removeByKeyStartWith(String id) {
-        String key = applicationConfigStore.getLinkShareStore().getRequiredByKeyStartWith(id).getKey();
-        applicationConfigStore.getLinkShareStore().remove(key);
+        String key = linkShareEntryStore.getRequiredByKeyStartWith(id).getKey();
+        linkShareEntryStore.remove(key);
     }
 
     public void removeAll() {
-        applicationConfigStore.getLinkShareStore().removeAll();
+        linkShareEntryStore.removeAll();
     }
 
     private List<ApiLinkShareLsResponseDTO> map(Collection<? extends Map.Entry<String, LinkShareEntry>> linkShareEntries) {

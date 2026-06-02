@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.share.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfiledaemon.configuration.ApplicationConfigStore;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
@@ -16,9 +16,9 @@ import java.io.File;
 public class ShareDownloadManifestCommandHandler
         implements CommandHandler<ShareDownloadManifestCommandRequest, FileManifest> {
 
-    private final ApplicationConfigStore applicationConfigStore;
-
     private final FileManifestBuilder fileManifestBuilder;
+
+    private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
@@ -32,7 +32,7 @@ public class ShareDownloadManifestCommandHandler
 
     @Override
     public FileManifest handle(ShareDownloadManifestCommandRequest request) {
-        ShareFileEntry fileEntry = applicationConfigStore.getShareFileEntryStore()
+        ShareFileEntry fileEntry = shareFileEntryStore
                 .getRequired(request.fileId()).getValue();
 
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());

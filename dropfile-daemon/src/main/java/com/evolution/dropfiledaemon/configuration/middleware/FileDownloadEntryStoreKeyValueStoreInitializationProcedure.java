@@ -14,6 +14,11 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
         implements KeyValueStoreInitializationProcedure<FileDownloadEntryStore> {
 
     @Override
+    public Class<FileDownloadEntryStore> getStoreClass() {
+        return FileDownloadEntryStore.class;
+    }
+
+    @Override
     public void init(FileDownloadEntryStore store) {
         store.save(() -> {
             Map<String, DownloadFileEntry> currentValues = store.getAll();
