@@ -17,7 +17,7 @@ public class CryptoHandshakeTrustedInStore
                                          ApplicationFingerprintSupplier applicationFingerprintSupplier, Path applicationConfigDirectoryPath) {
         super(
                 new FileProviderImpl(applicationConfigDirectoryPath, ".trustin.bin"),
-                new CryptoFileOperations<>(
+                new CryptoJsonFileOperations<>(
                         fileHelper,
                         objectMapper,
                         TrustedIn.class,

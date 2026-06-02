@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import java.io.InputStream;
 import java.util.Map;
 
-public class CryptoFileOperations<V>
+public class CryptoJsonFileOperations<V>
         extends JsonFileOperations<V>
         implements FileOperations<V> {
 
@@ -17,11 +17,11 @@ public class CryptoFileOperations<V>
 
     private final ApplicationFingerprintSupplier applicationFingerprintSupplier;
 
-    public CryptoFileOperations(FileHelper fileHelper,
-                                ObjectMapper objectMapper,
-                                Class<V> classType,
-                                CryptoTunnel cryptoTunnel,
-                                ApplicationFingerprintSupplier applicationFingerprintSupplier) {
+    public CryptoJsonFileOperations(FileHelper fileHelper,
+                                    ObjectMapper objectMapper,
+                                    Class<V> classType,
+                                    CryptoTunnel cryptoTunnel,
+                                    ApplicationFingerprintSupplier applicationFingerprintSupplier) {
         super(fileHelper, objectMapper, classType);
         this.cryptoTunnel = cryptoTunnel;
         this.applicationFingerprintSupplier = applicationFingerprintSupplier;

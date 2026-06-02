@@ -20,7 +20,7 @@ public class CryptoHandshakeTrustedOutStore
                                           Path applicationConfigDirectoryPath) {
         super(
                 new FileProviderImpl(applicationConfigDirectoryPath, ".trustout.bin"),
-                new CryptoFileOperations<>(
+                new CryptoJsonFileOperations<>(
                         fileHelper,
                         objectMapper,
                         TrustedOut.class,

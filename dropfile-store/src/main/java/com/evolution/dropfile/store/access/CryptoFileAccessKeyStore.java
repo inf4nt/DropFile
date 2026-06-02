@@ -4,7 +4,7 @@ import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.framework.file.CacheableSynchronizedFileKeyValueStore;
-import com.evolution.dropfile.store.framework.file.CryptoFileOperations;
+import com.evolution.dropfile.store.framework.file.CryptoJsonFileOperations;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,7 +18,7 @@ public class CryptoFileAccessKeyStore
                                     ApplicationFingerprintSupplier applicationFingerprintSupplier, Path parrentDirectoryPath) {
         super(
                 new FileProviderImpl(parrentDirectoryPath, "access.keys.config.json"),
-                new CryptoFileOperations<>(
+                new CryptoJsonFileOperations<>(
                         fileHelper,
                         objectMapper,
                         AccessKey.class,
