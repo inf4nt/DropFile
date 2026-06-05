@@ -50,7 +50,7 @@ public class TunnelTrafficMonitor {
                     String fingerprint = entry.getKey();
                     long speedBytesPerSec = entry.getValue().getSpeedBytesPerSec();
                     String displaySize = CommonUtils.toDisplaySize(speedBytesPerSec);
-                    return new AbstractMap.SimpleEntry<>(fingerprint, displaySize);
+                    return Map.entry(fingerprint, displaySize);
                 })
                 .collect(Collectors.toMap(
                         x -> x.getKey(),

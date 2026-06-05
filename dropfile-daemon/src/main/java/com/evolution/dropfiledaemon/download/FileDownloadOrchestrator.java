@@ -67,7 +67,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                     temporaryFilePath,
                     manifestFilePath
             );
-            waitingQueue.add(new AbstractMap.SimpleEntry<>(operationId, downloadProcedure));
+            waitingQueue.add(Map.entry(operationId, downloadProcedure));
         }
 
         tryToStartNext();
@@ -248,7 +248,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                         .withHash(downloadProcedure.getProgress().hash())
                                         .withDownloaded(downloadProcedure.getProgress().downloaded())
                                         .withTotal(downloadProcedure.getProgress().total());
-                                return new AbstractMap.SimpleEntry<>(operationId, updated);
+                                return Map.entry(operationId, updated);
                             }
                             DownloadFileEntry newOne = new DownloadFileEntry(
                                     downloadProcedure.getRequest().fingerprint(),
@@ -260,7 +260,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
                                     Instant.now(),
                                     Instant.now()
                             );
-                            return new AbstractMap.SimpleEntry<>(operationId, newOne);
+                            return Map.entry(operationId, newOne);
                         })
                         .collect(Collectors.toMap(
                                 x -> x.getKey(),

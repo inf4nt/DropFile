@@ -62,7 +62,7 @@ public interface KeyValueStore<V> {
 
     default Optional<Map.Entry<String, V>> get(String key) {
         return Optional.ofNullable(getAll().get(key))
-                .map(it -> new AbstractMap.SimpleEntry<>(key, it));
+                .map(it -> Map.entry(key, it));
     }
 
     default Map.Entry<String, V> getRequired(String key) {
