@@ -1,9 +1,9 @@
-package com.evolution.dropfiledaemon.tunnel.share.command;
+package com.evolution.dropfiledaemon.tunnel.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.share.dto.ShareLsTunnelResponse;
+import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
+import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;

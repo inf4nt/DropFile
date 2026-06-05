@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfiledaemon.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;

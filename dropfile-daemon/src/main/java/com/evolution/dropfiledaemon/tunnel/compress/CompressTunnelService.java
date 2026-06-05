@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.compress;
+package com.evolution.dropfiledaemon.tunnel.compress;
 
 import java.io.IOException;
 import java.io.InputStream;

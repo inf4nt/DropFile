@@ -7,8 +7,8 @@ import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplie
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplierImpl;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
-import com.evolution.dropfiledaemon.compress.CompressTunnelService;
-import com.evolution.dropfiledaemon.compress.ZstdCompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.compress.ZstdCompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;

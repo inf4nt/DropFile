@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.share.dto;
+package com.evolution.dropfiledaemon.tunnel.command.dto;
 
 import java.time.Instant;
 

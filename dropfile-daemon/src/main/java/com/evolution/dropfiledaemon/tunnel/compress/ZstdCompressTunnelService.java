@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.compress;
+package com.evolution.dropfiledaemon.tunnel.compress;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.github.luben.zstd.ZstdInputStream;
