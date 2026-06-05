@@ -26,7 +26,7 @@ public class CommonUtils {
 
     public static String random() {
         return UUID.randomUUID().toString()
-                .replaceAll("-", "")
+                .replace("-", "")
                 .substring(0, 10);
     }
 
