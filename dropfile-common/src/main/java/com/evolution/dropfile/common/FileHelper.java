@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,39 +42,46 @@ public class FileHelper {
     }
 
     public void write(Path path, byte[] data) throws IOException {
-        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
-            write(channel, data, 0);
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE);
+             InputStream inputStream = new ByteArrayInputStream(data)) {
+            write(channel, inputStream, 0, data.length);
         }
     }
 
     public void write(FileChannel fileChannel,
-                      byte[] bytes,
-                      long position) throws IOException {
-        ByteBuffer wrap = ByteBuffer.wrap(bytes);
+                      InputStream inputStream,
+                      long position,
+                      long length) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
         long offset = position;
+        long bytesRemainingToRead = length;
 
-        while (wrap.hasRemaining()) {
+        byte[] transferArray = new byte[bufferSize];
+        int bytesRead;
+
+        while (bytesRemainingToRead > 0 &&
+                (bytesRead = inputStream.read(transferArray, 0, (int) Math.min(transferArray.length, bytesRemainingToRead))) != -1) {
+
             CommonUtils.isInterrupted();
 
-            int originalLimit = wrap.limit();
+            buffer.clear();
+            buffer.put(transferArray, 0, bytesRead);
+            buffer.flip();
 
-            int chunk = Math.min(wrap.remaining(), bufferSize);
-            wrap.limit(wrap.position() + chunk);
-
-            int written = fileChannel.write(wrap, offset);
-            if (written <= 0) {
-                throw new IOException("FileChannel.write wrote zero or negative numbers of bytes");
+            while (buffer.hasRemaining()) {
+                int written = fileChannel.write(buffer, offset);
+                if (written <= 0) {
+                    throw new IOException("FileChannel.write wrote zero or negative numbers of bytes");
+                }
+                offset += written;
             }
-            offset += written;
-            wrap.limit(originalLimit);
-        }
-    }
 
-    @Deprecated
-    // TODO use CommonUtils
-    public String sha256(byte[] data) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance(SHA256);
-        return HexFormat.of().formatHex(digest.digest(data));
+            bytesRemainingToRead -= bytesRead;
+        }
+
+        if (bytesRemainingToRead > 0) {
+            throw new IOException("Stream ended prematurely. Missing " + bytesRemainingToRead + " bytes from manifest");
+        }
     }
 
     public String sha256(Path path) throws NoSuchAlgorithmException, IOException {

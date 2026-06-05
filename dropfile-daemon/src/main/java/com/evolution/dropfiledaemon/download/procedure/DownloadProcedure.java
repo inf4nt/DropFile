@@ -3,13 +3,12 @@ package com.evolution.dropfiledaemon.download.procedure;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.download.ProcedureExceptions;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
@@ -236,9 +235,7 @@ public class DownloadProcedure {
                                 return;
                             }
                             try {
-                                byte[] chunkBytes = chunkDownload(chunkManifest);
-                                writeChunkToFile(fileChannel, chunkBytes, chunkManifest);
-                                downloadSpeedMeter.addChunk(chunkManifest.size());
+                                handleSingleChunk(fileChannel, chunkManifest);
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             }
@@ -257,59 +254,41 @@ public class DownloadProcedure {
         }
     }
 
-    private byte[] chunkDownload(ChunkManifest chunkManifest) {
-        return RetryExecutor.call(() -> {
+    private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest) {
+        RetryExecutor
+                .call(() -> {
                     isInterrupted();
-                    try (InputStream inputStream = tunnelClient.stream(
-                            TunnelClient.Request.builder()
-                                    .command("share-download-chunk-stream")
-                                    .body(new ShareDownloadChunkStreamTunnelRequest(
-                                            request.fileId(),
-                                            chunkManifest.size(),
-                                            chunkManifest.position()
-                                    ))
-                                    .fingerprint(request.fingerprint())
-                                    .build())) {
-                        byte[] allBytes = inputStream.readNBytes(chunkManifest.size());
-                        String sha256 = fileHelper.sha256(allBytes);
-                        if (!chunkManifest.hash().equals(sha256)) {
-                            ProcedureExceptions.chunkDigestMismatchException(
-                                    request.operation(), chunkManifest.hash(), sha256, chunkManifest.size(), chunkManifest.position()
-                            );
-                        }
-                        return allBytes;
+                    TunnelClient.Request tunnelRequest = TunnelClient.Request.builder()
+                            .command("share-download-chunk-stream")
+                            .body(new ShareDownloadChunkStreamTunnelRequest(
+                                    request.fileId(),
+                                    chunkManifest.size(),
+                                    chunkManifest.position()
+                            ))
+                            .fingerprint(request.fingerprint())
+                            .build();
+                    try (InputStream stream = tunnelClient.stream(tunnelRequest)) {
+                        fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
+                    return 1;
                 })
                 .doOnError((attempt, exception) -> {
                     log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
                             chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
                     );
-                })
-                .run();
-    }
-
-    private void writeChunkToFile(FileChannel writeToFileChannel,
-                                  byte[] chunkBytes,
-                                  ChunkManifest chunkManifest) {
-        RetryExecutor
-                .call(() -> {
-                    isInterrupted();
-                    fileHelper.write(writeToFileChannel, chunkBytes, chunkManifest.position());
-                    return 1;
-                })
-                .doOnError((attempt, exception) -> {
-                    log.info("Retry 'write-chunk'. Attempt: {} size {} position {} exception {}",
-                            attempt, chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
-                    );
-                })
-                .run();
+                });
     }
 
     private void totalDigestHandler() throws NoSuchAlgorithmException, IOException {
         String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
         if (!manifest.hash().equals(actualSha256)) {
-            ProcedureExceptions.totalDigestMismatchException(request.operation(), manifest.hash(), actualSha256);
+            throw new RuntimeException(String.format(
+                    "Total digest mismatch. Operation: %s expected: %s actual: %s",
+                    request.operation(),
+                    manifest.hash(),
+                    actualSha256
+            ));
         }
     }
 

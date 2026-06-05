@@ -99,27 +99,6 @@ public class FileHelperTest {
     }
 
     @Test
-    public void sha256() throws Exception {
-        assertThat(
-                fileHelper.sha256("abcdefg".getBytes()),
-                is("7d1a54127b222502f5b79b5fb0803061152a44f92b37e23c6527baf665d4da9a")
-        );
-        assertThat(
-                fileHelper.sha256("abcdefg".getBytes()),
-                is("7d1a54127b222502f5b79b5fb0803061152a44f92b37e23c6527baf665d4da9a")
-        );
-
-        assertThat(
-                fileHelper.sha256("123456".getBytes()),
-                is("8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
-        );
-        assertThat(
-                fileHelper.sha256("123456".getBytes()),
-                is("8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
-        );
-    }
-
-    @Test
     public void sha256File() throws Exception {
         String expected = "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646";
 
