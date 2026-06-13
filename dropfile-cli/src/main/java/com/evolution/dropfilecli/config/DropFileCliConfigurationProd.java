@@ -6,7 +6,7 @@ import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplie
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplierImpl;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
-import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.CryptoCacheDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +30,7 @@ public class DropFileCliConfigurationProd {
                                                  CryptoTunnel cryptoTunnel,
                                                  ApplicationFingerprintSupplier applicationFingerprintSupplier,
                                                  CliApplicationProperties cliApplicationProperties) {
-        return new CryptoDaemonSecretsStore(
+        return new CryptoCacheDaemonSecretsStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,

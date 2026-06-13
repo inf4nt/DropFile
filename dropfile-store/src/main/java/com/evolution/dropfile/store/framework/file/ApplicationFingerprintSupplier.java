@@ -1,7 +1,8 @@
 package com.evolution.dropfile.store.framework.file;
 
-import java.util.function.Supplier;
-
+// TODO rename to InstallationLocalSeedProvider
 @FunctionalInterface
-public interface ApplicationFingerprintSupplier extends Supplier<String> {
+public interface ApplicationFingerprintSupplier {
+
+    String get();
 }

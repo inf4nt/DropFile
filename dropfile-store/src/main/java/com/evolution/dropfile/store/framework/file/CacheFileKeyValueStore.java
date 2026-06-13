@@ -7,15 +7,18 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class CacheableSynchronizedFileKeyValueStore<V>
-        extends SynchronizedFileKeyValueStore<V>
+public class CacheFileKeyValueStore<V>
+        extends FileKeyValueStore<V>
         implements CacheableKeyValueStore<V> {
 
-    volatile Map<String, V> cache;
+    volatile private Map<String, V> cache;
 
-    public CacheableSynchronizedFileKeyValueStore(FileProvider fileProvider, FileOperations<V> fileOperations) {
-        super(fileProvider, fileOperations);
+    public CacheFileKeyValueStore(FileProvider fileProvider,
+                                  FileOperations fileOperations,
+                                  SerdeOperations<V> serdeOperations) {
+        super(fileProvider, fileOperations, serdeOperations);
     }
+
 
     @Override
     public synchronized void init() {

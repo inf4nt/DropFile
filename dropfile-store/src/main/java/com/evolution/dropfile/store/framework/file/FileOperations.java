@@ -1,13 +1,13 @@
 package com.evolution.dropfile.store.framework.file;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
-public interface FileOperations<V> {
+public interface FileOperations {
 
-    void removeAll(Path destination);
+    void removeAll(Path destination) throws IOException;
 
-    void write(Path destination, Map<String, V> values);
+    void write(Path destination, byte[] bytes) throws IOException;
 
-    Map<String, V> read(Path destination);
+    byte[] read(Path destination) throws IOException;
 }

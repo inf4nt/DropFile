@@ -4,14 +4,14 @@ import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
+import com.evolution.dropfile.store.download.CacheDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.download.JsonFileFileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
 import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
-import com.evolution.dropfile.store.secret.CryptoDaemonSecretsStore;
+import com.evolution.dropfile.store.secret.CryptoCacheDaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.share.JsonFileShareFileEntryStore;
+import com.evolution.dropfile.store.share.CacheShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
@@ -19,8 +19,8 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoHandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoCacheHandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.crypto.CryptoCacheHandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +40,9 @@ public class DropFileDaemonConfigurationProd {
     public FileDownloadEntryStore fileDownloadEntryStore(FileHelper fileHelper,
                                                          ObjectMapper objectMapper,
                                                          DaemonApplicationProperties daemonApplicationProperties) {
-        return new JsonFileFileDownloadEntryStore(fileHelper,
+
+
+        return new CacheDownloadEntryStore(fileHelper,
                 objectMapper,
                 Paths.get(daemonApplicationProperties.configDirectory)
         );
@@ -60,7 +62,7 @@ public class DropFileDaemonConfigurationProd {
     public ShareFileEntryStore shareFileEntryStore(FileHelper fileHelper,
                                                    ObjectMapper objectMapper,
                                                    DaemonApplicationProperties daemonApplicationProperties) {
-        return new JsonFileShareFileEntryStore(fileHelper,
+        return new CacheShareFileEntryStore(fileHelper,
                 objectMapper,
                 Paths.get(daemonApplicationProperties.configDirectory)
         );
@@ -72,7 +74,7 @@ public class DropFileDaemonConfigurationProd {
                                                              CryptoTunnel cryptoTunnel,
                                                              ApplicationFingerprintSupplier applicationFingerprintSupplier,
                                                              DaemonApplicationProperties daemonApplicationProperties) {
-        return new CryptoHandshakeTrustedOutStore(
+        return new CryptoCacheHandshakeTrustedOutStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
@@ -87,7 +89,7 @@ public class DropFileDaemonConfigurationProd {
                                                            CryptoTunnel cryptoTunnel,
                                                            ApplicationFingerprintSupplier applicationFingerprintSupplier,
                                                            DaemonApplicationProperties daemonApplicationProperties) {
-        return new CryptoHandshakeTrustedInStore(
+        return new CryptoCacheHandshakeTrustedInStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
@@ -117,7 +119,7 @@ public class DropFileDaemonConfigurationProd {
                                                  CryptoTunnel cryptoTunnel,
                                                  ApplicationFingerprintSupplier applicationFingerprintSupplier,
                                                  DaemonApplicationProperties daemonApplicationProperties) {
-        return new CryptoDaemonSecretsStore(
+        return new CryptoCacheDaemonSecretsStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,

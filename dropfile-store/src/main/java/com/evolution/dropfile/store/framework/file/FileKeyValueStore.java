@@ -1,28 +1,28 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
+@RequiredArgsConstructor
+public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final FileProvider fileProvider;
 
-    private final FileOperations<V> fileOperations;
+    private final FileOperations fileOperations;
 
-    public SynchronizedFileKeyValueStore(FileProvider fileProvider,
-                                         FileOperations<V> fileOperations) {
-        this.fileProvider = fileProvider;
-        this.fileOperations = fileOperations;
-    }
+    private final SerdeOperations<V> serdeOperations;
 
     @Override
     public synchronized void init() {
         fileProvider.getOrCreateFile();
     }
 
+    @SneakyThrows
     @Override
     public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
         Objects.requireNonNull(supplier);
@@ -61,12 +61,14 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
         Map<String, V> all = new LinkedHashMap<>(getAll());
         all.putAll(toSave);
 
+        byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, all);
+        fileOperations.write(filePath, serialize);
 
         return Collections.unmodifiableCollection(toSave.values());
     }
 
+    @SneakyThrows
     @Override
     public synchronized V remove(String key) {
         Objects.requireNonNull(key, "key cannot be null");
@@ -76,20 +78,26 @@ public class SynchronizedFileKeyValueStore<V> implements KeyValueStore<V> {
         if (remove == null) {
             return null;
         }
+
+        byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, all);
+        fileOperations.write(filePath, serialize);
+
         return remove;
     }
 
+    @SneakyThrows
     @Override
     public synchronized void removeAll() {
         Path filePath = fileProvider.getFilePath();
         fileOperations.removeAll(filePath);
     }
 
+    @SneakyThrows
     @Override
     public synchronized Map<String, V> getAll() {
         Path filePath = fileProvider.getFilePath();
-        return fileOperations.read(filePath);
+        byte[] allBytes = fileOperations.read(filePath);
+        return serdeOperations.deserialize(allBytes);
     }
 }

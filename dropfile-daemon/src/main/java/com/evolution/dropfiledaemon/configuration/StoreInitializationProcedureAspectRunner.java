@@ -35,6 +35,8 @@ public class StoreInitializationProcedureAspectRunner {
 
     @EventListener(ApplicationReadyEvent.class)
     public void applicationReadyEventListener() {
+        // TODO If there is no init procedure, then keyValueStore must go through default procedure
+
         for (KeyValueStoreInitializationProcedure procedure : keyValueStoreInitializationProcedures) {
             log.info("Initializing key-value store {}", procedure.getStoreClass());
             KeyValueStore store = getKeyValueStore(procedure);
