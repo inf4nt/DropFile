@@ -18,8 +18,6 @@ public class DaemonApplicationProperties {
 
     public final int daemonPort;
 
-    public final int fileOperationsBufferSize;
-
     public final int downloadOrchestratorMaxQueueSize;
 
     public final int downloadOrchestratorActiveQueueSize;
@@ -52,7 +50,6 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
                                        @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
-                                       @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize,
                                        @Value("${dropfile.handshake.client.http.request-timeout-millis}") int handshakeClientHttpRequestTimeoutMillis,
                                        @Value("${dropfile.handshake.server.payload.life-time}") int handshakeServerPayloadLiveTime,
                                        @Value("${dropfile.tunnel.client.compress.enabled}") boolean tunnelClientCompressEnabled,
@@ -63,7 +60,6 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
                                        @Value("${dropfile.manifest.builder.buffer-size}") int manifestBuildBufferSize,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
-        this.fileOperationsBufferSize = fileOperationsBufferSize;
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;

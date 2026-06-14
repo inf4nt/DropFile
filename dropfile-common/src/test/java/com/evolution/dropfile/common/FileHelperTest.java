@@ -18,13 +18,13 @@ public class FileHelperTest {
 
     @BeforeEach
     public void before() {
-        fileHelper = new FileHelper(64 * 1024);
+        fileHelper = new FileHelper();
         file = new File(getClass().getClassLoader().getResource("readStream.txt").getFile());
     }
 
     @Test
     public void readStreamDoesNotReadAllFile() throws Exception {
-        try (InputStream inputStream = fileHelper.readStream(file, 0, 2)) {
+        try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, 2)) {
             byte[] bytes = inputStream.readAllBytes();
             String actual = new String(bytes);
 
@@ -37,7 +37,7 @@ public class FileHelperTest {
 
     @Test
     public void readStreamIsReadable() throws Exception {
-        try (InputStream inputStream = fileHelper.readStream(file, 0, 4)) {
+        try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, 4)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
             while (true) {
@@ -58,7 +58,7 @@ public class FileHelperTest {
 
     @Test
     public void readStreamSkip() throws Exception {
-        try (InputStream inputStream = fileHelper.readStream(file, 2, 4)) {
+        try (InputStream inputStream = fileHelper.readStream(file.toPath(), 2, 4)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
             while (true) {
@@ -79,7 +79,7 @@ public class FileHelperTest {
 
     @Test
     public void readStreamFull() throws Exception {
-        try (InputStream inputStream = fileHelper.readStream(file, 0, Integer.MAX_VALUE)) {
+        try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, Integer.MAX_VALUE)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
             while (true) {

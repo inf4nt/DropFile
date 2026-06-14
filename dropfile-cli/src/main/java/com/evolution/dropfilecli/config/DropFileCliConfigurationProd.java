@@ -20,8 +20,8 @@ import java.nio.file.Paths;
 public class DropFileCliConfigurationProd {
 
     @Bean
-    public FileHelper fileHelper(CliApplicationProperties applicationProperties) {
-        return new FileHelper(applicationProperties.fileOperationsBufferSize);
+    public FileHelper fileHelper() {
+        return new FileHelper();
     }
 
     @Bean

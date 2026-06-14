@@ -16,17 +16,13 @@ public class CliApplicationProperties {
 
     public final int daemonPort;
 
-    public int fileOperationsBufferSize;
-
     @Autowired
     public CliApplicationProperties(@Value("${user.dir}") String applicationDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
-                                    @Value("${dropfile.daemon.port}") int daemonPort,
-                                    @Value("${dropfile.file.operations.buffer-size}") int fileOperationsBufferSize) {
+                                    @Value("${dropfile.daemon.port}") int daemonPort) {
         this.configDirectory = getConfigDirectory(applicationDirectory);
         this.daemonHost = daemonHost;
         this.daemonPort = daemonPort;
-        this.fileOperationsBufferSize = fileOperationsBufferSize;
     }
 
     @SneakyThrows

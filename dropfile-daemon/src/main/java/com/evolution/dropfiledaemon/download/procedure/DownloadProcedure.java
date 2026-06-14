@@ -237,6 +237,7 @@ public class DownloadProcedure {
                             }
                             try {
                                 handleSingleChunk(fileChannel, chunkManifest);
+                                downloadSpeedMeter.addChunk(chunkManifest.size());
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             }
@@ -278,7 +279,8 @@ public class DownloadProcedure {
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
                             chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
                     );
-                });
+                })
+                .run();
     }
 
     private void totalDigestHandler() throws NoSuchAlgorithmException, IOException {

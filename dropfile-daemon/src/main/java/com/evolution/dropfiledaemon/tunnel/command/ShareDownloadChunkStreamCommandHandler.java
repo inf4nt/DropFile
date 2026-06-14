@@ -42,6 +42,6 @@ public class ShareDownloadChunkStreamCommandHandler
         long skip = request.position();
         int take = request.size();
 
-        return fileHelper.readStream(file, skip, take);
+        return fileHelper.readStream(file.toPath(), skip, take);
     }
 }

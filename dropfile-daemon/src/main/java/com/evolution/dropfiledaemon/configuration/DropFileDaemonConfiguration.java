@@ -3,7 +3,10 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
-import com.evolution.dropfile.store.framework.file.*;
+import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
+import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplierImpl;
+import com.evolution.dropfile.store.framework.file.FileProvider;
+import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfiledaemon.tunnel.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.compress.ZstdCompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,8 +43,8 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public FileHelper fileHelper(DaemonApplicationProperties applicationProperties) {
-        return new FileHelper(applicationProperties.fileOperationsBufferSize);
+    public FileHelper fileHelper() {
+        return new FileHelper();
     }
 
     @Bean
