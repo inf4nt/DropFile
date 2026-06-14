@@ -217,11 +217,11 @@ public class DownloadProcedure {
     private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
-        // TODO StandardOpenOption.TRUNCATE_EXISTING
         try (FileChannel fileChannel = FileChannel.open(
                 request.temporaryFilePath(),
                 StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE)) {
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
             Iterator<ChunkManifest> iterator = manifest.chunkManifests().iterator();
             while (iterator.hasNext()) {
