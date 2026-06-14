@@ -10,6 +10,8 @@ public interface CryptoTunnel {
 
     SecretKey secretKey(byte[] secret);
 
+    InputStream encryptSealStream(InputStream inputStream, SecretKey key);
+
     byte[] encryptInline(byte[] data, SecretKey key);
 
     SecureEnvelope encrypt(byte[] data, SecretKey key);

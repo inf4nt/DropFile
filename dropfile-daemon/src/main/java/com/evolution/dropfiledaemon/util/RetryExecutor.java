@@ -59,11 +59,10 @@ public class RetryExecutor<T> {
                     }
                     return call;
                 }
-            } catch (Exception e) {
-                if (e instanceof InterruptedException
-                        || e.getCause() instanceof InterruptedException
-                        || e instanceof ClosedChannelException
-                        || e.getCause() instanceof ClosedChannelException) {
+            }
+            catch (Exception e) {
+                if (CommonUtils.checkThrowable(e, InterruptedException.class,
+                        ClosedChannelException.class)) {
                     throw e;
                 }
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
@@ -150,12 +149,12 @@ public class RetryExecutor<T> {
         }
 
         public RetryExecutorBuilder<T> doOnError(BiConsumer<Integer, Exception> doOnError) {
-            this.doOnError = doOnError;
+            this.doOnError = Objects.requireNonNull(doOnError);
             return this;
         }
 
         public RetryExecutorBuilder<T> doOnSuccessful(BiConsumer<Integer, T> doOnSuccessful) {
-            this.doOnSuccessful = doOnSuccessful;
+            this.doOnSuccessful = Objects.requireNonNull(doOnSuccessful);
             return this;
         }
 

@@ -9,8 +9,10 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.SequenceInputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -37,6 +39,20 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
                 .getInstance(SHA256_ALGORITHM)
                 .digest(secret);
         return new SecretKeySpec(digest, SECRET_KEY_ALGORITHM);
+    }
+
+    @SneakyThrows
+    @Override
+    public InputStream encryptSealStream(InputStream inputStream, SecretKey key) {
+        byte[] nonce = CommonUtils.nonce12();
+        InputStream nonceStream = new ByteArrayInputStream(nonce);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
+
+        CipherInputStream cipherInputStream = new CipherInputStream(inputStream, cipher);
+
+        return new SequenceInputStream(nonceStream, cipherInputStream);
     }
 
     @SneakyThrows

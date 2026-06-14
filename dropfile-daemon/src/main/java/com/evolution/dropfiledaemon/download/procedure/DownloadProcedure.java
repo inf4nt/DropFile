@@ -217,6 +217,7 @@ public class DownloadProcedure {
     private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
+        // TODO StandardOpenOption.TRUNCATE_EXISTING
         try (FileChannel fileChannel = FileChannel.open(
                 request.temporaryFilePath(),
                 StandardOpenOption.CREATE,

@@ -125,6 +125,24 @@ public class CommonUtils {
         }
     }
 
+    @SafeVarargs
+    public static boolean checkThrowable(Throwable throwable,
+                                         Class<? extends Throwable>... lookFor) {
+        Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        Throwable cause = throwable;
+
+        while (cause != null && visited.add(cause)) {
+            for (Class<? extends Throwable> targetClass : lookFor) {
+                if (targetClass.isInstance(cause)) {
+                    return true;
+                }
+            }
+            cause = cause.getCause();
+        }
+
+        return false;
+    }
+
     public static <T> T requireOne(Collection<T> source) {
         return requireOne(source, null, null);
     }

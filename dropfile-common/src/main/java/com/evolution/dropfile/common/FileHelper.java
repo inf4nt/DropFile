@@ -1,18 +1,20 @@
 package com.evolution.dropfile.common;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
+@Deprecated
 public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
@@ -41,10 +43,17 @@ public class FileHelper {
         }
     }
 
-    public void write(Path path, byte[] data) throws IOException {
-        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE);
-             InputStream inputStream = new ByteArrayInputStream(data)) {
-            write(channel, inputStream, 0, data.length);
+    public void write(Path path, InputStream inputStream) throws IOException {
+        try (OutputStream outputStream = Files.newOutputStream(path,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE)) {
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                CommonUtils.isInterrupted();
+                outputStream.write(buffer, 0, bytesRead);
+            }
         }
     }
 
@@ -52,11 +61,12 @@ public class FileHelper {
                       InputStream inputStream,
                       long position,
                       long length) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
         long offset = position;
         long bytesRemainingToRead = length;
 
         byte[] transferArray = new byte[bufferSize];
+        ByteBuffer buffer = ByteBuffer.wrap(transferArray);
+
         int bytesRead;
 
         while (bytesRemainingToRead > 0 &&
@@ -64,9 +74,8 @@ public class FileHelper {
 
             CommonUtils.isInterrupted();
 
-            buffer.clear();
-            buffer.put(transferArray, 0, bytesRead);
-            buffer.flip();
+            buffer.position(0);
+            buffer.limit(bytesRead);
 
             while (buffer.hasRemaining()) {
                 int written = fileChannel.write(buffer, offset);

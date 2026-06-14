@@ -4,6 +4,8 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
@@ -63,7 +65,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
         byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, serialize);
+        fileOperations.write(filePath, new ByteArrayInputStream(serialize));
 
         return Collections.unmodifiableCollection(toSave.values());
     }
@@ -81,7 +83,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
         byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, serialize);
+        fileOperations.write(filePath, new ByteArrayInputStream(serialize));
 
         return remove;
     }
@@ -97,7 +99,10 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
     @Override
     public synchronized Map<String, V> getAll() {
         Path filePath = fileProvider.getFilePath();
-        byte[] allBytes = fileOperations.read(filePath);
-        return serdeOperations.deserialize(allBytes);
+        try (InputStream inputStream = fileOperations.read(filePath)) {
+            return serdeOperations.deserialize(inputStream);
+        } catch (NoContentFoundException e) {
+            return Collections.emptyMap();
+        }
     }
 }

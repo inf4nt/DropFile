@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -41,8 +42,8 @@ public class JsonSerdeOperations<V> implements SerdeOperations<V> {
     }
 
     @Override
-    public Map<String, V> deserialize(byte[] bytes) throws IOException {
-        return objectMapper.readValue(bytes, typeReference);
+    public Map<String, V> deserialize(InputStream inputStream) throws IOException {
+        return objectMapper.readValue(inputStream, typeReference);
     }
 
     @Override

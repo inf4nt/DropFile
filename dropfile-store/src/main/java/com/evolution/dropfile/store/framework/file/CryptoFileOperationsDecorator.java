@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class CryptoFileOperationsDecorator implements FileOperations {
@@ -23,18 +25,25 @@ public class CryptoFileOperationsDecorator implements FileOperations {
     }
 
     @Override
-    public void write(Path destination, byte[] bytes) throws IOException {
-        SecretKey secretKey = cryptoTunnel.secretKey(getFingerprint());
-        byte[] encrypted = cryptoTunnel.encryptInline(bytes, secretKey);
-        delegate.write(destination, encrypted);
+    public void write(Path destination, InputStream inputStream) throws IOException {
+        byte[] fingerprint = getFingerprint();
+        SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
+        try (InputStream encryptStream = cryptoTunnel.encryptSealStream(inputStream, secretKey)) {
+            delegate.write(destination, encryptStream);
+        }
     }
 
     @Override
-    public byte[] read(Path destination) throws IOException {
-        byte[] allBytes = delegate.read(destination);
-        byte[] fingerprint = getFingerprint();
-        SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-        return cryptoTunnel.decryptInline(allBytes, secretKey);
+    public InputStream read(Path destination) throws NoContentFoundException, IOException {
+        InputStream inputStream = delegate.read(destination);
+        try {
+            byte[] fingerprint = getFingerprint();
+            SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
+            return cryptoTunnel.decrypt(inputStream, secretKey);
+        } catch (Exception e) {
+            inputStream.close();
+            throw new IOException(e);
+        }
     }
 
     private byte[] getFingerprint() {

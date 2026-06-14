@@ -33,11 +33,11 @@ public class FileSystemOperations implements FileOperations {
     }
 
     @Override
-    public void write(Path destination, byte[] bytes) throws IOException {
+    public void write(Path destination, InputStream inputStream) throws IOException {
         Path temporaryFilePath = null;
         try {
             temporaryFilePath = getOrCreateTemporaryFilePath(destination);
-            fileHelper.write(temporaryFilePath, bytes);
+            fileHelper.write(temporaryFilePath, inputStream);
             Files.move(temporaryFilePath, destination, StandardCopyOption.ATOMIC_MOVE);
         } finally {
             if (temporaryFilePath != null) {
@@ -47,13 +47,17 @@ public class FileSystemOperations implements FileOperations {
     }
 
     @Override
-    public byte[] read(Path destination) throws IOException {
+    public InputStream read(Path destination) throws NoContentFoundException, IOException {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
-            return null;
+            throw new NoContentFoundException(destination);
         }
-        try (FileChannel fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
-             InputStream inputStream = Channels.newInputStream(fileChannel)) {
-            return inputStream.readAllBytes();
+
+        FileChannel fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
+        try {
+            return Channels.newInputStream(fileChannel);
+        } catch (Exception e) {
+            fileChannel.close();
+            throw new IOException(e);
         }
     }
 
