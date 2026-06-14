@@ -21,7 +21,6 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Aspect
-@Profile("prod")
 @Component
 public class StoreInitializationProcedureAspectRunner {
 

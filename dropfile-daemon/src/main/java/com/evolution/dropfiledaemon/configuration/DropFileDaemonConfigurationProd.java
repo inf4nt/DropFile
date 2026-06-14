@@ -7,9 +7,7 @@ import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStoreImpl;
-import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.file.*;
-import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
@@ -20,8 +18,6 @@ import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
 import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.configuration.middleware.KeyValueStoreInitializationGenericProcedureImpl;
-import com.evolution.dropfiledaemon.configuration.middleware.SingleValueStoreInitializationGenericProcedureImpl;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
@@ -48,19 +44,9 @@ public class DropFileDaemonConfigurationProd {
     public InstallationSeedProvider installationSeedProvider(DaemonApplicationProperties applicationProperties) {
         FileProvider fileProvider = new FileProviderImpl(
                 Paths.get(applicationProperties.configDirectory),
-                ".instalation.seed.bin"
+                ".installation.bin"
         );
         return new FileSystemInstallationSeedProvider(fileProvider);
-    }
-
-    @Bean
-    public KeyValueStoreInitializationGenericProcedure keyValueStoreInitializationGenericProcedure() {
-        return new KeyValueStoreInitializationGenericProcedureImpl();
-    }
-
-    @Bean
-    public SingleValueStoreInitializationGenericProcedure singleValueStoreInitializationGenericProcedure() {
-        return new SingleValueStoreInitializationGenericProcedureImpl();
     }
 
     @Primary
@@ -86,7 +72,7 @@ public class DropFileDaemonConfigurationProd {
                                                          DaemonApplicationProperties daemonApplicationProperties) {
         FileProvider fileProvider = new FileProviderImpl(
                 Paths.get(daemonApplicationProperties.configDirectory),
-                "download.file.entries.json"
+                "download.entries.json"
         );
         SerdeOperations<DownloadFileEntry> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
@@ -115,7 +101,7 @@ public class DropFileDaemonConfigurationProd {
                                                    DaemonApplicationProperties daemonApplicationProperties) {
         FileProvider fileProvider = new FileProviderImpl(
                 Paths.get(daemonApplicationProperties.configDirectory),
-                "share.file.entries.json"
+                "share.entries.json"
         );
         SerdeOperations<ShareFileEntry> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,

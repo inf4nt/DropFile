@@ -3,6 +3,10 @@ package com.evolution.dropfiledaemon.configuration;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGenericProcedure;
+import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
+import com.evolution.dropfiledaemon.configuration.middleware.KeyValueStoreInitializationGenericProcedureImpl;
+import com.evolution.dropfiledaemon.configuration.middleware.SingleValueStoreInitializationGenericProcedureImpl;
 import com.evolution.dropfiledaemon.tunnel.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.compress.ZstdCompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,5 +44,15 @@ public class DropFileDaemonConfiguration {
     @Bean
     public FileHelper fileHelper() {
         return new FileHelper();
+    }
+
+    @Bean
+    public KeyValueStoreInitializationGenericProcedure keyValueStoreInitializationGenericProcedure() {
+        return new KeyValueStoreInitializationGenericProcedureImpl();
+    }
+
+    @Bean
+    public SingleValueStoreInitializationGenericProcedure singleValueStoreInitializationGenericProcedure() {
+        return new SingleValueStoreInitializationGenericProcedureImpl();
     }
 }

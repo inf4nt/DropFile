@@ -63,7 +63,7 @@ public class DropFileCliConfigurationProd {
     public InstallationSeedProvider applicationFingerprintSupplier(CliApplicationProperties cliApplicationProperties) {
         FileProvider fileProvider = new FileProviderImpl(
                 Paths.get(cliApplicationProperties.configDirectory),
-                ".fingerprint.bin"
+                ".installation.bin"
         );
         return new FileSystemInstallationSeedProvider(fileProvider);
     }

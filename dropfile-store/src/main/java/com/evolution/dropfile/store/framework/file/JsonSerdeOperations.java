@@ -48,6 +48,6 @@ public class JsonSerdeOperations<V> implements SerdeOperations<V> {
 
     @Override
     public byte[] serialize(Map<String, V> values) throws IOException {
-        return objectMapper.writeValueAsBytes(values);
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(values);
     }
 }
