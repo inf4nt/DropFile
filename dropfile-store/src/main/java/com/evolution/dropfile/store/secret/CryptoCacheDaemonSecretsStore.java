@@ -15,7 +15,7 @@ public class CryptoCacheDaemonSecretsStore
     public CryptoCacheDaemonSecretsStore(FileHelper fileHelper,
                                          ObjectMapper objectMapper,
                                          CryptoTunnel cryptoTunnel,
-                                         ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                         InstallationSeedProvider installationSeedProvider,
                                          Path applicationConfigDirectoryPath) {
         super(
                 "daemonSecrets",
@@ -24,7 +24,7 @@ public class CryptoCacheDaemonSecretsStore
                         new CryptoFileOperationsDecorator(
                                 new FileSystemOperations(fileHelper),
                                 cryptoTunnel,
-                                applicationFingerprintSupplier
+                                installationSeedProvider
                         ),
                         new JsonSerdeOperations<>(objectMapper, DaemonSecrets.class)
                 )

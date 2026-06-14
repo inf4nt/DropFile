@@ -2,8 +2,8 @@ package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
-import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplierImpl;
+import com.evolution.dropfile.store.framework.file.InstallationSeedProvider;
+import com.evolution.dropfile.store.framework.file.FileSystemInstallationSeedProvider;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.secret.CryptoCacheDaemonSecretsStore;
@@ -28,23 +28,23 @@ public class DropFileCliConfigurationProd {
     public DaemonSecretsStore secretsConfigStore(FileHelper fileHelper,
                                                  ObjectMapper objectMapper,
                                                  CryptoTunnel cryptoTunnel,
-                                                 ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                                 InstallationSeedProvider installationSeedProvider,
                                                  CliApplicationProperties cliApplicationProperties) {
         return new CryptoCacheDaemonSecretsStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
-                applicationFingerprintSupplier,
+                installationSeedProvider,
                 Paths.get(cliApplicationProperties.configDirectory)
         );
     }
 
     @Bean
-    public ApplicationFingerprintSupplier applicationFingerprintSupplier(CliApplicationProperties cliApplicationProperties) {
+    public InstallationSeedProvider applicationFingerprintSupplier(CliApplicationProperties cliApplicationProperties) {
         FileProvider fileProvider = new FileProviderImpl(
                 Paths.get(cliApplicationProperties.configDirectory),
                 ".fingerprint.bin"
         );
-        return new ApplicationFingerprintSupplierImpl(fileProvider);
+        return new FileSystemInstallationSeedProvider(fileProvider);
     }
 }

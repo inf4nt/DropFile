@@ -15,7 +15,7 @@ public class CryptoCacheHandshakeTrustedInStore
     public CryptoCacheHandshakeTrustedInStore(FileHelper fileHelper,
                                               ObjectMapper objectMapper,
                                               CryptoTunnel cryptoTunnel,
-                                              ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                              InstallationSeedProvider installationSeedProvider,
                                               Path applicationConfigDirectoryPath) {
         super(
                 new FileProviderImpl(
@@ -27,7 +27,7 @@ public class CryptoCacheHandshakeTrustedInStore
                                 fileHelper
                         ),
                         cryptoTunnel,
-                        applicationFingerprintSupplier
+                        installationSeedProvider
                 ),
                 new JsonSerdeOperations<>(objectMapper, TrustedIn.class)
         );

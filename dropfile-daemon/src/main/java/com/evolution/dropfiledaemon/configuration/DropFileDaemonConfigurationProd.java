@@ -6,7 +6,10 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.download.CacheDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.framework.file.ApplicationFingerprintSupplier;
+import com.evolution.dropfile.store.framework.file.InstallationSeedProvider;
+import com.evolution.dropfile.store.framework.file.FileSystemInstallationSeedProvider;
+import com.evolution.dropfile.store.framework.file.FileProvider;
+import com.evolution.dropfile.store.framework.file.FileProviderImpl;
 import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.CryptoCacheDaemonSecretsStore;
@@ -35,6 +38,15 @@ import java.nio.file.Paths;
 @Profile("prod")
 @Configuration
 public class DropFileDaemonConfigurationProd {
+
+    @Bean
+    public InstallationSeedProvider applicationFingerprintSupplier(DaemonApplicationProperties applicationProperties) {
+        FileProvider fileProvider = new FileProviderImpl(
+                Paths.get(applicationProperties.configDirectory),
+                ".fingerprint.bin"
+        );
+        return new FileSystemInstallationSeedProvider(fileProvider);
+    }
 
     @Bean
     public FileDownloadEntryStore fileDownloadEntryStore(FileHelper fileHelper,
@@ -72,13 +84,13 @@ public class DropFileDaemonConfigurationProd {
     public HandshakeTrustedOutStore handshakeTrustedOutStore(FileHelper fileHelper,
                                                              ObjectMapper objectMapper,
                                                              CryptoTunnel cryptoTunnel,
-                                                             ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                                             InstallationSeedProvider installationSeedProvider,
                                                              DaemonApplicationProperties daemonApplicationProperties) {
         return new CryptoCacheHandshakeTrustedOutStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
-                applicationFingerprintSupplier,
+                installationSeedProvider,
                 Paths.get(daemonApplicationProperties.configDirectory)
         );
     }
@@ -87,13 +99,13 @@ public class DropFileDaemonConfigurationProd {
     public HandshakeTrustedInStore handshakeTrustedInStore(FileHelper fileHelper,
                                                            ObjectMapper objectMapper,
                                                            CryptoTunnel cryptoTunnel,
-                                                           ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                                           InstallationSeedProvider installationSeedProvider,
                                                            DaemonApplicationProperties daemonApplicationProperties) {
         return new CryptoCacheHandshakeTrustedInStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
-                applicationFingerprintSupplier,
+                installationSeedProvider,
                 Paths.get(daemonApplicationProperties.configDirectory)
         );
     }
@@ -117,13 +129,13 @@ public class DropFileDaemonConfigurationProd {
     public DaemonSecretsStore daemonSecretsStore(FileHelper fileHelper,
                                                  ObjectMapper objectMapper,
                                                  CryptoTunnel cryptoTunnel,
-                                                 ApplicationFingerprintSupplier applicationFingerprintSupplier,
+                                                 InstallationSeedProvider installationSeedProvider,
                                                  DaemonApplicationProperties daemonApplicationProperties) {
         return new CryptoCacheDaemonSecretsStore(
                 fileHelper,
                 objectMapper,
                 cryptoTunnel,
-                applicationFingerprintSupplier,
+                installationSeedProvider,
                 Paths.get(daemonApplicationProperties.configDirectory)
         );
     }

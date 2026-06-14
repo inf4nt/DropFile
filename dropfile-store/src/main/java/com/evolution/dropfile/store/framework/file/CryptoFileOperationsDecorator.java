@@ -8,7 +8,6 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 public class CryptoFileOperationsDecorator implements FileOperations {
@@ -17,7 +16,7 @@ public class CryptoFileOperationsDecorator implements FileOperations {
 
     private final CryptoTunnel cryptoTunnel;
 
-    private final ApplicationFingerprintSupplier applicationFingerprintSupplier;
+    private final InstallationSeedProvider installationSeedProvider;
 
     @Override
     public void removeAll(Path destination) throws IOException {
@@ -47,7 +46,7 @@ public class CryptoFileOperationsDecorator implements FileOperations {
     }
 
     private byte[] getFingerprint() {
-        String fingerprint = applicationFingerprintSupplier.get();
+        String fingerprint = installationSeedProvider.get();
         String string = cryptoTunnel.getAlgorithm() +
                 this.getClass().getName() +
 //                classType +

@@ -11,13 +11,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
-public class ApplicationFingerprintSupplierImpl implements ApplicationFingerprintSupplier {
+public class FileSystemInstallationSeedProvider implements InstallationSeedProvider {
 
     private final FileProvider fileProvider;
 
     volatile private String fingerprint;
 
-    public ApplicationFingerprintSupplierImpl(FileProvider fileProvider) {
+    public FileSystemInstallationSeedProvider(FileProvider fileProvider) {
         this.fileProvider = fileProvider;
     }
 
