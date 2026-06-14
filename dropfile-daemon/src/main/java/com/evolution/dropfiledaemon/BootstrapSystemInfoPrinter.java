@@ -1,11 +1,11 @@
 package com.evolution.dropfiledaemon;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.configuration.StoreInitializationProcedureReadyEvent;
 import com.evolution.dropfiledaemon.system.SystemInfoProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ public class BootstrapSystemInfoPrinter {
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(StoreInitializationProcedureReadyEvent.class)
     public void onApplicationEvent() {
         Map<String, Object> systemInfo = systemInfoProvider.getSystemInfo();
         System.out.println("================================");

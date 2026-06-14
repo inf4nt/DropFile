@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 @RequiredArgsConstructor
-public class CryptoFileOperationsDecorator implements FileOperations {
+public class CryptoFileOperations implements FileOperations {
 
     private final FileOperations delegate;
 
@@ -46,11 +46,11 @@ public class CryptoFileOperationsDecorator implements FileOperations {
     }
 
     private byte[] getFingerprint() {
-        String fingerprint = installationSeedProvider.get();
+        String seed = installationSeedProvider.get();
         String string = cryptoTunnel.getAlgorithm() +
                 this.getClass().getName() +
 //                classType +
-                fingerprint;
+                seed;
         return CommonUtils.getFingerprint(string.getBytes()).getBytes();
     }
 }

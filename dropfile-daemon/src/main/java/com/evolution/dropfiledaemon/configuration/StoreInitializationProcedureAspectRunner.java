@@ -1,8 +1,10 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
+import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
+import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +21,15 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Aspect
+@Profile("prod")
 @Component
 public class StoreInitializationProcedureAspectRunner {
 
     private boolean initialized = false;
+
+    private final KeyValueStoreInitializationGenericProcedure keyValueStoreInitializationGenericProcedure;
+
+    private final SingleValueStoreInitializationGenericProcedure singleValueStoreInitializationGenericProcedure;
 
     private final List<KeyValueStore> keyValueStores;
 
@@ -35,7 +43,13 @@ public class StoreInitializationProcedureAspectRunner {
 
     @EventListener(ApplicationReadyEvent.class)
     public void applicationReadyEventListener() {
-        // TODO If there is no init procedure, then keyValueStore must go through default procedure
+        for (KeyValueStore keyValueStore : keyValueStores) {
+            keyValueStoreInitializationGenericProcedure.init(keyValueStore);
+        }
+
+        for (SingleValueStore singleValueStore : singleValueStores) {
+            singleValueStoreInitializationGenericProcedure.init(singleValueStore);
+        }
 
         for (KeyValueStoreInitializationProcedure procedure : keyValueStoreInitializationProcedures) {
             log.info("Initializing key-value store {}", procedure.getStoreClass());
@@ -69,7 +83,9 @@ public class StoreInitializationProcedureAspectRunner {
             try {
                 Class<?> clazz = Class.forName(className);
                 if (KeyValueStoreInitializationProcedure.class.isAssignableFrom(clazz)
-                        || SingleValueStoreInitializationProcedure.class.isAssignableFrom(clazz)) {
+                        || SingleValueStoreInitializationProcedure.class.isAssignableFrom(clazz)
+                        || KeyValueStoreInitializationGenericProcedure.class.isAssignableFrom(clazz)
+                        || SingleValueStoreInitializationGenericProcedure.class.isAssignableFrom(clazz)) {
                     approvedByProcedure = true;
                     break;
                 }
