@@ -37,7 +37,10 @@ public class ShareDownloadManifestCommandHandler
 
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
 
-        // TODO manifest filename is a real filename. Must be an alias.
-        return fileManifestBuilder.build(new File(fileEntry.absolutePath()), chunkSize);
+        return fileManifestBuilder.build(
+                new File(fileEntry.absolutePath()),
+                fileEntry.alias(),
+                chunkSize
+        );
     }
 }

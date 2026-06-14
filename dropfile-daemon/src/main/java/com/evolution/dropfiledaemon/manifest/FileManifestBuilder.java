@@ -5,6 +5,7 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -87,7 +88,11 @@ public class FileManifestBuilder {
     }
 
     @SneakyThrows
-    public FileManifest build(File file, int chunkSize) {
+    public FileManifest build(File file, String fileManifestName, int chunkSize) {
+        if (ObjectUtils.isEmpty(fileManifestName)) {
+            throw new IllegalStateException("File manifest name is empty");
+        }
+
         if (chunkSize <= 0) {
             throw new IllegalArgumentException("Chunk size must be greater than zero");
         }
@@ -139,7 +144,7 @@ public class FileManifestBuilder {
                 .sum();
 
         return new FileManifest(
-                file.getName(),
+                fileManifestName,
                 HexFormat.of().formatHex(manifestDigest.digest()),
                 totalSize,
                 chunkManifests

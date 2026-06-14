@@ -34,7 +34,7 @@ public class FileManifestBuilderTest {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         assertThrows(FileNotFoundException.class, () -> {
-            underTest.build(new File("fake-file.txt"), Integer.MAX_VALUE);
+            underTest.build(new File("fake-file.txt"), "fake-file.txt", Integer.MAX_VALUE);
         });
     }
 
@@ -44,7 +44,7 @@ public class FileManifestBuilderTest {
 
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> underTest.build(new File(""), Integer.MAX_VALUE)
+                () -> underTest.build(new File(""), "fake-file.txt", Integer.MAX_VALUE)
         );
     }
 
@@ -52,7 +52,7 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize3() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file, 3);
+        FileManifest actual = underTest.build(file, "alias.txt", 3);
 
         assertDoesNotThrow(() -> {
             underTest.validate(actual);
@@ -68,7 +68,7 @@ public class FileManifestBuilderTest {
         );
         assertThat(
                 actual.fileName(),
-                is("readStream.txt")
+                is("alias.txt")
         );
         assertThat(
                 actual.chunkManifests().size(),
@@ -105,7 +105,7 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize3Buffer1() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 1);
 
-        FileManifest actual = underTest.build(file, 3);
+        FileManifest actual = underTest.build(file, "alias.txt", 3);
 
         assertDoesNotThrow(() -> {
             underTest.validate(actual);
@@ -121,7 +121,7 @@ public class FileManifestBuilderTest {
         );
         assertThat(
                 actual.fileName(),
-                is("readStream.txt")
+                is("alias.txt")
         );
         assertThat(
                 actual.chunkManifests().size(),
@@ -158,7 +158,7 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize3BufferMax() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-        FileManifest actual = underTest.build(file, 3);
+        FileManifest actual = underTest.build(file, "alias.txt", 3);
 
         assertDoesNotThrow(() -> {
             underTest.validate(actual);
@@ -174,7 +174,7 @@ public class FileManifestBuilderTest {
         );
         assertThat(
                 actual.fileName(),
-                is("readStream.txt")
+                is("alias.txt")
         );
         assertThat(
                 actual.chunkManifests().size(),
@@ -211,7 +211,7 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize9() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file, 9);
+        FileManifest actual = underTest.build(file, "alias.txt", 9);
 
         assertDoesNotThrow(() -> {
             underTest.validate(actual);
@@ -227,7 +227,7 @@ public class FileManifestBuilderTest {
         );
         assertThat(
                 actual.fileName(),
-                is("readStream.txt")
+                is("alias.txt")
         );
         assertThat(
                 actual.chunkManifests().size(),
@@ -254,7 +254,7 @@ public class FileManifestBuilderTest {
     public void buildManifestChunkSize() {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE, 4);
 
-        FileManifest actual = underTest.build(file, Integer.MAX_VALUE);
+        FileManifest actual = underTest.build(file, "alias.txt", Integer.MAX_VALUE);
 
         assertDoesNotThrow(() -> {
             underTest.validate(actual);
@@ -270,7 +270,7 @@ public class FileManifestBuilderTest {
         );
         assertThat(
                 actual.fileName(),
-                is("readStream.txt")
+                is("alias.txt")
         );
         assertThat(
                 actual.chunkManifests().size(),
