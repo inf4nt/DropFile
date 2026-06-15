@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WatchdogInputStream extends FilterInputStream {
 
@@ -22,7 +23,7 @@ public class WatchdogInputStream extends FilterInputStream {
 
     private long bytesRead;
 
-    volatile private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     public WatchdogInputStream(InputStream in) {
         this(in, Long.MAX_VALUE, null);
@@ -49,9 +50,7 @@ public class WatchdogInputStream extends FilterInputStream {
 
     @Override
     public int read() throws IOException {
-        if (closed) {
-            throw new IOException("Stream already closed");
-        }
+        ensureOpen();
 
         if (isLimitReached()) {
             return -1;
@@ -70,9 +69,7 @@ public class WatchdogInputStream extends FilterInputStream {
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if (closed) {
-            throw new IOException("Stream already closed");
-        }
+        ensureOpen();
 
         if (isLimitReached()) {
             return -1;
@@ -99,17 +96,22 @@ public class WatchdogInputStream extends FilterInputStream {
     }
 
     @Override
-    public void close() {
-        if (!closed) {
+    public void close() throws IOException {
+        if (closed.compareAndSet(false, true)) {
             finalizeStream();
-            CommonUtils.executeSafety(() -> super.close());
-            closed = true;
+            super.close();
         }
     }
 
     private void finalizeStream() {
         if (watchdogTask != null && !watchdogTask.isDone()) {
-            watchdogTask.cancel(true);
+            watchdogTask.cancel(false);
+        }
+    }
+
+    private void ensureOpen() throws IOException {
+        if (closed.get()) {
+            throw new IOException("Stream already closed");
         }
     }
 }

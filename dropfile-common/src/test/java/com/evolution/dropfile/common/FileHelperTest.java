@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -19,11 +20,13 @@ public class FileHelperTest {
     @BeforeEach
     public void before() {
         fileHelper = new FileHelper();
-        file = new File(getClass().getClassLoader().getResource("readStream.txt").getFile());
+        file = new File(
+                Objects.requireNonNull(getClass().getClassLoader().getResource("readStream.txt")).getFile()
+        );
     }
 
     @Test
-    public void readStreamDoesNotReadAllFile() throws Exception {
+    public void readStream_ShouldReturnLimitedBytes_WhenUsingReadAllBytes() throws Exception {
         try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, 2)) {
             byte[] bytes = inputStream.readAllBytes();
             String actual = new String(bytes);
@@ -36,7 +39,7 @@ public class FileHelperTest {
     }
 
     @Test
-    public void readStreamIsReadable() throws Exception {
+    public void readStream_ShouldReturnLimitedBytes_WhenReadInChunksFromStart() throws Exception {
         try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, 4)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
@@ -57,7 +60,7 @@ public class FileHelperTest {
     }
 
     @Test
-    public void readStreamSkip() throws Exception {
+    public void readStream_ShouldStartFromOffset_WhenReadInChunks() throws Exception {
         try (InputStream inputStream = fileHelper.readStream(file.toPath(), 2, 4)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
@@ -78,7 +81,7 @@ public class FileHelperTest {
     }
 
     @Test
-    public void readStreamFull() throws Exception {
+    public void readStream_ShouldReturnEntireFile_WhenSizeIsMaxInteger() throws Exception {
         try (InputStream inputStream = fileHelper.readStream(file.toPath(), 0, Integer.MAX_VALUE)) {
             StringBuilder actual = new StringBuilder();
             byte[] bytes = new byte[3];
@@ -99,7 +102,7 @@ public class FileHelperTest {
     }
 
     @Test
-    public void sha256File() throws Exception {
+    public void sha256_ShouldBeIdempotent_WhenCalledMultipleTimes() throws Exception {
         String expected = "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646";
 
         assertThat(
