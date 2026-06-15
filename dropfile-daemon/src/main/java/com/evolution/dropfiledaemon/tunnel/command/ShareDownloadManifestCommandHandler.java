@@ -7,6 +7,7 @@ import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -30,6 +31,7 @@ public class ShareDownloadManifestCommandHandler
         return ShareDownloadManifestCommandRequest.class;
     }
 
+    @SneakyThrows
     @Override
     public FileManifest handle(ShareDownloadManifestCommandRequest request) {
         ShareFileEntry fileEntry = shareFileEntryStore
@@ -38,7 +40,7 @@ public class ShareDownloadManifestCommandHandler
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
 
         return fileManifestBuilder.build(
-                new File(fileEntry.absolutePath()),
+                new File(fileEntry.absolutePath()).toPath(),
                 fileEntry.alias(),
                 chunkSize
         );

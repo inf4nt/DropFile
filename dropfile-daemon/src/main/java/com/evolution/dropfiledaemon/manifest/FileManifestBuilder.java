@@ -1,26 +1,25 @@
 package com.evolution.dropfiledaemon.manifest;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Component
@@ -28,18 +27,17 @@ public class FileManifestBuilder {
 
     private static final String SHA256 = "SHA-256";
 
-    private final int chunkMaxSize;
+    private static final HexFormat HEX_FORMAT = HexFormat.of();
 
-    private final int bufferSize;
+    private final int chunkMaxSize;
 
     @Autowired
     public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties) {
-        this(daemonApplicationProperties.manifestChunkMaxSize, daemonApplicationProperties.manifestBuildBufferSize);
+        this(daemonApplicationProperties.manifestChunkMaxSize);
     }
 
-    FileManifestBuilder(int chunkMaxSize, int bufferSize) {
+    FileManifestBuilder(int chunkMaxSize) {
         this.chunkMaxSize = chunkMaxSize;
-        this.bufferSize = bufferSize;
     }
 
     public void validate(FileManifest fileManifest) {
@@ -87,66 +85,83 @@ public class FileManifestBuilder {
         }
     }
 
-    @SneakyThrows
-    public FileManifest build(File file, String fileManifestName, int chunkSize) {
+    public FileManifest build(Path path, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
         if (ObjectUtils.isEmpty(fileManifestName)) {
             throw new IllegalStateException("File manifest name is empty");
         }
-
         if (chunkSize <= 0) {
             throw new IllegalArgumentException("Chunk size must be greater than zero");
         }
-
-        if (!Files.exists(file.toPath())) {
-            throw new FileNotFoundException("No file found: " + file.getAbsolutePath());
+        if (!Files.exists(path)) {
+            throw new FileNotFoundException("No file found: " + path);
+        }
+        if (Files.isDirectory(path)) {
+            throw new UnsupportedOperationException("Directories are unsupported: " + path.toAbsolutePath());
         }
 
-        if (Files.isDirectory(file.toPath())) {
-            throw new UnsupportedOperationException("Directories are unsupported: " + file.getAbsolutePath());
-        }
+        final long fileSize = Files.size(path);
 
-        List<ChunkManifest> chunkManifests = Collections.synchronizedList(new ArrayList<>());
-        int chunkSizeFactor = Math.toIntExact(Math.min(chunkSize, file.length()));
+        List<ChunkManifest> chunkManifests = new ArrayList<>();
+        long totalSizeAccumulated = 0;
 
         MessageDigest manifestDigest = MessageDigest.getInstance(SHA256);
         MessageDigest chunkDigest = MessageDigest.getInstance(SHA256);
 
-        long fileLength = file.length();
-        long processed = 0;
+        OutputStream digestOutputStream = new OutputStream() {
+            @Override
+            public void write(int b) {
+                manifestDigest.update((byte) b);
+                chunkDigest.update((byte) b);
+            }
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate((int) Math.min(file.length(), bufferSize));
+            @Override
+            public void write(byte[] b, int off, int len) {
+                manifestDigest.update(b, off, len);
+                chunkDigest.update(b, off, len);
+            }
+        };
 
-        try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            while (processed < fileLength) {
-                int chunkToProcess = chunkSizeFactor;
-                long leftOver = fileLength - processed;
-                if (leftOver < chunkToProcess) {
-                    chunkToProcess = Math.toIntExact(leftOver);
+        try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+             WritableByteChannel targetChannel = Channels.newChannel(digestOutputStream)) {
+
+            long position = 0;
+
+            while (position < fileSize) {
+                int bytesInChunk = (int) Math.min(chunkSize, fileSize - position);
+                long bytesTransferredInChunk = 0;
+
+                while (bytesTransferredInChunk < bytesInChunk) {
+                    long transferred = fileChannel.transferTo(
+                            position + bytesTransferredInChunk,
+                            bytesInChunk - bytesTransferredInChunk,
+                            targetChannel
+                    );
+
+                    if (transferred <= 0) {
+                        throw new IOException("Unexpected EOF or channel closed during chunk transfer");
+                    }
+
+                    bytesTransferredInChunk += transferred;
                 }
 
-                int totalRead = read(fileChannel, processed, chunkToProcess, byteBuffer, buffer -> {
-                    manifestDigest.update(buffer.duplicate());
-                    chunkDigest.update(buffer);
-                });
-                ChunkManifest chunkManifest = new ChunkManifest(
-                        HexFormat.of().formatHex(chunkDigest.digest()),
-                        totalRead,
-                        processed
-                );
+                byte[] chunkHash = chunkDigest.digest();
+
+                ChunkManifest chunkManifest = new ChunkManifest(HEX_FORMAT.formatHex(chunkHash), bytesInChunk, position);
                 chunkManifests.add(chunkManifest);
 
-                processed = processed + totalRead;
+                position += bytesInChunk;
+                totalSizeAccumulated += bytesInChunk;
             }
         }
 
-        long totalSize = chunkManifests.stream().map(it -> it.size())
-                .mapToLong(Long::valueOf)
-                .sum();
+        if (totalSizeAccumulated != fileSize) {
+            throw new IOException("Calculated size does not match file size: " + fileSize + " total size: " + totalSizeAccumulated);
+        }
 
         return new FileManifest(
                 fileManifestName,
-                HexFormat.of().formatHex(manifestDigest.digest()),
-                totalSize,
+                HEX_FORMAT.formatHex(manifestDigest.digest()),
+                fileSize,
                 chunkManifests
         );
     }
@@ -155,37 +170,7 @@ public class FileManifestBuilder {
         return Math.min(requestChunkSize, chunkMaxSize);
     }
 
-    int read(FileChannel fileChannel,
-             long skip,
-             int take,
-             ByteBuffer byteBuffer,
-             Consumer<ByteBuffer> consumer) throws IOException {
-        fileChannel.position(skip);
-        int totalRead = 0;
-        while (totalRead < take) {
-            CommonUtils.isInterrupted();
-
-            int leftOver = take - totalRead;
-            int toRead = Math.min(byteBuffer.capacity(), leftOver);
-            byteBuffer.limit(toRead);
-
-            int read = fileChannel.read(byteBuffer);
-            if (read == -1) {
-                break;
-            }
-
-            byteBuffer.flip();
-
-            consumer.accept(byteBuffer.asReadOnlyBuffer());
-
-            totalRead += read;
-
-            byteBuffer.clear();
-        }
-        return totalRead;
-    }
-
-    List<Long> getPositionsBasedOnChunkSize(List<ChunkManifest> chunkManifests) {
+    private List<Long> getPositionsBasedOnChunkSize(List<ChunkManifest> chunkManifests) {
         AtomicLong offset = new AtomicLong(0);
         return chunkManifests.stream()
                 .map(chunk -> offset.getAndAdd(chunk.size()))

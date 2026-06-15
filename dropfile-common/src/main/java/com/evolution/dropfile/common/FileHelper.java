@@ -14,6 +14,8 @@ import java.util.HexFormat;
 
 public class FileHelper {
 
+    private static final String SHA256 = "SHA-256";
+
     public void write(FileChannel channel,
                       InputStream inputStream) throws IOException {
         OutputStream outputStream = Channels.newOutputStream(channel);
@@ -65,7 +67,7 @@ public class FileHelper {
     }
 
     public String sha256(Path path) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        MessageDigest digest = MessageDigest.getInstance(SHA256);
 
         OutputStream digestOutputStream = new OutputStream() {
             @Override

@@ -36,8 +36,6 @@ public class DaemonApplicationProperties {
 
     public final int tunnelServerPayloadLifeTime;
 
-    public final int manifestBuildBufferSize;
-
     public final int manifestChunkMaxSize;
 
     public final int handshakeClientHttpRequestTimeoutMillis;
@@ -58,12 +56,10 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.client.http.request-timeout-millis}") int tunnelClientHttpRequestTimeoutMillis,
                                        @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
                                        @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
-                                       @Value("${dropfile.manifest.builder.buffer-size}") int manifestBuildBufferSize,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
-        this.manifestBuildBufferSize = manifestBuildBufferSize;
         this.downloadDirectory = getDownloadDirectory(downloadDirectory);
         this.configDirectory = getConfigDirectory(applicationDirectory);
         this.daemonPort = daemonPort;
