@@ -16,33 +16,11 @@ public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
 
-    public void write(FileChannel channel,
-                      InputStream inputStream) throws IOException {
-        OutputStream outputStream = Channels.newOutputStream(channel);
-        inputStream.transferTo(outputStream);
-    }
-
     public void write(Path path, InputStream inputStream) throws IOException {
         try (FileChannel channel = FileChannel.open(path,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING)) {
-            write(channel, inputStream);
-        }
-    }
-
-    public InputStream readStream(Path path, long skip, int take) throws IOException {
-        FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-        boolean success = false;
-        try {
-            fileChannel.position(skip);
-            InputStream inputStream = Channels.newInputStream(fileChannel);
-            InputStream watchdog = new WatchdogInputStream(inputStream, take);
-            success = true;
-            return watchdog;
-        } finally {
-            if (!success) {
-                fileChannel.close();
-            }
+            write(channel, inputStream, 0, Long.MAX_VALUE);
         }
     }
 
@@ -63,6 +41,22 @@ public class FileHelper {
 
             offset += transferred;
             remaining -= transferred;
+        }
+    }
+
+    public InputStream readStream(Path path, long skip, int take) throws IOException {
+        FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+        boolean success = false;
+        try {
+            fileChannel.position(skip);
+            InputStream inputStream = Channels.newInputStream(fileChannel);
+            InputStream watchdog = new WatchdogInputStream(inputStream, take);
+            success = true;
+            return watchdog;
+        } finally {
+            if (!success) {
+                fileChannel.close();
+            }
         }
     }
 

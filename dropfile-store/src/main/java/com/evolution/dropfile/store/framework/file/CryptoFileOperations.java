@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import lombok.RequiredArgsConstructor;
 
 import javax.crypto.SecretKey;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -27,7 +28,14 @@ public class CryptoFileOperations implements FileOperations {
     public void write(Path destination, InputStream inputStream) throws IOException {
         byte[] fingerprint = getFingerprint();
         SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-        try (InputStream encryptStream = cryptoTunnel.encryptSealStream(inputStream, secretKey)) {
+        InputStream shieldStream = new FilterInputStream(inputStream) {
+            @Override
+            public void close() {
+
+            }
+        };
+
+        try (InputStream encryptStream = cryptoTunnel.encryptSealStream(shieldStream, secretKey)) {
             delegate.write(destination, encryptStream);
         }
     }
