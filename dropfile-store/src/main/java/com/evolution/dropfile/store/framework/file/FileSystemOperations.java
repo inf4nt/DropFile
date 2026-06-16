@@ -51,13 +51,17 @@ public class FileSystemOperations implements FileOperations {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
             throw new NoContentFoundException(destination);
         }
-
-        FileChannel fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
+        boolean success = false;
+        FileChannel fileChannel = null;
         try {
-            return Channels.newInputStream(fileChannel);
-        } catch (Exception e) {
-            fileChannel.close();
-            throw new IOException(e);
+            fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
+            InputStream inputStream = Channels.newInputStream(fileChannel);
+            success = true;
+            return inputStream;
+        } finally {
+            if (!success && fileChannel != null) {
+                fileChannel.close();
+            }
         }
     }
 

@@ -42,14 +42,19 @@ public class CryptoFileOperations implements FileOperations {
 
     @Override
     public InputStream read(Path destination) throws NoContentFoundException, IOException {
-        InputStream inputStream = delegate.read(destination);
+        boolean success = false;
+        InputStream inputStream = null;
         try {
+            inputStream = delegate.read(destination);
             byte[] fingerprint = getFingerprint();
             SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-            return cryptoTunnel.decrypt(inputStream, secretKey);
-        } catch (Exception e) {
-            inputStream.close();
-            throw new IOException(e);
+            InputStream resultStream = cryptoTunnel.decrypt(inputStream, secretKey);
+            success = true;
+            return resultStream;
+        } finally {
+            if (!success && inputStream != null) {
+                inputStream.close();
+            }
         }
     }
 

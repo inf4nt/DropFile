@@ -16,6 +16,8 @@ public class CommonUtils {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    private static final HexFormat HEX_FORMAT = HexFormat.of();
+
     private static final String SHA256_ALGORITHM = "SHA-256";
 
     public static byte[] nonce12() {
@@ -63,7 +65,7 @@ public class CommonUtils {
     public static String getFingerprint(byte[] data) {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         byte[] hash = md.digest(data);
-        return HexFormat.of().formatHex(hash);
+        return HEX_FORMAT.formatHex(hash);
     }
 
     @SneakyThrows
