@@ -16,6 +16,9 @@ public class InetAddressUtils {
         Enumeration<NetworkInterface> interfaces =
                 NetworkInterface.getNetworkInterfaces();
 
+        List<BestLocalAddress> wifi =  new ArrayList<>();
+        List<BestLocalAddress> ethernet =  new ArrayList<>();
+
         while (interfaces.hasMoreElements()) {
             NetworkInterface iface = interfaces.nextElement();
 
@@ -29,6 +32,8 @@ public class InetAddressUtils {
             String ifaceNameDisplay = name + ":" + display;
 
             Enumeration<InetAddress> addresses = iface.getInetAddresses();
+
+
             while (addresses.hasMoreElements()) {
                 InetAddress addr = addresses.nextElement();
 
@@ -41,14 +46,23 @@ public class InetAddressUtils {
 
                 String wifiMatch = getWifi(name, display);
                 if (wifiMatch != null) {
-                    return new BestLocalAddress(wifiMatch, ifaceNameDisplay, addr);
+                    BestLocalAddress bestLocalAddress = new BestLocalAddress(wifiMatch, ifaceNameDisplay, addr);
+                    wifi.add(bestLocalAddress);
                 }
 
                 String ethernetMatch = getEthernet(name, display);
                 if (ethernetMatch != null) {
-                    return new BestLocalAddress(ethernetMatch, ifaceNameDisplay, addr);
+                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ethernetMatch, ifaceNameDisplay, addr);
+                    ethernet.add(bestLocalAddress);
                 }
             }
+        }
+
+        if (!wifi.isEmpty()) {
+            return wifi.getFirst();
+        }
+        if (!ethernet.isEmpty()) {
+            return ethernet.getFirst();
         }
 
         throw new IllegalStateException("No suitable IPv4 address found");
