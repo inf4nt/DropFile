@@ -34,15 +34,17 @@ public class ApiLinkShareFacade {
     public ApiLinkShareLsResponseDTO add(ApiLinkShareAddRequestDTO requestDTO) {
         String shareFileId = shareFileEntryStore.getRequiredByKeyStartWith(requestDTO.fileId()).getKey();
 
-        KeyEnvelopeUtils.KeyEnvelope keyEnvelope = KeyEnvelopeUtils.generate();
-        LinkShareEntry linkShareEntry = linkShareEntryStore.save(keyEnvelope.id(), () -> new LinkShareEntry(
+        String secret = CommonUtils.generateSecretNonce12();
+        String id = CommonUtils.random();
+
+        LinkShareEntry linkShareEntry = linkShareEntryStore.save(id, () -> new LinkShareEntry(
                 shareFileId,
-                keyEnvelope.key(),
+                secret,
                 false,
                 Instant.now(),
                 Instant.now()
         ));
-        return map(keyEnvelope.id(), linkShareEntry);
+        return map(id, linkShareEntry);
     }
 
     public List<ApiLinkShareLsResponseDTO> ls() {

@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 )
 public class LinkShareAddCommand extends AbstractCommandHttpHandler {
 
-    @CommandLine.Option(names = {"-id", "--id"}, description = "File id", required = true)
+    @CommandLine.Option(names = {"-id", "--id"}, description = "Share file id", required = true)
     private String id;
 
     @Override
