@@ -32,7 +32,7 @@ public class PublicLinkShareRestController {
     @GetMapping("/{id}")
     public WebAsyncTask<StreamingResponseBody> download(@PathVariable String id, HttpServletResponse response) {
         LinkShareEntry linkShareEntry = linkShareEntryStore
-                .getRequired(id, value -> !value.used())
+                .getRequired(id)
                 .getValue();
         linkShareEntryStore
                 .update(id, value -> value

@@ -7,22 +7,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public interface KeyValueStore<V> {
-
-    default Map.Entry<String, V> getRequired(String key,
-                                             Predicate<V> predicate) {
-        Map.Entry<String, V> required = getRequired(key);
-        boolean test = predicate.test(required.getValue());
-        if (!test) {
-            throw new RuntimeException(String.format(
-                    "Store %s. Filter predicate failed %s", getClass().getName(), key
-            ));
-        }
-        return required;
-    }
 
     Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy);
 
