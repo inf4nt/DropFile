@@ -8,6 +8,9 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 
 public class SecureZipUtils {
 
@@ -50,8 +53,9 @@ public class SecureZipUtils {
 
                 innerZos.putNextEntry(innerParams);
 
-                try (FileInputStream fis = new FileInputStream(file)) {
-                    fis.transferTo(innerZos);
+                try (FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+                     InputStream inputStream = Channels.newInputStream(fileChannel)) {
+                    inputStream.transferTo(innerZos);
                 }
                 innerZos.closeEntry();
             }
