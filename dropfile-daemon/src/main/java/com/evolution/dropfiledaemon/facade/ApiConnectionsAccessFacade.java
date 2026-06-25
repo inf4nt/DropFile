@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
@@ -49,7 +48,7 @@ public class ApiConnectionsAccessFacade {
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
         return new ApiConnectionsAccessInfoResponseDTO(
                 id,
-                CommonUtils.encodeBase64(accessKey.key().getBytes()),
+                accessKey.key(),
                 accessKey.created()
         );
     }

@@ -9,10 +9,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.SequenceInputStream;
+import java.io.*;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -26,9 +23,35 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private static final int NONCE_LENGTH = 12;
 
+    private static final int SECRET_KEY_LENGTH = 32;
+
     @Override
     public String getAlgorithm() {
         return CIPHER_ALGORITHM;
+    }
+
+    @Override
+    public byte[] generateSecret() {
+        return CommonUtils.nonce32();
+    }
+
+    @SneakyThrows
+    @Override
+    public byte[] secretAdapter(byte[] bytes) {
+        return MessageDigest
+                .getInstance(SHA256_ALGORITHM)
+                .digest(bytes);
+    }
+
+    // TODO add HKDF
+    @Override
+    public SecretKey getSecretKey(byte[] secret) {
+        if (secret == null || secret.length != SECRET_KEY_LENGTH) {
+            throw new IllegalArgumentException(
+                    String.format("%s key must be exactly %d bytes", SECRET_KEY_ALGORITHM, SECRET_KEY_LENGTH)
+            );
+        }
+        return new SecretKeySpec(secret, SECRET_KEY_ALGORITHM);
     }
 
     // TODO add HKDF
@@ -118,6 +141,9 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @Override
     public InputStream decrypt(InputStream inputStream, SecretKey key) {
         byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IOException("Premature EOF: incomplete nonce in stream");
+        }
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
@@ -125,4 +151,3 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         return new CipherInputStream(inputStream, cipher);
     }
 }
-

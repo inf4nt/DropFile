@@ -20,10 +20,18 @@ public class CommonUtils {
 
     private static final String SHA256_ALGORITHM = "SHA-256";
 
-    public static byte[] nonce12() {
-        byte[] bytes = new byte[12];
+    public static byte[] nonce(int length) {
+        byte[] bytes = new byte[length];
         SECURE_RANDOM.nextBytes(bytes);
         return bytes;
+    }
+
+    public static byte[] nonce32() {
+        return nonce(32);
+    }
+
+    public static byte[] nonce12() {
+        return nonce(12);
     }
 
     public static String random() {
@@ -32,7 +40,7 @@ public class CommonUtils {
                 .substring(0, 10);
     }
 
-    public static String generateSecretNonce12() {
+    public static String generateRawSecretNonce12() {
         byte[] bytes = nonce12();
         return Base64.getUrlEncoder()
                 .withoutPadding()

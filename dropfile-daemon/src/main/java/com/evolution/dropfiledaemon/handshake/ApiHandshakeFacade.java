@@ -75,8 +75,9 @@ public class ApiHandshakeFacade {
         );
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
 
-        String secret = new String(CommonUtils.decodeBase64(requestDTO.key()));
-        SecretKey secretKey = cryptoTunnel.secretKey(secret.getBytes());
+        String rawSecret = requestDTO.key();
+        byte[] secret = cryptoTunnel.secretAdapter(rawSecret.getBytes());
+        SecretKey secretKey = cryptoTunnel.getSecretKey(secret);
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 requestPayloadByteArray,
                 secretKey
@@ -87,7 +88,7 @@ public class ApiHandshakeFacade {
                 rsaKeyPair.getPrivate()
         );
 
-        String requestId = KeyEnvelopeUtils.getId(secret);
+        String requestId = KeyEnvelopeUtils.getId(rawSecret);
         HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
                 requestId,
                 secureEnvelope.payload(),

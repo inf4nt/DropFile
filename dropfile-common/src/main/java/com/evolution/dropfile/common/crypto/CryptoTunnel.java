@@ -8,6 +8,13 @@ public interface CryptoTunnel {
 
     String getAlgorithm();
 
+    byte[] generateSecret();
+
+    byte[] secretAdapter(byte[] bytes);
+
+    SecretKey getSecretKey(byte[] secret);
+
+    @Deprecated
     SecretKey secretKey(byte[] secret);
 
     InputStream encryptSealStream(InputStream inputStream, SecretKey key);

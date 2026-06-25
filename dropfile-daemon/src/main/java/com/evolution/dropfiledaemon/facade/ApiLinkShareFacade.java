@@ -8,7 +8,6 @@ import com.evolution.dropfile.store.link.LinkShareEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.controller.PublicLinkShareRestController;
 import com.evolution.dropfiledaemon.util.InetAddressUtils;
-import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -34,7 +33,7 @@ public class ApiLinkShareFacade {
     public ApiLinkShareLsResponseDTO add(ApiLinkShareAddRequestDTO requestDTO) {
         String shareFileId = shareFileEntryStore.getRequiredByKeyStartWith(requestDTO.fileId()).getKey();
 
-        String secret = CommonUtils.generateSecretNonce12();
+        String secret = CommonUtils.generateRawSecretNonce12();
         String id = CommonUtils.random();
 
         LinkShareEntry linkShareEntry = linkShareEntryStore.save(id, () -> new LinkShareEntry(
