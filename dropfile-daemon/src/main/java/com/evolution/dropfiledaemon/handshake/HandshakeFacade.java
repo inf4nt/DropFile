@@ -49,8 +49,7 @@ public class HandshakeFacade {
         accessKeyStore.remove(requestDTO.id());
 
         String rawSecret = accessKey.key();
-        byte[] secret = cryptoTunnel.secretAdapter(rawSecret.getBytes());
-        SecretKey secretKey = cryptoTunnel.getSecretKey(secret);
+        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes());
 
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 requestDTO.payload(),

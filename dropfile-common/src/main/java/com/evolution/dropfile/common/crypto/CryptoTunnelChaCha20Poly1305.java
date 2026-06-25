@@ -23,35 +23,9 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private static final int NONCE_LENGTH = 12;
 
-    private static final int SECRET_KEY_LENGTH = 32;
-
     @Override
     public String getAlgorithm() {
         return CIPHER_ALGORITHM;
-    }
-
-    @Override
-    public byte[] generateSecret() {
-        return CommonUtils.nonce32();
-    }
-
-    @SneakyThrows
-    @Override
-    public byte[] secretAdapter(byte[] bytes) {
-        return MessageDigest
-                .getInstance(SHA256_ALGORITHM)
-                .digest(bytes);
-    }
-
-    // TODO add HKDF
-    @Override
-    public SecretKey getSecretKey(byte[] secret) {
-        if (secret == null || secret.length != SECRET_KEY_LENGTH) {
-            throw new IllegalArgumentException(
-                    String.format("%s key must be exactly %d bytes", SECRET_KEY_ALGORITHM, SECRET_KEY_LENGTH)
-            );
-        }
-        return new SecretKeySpec(secret, SECRET_KEY_ALGORITHM);
     }
 
     // TODO add HKDF
