@@ -4,9 +4,11 @@ import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializat
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Component
 @RequiredArgsConstructor
 public class DaemonSecretsSingleValueStoreInitializationProcedure
         implements SingleValueStoreInitializationProcedure {

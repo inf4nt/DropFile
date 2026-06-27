@@ -4,9 +4,11 @@ import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class SingleValueStoreInitializationGenericProcedureImpl

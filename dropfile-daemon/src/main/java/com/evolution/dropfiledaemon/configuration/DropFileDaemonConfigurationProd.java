@@ -18,9 +18,6 @@ import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
-import com.evolution.dropfiledaemon.bootstrap.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.bootstrap.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.bootstrap.middleware.InstallationSeedBootstrapStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
@@ -78,11 +75,6 @@ public class DropFileDaemonConfigurationProd {
                 fileOperations,
                 serdeOperations
         );
-    }
-
-    @Bean
-    public FileDownloadEntryStoreKeyValueStoreInitializationProcedure fileDownloadEntryStoreKeyValueStoreInitializationProcedure(FileDownloadEntryStore store) {
-        return new FileDownloadEntryStoreKeyValueStoreInitializationProcedure(store);
     }
 
     @Bean
@@ -182,11 +174,6 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DaemonSecretsSingleValueStoreInitializationProcedure daemonSecretsSingleValueStoreInitializationProcedure(DaemonSecretsStore store) {
-        return new DaemonSecretsSingleValueStoreInitializationProcedure(store);
-    }
-
-    @Bean
     public InstallationSeedBootstrapStore installationSeedBootstrapStore(DaemonApplicationProperties applicationProperties,
                                                                          FileOperations fileOperations,
                                                                          ObjectMapper objectMapper) {
@@ -205,10 +192,5 @@ public class DropFileDaemonConfigurationProd {
                         serdeOperations
                 )
         );
-    }
-
-    @Bean
-    public InstallationSeedBootstrapStoreInitializationProcedure installationSeedBootstrapStoreInitializationProcedure(InstallationSeedBootstrapStore store) {
-        return new InstallationSeedBootstrapStoreInitializationProcedure(store);
     }
 }

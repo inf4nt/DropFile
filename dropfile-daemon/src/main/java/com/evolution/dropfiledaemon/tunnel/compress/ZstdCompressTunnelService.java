@@ -4,11 +4,13 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+@Component
 @RequiredArgsConstructor
 public class ZstdCompressTunnelService
         implements CompressTunnelService {

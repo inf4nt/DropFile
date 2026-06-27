@@ -5,11 +5,13 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
