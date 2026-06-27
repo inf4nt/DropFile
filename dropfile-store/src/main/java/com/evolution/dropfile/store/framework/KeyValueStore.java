@@ -44,6 +44,7 @@ public interface KeyValueStore<V> {
 
     Map<String, V> getAll();
 
+    @Deprecated
     void init();
 
     default void validate(String key, V value) {

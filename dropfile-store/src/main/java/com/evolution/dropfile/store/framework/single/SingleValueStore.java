@@ -14,6 +14,7 @@ public interface SingleValueStore<V> {
 
     V remove();
 
+    @Deprecated
     void init();
 
     default void validate(V value) {
