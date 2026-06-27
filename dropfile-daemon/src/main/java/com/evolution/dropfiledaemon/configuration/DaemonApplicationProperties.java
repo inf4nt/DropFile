@@ -1,20 +1,10 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 @Component
 public class DaemonApplicationProperties {
-
-    public final String downloadDirectory;
-
-    public final String configDirectory;
 
     public final int daemonPort;
 
@@ -42,9 +32,7 @@ public class DaemonApplicationProperties {
 
     public final int handshakeServerPayloadLiveTime;
 
-    public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
-                                       @Value("${dropfile.download.directory}") String downloadDirectory,
-                                       @Value("${dropfile.daemon.port}") int daemonPort,
+    public DaemonApplicationProperties(@Value("${dropfile.daemon.port}") int daemonPort,
                                        @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
                                        @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
@@ -60,8 +48,6 @@ public class DaemonApplicationProperties {
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
-        this.downloadDirectory = getDownloadDirectory(downloadDirectory);
-        this.configDirectory = getConfigDirectory(applicationDirectory);
         this.daemonPort = daemonPort;
         this.downloadOrchestratorMaxQueueSize = downloadOrchestratorMaxQueueSize;
         this.downloadOrchestratorActiveQueueSize = downloadOrchestratorActiveQueueSize;
@@ -72,22 +58,5 @@ public class DaemonApplicationProperties {
         this.tunnelServerCompressLevel = tunnelServerCompressLevel;
         this.manifestChunkMaxSize = manifestChunkMaxSize;
         this.tunnelClientStreamMaxSize = tunnelClientStreamMaxSize;
-    }
-
-    @SneakyThrows
-    private String getDownloadDirectory(String downloadDirectory) {
-        Path path = Paths.get(downloadDirectory);
-        if (Files.notExists(path)) {
-            throw new FileNotFoundException(String.format("No %s found", path));
-        }
-        if (!Files.isDirectory(path)) {
-            throw new IllegalArgumentException("Must be a directory " + path);
-        }
-        return path.toString();
-    }
-
-    @SneakyThrows
-    private String getConfigDirectory(String applicationDirectory) {
-        return Paths.get(applicationDirectory, "conf").toString();
     }
 }

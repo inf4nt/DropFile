@@ -1,16 +1,18 @@
-package com.evolution.dropfiledaemon.bootstrap.middleware;
+package com.evolution.dropfiledaemon.bootstrap.phase.init.prod;
 
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Profile("prod")
 @Component
 @RequiredArgsConstructor
 @Slf4j

@@ -2,7 +2,7 @@ package com.evolution.dropfile.store.framework.file;
 
 import java.nio.file.Path;
 
-public interface FileProvider {
+public interface DirectoryProvider {
 
-    Path getFilePath();
+    Path getDirectoryPath();
 }

@@ -59,9 +59,4 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     public synchronized Map<String, V> getAll() {
         return Collections.unmodifiableMap(store);
     }
-
-    @Override
-    public void init() {
-
-    }
 }

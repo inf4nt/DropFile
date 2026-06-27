@@ -5,6 +5,8 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
+import com.evolution.dropfile.store.framework.file.DirectoryProvider;
+import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
@@ -43,6 +45,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final FileDownloadEntryStore fileDownloadEntryStore;
+
+    private final DirectoryProvider downloadDirectory;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -273,8 +277,9 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     }
 
     private Path getManifestFilePath(Path destinationFilePath) {
-        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
-        Path manifestPath = Paths.get(downloadDirectory, String.format("%s%s%s", "manifest.", destinationFilePath.getFileName().toString(), ".json"));
+        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+
+        Path manifestPath = downloadDirectoryPath.resolve(String.format("%s%s%s", "manifest.", destinationFilePath.getFileName().toString(), ".json"));
 
         if (Files.exists(manifestPath)) {
             throw new IllegalArgumentException(String.format("file already exists: %s", manifestPath));
@@ -291,8 +296,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
 
-        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
-        Path downloadFilePath = Paths.get(downloadDirectory, request.filename()).toAbsolutePath();
+        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+        Path downloadFilePath = downloadDirectoryPath.resolve(request.filename());
 
         Map.Entry<String, DownloadProgress> duplicate = Stream.concat(getWaitingQueue().entrySet().stream(), getDownloadProcedures().entrySet().stream())
                 .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
@@ -315,8 +320,8 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private Path getTemporaryFilePath(FileDownloadRequest request) {
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
-        String downloadDirectory = daemonApplicationProperties.downloadDirectory;
-        return Paths.get(downloadDirectory, temporaryFileName).toAbsolutePath();
+        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+        return downloadDirectoryPath.resolve(temporaryFileName);
     }
 
     @SneakyThrows

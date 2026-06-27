@@ -41,6 +41,41 @@ import java.util.UUID;
 @Configuration
 public class DropFileDaemonConfigurationProd {
 
+    @Bean
+    public DirectoryProvider configDirectory(DirectoryProvider applicationDirectory) {
+        return new DirectoryProviderImpl(applicationDirectory, Paths.get("conf"));
+    }
+
+    @Bean
+    public FileProvider downloadEntriesFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get("download.entries.json"));
+    }
+
+    @Bean
+    public FileProvider shareEntriesFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get("share.entries.json"));
+    }
+
+    @Bean
+    public FileProvider trustOutFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get(".trustout.bin"));
+    }
+
+    @Bean
+    public FileProvider trustInFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get(".trustin.bin"));
+    }
+
+    @Bean
+    public FileProvider daemonSecretFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get(".daemon.bin"));
+    }
+
+    @Bean
+    public FileProvider installationSeedFileProvider(DirectoryProvider configDirectory) {
+        return new FileProviderImpl(configDirectory, Paths.get(".installation.bin"));
+    }
+
     @Primary
     @Bean
     public FileSystemOperations fileSystemOperations(FileHelper fileHelper) {
@@ -59,19 +94,15 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public FileDownloadEntryStore fileDownloadEntryStore(FileOperations fileOperations,
-                                                         ObjectMapper objectMapper,
-                                                         DaemonApplicationProperties daemonApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(daemonApplicationProperties.configDirectory),
-                "download.entries.json"
-        );
+    public FileDownloadEntryStore fileDownloadEntryStore(FileProvider downloadEntriesFileProvider,
+                                                         FileOperations fileOperations,
+                                                         ObjectMapper objectMapper) {
         SerdeOperations<DownloadFileEntry> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 DownloadFileEntry.class
         );
         return new FileDownloadEntryStoreImpl(
-                fileProvider,
+                downloadEntriesFileProvider,
                 fileOperations,
                 serdeOperations
         );
@@ -83,57 +114,45 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public ShareFileEntryStore shareFileEntryStore(FileOperations fileOperations,
-                                                   ObjectMapper objectMapper,
-                                                   DaemonApplicationProperties daemonApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(daemonApplicationProperties.configDirectory),
-                "share.entries.json"
-        );
+    public ShareFileEntryStore shareFileEntryStore(FileProvider shareEntriesFileProvider,
+                                                   FileOperations fileOperations,
+                                                   ObjectMapper objectMapper) {
         SerdeOperations<ShareFileEntry> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 ShareFileEntry.class
         );
         return new ShareFileEntryStoreImpl(
-                fileProvider,
+                shareEntriesFileProvider,
                 fileOperations,
                 serdeOperations
         );
     }
 
     @Bean
-    public HandshakeTrustedOutStore handshakeTrustedOutStore(CryptoFileOperations fileOperations,
-                                                             ObjectMapper objectMapper,
-                                                             DaemonApplicationProperties daemonApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(daemonApplicationProperties.configDirectory),
-                ".trustout.bin"
-        );
+    public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
+                                                             CryptoFileOperations fileOperations,
+                                                             ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedOutStore.TrustedOut> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 HandshakeTrustedOutStore.TrustedOut.class
         );
         return new HandshakeTrustedOutStoreImpl(
-                fileProvider,
+                trustOutFileProvider,
                 fileOperations,
                 serdeOperations
         );
     }
 
     @Bean
-    public HandshakeTrustedInStore handshakeTrustedInStore(CryptoFileOperations fileOperations,
-                                                           ObjectMapper objectMapper,
-                                                           DaemonApplicationProperties daemonApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(daemonApplicationProperties.configDirectory),
-                ".trustin.bin"
-        );
+    public HandshakeTrustedInStore handshakeTrustedInStore(FileProvider trustInFileProvider,
+                                                           CryptoFileOperations fileOperations,
+                                                           ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedInStore.TrustedIn> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 HandshakeTrustedInStore.TrustedIn.class
         );
         return new HandshakeTrustedInStoreImpl(
-                fileProvider,
+                trustInFileProvider,
                 fileOperations,
                 serdeOperations
         );
@@ -155,39 +174,33 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(CryptoFileOperations fileOperations,
-                                                 ObjectMapper objectMapper,
-                                                 DaemonApplicationProperties daemonApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(daemonApplicationProperties.configDirectory),
-                ".daemon.bin"
-        );
+    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretFileProvider,
+                                                 CryptoFileOperations fileOperations,
+                                                 ObjectMapper objectMapper) {
         SerdeOperations<DaemonSecrets> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 DaemonSecrets.class
         );
         return new DaemonSecretsStoreImpl(
                 new CacheFileKeyValueStore<>(
-                        fileProvider, fileOperations, serdeOperations
+                        daemonSecretFileProvider,
+                        fileOperations,
+                        serdeOperations
                 )
         );
     }
 
     @Bean
-    public InstallationSeedBootstrapStore installationSeedBootstrapStore(DaemonApplicationProperties applicationProperties,
+    public InstallationSeedBootstrapStore installationSeedBootstrapStore(FileProvider installationSeedFileProvider,
                                                                          FileOperations fileOperations,
                                                                          ObjectMapper objectMapper) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(applicationProperties.configDirectory),
-                ".installation.bin"
-        );
         SerdeOperations<UUID> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 UUID.class
         );
         return new InstallationSeedBootstrapStoreImpl(
                 new CacheFileKeyValueStore<>(
-                        fileProvider,
+                        installationSeedFileProvider,
                         fileOperations,
                         serdeOperations
                 )

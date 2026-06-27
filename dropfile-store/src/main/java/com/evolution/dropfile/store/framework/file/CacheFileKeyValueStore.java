@@ -19,12 +19,6 @@ public class CacheFileKeyValueStore<V>
         super(fileProvider, fileOperations, serdeOperations);
     }
 
-
-    @Override
-    public synchronized void init() {
-        super.init();
-    }
-
     @Override
     public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
         try {

@@ -19,11 +19,6 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final SerdeOperations<V> serdeOperations;
 
-    @Override
-    public synchronized void init() {
-        fileProvider.getOrCreateFile();
-    }
-
     @SneakyThrows
     @Override
     public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
