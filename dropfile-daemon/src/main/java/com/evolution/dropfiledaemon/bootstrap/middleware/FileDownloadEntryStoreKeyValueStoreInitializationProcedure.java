@@ -1,25 +1,24 @@
-package com.evolution.dropfiledaemon.configuration.middleware;
+package com.evolution.dropfiledaemon.bootstrap.middleware;
 
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Slf4j
 public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
-        implements KeyValueStoreInitializationProcedure<FileDownloadEntryStore> {
+        implements KeyValueStoreInitializationProcedure {
+
+    private final FileDownloadEntryStore store;
 
     @Override
-    public Class<FileDownloadEntryStore> getStoreClass() {
-        return FileDownloadEntryStore.class;
-    }
-
-    @Override
-    public void init(FileDownloadEntryStore store) {
+    public void init() {
         store.save(() -> {
             Map<String, DownloadFileEntry> currentValues = store.getAll();
 

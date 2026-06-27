@@ -1,8 +1,6 @@
 package com.evolution.dropfile.store.framework.single;
 
-public interface SingleValueStoreInitializationProcedure<Store extends SingleValueStore> {
+public interface SingleValueStoreInitializationProcedure {
 
-    Class<Store> getStoreClass();
-
-    void init(Store store);
+    void init();
 }

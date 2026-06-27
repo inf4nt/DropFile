@@ -1,8 +1,6 @@
 package com.evolution.dropfile.store.framework;
 
-public interface KeyValueStoreInitializationProcedure<Store extends KeyValueStore> {
+public interface KeyValueStoreInitializationProcedure {
 
-    Class<Store> getStoreClass();
-
-    void init(Store keyValueStore);
+    void init();
 }

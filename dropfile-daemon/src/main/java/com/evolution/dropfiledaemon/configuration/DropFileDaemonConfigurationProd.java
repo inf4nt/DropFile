@@ -16,8 +16,8 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
-import com.evolution.dropfiledaemon.configuration.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.configuration.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.bootstrap.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.bootstrap.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
@@ -86,8 +86,8 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public FileDownloadEntryStoreKeyValueStoreInitializationProcedure fileDownloadEntryStoreKeyValueStoreInitializationProcedure() {
-        return new FileDownloadEntryStoreKeyValueStoreInitializationProcedure();
+    public FileDownloadEntryStoreKeyValueStoreInitializationProcedure fileDownloadEntryStoreKeyValueStoreInitializationProcedure(FileDownloadEntryStore store) {
+        return new FileDownloadEntryStoreKeyValueStoreInitializationProcedure(store);
     }
 
     @Bean
@@ -187,7 +187,7 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public DaemonSecretsSingleValueStoreInitializationProcedure daemonSecretsSingleValueStoreInitializationProcedure() {
-        return new DaemonSecretsSingleValueStoreInitializationProcedure();
+    public DaemonSecretsSingleValueStoreInitializationProcedure daemonSecretsSingleValueStoreInitializationProcedure(DaemonSecretsStore store) {
+        return new DaemonSecretsSingleValueStoreInitializationProcedure(store);
     }
 }

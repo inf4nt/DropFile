@@ -2,7 +2,6 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfiledaemon.DropFileDaemonApplication;
-import com.evolution.dropfiledaemon.configuration.StoreCacheResetManager;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.system.SystemInfoProvider;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApiDaemonFacade {
 
-    private final StoreCacheResetManager storeCacheResetManager;
+    private final StoreCacheResetFacade storeCacheResetFacade;
 
     private final SystemInfoProvider systemInfoProvider;
 
@@ -30,6 +29,6 @@ public class ApiDaemonFacade {
     }
 
     public void cacheReset() {
-        storeCacheResetManager.reset();
+        storeCacheResetFacade.reset();
     }
 }

@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.configuration;
+package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.store.framework.Cacheable;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Component
-public class StoreCacheResetManager {
+public class StoreCacheResetFacade {
 
     private final List<KeyValueStore> keyValueStores;
 

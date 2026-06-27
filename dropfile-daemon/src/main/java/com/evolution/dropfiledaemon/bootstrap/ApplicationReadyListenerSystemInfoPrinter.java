@@ -1,7 +1,7 @@
-package com.evolution.dropfiledaemon;
+package com.evolution.dropfiledaemon.bootstrap;
 
+import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.configuration.StoreInitializationProcedureReadyEvent;
 import com.evolution.dropfiledaemon.system.SystemInfoProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class BootstrapSystemInfoPrinter {
+public class ApplicationReadyListenerSystemInfoPrinter {
 
     private final SystemInfoProvider systemInfoProvider;
 
@@ -24,7 +24,7 @@ public class BootstrapSystemInfoPrinter {
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    @EventListener(StoreInitializationProcedureReadyEvent.class)
+    @EventListener(DropFileDaemonApplicationReadyEvent.class)
     public void onApplicationEvent() {
         log.info("DropFile daemon initialization completed and ready to go");
 

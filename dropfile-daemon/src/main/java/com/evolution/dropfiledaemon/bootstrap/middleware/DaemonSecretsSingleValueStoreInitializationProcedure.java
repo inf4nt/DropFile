@@ -1,21 +1,20 @@
-package com.evolution.dropfiledaemon.configuration.middleware;
+package com.evolution.dropfiledaemon.bootstrap.middleware;
 
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class DaemonSecretsSingleValueStoreInitializationProcedure
-        implements SingleValueStoreInitializationProcedure<DaemonSecretsStore> {
+        implements SingleValueStoreInitializationProcedure {
+
+    private final DaemonSecretsStore store;
 
     @Override
-    public Class<DaemonSecretsStore> getStoreClass() {
-        return DaemonSecretsStore.class;
-    }
-
-    @Override
-    public void init(DaemonSecretsStore store) {
+    public void init() {
         DaemonSecrets value = new DaemonSecrets(UUID.randomUUID().toString());
         store.save(value);
     }
