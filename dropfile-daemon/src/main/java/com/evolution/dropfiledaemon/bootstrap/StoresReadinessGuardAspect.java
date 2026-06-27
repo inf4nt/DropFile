@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.bootstrap;
 
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
+import com.evolution.dropfile.store.framework.bootstrap.BootstrapStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonBeforeApplicationReadyEvent;
@@ -24,7 +25,8 @@ public class StoresReadinessGuardAspect {
             KeyValueStoreInitializationProcedure.class,
             SingleValueStoreInitializationProcedure.class,
             KeyValueStoreInitializationGenericProcedure.class,
-            SingleValueStoreInitializationGenericProcedure.class
+            SingleValueStoreInitializationGenericProcedure.class,
+            BootstrapStoreInitializationProcedure.class
     );
 
     private boolean ready;
@@ -35,7 +37,9 @@ public class StoresReadinessGuardAspect {
     }
 
     @Before("execution(* com.evolution.dropfile.store.framework.KeyValueStore.*(..)) || " +
-            "execution(* com.evolution.dropfile.store.framework.single.SingleValueStore.*(..))")
+            "execution(* com.evolution.dropfile.store.framework.bootstrap.BootstrapStore.*(..)) || " +
+            "execution(* com.evolution.dropfile.store.framework.single.SingleValueStore.*(..))"
+    )
     public void checkAccess() {
         if (ready) {
             return;

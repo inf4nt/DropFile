@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import lombok.RequiredArgsConstructor;
 
 import javax.crypto.SecretKey;
@@ -9,6 +10,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class CryptoFileOperations implements FileOperations {
@@ -17,12 +19,14 @@ public class CryptoFileOperations implements FileOperations {
 
     private final CryptoTunnel cryptoTunnel;
 
-    private final InstallationSeedProvider installationSeedProvider;
+    private final InstallationSeedBootstrapStore installationSeedBootstrapStore;
 
     @Override
     public void removeAll(Path destination) throws IOException {
         delegate.removeAll(destination);
     }
+
+
 
     @Override
     public void write(Path destination, InputStream inputStream) throws IOException {
@@ -59,10 +63,9 @@ public class CryptoFileOperations implements FileOperations {
     }
 
     private byte[] getFingerprint() {
-        String seed = installationSeedProvider.get();
+        UUID seed = installationSeedBootstrapStore.getRequired();
         String string = cryptoTunnel.getAlgorithm() +
-                this.getClass().getName() +
-//                classType +
+                CryptoFileOperations.class.getName() +
                 seed;
         return CommonUtils.getFingerprint(string.getBytes()).getBytes();
     }

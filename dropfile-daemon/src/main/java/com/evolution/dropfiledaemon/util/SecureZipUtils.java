@@ -21,7 +21,13 @@ public class SecureZipUtils {
                            String aliasFileName,
                            String password) throws IOException {
 
-        try (ZipOutputStream outerZos = new ZipOutputStream(outputStream, password.toCharArray())) {
+        OutputStream shieldOutputStream = new FilterOutputStream(outputStream) {
+            @Override
+            public void close() {
+            }
+        };
+
+        try (ZipOutputStream outerZos = new ZipOutputStream(shieldOutputStream, password.toCharArray())) {
 
             ZipParameters outerParams = new ZipParameters();
             outerParams.setFileNameInZip(INNER_ZIP_NAME);

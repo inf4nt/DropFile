@@ -13,11 +13,14 @@ import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
 import com.evolution.dropfiledaemon.bootstrap.middleware.DaemonSecretsSingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.bootstrap.middleware.FileDownloadEntryStoreKeyValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.bootstrap.middleware.InstallationSeedBootstrapStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
@@ -34,20 +37,12 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @Slf4j
 @Profile("prod")
 @Configuration
 public class DropFileDaemonConfigurationProd {
-
-    @Bean
-    public InstallationSeedProvider installationSeedProvider(DaemonApplicationProperties applicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(applicationProperties.configDirectory),
-                ".installation.bin"
-        );
-        return new FileSystemInstallationSeedProvider(fileProvider);
-    }
 
     @Primary
     @Bean
@@ -58,11 +53,11 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public CryptoFileOperations cryptoFileOperations(FileOperations fileOperations,
                                                      CryptoTunnel cryptoTunnel,
-                                                     InstallationSeedProvider installationSeedProvider) {
+                                                     InstallationSeedBootstrapStore installationSeedBootstrapStore) {
         return new CryptoFileOperations(
                 fileOperations,
                 cryptoTunnel,
-                installationSeedProvider
+                installationSeedBootstrapStore
         );
     }
 
@@ -189,5 +184,31 @@ public class DropFileDaemonConfigurationProd {
     @Bean
     public DaemonSecretsSingleValueStoreInitializationProcedure daemonSecretsSingleValueStoreInitializationProcedure(DaemonSecretsStore store) {
         return new DaemonSecretsSingleValueStoreInitializationProcedure(store);
+    }
+
+    @Bean
+    public InstallationSeedBootstrapStore installationSeedBootstrapStore(DaemonApplicationProperties applicationProperties,
+                                                                         FileOperations fileOperations,
+                                                                         ObjectMapper objectMapper) {
+        FileProvider fileProvider = new FileProviderImpl(
+                Paths.get(applicationProperties.configDirectory),
+                ".installation.bin"
+        );
+        SerdeOperations<UUID> serdeOperations = new JsonSerdeOperations<>(
+                objectMapper,
+                UUID.class
+        );
+        return new InstallationSeedBootstrapStoreImpl(
+                new CacheFileKeyValueStore<>(
+                        fileProvider,
+                        fileOperations,
+                        serdeOperations
+                )
+        );
+    }
+
+    @Bean
+    public InstallationSeedBootstrapStoreInitializationProcedure installationSeedBootstrapStoreInitializationProcedure(InstallationSeedBootstrapStore store) {
+        return new InstallationSeedBootstrapStoreInitializationProcedure(store);
     }
 }

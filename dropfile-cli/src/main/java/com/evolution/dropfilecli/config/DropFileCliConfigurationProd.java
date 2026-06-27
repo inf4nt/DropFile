@@ -6,6 +6,8 @@ import com.evolution.dropfile.store.framework.file.*;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @Profile("prod")
 @Configuration
@@ -32,11 +35,11 @@ public class DropFileCliConfigurationProd {
     @Bean
     public CryptoFileOperations cryptoFileOperations(FileOperations fileOperations,
                                                      CryptoTunnel cryptoTunnel,
-                                                     InstallationSeedProvider installationSeedProvider) {
+                                                     InstallationSeedBootstrapStore installationSeedBootstrapStore) {
         return new CryptoFileOperations(
                 fileOperations,
                 cryptoTunnel,
-                installationSeedProvider
+                installationSeedBootstrapStore
         );
     }
 
@@ -60,11 +63,23 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public InstallationSeedProvider applicationFingerprintSupplier(CliApplicationProperties cliApplicationProperties) {
+    public InstallationSeedBootstrapStore installationSeedBootstrapStore(CliApplicationProperties applicationProperties,
+                                                                         FileOperations fileOperations,
+                                                                         ObjectMapper objectMapper) {
         FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(cliApplicationProperties.configDirectory),
+                Paths.get(applicationProperties.configDirectory),
                 ".installation.bin"
         );
-        return new FileSystemInstallationSeedProvider(fileProvider);
+        SerdeOperations<UUID> serdeOperations = new JsonSerdeOperations<>(
+                objectMapper,
+                UUID.class
+        );
+        return new InstallationSeedBootstrapStoreImpl(
+                new CacheFileKeyValueStore<>(
+                        fileProvider,
+                        fileOperations,
+                        serdeOperations
+                )
+        );
     }
 }
