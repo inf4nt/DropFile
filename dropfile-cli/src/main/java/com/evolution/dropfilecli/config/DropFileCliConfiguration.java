@@ -53,7 +53,7 @@ public class DropFileCliConfiguration {
 
     @Bean
     public DirectoryProvider applicationDirectoryProvider(CliApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(Paths.get(applicationProperties.applicationDirectory));
+        return new DirectoryProviderImpl(applicationProperties.applicationDirectory);
     }
 
     @Bean

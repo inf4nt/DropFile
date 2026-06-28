@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 @Component
 public class CliApplicationProperties {
 
-    public final String applicationDirectory;
+    public final Path applicationDirectory;
 
     public final String daemonHost;
 
@@ -17,10 +17,10 @@ public class CliApplicationProperties {
 
 
     @Autowired
-    public CliApplicationProperties(@Value("${user.dir}") String applicationDirectory,
+    public CliApplicationProperties(@Value("${user.dir}") Path applicationDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
                                     @Value("${dropfile.daemon.port}") int daemonPort) {
-        this.applicationDirectory = Paths.get(applicationDirectory).toString();
+        this.applicationDirectory = applicationDirectory;
         this.daemonHost = daemonHost;
         this.daemonPort = daemonPort;
     }

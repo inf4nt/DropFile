@@ -3,14 +3,14 @@ package com.evolution.dropfiledaemon.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 @Component
 public class DaemonApplicationProperties {
 
-    public final String applicationDirectory;
+    public final Path applicationDirectory;
 
-    public final String applicationDownloadDirectory;
+    public final Path applicationDownloadDirectory;
 
     public final int daemonPort;
 
@@ -38,8 +38,8 @@ public class DaemonApplicationProperties {
 
     public final int handshakeServerPayloadLiveTime;
 
-    public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
-                                       @Value("${dropfile.download.directory}") String applicationDownloadDirectory,
+    public DaemonApplicationProperties(@Value("${user.dir}") Path applicationDirectory,
+                                       @Value("${dropfile.download.directory}") Path applicationDownloadDirectory,
                                        @Value("${dropfile.daemon.port}") int daemonPort,
                                        @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
                                        @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
@@ -53,8 +53,8 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
                                        @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
-        this.applicationDirectory = Paths.get(applicationDirectory).toString();
-        this.applicationDownloadDirectory = Paths.get(applicationDownloadDirectory).toString();
+        this.applicationDirectory = applicationDirectory;
+        this.applicationDownloadDirectory = applicationDownloadDirectory;
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;

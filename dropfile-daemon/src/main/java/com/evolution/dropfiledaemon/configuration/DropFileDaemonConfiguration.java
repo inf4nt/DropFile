@@ -7,12 +7,10 @@ import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfile.store.framework.file.DirectoryProviderImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.net.http.HttpClient;
-import java.nio.file.Paths;
 
 @Configuration
 public class DropFileDaemonConfiguration {
@@ -41,11 +39,11 @@ public class DropFileDaemonConfiguration {
 
     @Bean
     public DirectoryProvider applicationDirectory(DaemonApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(Paths.get(applicationProperties.applicationDirectory));
+        return new DirectoryProviderImpl(applicationProperties.applicationDirectory);
     }
 
     @Bean
     public DirectoryProvider applicationDownloadDirectoryProvider(DaemonApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(Paths.get(applicationProperties.applicationDownloadDirectory));
+        return new DirectoryProviderImpl(applicationProperties.applicationDownloadDirectory);
     }
 }
