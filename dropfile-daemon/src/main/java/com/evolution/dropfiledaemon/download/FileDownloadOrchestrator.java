@@ -46,7 +46,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private final FileDownloadEntryStore fileDownloadEntryStore;
 
-    private final DirectoryProvider downloadDirectory;
+    private final DirectoryProvider applicationDownloadDirectoryProvider;
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
@@ -277,7 +277,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
     }
 
     private Path getManifestFilePath(Path destinationFilePath) {
-        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+        Path downloadDirectoryPath = applicationDownloadDirectoryProvider.getDirectoryPath();
 
         Path manifestPath = downloadDirectoryPath.resolve(String.format("%s%s%s", "manifest.", destinationFilePath.getFileName().toString(), ".json"));
 
@@ -296,7 +296,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
             throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
         }
 
-        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+        Path downloadDirectoryPath = applicationDownloadDirectoryProvider.getDirectoryPath();
         Path downloadFilePath = downloadDirectoryPath.resolve(request.filename());
 
         Map.Entry<String, DownloadProgress> duplicate = Stream.concat(getWaitingQueue().entrySet().stream(), getDownloadProcedures().entrySet().stream())
@@ -320,7 +320,7 @@ public class FileDownloadOrchestrator implements AutoCloseable {
 
     private Path getTemporaryFilePath(FileDownloadRequest request) {
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
-        Path downloadDirectoryPath = downloadDirectory.getDirectoryPath();
+        Path downloadDirectoryPath = applicationDownloadDirectoryProvider.getDirectoryPath();
         return downloadDirectoryPath.resolve(temporaryFileName);
     }
 

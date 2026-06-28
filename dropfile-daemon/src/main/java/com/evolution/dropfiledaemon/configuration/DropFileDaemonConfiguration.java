@@ -40,12 +40,12 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public DirectoryProvider applicationDirectory(@Value("${user.dir}") String rootDirectory) {
-        return new DirectoryProviderImpl(Paths.get(rootDirectory));
+    public DirectoryProvider applicationDirectory(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(Paths.get(applicationProperties.applicationDirectory));
     }
 
     @Bean
-    public DirectoryProvider downloadDirectory(@Value("${dropfile.download.directory}") String downloadDirectory) {
-        return new DirectoryProviderImpl(Paths.get(downloadDirectory));
+    public DirectoryProvider applicationDownloadDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(Paths.get(applicationProperties.applicationDownloadDirectory));
     }
 }

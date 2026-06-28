@@ -6,6 +6,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class DaemonApplicationProperties {
 
+    public final String applicationDirectory;
+
+    public final String applicationDownloadDirectory;
+
     public final int daemonPort;
 
     public final int downloadOrchestratorMaxQueueSize;
@@ -32,7 +36,9 @@ public class DaemonApplicationProperties {
 
     public final int handshakeServerPayloadLiveTime;
 
-    public DaemonApplicationProperties(@Value("${dropfile.daemon.port}") int daemonPort,
+    public DaemonApplicationProperties(@Value("${user.dir}") String applicationDirectory,
+                                       @Value("${dropfile.download.directory}") String applicationDownloadDirectory,
+                                       @Value("${dropfile.daemon.port}") int daemonPort,
                                        @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
                                        @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
                                        @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
@@ -45,6 +51,8 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
                                        @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
+        this.applicationDirectory = applicationDirectory;
+        this.applicationDownloadDirectory = applicationDownloadDirectory;
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
