@@ -21,7 +21,7 @@ public class FileHelperTest {
     public void before() {
         fileHelper = new FileHelper();
         file = new File(
-                Objects.requireNonNull(getClass().getClassLoader().getResource("readStream.txt")).getFile()
+                Objects.requireNonNull(getClass().getClassLoader().getResource("numbers.txt")).getFile()
         );
     }
 
