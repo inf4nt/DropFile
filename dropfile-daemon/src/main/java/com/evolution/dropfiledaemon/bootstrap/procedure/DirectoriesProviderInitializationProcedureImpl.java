@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase.init;
+package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.framework.file.DirectoriesProviderInitializationProcedure;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;

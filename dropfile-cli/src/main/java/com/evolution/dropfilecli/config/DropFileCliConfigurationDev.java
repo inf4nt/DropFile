@@ -4,10 +4,10 @@ import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
 
 @Slf4j
 @Profile("dev")
@@ -15,11 +15,8 @@ import org.springframework.core.env.Environment;
 public class DropFileCliConfigurationDev {
 
     @Bean
-    public DaemonSecretsStore secretsConfigStore(Environment environment) {
-        return new ImmutableDaemonSecretsStore(() -> {
-            String daemonToken = environment.getRequiredProperty("dropfile.daemon.token");
-
-            return new DaemonSecrets(daemonToken);
-        });
+    public DaemonSecretsStore secretsConfigStore(@Value("${dropfile.daemon.token}") String daemonToken) {
+        DaemonSecrets secrets = new DaemonSecrets(daemonToken);
+        return new ImmutableDaemonSecretsStore(secrets);
     }
 }

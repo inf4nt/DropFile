@@ -44,39 +44,41 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(CryptoFileOperations fileOperations,
-                                                 ObjectMapper objectMapper,
-                                                 CliApplicationProperties cliApplicationProperties) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(cliApplicationProperties.configDirectory),
-                ".daemon.bin"
-        );
+    public FileProvider daemonSecretFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
+        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".daemon.bin"));
+    }
+
+    @Bean
+    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretFileProvider,
+                                                 CryptoFileOperations fileOperations,
+                                                 ObjectMapper objectMapper) {
         SerdeOperations<DaemonSecrets> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 DaemonSecrets.class
         );
         return new DaemonSecretsStoreImpl(
                 new CacheFileKeyValueStore<>(
-                        fileProvider, fileOperations, serdeOperations
+                        daemonSecretFileProvider, fileOperations, serdeOperations
                 )
         );
     }
 
     @Bean
-    public InstallationSeedBootstrapStore installationSeedBootstrapStore(CliApplicationProperties applicationProperties,
+    public FileProvider installationSeedFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
+        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".installation.bin"));
+    }
+
+    @Bean
+    public InstallationSeedBootstrapStore installationSeedBootstrapStore(FileProvider installationSeedFileProvider,
                                                                          FileOperations fileOperations,
                                                                          ObjectMapper objectMapper) {
-        FileProvider fileProvider = new FileProviderImpl(
-                Paths.get(applicationProperties.configDirectory),
-                ".installation.bin"
-        );
         SerdeOperations<UUID> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
                 UUID.class
         );
         return new InstallationSeedBootstrapStoreImpl(
                 new CacheFileKeyValueStore<>(
-                        fileProvider,
+                        installationSeedFileProvider,
                         fileOperations,
                         serdeOperations
                 )

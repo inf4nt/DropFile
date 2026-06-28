@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase.init.prod;
+package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;

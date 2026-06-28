@@ -73,6 +73,7 @@ public class DropFileDaemonConfigurationDev {
     @Bean
     public DaemonSecretsStore daemonSecretsStore(@Value("${dropfile.daemon.token}") String daemonToken) {
         log.info("Provided daemon token: {}", daemonToken);
-        return new ImmutableDaemonSecretsStore(() -> new DaemonSecrets(daemonToken));
+        DaemonSecrets secrets = new DaemonSecrets(daemonToken);
+        return new ImmutableDaemonSecretsStore(secrets);
     }
 }

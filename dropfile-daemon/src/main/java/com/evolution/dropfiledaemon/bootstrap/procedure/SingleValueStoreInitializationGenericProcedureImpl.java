@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase.init.prod;
+package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;

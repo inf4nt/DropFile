@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase.init.prod;
+package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.framework.bootstrap.BootstrapStoreInitializationProcedure;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
