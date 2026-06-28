@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @Slf4j
 @ControllerAdvice(assignableTypes = {
         ApiConnectionsAccessRestController.class,
-        ApiConnectionsShareRestController.class,
+        ApiConnectionsBrowseRestController.class,
         ApiConnectionsRestController.class,
         ApiDaemonRestController.class,
-        ApiShareRestController.class,
+        ApiConnectionsShareRestController.class,
         ApiDownloadRestController.class,
         ApiLinkShareRestController.class
 })

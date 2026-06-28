@@ -1,5 +1,6 @@
-package com.evolution.dropfilecli.command.share;
+package com.evolution.dropfilecli.command.connections.share;
 
+import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfile.common.dto.ApiShareInfoResponseDTO;
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,7 +15,7 @@ import java.net.http.HttpResponse;
         name = "add",
         description = "Add file command"
 )
-public class ShareAddCommand extends AbstractCommandHttpHandler {
+public class ConnectionsShareAddCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;
@@ -25,12 +26,12 @@ public class ShareAddCommand extends AbstractCommandHttpHandler {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         String filename = getFilename();
-        return daemonClient.shareAdd(filename, file.getAbsolutePath());
+        return daemonClient.connectionsShareAdd(filename, file.getAbsolutePath());
     }
 
     @Override
     protected TypeReference<?> getTypeReference() {
-        return new TypeReference<ApiShareInfoResponseDTO>() {
+        return new TypeReference<ApiConnectionsShareLsResponseDTO>() {
         };
     }
 

@@ -4,7 +4,6 @@ import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.download.DownloadCommand;
 import com.evolution.dropfilecli.command.link.LinkShareCommand;
-import com.evolution.dropfilecli.command.share.ShareCommand;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +17,6 @@ import picocli.CommandLine;
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                ShareCommand.class,
                 DownloadCommand.class,
                 LinkShareCommand.class
         }

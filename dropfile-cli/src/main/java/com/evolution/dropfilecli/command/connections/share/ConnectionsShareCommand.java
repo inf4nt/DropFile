@@ -7,12 +7,12 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "share",
+        description = "Share commands",
         aliases = {"-s", "--s"},
-        description = "Share operations",
         subcommands = {
-                ConnectionsShareDownloadCommand.class,
                 ConnectionsShareLsCommand.class,
-                ConnectionsShareCatCommand.class
+                ConnectionsShareAddCommand.class,
+                ConnectionsShareRmCommand.class
         }
 )
 public class ConnectionsShareCommand implements SimpleCommandHandler {

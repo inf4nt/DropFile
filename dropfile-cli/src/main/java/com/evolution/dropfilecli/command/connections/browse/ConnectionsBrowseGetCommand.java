@@ -1,6 +1,6 @@
-package com.evolution.dropfilecli.command.connections.share;
+package com.evolution.dropfilecli.command.connections.browse;
 
-import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsBrowseGetResponseDTO;
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
@@ -10,11 +10,11 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "download",
-        aliases = {"-d", "--d"},
-        description = "Download file"
+        name = "get",
+        aliases = {"-g", "--g"},
+        description = "Get file"
 )
-public class ConnectionsShareDownloadCommand extends AbstractCommandHttpHandler {
+public class ConnectionsBrowseGetCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;
@@ -24,12 +24,12 @@ public class ConnectionsShareDownloadCommand extends AbstractCommandHttpHandler 
 
     @Override
     public HttpResponse<byte[]> execute() {
-        return daemonClient.connectionsShareDownload(id, filename);
+        return daemonClient.connectionsBrowseGet(id, filename);
     }
 
     @Override
     protected TypeReference<?> getTypeReference() {
-        return new TypeReference<ApiConnectionsShareDownloadResponseDTO>() {
+        return new TypeReference<ApiConnectionsBrowseGetResponseDTO>() {
         };
     }
 }

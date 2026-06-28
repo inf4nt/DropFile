@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.share;
+package com.evolution.dropfilecli.command.connections.share;
 
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
@@ -8,10 +8,9 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "rm",
-        description = "Remove file"
+        name = "rm"
 )
-public class ShareRmCommand extends AbstractCommandHttpHandler {
+public class ConnectionsShareRmCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -27,8 +26,8 @@ public class ShareRmCommand extends AbstractCommandHttpHandler {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
-            return daemonClient.shareRmAll();
+            return daemonClient.connectionsShareRmAll();
         }
-        return daemonClient.shareRm(exclusive.id);
+        return daemonClient.connectionsShareRm(exclusive.id);
     }
 }

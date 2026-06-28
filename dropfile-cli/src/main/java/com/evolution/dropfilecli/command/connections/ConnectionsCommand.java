@@ -2,6 +2,7 @@ package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfilecli.SimpleCommandHandler;
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
+import com.evolution.dropfilecli.command.connections.browse.ConnectionsBrowseCommand;
 import com.evolution.dropfilecli.command.connections.share.ConnectionsShareCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -20,6 +21,7 @@ import picocli.CommandLine;
                 RevokeCommand.class,
                 AccessCommand.class,
                 StatusConnectionCommand.class,
+                ConnectionsBrowseCommand.class,
                 ConnectionsShareCommand.class,
                 TrafficCommand.class
         }

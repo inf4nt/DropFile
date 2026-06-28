@@ -1,115 +1,75 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
-import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.download.FileDownloadRequest;
-import com.evolution.dropfiledaemon.download.FileDownloadResponse;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.evolution.dropfile.store.share.ShareFileEntry;
+import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 
 @RequiredArgsConstructor
-@Slf4j
 @Component
 public class ApiConnectionsShareFacade {
 
-    private final TunnelClient tunnelClient;
+    private final ShareFileEntryStore shareFileEntryStore;
 
-    private final FileDownloadOrchestrator fileDownloadOrchestrator;
+    @SneakyThrows
+    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) {
+        String alias = Paths.get(requestDTO.alias()).toString();
+        Path absoluteFilePathPath = Paths.get(requestDTO.absoluteFilePath());
+        if (Files.notExists(absoluteFilePathPath)) {
+            throw new FileNotFoundException(absoluteFilePathPath.toString());
+        }
+        if (Files.isDirectory(absoluteFilePathPath)) {
+            throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.absoluteFilePath());
+        }
 
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
-
-    public List<ApiConnectionsShareLsResponseDTO> ls(ApiConnectionsShareLsRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
-                .getKey();
-        return ls(fingerprintConnection, requestDTO);
+        String id = CommonUtils.random();
+        ShareFileEntry entry = shareFileEntryStore.save(
+                id,
+                new ShareFileEntry(
+                        alias,
+                        absoluteFilePathPath.toFile().getCanonicalPath(),
+                        absoluteFilePathPath.toFile().length(),
+                        Instant.now()
+                )
+        );
+        return map(id, entry);
     }
 
-    private List<ApiConnectionsShareLsResponseDTO> ls(String fingerprint,
-                                                      ApiConnectionsShareLsRequestDTO requestDTO) {
-        List<ShareLsTunnelResponse> files = tunnelClient.send(
-                TunnelClient.Request.builder()
-                        .command("share-ls")
-                        .body(new ShareLsTunnelRequest(requestDTO.ids()))
-                        .fingerprint(fingerprint)
-                        .build(),
-                new TypeReference<List<ShareLsTunnelResponse>>() {
-                }
-        );
-        return files.stream()
-                .map(it -> new ApiConnectionsShareLsResponseDTO(
-                        it.id(),
-                        it.alias(),
-                        CommonUtils.toDisplaySize(it.size()),
-                        it.created()
-                ))
+    public List<ApiConnectionsShareLsResponseDTO> ls() {
+        return shareFileEntryStore.getAll()
+                .entrySet()
+                .stream()
+                .map(it -> map(it.getKey(), it.getValue()))
                 .toList();
     }
 
-    public String cat(String id) {
-        return tunnelClient.send(
-                TunnelClient.Request.builder()
-                        .command("share-cat")
-                        .body(id)
-                        .fingerprint(
-                                handshakeSessionOutStore.getRequiredLatestUpdated()
-                                        .getKey()
-                        )
-                        .build(),
-                String.class
-        );
+    public void rm(String id) {
+        String key = shareFileEntryStore.getRequiredByKeyStartWith(id).getKey();
+        shareFileEntryStore.remove(key);
     }
 
-    private FileDownloadRequest getRequestForDownloadRequest(String fingerprintConnection, ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        List<ApiConnectionsShareLsResponseDTO> responses = ls(
-                fingerprintConnection, new ApiConnectionsShareLsRequestDTO(List.of(requestDTO.fileId()))
-        );
-        ApiConnectionsShareLsResponseDTO response = CommonUtils.requireOne(responses);
-        return new FileDownloadRequest(
-                fingerprintConnection,
-                response.id(),
-                ObjectUtils.isEmpty(requestDTO.filename()) ? response.alias() : requestDTO.filename()
-        );
+    public void rmAll() {
+        shareFileEntryStore.removeAll();
     }
 
-    public ApiConnectionsShareDownloadResponseDTO download(ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
-                .getKey();
-
-        FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
-
-        // TODO remove it
-        if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {
-            int index = requestDTO.filename().indexOf("big");
-            Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
-            for (int i = 0; i < iterations; i++) {
-                String filename = i + "-" + fileDownloadRequest.filename();
-                fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(fileDownloadRequest.fingerprint(), fileDownloadRequest.fileId(), filename)
-                );
-            }
-            return null;
-        }
-
-        FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(fileDownloadRequest);
-
-        return new ApiConnectionsShareDownloadResponseDTO(
-                fileDownloadResponse.operationId(),
-                fingerprintConnection,
-                fileDownloadResponse.fileId(),
-                fileDownloadResponse.filename()
+    private ApiConnectionsShareLsResponseDTO map(String id, ShareFileEntry shareFileEntry) {
+        return new ApiConnectionsShareLsResponseDTO(
+                id,
+                shareFileEntry.alias(),
+                shareFileEntry.absolutePath(),
+                CommonUtils.toDisplaySize(shareFileEntry.size()),
+                shareFileEntry.created()
         );
     }
 }

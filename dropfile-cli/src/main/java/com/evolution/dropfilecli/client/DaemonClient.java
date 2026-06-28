@@ -134,9 +134,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionShareLs(List<String> ids) {
+    public HttpResponse<byte[]> connectionsBrowseLs(List<String> ids) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/ls");
+                .resolve("/api/connections/browse/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -146,7 +146,7 @@ public class DaemonClient {
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(
-                                new ApiConnectionsShareLsRequestDTO(ids)
+                                new ApiConnectionsBrowseLsRequestDTO(ids)
                         )
                 ))
                 .header("Content-Type", "application/json")
@@ -156,9 +156,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareDownload(String id, String filename) {
+    public HttpResponse<byte[]> connectionsBrowseGet(String id, String filename) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/download");
+                .resolve("/api/connections/browse/get");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -167,7 +167,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiConnectionsShareDownloadRequestDTO(id, filename)
+                        new ApiConnectionsBrowseGetRequestDTO(id, filename)
                 )))
                 .header("Content-Type", "application/json")
                 .build();
@@ -194,9 +194,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> shareLs() {
+    public HttpResponse<byte[]> connectionsShareLs() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/share/ls");
+                .resolve("/api/connections/share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -211,9 +211,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> shareAdd(String alias, String absoluteFilePath) {
+    public HttpResponse<byte[]> connectionsShareAdd(String alias, String absoluteFilePath) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/share/add");
+                .resolve("/api/connections/share/add");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -223,7 +223,7 @@ public class DaemonClient {
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(
-                                new ApiShareAddRequestDTO(alias, absoluteFilePath)
+                                new ApiConnectionsShareAddRequestDTO(alias, absoluteFilePath)
                         )
                 ))
                 .header("Content-Type", "application/json")
@@ -233,9 +233,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> shareRm(String id) {
+    public HttpResponse<byte[]> connectionsShareRm(String id) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/share/rm/")
+                .resolve("/api/connections/share/rm/")
                 .resolve(id);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -251,9 +251,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> shareRmAll() {
+    public HttpResponse<byte[]> connectionsShareRmAll() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/share/rm-all");
+                .resolve("/api/connections/share/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

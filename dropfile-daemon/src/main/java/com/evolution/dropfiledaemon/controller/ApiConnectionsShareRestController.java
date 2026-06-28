@@ -1,13 +1,9 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadRequestDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareDownloadResponseDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareLsRequestDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsShareFacade;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,20 +15,23 @@ public class ApiConnectionsShareRestController {
 
     private final ApiConnectionsShareFacade apiFacade;
 
-    @PostMapping("/ls")
-    public ResponseEntity<List<ApiConnectionsShareLsResponseDTO>> ls(@RequestBody ApiConnectionsShareLsRequestDTO requestDTO) {
-        List<ApiConnectionsShareLsResponseDTO> files = apiFacade.ls(requestDTO);
-        return ResponseEntity.ok(files);
+    @PostMapping("/add")
+    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO) {
+        return apiFacade.add(requestDTO);
     }
 
-    @PostMapping("/download")
-    public ResponseEntity<ApiConnectionsShareDownloadResponseDTO> download(@RequestBody ApiConnectionsShareDownloadRequestDTO requestDTO) {
-        return ResponseEntity.ok(apiFacade.download(requestDTO));
+    @GetMapping("/ls")
+    public List<ApiConnectionsShareLsResponseDTO> ls() {
+        return apiFacade.ls();
     }
 
-    @GetMapping("/cat/{id}")
-    public ResponseEntity<String> cat(@PathVariable String id) {
-        String responseDTO = apiFacade.cat(id);
-        return ResponseEntity.ok(responseDTO);
+    @DeleteMapping("/rm/{id}")
+    public void rm(@PathVariable String id) {
+        apiFacade.rm(id);
+    }
+
+    @DeleteMapping("/rm-all")
+    public void rmAll() {
+        apiFacade.rmAll();
     }
 }
