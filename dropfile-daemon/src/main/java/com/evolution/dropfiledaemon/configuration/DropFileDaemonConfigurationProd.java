@@ -8,8 +8,8 @@ import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStoreImpl;
 import com.evolution.dropfile.store.framework.file.*;
-import com.evolution.dropfile.store.link.LinkShareEntryStore;
-import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
+import com.evolution.dropfile.store.link.QuickShareEntryStore;
+import com.evolution.dropfile.store.link.RuntimeQuickShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
@@ -169,8 +169,8 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public LinkShareEntryStore linkShareEntryStore() {
-        return new RuntimeLinkShareEntryStore();
+    public QuickShareEntryStore linkShareEntryStore() {
+        return new RuntimeQuickShareEntryStore();
     }
 
     @Bean

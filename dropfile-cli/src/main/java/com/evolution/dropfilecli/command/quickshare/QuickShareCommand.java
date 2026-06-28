@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.link;
+package com.evolution.dropfilecli.command.quickshare;
 
 import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
@@ -6,16 +6,16 @@ import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "link",
-        description = "Link commands",
-        aliases = {"-l", "--l"},
+        name = "quick-share",
+        description = "Quick share",
+        aliases = {"-q", "--q"},
         subcommands = {
-                LinkShareAddCommand.class,
-                LinkShareLsCommand.class,
-                LinkShareRmCommand.class
+                QuickShareAddCommand.class,
+                QuickShareLsCommand.class,
+                QuickShareRmCommand.class
         }
 )
-public class LinkShareCommand implements SimpleCommandHandler {
+public class QuickShareCommand implements SimpleCommandHandler {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 

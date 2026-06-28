@@ -1,6 +1,6 @@
-package com.evolution.dropfilecli.command.link;
+package com.evolution.dropfilecli.command.quickshare;
 
-import com.evolution.dropfile.common.dto.ApiLinkShareLsResponseDTO;
+import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
@@ -13,15 +13,15 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class LinkShareLsCommand extends AbstractCommandHttpHandler {
+public class QuickShareLsCommand extends AbstractCommandHttpHandler {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.linkShareLs();
+        return daemonClient.quickShareLs();
     }
 
     @Override
     protected TypeReference<?> getTypeReference() {
-        return new TypeReference<List<ApiLinkShareLsResponseDTO>>() {};
+        return new TypeReference<List<ApiQuickShareLsResponseDTO>>() {};
     }
 }

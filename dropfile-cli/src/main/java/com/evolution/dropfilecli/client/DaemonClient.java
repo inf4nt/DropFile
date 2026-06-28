@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -599,9 +600,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> linkShareAdd(String fileId) {
+    public HttpResponse<byte[]> quickShareAdd(File file, String alias, boolean singleUse) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/link-share/add");
+                .resolve("/api/quick-share/add");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -610,7 +611,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiLinkShareAddRequestDTO(fileId)
+                        new ApiQuickShareAddRequestDTO(file, alias, singleUse)
                 )))
                 .header("Content-Type", "application/json")
                 .build();
@@ -619,9 +620,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> linkShareLs() {
+    public HttpResponse<byte[]> quickShareLs() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/link-share/ls");
+                .resolve("/api/quick-share/ls");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -636,9 +637,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> linkShareRmAll() {
+    public HttpResponse<byte[]> quickShareRmAll() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/link-share/rm-all");
+                .resolve("/api/quick-share/rm-all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -653,9 +654,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> linkShareRm(String id) {
+    public HttpResponse<byte[]> quickShareRm(String id) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/link-share/rm/")
+                .resolve("/api/quick-share/rm/")
                 .resolve(id);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();

@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.link;
+package com.evolution.dropfilecli.command.quickshare;
 
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "rm"
 )
-public class LinkShareRmCommand extends AbstractCommandHttpHandler {
+public class QuickShareRmCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
@@ -26,8 +26,8 @@ public class LinkShareRmCommand extends AbstractCommandHttpHandler {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
-            return daemonClient.linkShareRmAll();
+            return daemonClient.quickShareRmAll();
         }
-        return daemonClient.linkShareRm(exclusive.id);
+        return daemonClient.quickShareRm(exclusive.id);
     }
 }

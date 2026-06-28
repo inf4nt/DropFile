@@ -4,8 +4,8 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
-import com.evolution.dropfile.store.link.LinkShareEntryStore;
-import com.evolution.dropfile.store.link.RuntimeLinkShareEntryStore;
+import com.evolution.dropfile.store.link.QuickShareEntryStore;
+import com.evolution.dropfile.store.link.RuntimeQuickShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
@@ -66,8 +66,8 @@ public class DropFileDaemonConfigurationDev {
     }
 
     @Bean
-    public LinkShareEntryStore linkShareEntryStore() {
-        return new RuntimeLinkShareEntryStore();
+    public QuickShareEntryStore linkShareEntryStore() {
+        return new RuntimeQuickShareEntryStore();
     }
 
     @Bean

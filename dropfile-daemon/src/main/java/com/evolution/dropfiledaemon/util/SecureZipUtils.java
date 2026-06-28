@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import jakarta.annotation.Nullable;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -18,8 +19,12 @@ public class SecureZipUtils {
 
     public static void zip(OutputStream outputStream,
                            File file,
-                           String aliasFileName,
+                           @Nullable String aliasFileName,
                            String password) throws IOException {
+
+        if (aliasFileName == null) {
+            aliasFileName = file.getName();
+        }
 
         OutputStream shieldOutputStream = new FilterOutputStream(outputStream) {
             @Override
