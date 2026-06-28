@@ -2,7 +2,6 @@ package com.evolution.dropfilecli;
 
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
-import com.evolution.dropfilecli.command.download.DownloadCommand;
 import com.evolution.dropfilecli.command.link.LinkShareCommand;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,6 @@ import picocli.CommandLine;
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                DownloadCommand.class,
                 LinkShareCommand.class
         }
 )

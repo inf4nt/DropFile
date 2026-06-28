@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class ConnectionsShareLsCommand extends AbstractCommandHttpHandler {
+public class ShareLsCommand extends AbstractCommandHttpHandler {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

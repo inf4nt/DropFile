@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.download;
+package com.evolution.dropfilecli.command.connections.download;
 
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;

@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.connections.browse;
+package com.evolution.dropfilecli.command.connections.share;
 
 import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
@@ -6,15 +6,16 @@ import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "browse",
-        aliases = {"-b", "--b"},
-        description = "Browse operations",
+        name = "share",
+        description = "Share commands",
+        aliases = {"-s", "--s"},
         subcommands = {
-                ConnectionsBrowseGetCommand.class,
-                ConnectionsBrowseLsCommand.class
+                ShareLsCommand.class,
+                ShareAddCommand.class,
+                ShareRmCommand.class
         }
 )
-public class ConnectionsBrowseCommand implements SimpleCommandHandler {
+public class ShareCommand implements SimpleCommandHandler {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

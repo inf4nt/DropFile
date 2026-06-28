@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         name = "add",
         description = "Add file command"
 )
-public class ConnectionsShareAddCommand extends AbstractCommandHttpHandler {
+public class ShareAddCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;

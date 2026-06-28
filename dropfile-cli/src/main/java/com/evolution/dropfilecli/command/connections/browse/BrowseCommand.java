@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.download;
+package com.evolution.dropfilecli.command.connections.browse;
 
 import com.evolution.dropfilecli.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
@@ -6,16 +6,15 @@ import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "download",
-        description = "Download commands",
-        aliases = {"-d", "--d"},
+        name = "browse",
+        aliases = {"-b", "--b"},
+        description = "Browse operations",
         subcommands = {
-                DownloadLsCommand.class,
-                DownloadStopCommand.class,
-                DownloadRmCommand.class
+                BrowseGetCommand.class,
+                BrowseLsCommand.class
         }
 )
-public class DownloadCommand implements SimpleCommandHandler {
+public class BrowseCommand implements SimpleCommandHandler {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;

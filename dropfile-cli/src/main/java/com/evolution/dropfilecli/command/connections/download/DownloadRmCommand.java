@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.command.connections.share;
+package com.evolution.dropfilecli.command.connections.download;
 
 import com.evolution.dropfilecli.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
@@ -10,13 +10,13 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "rm"
 )
-public class ConnectionsShareRmCommand extends AbstractCommandHttpHandler {
+public class DownloadRmCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "Remove by id")
+        @CommandLine.Option(names = {"-id", "--id"}, description = "Operation id")
         private String id;
 
         @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")
@@ -26,8 +26,8 @@ public class ConnectionsShareRmCommand extends AbstractCommandHttpHandler {
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
-            return daemonClient.connectionsShareRmAll();
+            return daemonClient.downloadRmAll();
         }
-        return daemonClient.connectionsShareRm(exclusive.id);
+        return daemonClient.downloadRm(exclusive.id);
     }
 }

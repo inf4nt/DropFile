@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         aliases = {"-g", "--g"},
         description = "Get file"
 )
-public class ConnectionsBrowseGetCommand extends AbstractCommandHttpHandler {
+public class BrowseGetCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;

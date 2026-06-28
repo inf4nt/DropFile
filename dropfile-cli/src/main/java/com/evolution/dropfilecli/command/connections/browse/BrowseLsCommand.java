@@ -14,7 +14,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class ConnectionsBrowseLsCommand extends AbstractCommandHttpHandler {
+public class BrowseLsCommand extends AbstractCommandHttpHandler {
 
     @CommandLine.Option(names = {"-id", "--id"}, split = ",", description = "List of ids")
     private List<String> ids;
