@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Paths;
+
 @Component
 public class DaemonApplicationProperties {
 
@@ -51,8 +53,8 @@ public class DaemonApplicationProperties {
                                        @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
                                        @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
                                        @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
-        this.applicationDirectory = applicationDirectory;
-        this.applicationDownloadDirectory = applicationDownloadDirectory;
+        this.applicationDirectory = Paths.get(applicationDirectory).toString();
+        this.applicationDownloadDirectory = Paths.get(applicationDownloadDirectory).toString();
         this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
         this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
         this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
