@@ -38,7 +38,7 @@ COPY /dropfile-daemon/src dropfile-daemon/src
 
 RUN mvn package -Dmaven.test.skip=true
 
-FROM busybox
+FROM busybox AS archive_build
 
 RUN mkdir -p dropfile/bin \
     && mkdir -p dropfile/logs \
@@ -59,8 +59,8 @@ COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/dropfile-daemon/
 
 RUN tar -czf dropfile-windows-x64.tar.gz dropfile
 
-RUN rm -rf /dropfile
+FROM busybox
 
-RUN mkdir out
+COPY --from=archive_build /dropfile-windows-x64.tar.gz /dropfile-windows-x64.tar.gz
 
-ENTRYPOINT ["cp", "/dropfile-windows-x64.tar.gz", "/out/dropfile-windows-x64.tar.gz"]
+CMD ["cp", "/dropfile-windows-x64.tar.gz", "/out/dropfile-windows-x64.tar.gz"]
