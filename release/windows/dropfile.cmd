@@ -2,7 +2,7 @@
 
 cd /d "%DROPFILE_HOME%"
 
-set JAR_PATH=%DROPFILE_HOME%\dropfile-cli\dropfile-cli.jar
+set JAR_PATH=%DROPFILE_HOME%\jars\dropfile-cli.jar
 set JAVA_PATH=%DROPFILE_HOME%\runtime\bin\java.exe
 set SPRING_APPLICATION_PROPERTIES_PATH=%DROPFILE_HOME%\conf\dropfile-cli.application.properties
 

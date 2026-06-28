@@ -4,7 +4,7 @@ set -e
 cd $DROPFILE_HOME
 
 JAVA_PATH="$DROPFILE_HOME/runtime/bin/java"
-JAR_PATH="$DROPFILE_HOME/dropfile-daemon/dropfile-daemon.jar"
+JAR_PATH="$DROPFILE_HOME/jars/dropfile-daemon.jar"
 LOG_PATH=$DROPFILE_HOME/logs
 SPRING_APPLICATION_PROPERTIES_PATH="$DROPFILE_HOME/conf/dropfile-daemon.application.properties"
 
