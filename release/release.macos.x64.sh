@@ -1,5 +1,10 @@
-RELEASE_BUILD_IMAGE=dropfile-release-macos-x64
+IMAGE_NAME=dropfile-release-macos-x64
+DOCKERFILE_NAME=Dockerfile.release.macos.x64
+ARCHIVE_NAME_INPUT=dropfile.tar.gz
+ARCHIVE_NAME_OUTPUT=dropfile-macos-x64.tar.gz
 
-docker build -t $RELEASE_BUILD_IMAGE --file Dockerfile.release.macos.x64 ../.
+docker build -t $IMAGE_NAME --file $DOCKERFILE_NAME ../.
 
-docker run --rm -v "$(pwd):/out" $RELEASE_BUILD_IMAGE
+docker create --name extractor $IMAGE_NAME
+docker cp extractor:/$ARCHIVE_NAME_INPUT ./$ARCHIVE_NAME_OUTPUT
+docker rm extractor

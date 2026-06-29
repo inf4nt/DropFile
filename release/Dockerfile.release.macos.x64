@@ -38,7 +38,7 @@ COPY /dropfile-daemon/src dropfile-daemon/src
 
 RUN mvn package -Dmaven.test.skip=true
 
-FROM busybox AS archive_build
+FROM busybox:1.38.0 AS archive_build
 
 RUN mkdir -p dropfile/bin \
     && mkdir -p dropfile/logs \
@@ -56,10 +56,12 @@ COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
 COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
 COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
 
-RUN tar -czf dropfile-macos-x64.tar.gz dropfile
+RUN chmod +x dropfile/bin/dropfile dropfile/bin/dropfile-daemon
 
-FROM busybox
+RUN tar -czf dropfile.tar.gz dropfile
 
-COPY --from=archive_build /dropfile-macos-x64.tar.gz /dropfile-macos-x64.tar.gz
+FROM scratch
 
-CMD ["cp", "/dropfile-macos-x64.tar.gz", "/out/dropfile-macos-x64.tar.gz"]
+COPY --from=archive_build /dropfile.tar.gz /dropfile.tar.gz
+
+CMD ["echo", "Done"]
