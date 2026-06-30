@@ -42,6 +42,16 @@ import java.util.UUID;
 public class DropFileDaemonConfigurationProd {
 
     @Bean
+    public DirectoryProvider daemonSecretsDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonSecretsDirectory);
+    }
+
+    @Bean
+    public DirectoryProvider daemonInstallationSeedDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonInstallationSeedDirectory);
+    }
+
+    @Bean
     public DirectoryProvider daemonConfigDirectoryProvider(DaemonApplicationProperties applicationProperties) {
         return new DirectoryProviderImpl(applicationProperties.daemonConfigDirectory);
     }
