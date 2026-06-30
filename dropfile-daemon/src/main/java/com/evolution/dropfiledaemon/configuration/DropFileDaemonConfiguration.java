@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
@@ -14,6 +15,11 @@ import java.net.http.HttpClient;
 
 @Configuration
 public class DropFileDaemonConfiguration {
+
+    @Bean
+    public SystemInfoProvider systemInfoProvider() {
+        return new SystemInfoProvider();
+    }
 
     @Bean
     public HttpClient httpClient() {

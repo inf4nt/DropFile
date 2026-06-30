@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.config;
 
+import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfilecli.util.DateUtils;
@@ -18,6 +19,11 @@ import java.time.Instant;
 
 @Configuration
 public class DropFileCliConfiguration {
+
+    @Bean
+    public SystemInfoProvider systemInfoProvider() {
+        return new SystemInfoProvider();
+    }
 
     @Bean
     public HttpClient httpClient() {

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.bootstrap;
 
+import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.system.SystemInfoProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -28,7 +28,7 @@ public class ApplicationReadyListenerSystemInfoPrinter {
     public void onApplicationEvent() {
         log.info("DropFile daemon initialization completed and ready to go");
 
-        Map<String, Object> systemInfo = systemInfoProvider.getSystemInfo();
+        Map<String, String> systemInfo = systemInfoProvider.getSystemInfo();
         System.out.println("================================");
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
                 systemInfo
