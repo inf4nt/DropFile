@@ -2,8 +2,6 @@ package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
-import com.evolution.dropfile.store.framework.file.DirectoryProvider;
-import com.evolution.dropfile.store.framework.file.DirectoryProviderImpl;
 import com.evolution.dropfilecli.util.DateUtils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -15,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 
@@ -49,15 +46,5 @@ public class DropFileCliConfiguration {
     @Bean
     public CryptoTunnel cryptoTunnel() {
         return new CryptoTunnelChaCha20Poly1305();
-    }
-
-    @Bean
-    public DirectoryProvider applicationDirectoryProvider(CliApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(applicationProperties.applicationDirectory);
-    }
-
-    @Bean
-    public DirectoryProvider applicationConfigDirectoryProvider(DirectoryProvider applicationDirectoryProvider) {
-        return new DirectoryProviderImpl(applicationDirectoryProvider, Paths.get("conf"));
     }
 }

@@ -9,18 +9,21 @@ import java.nio.file.Path;
 @Component
 public class CliApplicationProperties {
 
-    public final Path applicationDirectory;
+    public final Path daemonSecretsDirectory;
+
+    public final Path daemonInstallationSeedDirectory;
 
     public final String daemonHost;
 
     public final int daemonPort;
 
-
     @Autowired
-    public CliApplicationProperties(@Value("${user.dir}") Path applicationDirectory,
+    public CliApplicationProperties(@Value("${dropfile.daemon.secrets.dir}") Path daemonSecretsDirectory,
+                                    @Value("${dropfile.daemon.installation.seed.dir}") Path daemonInstallationSeedDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
                                     @Value("${dropfile.daemon.port}") int daemonPort) {
-        this.applicationDirectory = applicationDirectory;
+        this.daemonSecretsDirectory = daemonSecretsDirectory;
+        this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;
         this.daemonHost = daemonHost;
         this.daemonPort = daemonPort;
     }

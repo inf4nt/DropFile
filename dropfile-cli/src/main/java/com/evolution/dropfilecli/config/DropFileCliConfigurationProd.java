@@ -44,12 +44,23 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public FileProvider daemonSecretFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".daemon.bin"));
+    public FileProvider daemonSecretsFileProvider(CliApplicationProperties cliApplicationProperties) {
+        return new FileProviderImpl(
+                new DirectoryProviderImpl(cliApplicationProperties.daemonSecretsDirectory),
+                Paths.get(".daemon.bin")
+        );
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretFileProvider,
+    public FileProvider installationSeedFileProvider(CliApplicationProperties cliApplicationProperties) {
+        return new FileProviderImpl(
+                new DirectoryProviderImpl(cliApplicationProperties.daemonInstallationSeedDirectory),
+                Paths.get(".installation.bin")
+        );
+    }
+
+    @Bean
+    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretsFileProvider,
                                                  CryptoFileOperations fileOperations,
                                                  ObjectMapper objectMapper) {
         SerdeOperations<DaemonSecrets> serdeOperations = new JsonSerdeOperations<>(
@@ -58,14 +69,9 @@ public class DropFileCliConfigurationProd {
         );
         return new DaemonSecretsStoreImpl(
                 new CacheFileKeyValueStore<>(
-                        daemonSecretFileProvider, fileOperations, serdeOperations
+                        daemonSecretsFileProvider, fileOperations, serdeOperations
                 )
         );
-    }
-
-    @Bean
-    public FileProvider installationSeedFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".installation.bin"));
     }
 
     @Bean

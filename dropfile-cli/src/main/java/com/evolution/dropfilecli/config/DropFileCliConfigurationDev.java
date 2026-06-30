@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
 public class DropFileCliConfigurationDev {
 
     @Bean
-    public DaemonSecretsStore secretsConfigStore(@Value("${dropfile.daemon.token}") String daemonToken) {
+    public DaemonSecretsStore daemonSecretsStore(@Value("${dropfile.daemon.token}") String daemonToken) {
         DaemonSecrets secrets = new DaemonSecrets(daemonToken);
         return new ImmutableDaemonSecretsStore(secrets);
     }
