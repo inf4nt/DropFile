@@ -67,13 +67,13 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public FileProvider daemonSecretFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
-        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".daemon.bin"));
+    public FileProvider daemonSecretFileProvider(DirectoryProvider daemonSecretsDirectoryProvider) {
+        return new FileProviderImpl(daemonSecretsDirectoryProvider, Paths.get(".daemon.bin"));
     }
 
     @Bean
-    public FileProvider installationSeedFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
-        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".installation.bin"));
+    public FileProvider installationSeedFileProvider(DirectoryProvider daemonInstallationSeedDirectoryProvider) {
+        return new FileProviderImpl(daemonInstallationSeedDirectoryProvider, Paths.get(".installation.bin"));
     }
 
     @Primary
