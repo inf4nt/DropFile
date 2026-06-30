@@ -18,8 +18,8 @@ public class CliApplicationProperties {
     public final int daemonPort;
 
     @Autowired
-    public CliApplicationProperties(@Value("${dropfile.daemon.secrets.dir}") Path daemonSecretsDirectory,
-                                    @Value("${dropfile.daemon.installation.seed.dir}") Path daemonInstallationSeedDirectory,
+    public CliApplicationProperties(@Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
+                                    @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
                                     @Value("${dropfile.daemon.port}") int daemonPort) {
         this.daemonSecretsDirectory = daemonSecretsDirectory;

@@ -44,12 +44,17 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public DirectoryProvider applicationDirectory(DaemonApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(applicationProperties.applicationDirectory);
+    public DirectoryProvider daemonSecretsDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonSecretsDirectory);
     }
 
     @Bean
-    public DirectoryProvider applicationDownloadDirectoryProvider(DaemonApplicationProperties applicationProperties) {
-        return new DirectoryProviderImpl(applicationProperties.applicationDownloadDirectory);
+    public DirectoryProvider daemonInstallationSeedDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonInstallationSeedDirectory);
+    }
+
+    @Bean
+    public DirectoryProvider daemonDownloadsDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonDownloadsDirectory);
     }
 }

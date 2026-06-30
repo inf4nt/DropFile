@@ -32,7 +32,7 @@ public class FileManifestBuilder {
 
     @Autowired
     public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties) {
-        this(daemonApplicationProperties.manifestChunkMaxSize);
+        this(daemonApplicationProperties.daemonManifestChunkMaxSize);
     }
 
     FileManifestBuilder(int chunkMaxSize) {

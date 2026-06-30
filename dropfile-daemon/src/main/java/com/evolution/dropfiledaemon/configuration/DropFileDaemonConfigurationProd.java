@@ -42,38 +42,38 @@ import java.util.UUID;
 public class DropFileDaemonConfigurationProd {
 
     @Bean
-    public DirectoryProvider applicationConfigDirectoryProvider(DirectoryProvider applicationDirectory) {
-        return new DirectoryProviderImpl(applicationDirectory, Paths.get("conf"));
+    public DirectoryProvider daemonConfigDirectoryProvider(DaemonApplicationProperties applicationProperties) {
+        return new DirectoryProviderImpl(applicationProperties.daemonConfigDirectory);
     }
 
     @Bean
-    public FileProvider downloadEntriesFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get("download.entries.json"));
+    public FileProvider downloadEntriesFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get("download.entries.json"));
     }
 
     @Bean
-    public FileProvider shareEntriesFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get("share.entries.json"));
+    public FileProvider shareEntriesFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get("share.entries.json"));
     }
 
     @Bean
-    public FileProvider trustOutFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".trustout.bin"));
+    public FileProvider trustOutFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".trustout.bin"));
     }
 
     @Bean
-    public FileProvider trustInFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".trustin.bin"));
+    public FileProvider trustInFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".trustin.bin"));
     }
 
     @Bean
-    public FileProvider daemonSecretFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".daemon.bin"));
+    public FileProvider daemonSecretFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".daemon.bin"));
     }
 
     @Bean
-    public FileProvider installationSeedFileProvider(DirectoryProvider applicationConfigDirectoryProvider) {
-        return new FileProviderImpl(applicationConfigDirectoryProvider, Paths.get(".installation.bin"));
+    public FileProvider installationSeedFileProvider(DirectoryProvider daemonConfigDirectoryProvider) {
+        return new FileProviderImpl(daemonConfigDirectoryProvider, Paths.get(".installation.bin"));
     }
 
     @Primary

@@ -31,8 +31,8 @@ public class DownloadProcedureFactory {
                                  Path destinationFilePath,
                                  Path temporaryFilePath,
                                  Path manifestFilePath) {
-        int downloadProcedureThreadSize = daemonApplicationProperties.downloadProcedureThreadSize;
-        int manifestChunkMaxSize = daemonApplicationProperties.manifestChunkMaxSize;
+        int downloadProcedureThreadSize = daemonApplicationProperties.daemonDownloadProcedureThreadSize;
+        int manifestChunkMaxSize = daemonApplicationProperties.daemonManifestChunkMaxSize;
 
         return new DownloadProcedure(
                 objectMapper,

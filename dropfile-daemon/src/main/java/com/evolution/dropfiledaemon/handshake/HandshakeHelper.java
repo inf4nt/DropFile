@@ -22,7 +22,7 @@ public class HandshakeHelper {
 
     @Autowired
     public HandshakeHelper(DaemonApplicationProperties daemonApplicationProperties) {
-        this.handshakeServerPayloadLiveTime = daemonApplicationProperties.handshakeServerPayloadLiveTime;
+        this.handshakeServerPayloadLiveTime = daemonApplicationProperties.daemonHandshakeServerPayloadLiveTime;
     }
 
     public void validateHandshakeLiveTimeout(Long timestamp) {

@@ -36,7 +36,7 @@ public class HandshakeClient {
                         objectMapper.writeValueAsBytes(handshakeRequestDTO))
                 )
                 .header("Content-Type", "application/json")
-                .timeout(Duration.ofMillis(daemonApplicationProperties.handshakeClientHttpRequestTimeoutMillis))
+                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
                 .build();
 
         HttpResponse<byte[]> httpResponse = execute(httpRequest);
@@ -52,7 +52,7 @@ public class HandshakeClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(session))
                 )
-                .timeout(Duration.ofMillis(daemonApplicationProperties.handshakeClientHttpRequestTimeoutMillis))
+                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
                 .header("Content-Type", "application/json")
                 .build();
 

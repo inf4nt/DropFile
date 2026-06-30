@@ -19,7 +19,7 @@ public class ZstdCompressTunnelService
 
     @Override
     public OutputStream compressWrapper(OutputStream outputStream) throws IOException {
-        return new ZstdOutputStream(outputStream, daemonApplicationProperties.tunnelServerCompressLevel);
+        return new ZstdOutputStream(outputStream, daemonApplicationProperties.daemonTunnelServerCompressLevel);
     }
 
     @Override

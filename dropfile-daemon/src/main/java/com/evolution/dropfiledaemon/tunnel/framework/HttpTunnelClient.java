@@ -79,7 +79,7 @@ public class HttpTunnelClient implements TunnelClient {
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
                     .header("Content-Type", "application/json")
-                    .timeout(Duration.ofMillis(daemonApplicationProperties.tunnelClientHttpRequestTimeoutMillis))
+                    .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
                     .build();
 
             httpResponse = httpClient
@@ -116,15 +116,15 @@ public class HttpTunnelClient implements TunnelClient {
                                                SecretKey secretKey) throws IOException {
         WatchdogInputStream watchdogInputStream = new WatchdogInputStream(
                 httpResponse.body(),
-                daemonApplicationProperties.tunnelClientStreamMaxSize,
-                Duration.ofMillis(daemonApplicationProperties.tunnelClientStreamDeadlineTimeoutMillis)
+                daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
+                Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
         );
         InputStream tunnelTrafficMonitorInputStream = tunnelTrafficMonitor.inputStreamWrapper(fingerprint, watchdogInputStream);
         InputStream decrypt = cryptoTunnel.decrypt(
                 tunnelTrafficMonitorInputStream,
                 secretKey
         );
-        if (daemonApplicationProperties.tunnelClientCompressEnabled) {
+        if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
             return compressTunnelService.decompress(decrypt);
         }
         return decrypt;
@@ -144,7 +144,7 @@ public class HttpTunnelClient implements TunnelClient {
                                 request.getCommand(),
                                 payload,
                                 new TunnelRequestDTO.TunnelRequestConfiguration(
-                                        daemonApplicationProperties.tunnelClientCompressEnabled
+                                        daemonApplicationProperties.daemonTunnelClientCompressEnabled
                                 ),
                                 System.currentTimeMillis()
                         )

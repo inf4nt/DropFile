@@ -8,65 +8,74 @@ import java.nio.file.Path;
 @Component
 public class DaemonApplicationProperties {
 
-    public final Path applicationDirectory;
+    public final Path daemonConfigDirectory;
 
-    public final Path applicationDownloadDirectory;
+    public final Path daemonSecretsDirectory;
+
+    public final Path daemonInstallationSeedDirectory;
+
+    public final Path daemonDownloadsDirectory;
 
     public final int daemonPort;
 
-    public final int downloadOrchestratorMaxQueueSize;
+    public final int daemonDownloadOrchestratorMaxQueueSize;
 
-    public final int downloadOrchestratorActiveQueueSize;
+    public final int daemonDownloadOrchestratorActiveQueueSize;
 
-    public final int downloadProcedureThreadSize;
+    public final int daemonDownloadProcedureThreadSize;
 
-    public final boolean tunnelClientCompressEnabled;
+    public final boolean daemonTunnelClientCompressEnabled;
 
-    public final int tunnelClientStreamMaxSize;
+    public final int daemonTunnelClientStreamMaxSize;
 
-    public final int tunnelClientStreamDeadlineTimeoutMillis;
+    public final int daemonTunnelClientStreamDeadlineTimeoutMillis;
 
-    public final int tunnelClientHttpRequestTimeoutMillis;
+    public final int daemonTunnelClientHttpRequestTimeoutMillis;
 
-    public final int tunnelServerCompressLevel;
+    public final int daemonTunnelServerCompressLevel;
 
-    public final int tunnelServerPayloadLifeTime;
+    public final int daemonTunnelServerPayloadLifeTime;
 
-    public final int manifestChunkMaxSize;
+    public final int daemonManifestChunkMaxSize;
 
-    public final int handshakeClientHttpRequestTimeoutMillis;
+    public final int daemonHandshakeClientHttpRequestTimeoutMillis;
 
-    public final int handshakeServerPayloadLiveTime;
+    public final int daemonHandshakeServerPayloadLiveTime;
 
-    public DaemonApplicationProperties(@Value("${user.dir}") Path applicationDirectory,
-                                       @Value("${dropfile.download.directory}") Path applicationDownloadDirectory,
-                                       @Value("${dropfile.daemon.port}") int daemonPort,
-                                       @Value("${dropfile.download.orchestrator.max-queue-size}") int downloadOrchestratorMaxQueueSize,
-                                       @Value("${dropfile.download.orchestrator.active-queue-size}") int downloadOrchestratorActiveQueueSize,
-                                       @Value("${dropfile.download.procedure.thread-size}") int downloadProcedureThreadSize,
-                                       @Value("${dropfile.handshake.client.http.request-timeout-millis}") int handshakeClientHttpRequestTimeoutMillis,
-                                       @Value("${dropfile.handshake.server.payload.life-time}") int handshakeServerPayloadLiveTime,
-                                       @Value("${dropfile.tunnel.client.compress.enabled}") boolean tunnelClientCompressEnabled,
-                                       @Value("${dropfile.tunnel.client.stream.max-size}") int tunnelClientStreamMaxSize,
-                                       @Value("${dropfile.tunnel.client.stream.deadline-timeout-millis}") int tunnelClientStreamDeadlineTimeoutMillis,
-                                       @Value("${dropfile.tunnel.client.http.request-timeout-millis}") int tunnelClientHttpRequestTimeoutMillis,
-                                       @Value("${dropfile.tunnel.server.compress.level}") int tunnelServerCompressLevel,
-                                       @Value("${dropfile.tunnel.server.payload.life-time}") int tunnelServerPayloadLifeTime,
-                                       @Value("${dropfile.manifest.chunk-max-size}") int manifestChunkMaxSize) {
-        this.applicationDirectory = applicationDirectory;
-        this.applicationDownloadDirectory = applicationDownloadDirectory;
-        this.tunnelClientHttpRequestTimeoutMillis = tunnelClientHttpRequestTimeoutMillis;
-        this.tunnelClientStreamDeadlineTimeoutMillis = tunnelClientStreamDeadlineTimeoutMillis;
-        this.tunnelServerPayloadLifeTime = tunnelServerPayloadLifeTime;
+    public DaemonApplicationProperties(
+            @Value("${dropfile.daemon.config.directory}") Path daemonConfigDirectory,
+            @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
+            @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
+            @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
+            @Value("${dropfile.daemon.port}") int daemonPort,
+            @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
+            @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
+            @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
+            @Value("${dropfile.daemon.handshake.client.http.request-timeout-millis}") int daemonHandshakeClientHttpRequestTimeoutMillis,
+            @Value("${dropfile.daemon.handshake.server.payload.life-time}") int daemonHandshakeServerPayloadLiveTime,
+            @Value("${dropfile.daemon.tunnel.client.compress.enabled}") boolean daemonTunnelClientCompressEnabled,
+            @Value("${dropfile.daemon.tunnel.client.stream.max-size}") int daemonTunnelClientStreamMaxSize,
+            @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
+            @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
+            @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
+            @Value("${dropfile.daemon.tunnel.server.payload.life-time}") int daemonTunnelServerPayloadLifeTime,
+            @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize) {
+        this.daemonConfigDirectory = daemonConfigDirectory;
+        this.daemonSecretsDirectory = daemonSecretsDirectory;
+        this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;
+        this.daemonDownloadsDirectory = daemonDownloadsDirectory;
+        this.daemonTunnelClientHttpRequestTimeoutMillis = daemonTunnelClientHttpRequestTimeoutMillis;
+        this.daemonTunnelClientStreamDeadlineTimeoutMillis = daemonTunnelClientStreamDeadlineTimeoutMillis;
+        this.daemonTunnelServerPayloadLifeTime = daemonTunnelServerPayloadLifeTime;
         this.daemonPort = daemonPort;
-        this.downloadOrchestratorMaxQueueSize = downloadOrchestratorMaxQueueSize;
-        this.downloadOrchestratorActiveQueueSize = downloadOrchestratorActiveQueueSize;
-        this.downloadProcedureThreadSize = downloadProcedureThreadSize;
-        this.handshakeClientHttpRequestTimeoutMillis = handshakeClientHttpRequestTimeoutMillis;
-        this.handshakeServerPayloadLiveTime = handshakeServerPayloadLiveTime;
-        this.tunnelClientCompressEnabled = tunnelClientCompressEnabled;
-        this.tunnelServerCompressLevel = tunnelServerCompressLevel;
-        this.manifestChunkMaxSize = manifestChunkMaxSize;
-        this.tunnelClientStreamMaxSize = tunnelClientStreamMaxSize;
+        this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
+        this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
+        this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;
+        this.daemonHandshakeClientHttpRequestTimeoutMillis = daemonHandshakeClientHttpRequestTimeoutMillis;
+        this.daemonHandshakeServerPayloadLiveTime = daemonHandshakeServerPayloadLiveTime;
+        this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
+        this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
+        this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
+        this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
     }
 }

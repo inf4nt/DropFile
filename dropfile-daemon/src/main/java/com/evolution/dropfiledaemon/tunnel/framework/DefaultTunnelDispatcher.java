@@ -44,7 +44,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         TunnelRequestDTO.TunnelRequestPayload payload = decrypt(requestDTO, secretKey);
 
         long requestTime = Math.abs(System.currentTimeMillis() - payload.timestamp());
-        int tunnelServerPayloadLifeTime = daemonApplicationProperties.tunnelServerPayloadLifeTime;
+        int tunnelServerPayloadLifeTime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
         if (requestTime > tunnelServerPayloadLifeTime) {
             throw new RuntimeException(
                     String.format(
