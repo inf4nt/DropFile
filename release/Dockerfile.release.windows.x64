@@ -2,22 +2,20 @@ FROM alpine:3.19 AS runtime_container
 
 ARG WORKDIR_NAME=/runtime_container
 ARG RUNTIME_DIR_NAME=/$WORKDIR_NAME/runtime
-ARG JDK_MAJOR_VERION=25
-ARG JDK_VERSION=25.0.1
-ARG JDK_DOWNLOAD_URL="https://download.oracle.com/java/$JDK_MAJOR_VERION/archive/jdk-"$JDK_VERSION"_windows-x64_bin.zip"
-ARG JDK_ARCHIVE="jdk.zip"
-ARG JAVA_HOME=/$WORKDIR_NAME/jdk-$JDK_VERSION
+ARG JDK_DOWNLOAD_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3+9/OpenJDK25U-jre_x64_windows_hotspot_25.0.3_9.zip"
+ARG JDK_ARCHIVE="jre-25.zip"
+ARG JAVA_HOME=/$WORKDIR_NAME/"jdk-25.0.3+9-jre"
 
-RUN apk add --no-cache curl unzip
+RUN apk add --no-cache curl
 
 WORKDIR $WORKDIR_NAME
 
-RUN curl -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
+RUN curl -L -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
     && unzip $JDK_ARCHIVE -d $WORKDIR_NAME \
     && rm $JDK_ARCHIVE \
     && mv $JAVA_HOME $RUNTIME_DIR_NAME
 
-FROM maven:3.9.13-eclipse-temurin-25 AS build
+FROM maven:3.9.13-amazoncorretto-25-alpine AS build
 
 ARG WORKDIR_NAME=/build
 
