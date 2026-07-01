@@ -1,0 +1,29 @@
+FROM maven:3.9.13-amazoncorretto-25-alpine AS build
+
+ARG WORKDIR_NAME=/build
+
+WORKDIR $WORKDIR_NAME
+
+COPY /dropfile-common/pom.xml dropfile-common/pom.xml
+RUN mvn clean verify --fail-never -f dropfile-common
+COPY /dropfile-common/src dropfile-common/src
+RUN mvn install -Dmaven.test.skip=true -f dropfile-common
+
+COPY /dropfile-store/pom.xml dropfile-store/pom.xml
+RUN mvn clean verify --fail-never -f dropfile-store
+COPY /dropfile-store/src dropfile-store/src
+RUN mvn install -Dmaven.test.skip=true -f dropfile-store
+
+COPY /dropfile-daemon/pom.xml dropfile-daemon/pom.xml
+RUN mvn clean verify --fail-never -f dropfile-daemon
+COPY /dropfile-daemon/src dropfile-daemon/src
+RUN mvn package -Dmaven.test.skip=true -f dropfile-daemon
+
+FROM bellsoft/liberica-openjre-alpine:25
+
+ARG WORKDIR_NAME=/app
+WORKDIR $WORKDIR_NAME
+
+COPY --from=build /build/dropfile-daemon/target/*.jar $WORKDIR_NAME/app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
