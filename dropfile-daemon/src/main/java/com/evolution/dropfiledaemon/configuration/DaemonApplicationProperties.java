@@ -8,6 +8,10 @@ import java.nio.file.Path;
 @Component
 public class DaemonApplicationProperties {
 
+    public final Path userDir;
+
+    public final int serverPort;
+
     public final Path daemonConfigDirectory;
 
     public final Path daemonSecretsDirectory;
@@ -43,6 +47,8 @@ public class DaemonApplicationProperties {
     public final int daemonHandshakeServerPayloadLiveTime;
 
     public DaemonApplicationProperties(
+            @Value("${user.dir}") Path userDir,
+            @Value("${server.port}") int serverPort,
             @Value("${dropfile.daemon.config.directory}") Path daemonConfigDirectory,
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
@@ -60,6 +66,8 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
             @Value("${dropfile.daemon.tunnel.server.payload.life-time}") int daemonTunnelServerPayloadLifeTime,
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize) {
+        this.userDir = userDir;
+        this.serverPort = serverPort;
         this.daemonConfigDirectory = daemonConfigDirectory;
         this.daemonSecretsDirectory = daemonSecretsDirectory;
         this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;
