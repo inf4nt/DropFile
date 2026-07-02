@@ -20,6 +20,8 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
     private final RootCommand root;
 
+    private final IExecutionStrategyImpl executionStrategy;
+
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     @PostConstruct
@@ -34,6 +36,23 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
         CompletableFuture.runAsync(() -> {
             CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
             commandLine.setUnmatchedArgumentsAllowed(true);
+
+            CommandLine.Model.OptionSpec liveOption = CommandLine.Model.OptionSpec.builder("--live")
+                    .type(boolean.class)
+                    .description("Run this command in live update mode")
+                    .scopeType(CommandLine.ScopeType.INHERIT)
+                    .build();
+            commandLine.getCommandSpec().addOption(liveOption);
+
+            CommandLine.Model.OptionSpec ignoreErrorOption = CommandLine.Model.OptionSpec.builder("--ignore-error")
+                    .type(boolean.class)
+                    .description("Continue polling even if the command encounters an error")
+                    .scopeType(CommandLine.ScopeType.INHERIT)
+                    .build();
+            commandLine.getCommandSpec().addOption(ignoreErrorOption);
+
+            commandLine.setExecutionStrategy(executionStrategy);
+
 //        commandLine.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
 //            @Override
 //            public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult fullParseResult) throws Exception {

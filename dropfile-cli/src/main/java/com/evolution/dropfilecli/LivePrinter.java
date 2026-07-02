@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Deprecated
 public class LivePrinter {
 
     private static final int MAX_LIVE_ITERATION = 1_200;

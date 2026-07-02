@@ -22,9 +22,6 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
     @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false")
     protected boolean list;
 
-    @CommandLine.Option(names = {"-live", "--live"}, description = "Print live", defaultValue = "false")
-    protected boolean live;
-
     protected DaemonClient daemonClient;
 
     protected ObjectMapper objectMapper;
@@ -75,11 +72,7 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
     @SneakyThrows
     @Override
     public void run() {
-        if (live) {
-            LivePrinter.live(() -> runCommand());
-        } else {
-            runCommand();
-        }
+        runCommand();
     }
 
     private void runCommand() {
@@ -132,11 +125,7 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
             return;
         }
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
-        if (live) {
-            LivePrinter.printLive(() -> json);
-        } else {
-            System.out.println(json);
-        }
+        System.out.println(json);
     }
 
     protected void printTable(Object object) {
@@ -145,11 +134,7 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
         }
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
         String print = TablePrinter.get(data);
-        if (live) {
-            LivePrinter.printLive(() -> print);
-        } else {
-            System.out.println(print);
-        }
+        System.out.println(print);
     }
 
     protected enum PrintModeEnum {
