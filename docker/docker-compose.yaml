@@ -1,0 +1,43 @@
+volumes:
+  dropfile-daemon-share:
+networks:
+  dropfile-network:
+services:
+  dropfile-daemon:
+    networks:
+      - dropfile-network
+    build:
+      context: ..
+      dockerfile: /docker/Dockerfile.daemon
+    image:
+      dropfile-daemon
+    container_name: dropfile-daemon
+    ports:
+      - 28282:28282
+    environment:
+      DROPFILE_DAEMON_PORT: 28282
+      DROPFILE_DAEMON_DAEMON-SECRETS_DIRECTORY: /daemon-conf
+      DROPFILE_DAEMON_INSTALLATION-SEED_DIRECTORY: /daemon-conf
+    volumes:
+      - dropfile-daemon-share:/daemon-conf
+      - type: bind
+        source: ${HOME}/${SHARE_MOUNT}
+        target: ${HOME}/${SHARE_MOUNT}
+  dropfile-cli:
+    networks:
+      - dropfile-network
+    build:
+      context: ..
+      dockerfile: /docker/Dockerfile.cli
+    image:
+      cli
+    entrypoint: ["sh", "-c", "java -jar /app/app.jar && tail -f /dev/null"]
+    command: []
+    container_name: dropfile-cli
+    volumes:
+      - dropfile-daemon-share:/daemon-conf
+    environment:
+      DROPFILE_DAEMON_HOST: dropfile-daemon
+      DROPFILE_DAEMON_PORT: 28282
+      DROPFILE_DAEMON_DAEMON-SECRETS_DIRECTORY: /daemon-conf
+      DROPFILE_DAEMON_INSTALLATION-SEED_DIRECTORY: /daemon-conf
