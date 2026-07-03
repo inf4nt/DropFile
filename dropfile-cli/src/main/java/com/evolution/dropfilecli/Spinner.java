@@ -1,46 +1,45 @@
 package com.evolution.dropfilecli;
 
-import lombok.SneakyThrows;
-
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Spinner {
 
-    private static final AtomicReference<String> PROGRESS_INDICATOR = new AtomicReference<>("/");
+    private static final ProgressIndicator PROGRESS_INDICATOR = ProgressIndicator.processing();
 
-    private static final AtomicReference<Boolean> EXECUTING = new AtomicReference<>(false);
+    private static final AtomicBoolean EXECUTING = new AtomicBoolean(false);
+
+    volatile private static Thread SPINNER_THREAD;
 
     public static void start() {
-        EXECUTING.set(true);
-        Thread.ofVirtual().start(new Runnable() {
-            @Override
-            @SneakyThrows
-            public void run() {
+        if (!EXECUTING.compareAndSet(false, true)) {
+            return;
+        }
+
+        SPINNER_THREAD = Thread.ofVirtual().start(() -> {
+            try {
                 while (EXECUTING.get() && !Thread.currentThread().isInterrupted()) {
-                    String progressIndicator = getProgressIndicator();
-                    if (EXECUTING.get()) {
-                        System.out.print("\r" + progressIndicator);
-                    }
-                    Thread.sleep(500);
+                    String progressIndicator = PROGRESS_INDICATOR.getProgressIndicator();
+
+                    System.out.print("\r" + progressIndicator);
+                    System.out.flush();
+
+                    Thread.sleep(150);
                 }
+            } catch (InterruptedException _) {
+
+            } finally {
+                System.out.print("\r\u001b[K");
+                System.out.flush();
             }
         });
     }
 
     public static void stop() {
-        if (!EXECUTING.get()) {
+        if (!EXECUTING.compareAndSet(true, false)) {
             return;
         }
-        EXECUTING.set(false);
-        System.out.print("\r\u001b[K");
-    }
-
-    public static String getProgressIndicator() {
-        if (PROGRESS_INDICATOR.get().equals("/")) {
-            PROGRESS_INDICATOR.set("\\");
-        } else {
-            PROGRESS_INDICATOR.set("/");
+        if (SPINNER_THREAD != null) {
+            SPINNER_THREAD.interrupt();
         }
-        return "Processing " + PROGRESS_INDICATOR.get();
     }
 }

@@ -20,7 +20,7 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
     private final RootCommand root;
 
-    private final IExecutionStrategyImpl executionStrategy;
+    private final LiveExecutionStrategy liveExecutionStrategy;
 
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -51,7 +51,7 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
                     .build();
             commandLine.getCommandSpec().addOption(ignoreErrorOption);
 
-            commandLine.setExecutionStrategy(executionStrategy);
+            commandLine.setExecutionStrategy(liveExecutionStrategy);
 
 //        commandLine.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
 //            @Override
@@ -60,8 +60,8 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 //                return 0;
 //            }
 //        });
-            commandLine.execute(args);
-            System.exit(0);
+            int execute = commandLine.execute(args);
+            DropFileCliApplication.exit(execute);
         }, executorService).join();
     }
 }
