@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
         aliases = {"-c", "--c"},
         description = "Connect"
 )
-public class ConnectCommand extends AbstractCommandHttpHandler {
+public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
@@ -36,7 +36,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiHandshakeStatusResponseDTO> getTypeReference() {
         return new TypeReference<ApiHandshakeStatusResponseDTO>() {
         };
     }

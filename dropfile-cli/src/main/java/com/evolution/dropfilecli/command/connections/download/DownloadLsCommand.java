@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class DownloadLsCommand extends AbstractCommandHttpHandler {
+public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 
     @CommandLine.ArgGroup
     private Exclusive status;
@@ -66,7 +66,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<ApiDownloadLsDTO.Response>> getTypeReference() {
         return new TypeReference<List<ApiDownloadLsDTO.Response>>() {
         };
     }

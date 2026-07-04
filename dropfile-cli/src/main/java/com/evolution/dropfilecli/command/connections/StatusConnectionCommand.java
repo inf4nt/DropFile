@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
         name = "status",
         description = "Retrieve status of current connection"
 )
-public class StatusConnectionCommand extends AbstractCommandHttpHandler {
+public class StatusConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -21,7 +21,7 @@ public class StatusConnectionCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiHandshakeStatusResponseDTO> getTypeReference() {
         return new TypeReference<ApiHandshakeStatusResponseDTO>() {
         };
     }

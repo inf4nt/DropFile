@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "rm",
         description = "rm access key"
 )
-public class AccessRmCommand extends AbstractCommandHttpHandler {
+public class AccessRmCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;

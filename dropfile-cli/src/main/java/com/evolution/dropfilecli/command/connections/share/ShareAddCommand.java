@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         name = "add",
         description = "Add file command"
 )
-public class ShareAddCommand extends AbstractCommandHttpHandler {
+public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsShareLsResponseDTO> {
 
     @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;
@@ -29,7 +29,7 @@ public class ShareAddCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiConnectionsShareLsResponseDTO> getTypeReference() {
         return new TypeReference<ApiConnectionsShareLsResponseDTO>() {
         };
     }

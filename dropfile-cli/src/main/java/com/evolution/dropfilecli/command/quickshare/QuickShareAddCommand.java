@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "add"
 )
-public class QuickShareAddCommand extends AbstractCommandHttpHandler {
+public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 
     @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;
@@ -30,7 +30,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiQuickShareLsResponseDTO> getTypeReference() {
         return new TypeReference<ApiQuickShareLsResponseDTO>() {
         };
     }

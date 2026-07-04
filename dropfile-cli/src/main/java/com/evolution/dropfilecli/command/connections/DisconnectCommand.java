@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "disconnect",
         description = "Disconnect trusted-out connection"
 )
-public class DisconnectCommand extends AbstractCommandHttpHandler {
+public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;

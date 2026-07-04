@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "cache-reset",
         description = "Daemon cache reset"
 )
-public class CacheResetCommand extends AbstractCommandHttpHandler {
+public class CacheResetCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

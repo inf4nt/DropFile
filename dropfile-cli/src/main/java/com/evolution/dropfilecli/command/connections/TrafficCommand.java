@@ -15,7 +15,7 @@ import java.util.List;
         description = "Retrieve traffic"
 )
 
-public class TrafficCommand extends AbstractCommandHttpHandler {
+public class TrafficCommand extends AbstractCommandHttpHandler<List<TunnelTrafficResponseDTO>> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -23,7 +23,7 @@ public class TrafficCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<TunnelTrafficResponseDTO>> getTypeReference() {
         return new TypeReference<List<TunnelTrafficResponseDTO>>() {
         };
     }

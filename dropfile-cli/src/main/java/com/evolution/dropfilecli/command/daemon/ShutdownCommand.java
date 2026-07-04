@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "shutdown",
         description = "Daemon shutdown"
 )
-public class ShutdownCommand extends AbstractCommandHttpHandler {
+public class ShutdownCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

@@ -14,7 +14,7 @@ import java.util.List;
         name = "ls",
         description = "Retrieve access keys"
 )
-public class AccessLsCommand extends AbstractCommandHttpHandler {
+public class AccessLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsAccessInfoResponseDTO>> {
 
     @Override
     public HttpResponse<byte[]> execute() {
@@ -22,7 +22,7 @@ public class AccessLsCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<ApiConnectionsAccessInfoResponseDTO>> getTypeReference() {
         return new TypeReference<List<ApiConnectionsAccessInfoResponseDTO>>() {
         };
     }

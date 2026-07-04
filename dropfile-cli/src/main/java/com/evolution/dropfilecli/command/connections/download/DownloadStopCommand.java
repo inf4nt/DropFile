@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "stop"
 )
-public class DownloadStopCommand extends AbstractCommandHttpHandler {
+public class DownloadStopCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;

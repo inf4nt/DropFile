@@ -14,7 +14,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class BrowseLsCommand extends AbstractCommandHttpHandler {
+public class BrowseLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsBrowseLsResponseDTO>> {
 
     // TODO add show command to show object by id
     @CommandLine.Option(names = {"-id", "--id"}, split = ",", description = "List of ids")
@@ -27,7 +27,7 @@ public class BrowseLsCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<ApiConnectionsBrowseLsResponseDTO>> getTypeReference() {
         return new TypeReference<List<ApiConnectionsBrowseLsResponseDTO>>() {
         };
     }

@@ -15,7 +15,7 @@ import java.util.List;
         aliases = {"--out", "-out", "--o", "-o"},
         description = "Retrieve trusted-out connections"
 )
-public class TrustedOutCommand extends AbstractCommandHttpHandler {
+public class TrustedOutCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustOutResponseDTO>> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -23,7 +23,7 @@ public class TrustedOutCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<HandshakeApiTrustOutResponseDTO>> getTypeReference() {
         return new TypeReference<List<HandshakeApiTrustOutResponseDTO>>() {
         };
     }

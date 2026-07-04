@@ -15,7 +15,7 @@ import java.util.List;
         aliases = {"--in", "-in", "--i", "-i"},
         description = "Retrieve trusted-in connections"
 )
-public class TrustedInCommand extends AbstractCommandHttpHandler {
+public class TrustedInCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustInResponseDTO>> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -23,7 +23,7 @@ public class TrustedInCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<HandshakeApiTrustInResponseDTO>> getTypeReference() {
         return new TypeReference<List<HandshakeApiTrustInResponseDTO>>() {
         };
     }

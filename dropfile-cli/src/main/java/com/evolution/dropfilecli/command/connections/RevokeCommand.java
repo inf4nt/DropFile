@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "revoke",
         description = "Drop trusted-in connection"
 )
-public class RevokeCommand extends AbstractCommandHttpHandler {
+public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
     private Exclusive exclusive;

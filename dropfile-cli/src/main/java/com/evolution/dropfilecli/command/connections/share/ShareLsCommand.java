@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls"
 )
-public class ShareLsCommand extends AbstractCommandHttpHandler {
+public class ShareLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsShareLsResponseDTO>> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -21,7 +21,7 @@ public class ShareLsCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<List<ApiConnectionsShareLsResponseDTO>> getTypeReference() {
         return new TypeReference<List<ApiConnectionsShareLsResponseDTO>>() {
         };
     }

@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         aliases = {"-g", "--g"},
         description = "Get file"
 )
-public class BrowseGetCommand extends AbstractCommandHttpHandler {
+public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {
 
     @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;
@@ -28,7 +28,7 @@ public class BrowseGetCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiConnectionsBrowseGetResponseDTO> getTypeReference() {
         return new TypeReference<ApiConnectionsBrowseGetResponseDTO>() {
         };
     }

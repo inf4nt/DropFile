@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
         aliases = {"-g", "--g"},
         description = "Generate access key command"
 )
-public class AccessGenerateCommand extends AbstractCommandHttpHandler {
+public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnectionsAccessInfoResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() {
@@ -22,7 +22,7 @@ public class AccessGenerateCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<ApiConnectionsAccessInfoResponseDTO> getTypeReference() {
         return new TypeReference<ApiConnectionsAccessInfoResponseDTO>() {
         };
     }

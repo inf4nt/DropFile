@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
         name = "status",
         description = "Daemon status"
 )
-public class RetrieveInfoCommand extends AbstractCommandHttpHandler {
+public class RetrieveInfoCommand extends AbstractCommandHttpHandler<DaemonInfoResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -21,7 +21,7 @@ public class RetrieveInfoCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<DaemonInfoResponseDTO> getTypeReference() {
         return new TypeReference<DaemonInfoResponseDTO>() {
         };
     }

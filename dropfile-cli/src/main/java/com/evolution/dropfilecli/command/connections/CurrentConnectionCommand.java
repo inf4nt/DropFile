@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
         name = "current",
         description = "Retrieve current connection"
 )
-public class CurrentConnectionCommand extends AbstractCommandHttpHandler {
+public class CurrentConnectionCommand extends AbstractCommandHttpHandler<HandshakeApiTrustOutResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() {
@@ -21,7 +21,7 @@ public class CurrentConnectionCommand extends AbstractCommandHttpHandler {
     }
 
     @Override
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<HandshakeApiTrustOutResponseDTO> getTypeReference() {
         return new TypeReference<HandshakeApiTrustOutResponseDTO>() {
         };
     }
