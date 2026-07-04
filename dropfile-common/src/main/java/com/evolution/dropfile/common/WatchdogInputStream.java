@@ -1,6 +1,5 @@
 package com.evolution.dropfile.common;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -9,13 +8,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WatchdogInputStream extends FilterInputStream {
+public class WatchdogInputStream extends InputStreamDecorator {
 
     private static final ExecutorService WATCHDOG_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
-
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> WATCHDOG_EXECUTOR.shutdownNow()));
-    }
 
     private final long limit;
 
@@ -46,6 +41,11 @@ public class WatchdogInputStream extends FilterInputStream {
         } else {
             this.watchdogTask = null;
         }
+    }
+
+    @Override
+    public int read(byte[] b) throws IOException {
+        return read(b, 0, b.length);
     }
 
     @Override
@@ -105,6 +105,7 @@ public class WatchdogInputStream extends FilterInputStream {
 
     private void finalizeStream() {
         if (watchdogTask != null && !watchdogTask.isDone()) {
+            // TODO test cancel(false) vs .cancel(true)
             watchdogTask.cancel(false);
         }
     }

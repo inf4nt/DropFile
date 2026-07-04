@@ -66,6 +66,11 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     }
 
     private void printQRCode(ApiQuickShareLsResponseDTO object) {
+        if (object.expired()) {
+            System.out.println("Unable to generate QRCode for expired object");
+            return;
+        }
+
         Map.Entry<QRCodeType, String> entryURL = extractURL(qrCodeType, object).orElse(null);
         if (entryURL == null) {
             throw new IllegalStateException("Unable to build QRCode by given type " + qrCodeType);
@@ -75,7 +80,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
         if (ObjectUtils.isEmpty(url) || entryURL.getKey() == QRCodeType.ETHERNET) {
             System.out.println(
                     """
-                            ❌ Error: Cannot generate QR code.
+                            Error: Cannot generate QR code.
                             Either was specified or only the Ethernet address is available.
                             QR code generation is not supported for wired connections."""
             );

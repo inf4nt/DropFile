@@ -1,12 +1,12 @@
 package com.evolution.dropfile.store.framework.file;
 
+import com.evolution.dropfile.common.CloseShieldInputStream;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import lombok.RequiredArgsConstructor;
 
 import javax.crypto.SecretKey;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -27,17 +27,11 @@ public class CryptoFileOperations implements FileOperations {
     }
 
 
-
     @Override
     public void write(Path destination, InputStream inputStream) throws IOException {
         byte[] fingerprint = getFingerprint();
         SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-        InputStream shieldStream = new FilterInputStream(inputStream) {
-            @Override
-            public void close() {
-
-            }
-        };
+        CloseShieldInputStream shieldStream = new CloseShieldInputStream(inputStream);
 
         try (InputStream encryptStream = cryptoTunnel.encryptSealStream(shieldStream, secretKey)) {
             delegate.write(destination, encryptStream);

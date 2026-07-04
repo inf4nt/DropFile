@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
@@ -15,6 +16,15 @@ import java.util.HexFormat;
 public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
+
+    public void transferTo(Path path, OutputStream outputStream) throws IOException {
+        CloseShieldOutputStream closeShieldOutputStream = new CloseShieldOutputStream(outputStream);
+
+        try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+             WritableByteChannel writableByteChannel = Channels.newChannel(closeShieldOutputStream)) {
+            fileChannel.transferTo(0, Long.MAX_VALUE, writableByteChannel);
+        }
+    }
 
     public void write(Path path, InputStream inputStream) throws IOException {
         try (FileChannel channel = FileChannel.open(path,
@@ -28,19 +38,21 @@ public class FileHelper {
                       InputStream inputStream,
                       long position,
                       long size) throws IOException {
-        ReadableByteChannel src = Channels.newChannel(inputStream);
-        long offset = position;
-        long remaining = size;
+        CloseShieldInputStream closeShieldInputStream = new CloseShieldInputStream(inputStream);
+        try (ReadableByteChannel readableByteChannel = Channels.newChannel(closeShieldInputStream)) {
+            long offset = position;
+            long remaining = size;
 
-        while (remaining > 0) {
-            long transferred = fileChannel.transferFrom(src, offset, remaining);
+            while (remaining > 0) {
+                long transferred = fileChannel.transferFrom(readableByteChannel, offset, remaining);
 
-            if (transferred <= 0) {
-                break;
+                if (transferred <= 0) {
+                    break;
+                }
+
+                offset += transferred;
+                remaining -= transferred;
             }
-
-            offset += transferred;
-            remaining -= transferred;
         }
     }
 

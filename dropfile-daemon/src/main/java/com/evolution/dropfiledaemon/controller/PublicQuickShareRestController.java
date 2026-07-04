@@ -1,11 +1,12 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
-import com.evolution.dropfiledaemon.util.SecureZipUtils;
+import com.evolution.dropfiledaemon.util.SecureZipService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.util.ObjectUtils;
@@ -16,11 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(PublicQuickShareRestController.ENDPOINT)
@@ -29,6 +29,10 @@ public class PublicQuickShareRestController {
     public static final String ENDPOINT = "p/qs";
 
     private final QuickShareEntryStore quickShareEntryStore;
+
+    private final FileHelper fileHelper;
+
+    private final SecureZipService secureZipService;
 
     @GetMapping("/{id}")
     public WebAsyncTask<Void> download(@PathVariable String id, HttpServletResponse response) {
@@ -54,7 +58,7 @@ public class PublicQuickShareRestController {
                 : quickShareEntry.alias();
 
         if (quickShareEntry.secure()) {
-            String zipName = String.format("%s-%s.zip", "secure", CommonUtils.random());
+            String zipName = String.format("%s-%s.zip", "secure", id);
 
             response.setContentType("application/zip");
             response.setHeader("Content-Disposition", "attachment; filename=" + zipName);
@@ -62,7 +66,7 @@ public class PublicQuickShareRestController {
 
             return new WebAsyncTask<>(86400000L, () -> {
                 OutputStream outputStream = response.getOutputStream();
-                SecureZipUtils.zip(
+                secureZipService.zip(
                         outputStream,
                         file,
                         responseFileName,
@@ -78,14 +82,13 @@ public class PublicQuickShareRestController {
                     .orElse("application/octet-stream");
 
             response.setContentType(contentType);
+            response.setContentLengthLong(file.length());
             response.setHeader("Content-Disposition", "attachment; filename=" + responseFileName);
             response.setStatus(200);
 
             return new WebAsyncTask<>(86400000L, () -> {
                 OutputStream outputStream = response.getOutputStream();
-                try (InputStream inputStream = new FileInputStream(file)) {
-                    inputStream.transferTo(outputStream);
-                }
+                fileHelper.transferTo(file.toPath(), outputStream);
                 outputStream.flush();
                 return null;
             });

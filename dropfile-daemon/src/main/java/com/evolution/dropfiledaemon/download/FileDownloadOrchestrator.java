@@ -12,6 +12,8 @@ import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -19,7 +21,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +34,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Slf4j
 @Component
-public class FileDownloadOrchestrator implements AutoCloseable {
+public class FileDownloadOrchestrator {
 
     volatile private boolean closed;
 
@@ -323,9 +328,10 @@ public class FileDownloadOrchestrator implements AutoCloseable {
         return downloadDirectoryPath.resolve(temporaryFileName);
     }
 
-    @SneakyThrows
-    @Override
-    public void close() {
+    @EventListener(ContextClosedEvent.class)
+    public void contextClosedEventListener() throws InterruptedException {
+        log.info("Closing by " + ContextClosedEvent.class);
+
         log.info("Closing FileDownloadOrchestrator");
         closed = true;
 

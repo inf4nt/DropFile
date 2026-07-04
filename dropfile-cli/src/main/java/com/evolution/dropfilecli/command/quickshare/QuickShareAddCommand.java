@@ -25,7 +25,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     private String alias;
 
     @CommandLine.Option(
-            names = {"-singleUse", "--singleUse"},
+            names = {"-single-use", "--single-use"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",

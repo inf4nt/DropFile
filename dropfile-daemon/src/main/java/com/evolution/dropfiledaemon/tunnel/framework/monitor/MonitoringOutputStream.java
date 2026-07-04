@@ -1,12 +1,12 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
+import com.evolution.dropfile.common.OutputStreamDecorator;
 import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
 
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class MonitoringOutputStream extends FilterOutputStream {
+public class MonitoringOutputStream extends OutputStreamDecorator {
 
     private final DownloadSpeedMeter downloadSpeedMeter;
 
@@ -15,7 +15,6 @@ public class MonitoringOutputStream extends FilterOutputStream {
         this.downloadSpeedMeter = downloadSpeedMeter;
     }
 
-
     @Override
     public void write(int b) throws IOException {
         super.write(b);
@@ -23,8 +22,14 @@ public class MonitoringOutputStream extends FilterOutputStream {
     }
 
     @Override
+    public void write(byte[] b) throws IOException {
+        super.write(b);
+        downloadSpeedMeter.addChunk(b.length);
+    }
+
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        out.write(b, off, len);
+        super.write(b, off, len);
         downloadSpeedMeter.addChunk(len);
     }
 }
