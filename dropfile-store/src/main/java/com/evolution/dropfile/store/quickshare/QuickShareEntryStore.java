@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.link;
+package com.evolution.dropfile.store.quickshare;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
 

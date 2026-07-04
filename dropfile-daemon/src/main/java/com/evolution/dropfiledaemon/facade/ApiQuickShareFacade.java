@@ -3,8 +3,8 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfile.store.link.QuickShareEntry;
-import com.evolution.dropfile.store.link.QuickShareEntryStore;
+import com.evolution.dropfile.store.quickshare.QuickShareEntry;
+import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.controller.PublicQuickShareRestController;
 import com.evolution.dropfiledaemon.util.InetAddressUtils;
 import jakarta.annotation.Nullable;
@@ -37,18 +37,33 @@ public class ApiQuickShareFacade {
 
         String id = CommonUtils.random();
 
-        String secret = CommonUtils.generateRawSecretNonce12();
         QuickShareEntry quickShareEntry = quickShareEntryStore.save(
                 id,
-                () -> new QuickShareEntry(
-                        requestDTO.file().toPath().toAbsolutePath().toString(),
-                        requestDTO.alias(),
-                        secret,
-                        requestDTO.singleUse(),
-                        false,
-                        Instant.now(),
-                        Instant.now()
-                )
+                () -> {
+                    if (requestDTO.secure()) {
+                        String secret = CommonUtils.generateRawSecretNonce12();
+                        return new QuickShareEntry(
+                                requestDTO.file().toPath().toAbsolutePath().toString(),
+                                requestDTO.alias(),
+                                secret,
+                                requestDTO.singleUse(),
+                                true,
+                                false,
+                                Instant.now(),
+                                Instant.now()
+                        );
+                    }
+                    return new QuickShareEntry(
+                            requestDTO.file().toPath().toAbsolutePath().toString(),
+                            requestDTO.alias(),
+                            null,
+                            requestDTO.singleUse(),
+                            false,
+                            false,
+                            Instant.now(),
+                            Instant.now()
+                    );
+                }
         );
 
         return map(id, quickShareEntry);
@@ -92,6 +107,7 @@ public class ApiQuickShareFacade {
                 List.of(), // TODO external links is a link with provided public IP
                 connectionAddress != null ? buildLinks(connectionAddress.wireless(), linkId) : List.of(),
                 connectionAddress != null ? buildLinks(connectionAddress.ethernet(), linkId) : List.of(),
+                entry.secure(),
                 entry.singleUse(),
                 entry.expired(),
                 entry.updated(),

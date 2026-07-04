@@ -19,12 +19,8 @@ public class SecureZipUtils {
 
     public static void zip(OutputStream outputStream,
                            File file,
-                           @Nullable String aliasFileName,
+                           String aliasFileName,
                            String password) throws IOException {
-
-        if (aliasFileName == null) {
-            aliasFileName = file.getName();
-        }
 
         OutputStream shieldOutputStream = new FilterOutputStream(outputStream) {
             @Override

@@ -33,16 +33,16 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     )
     private boolean singleUse;
 
-//    @CommandLine.Option(
-//            names = {"-secure", "--secure"},
-//            arity = "0..1",
-//            defaultValue = "true",
-//            fallbackValue = "true",
-//            description = "Encrypt the file with a password. " +
-//                    "If 'true' (default), packs it into a password-protected archive. " +
-//                    "If 'false', shares the file as-is (unprotected)"
-//    )
-//    private boolean secure;
+    @CommandLine.Option(
+            names = {"-secure", "--secure"},
+            arity = "0..1",
+            defaultValue = "true",
+            fallbackValue = "true",
+            description = "Encrypt the file with a password. " +
+                    "If 'true' (default), packs it into a password-protected archive. " +
+                    "If 'false', shares the file as-is (unprotected)"
+    )
+    private boolean secure;
 
     @CommandLine.Option(
             names = {"-qrcode", "--qrcode", "-qr", "--qr"},
@@ -55,7 +55,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.quickShareAdd(file, alias, singleUse);
+        return daemonClient.quickShareAdd(file, alias, singleUse, secure);
     }
 
     @Override

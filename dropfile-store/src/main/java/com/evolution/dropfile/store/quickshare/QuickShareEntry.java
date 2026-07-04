@@ -1,4 +1,4 @@
-package com.evolution.dropfile.store.link;
+package com.evolution.dropfile.store.quickshare;
 
 import lombok.With;
 
@@ -9,6 +9,7 @@ public record QuickShareEntry(String absolutePath,
                               String alias,
                               String secret,
                               boolean singleUse,
+                              boolean secure,
                               boolean expired,
                               Instant updated,
                               Instant created) {
