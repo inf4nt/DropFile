@@ -20,24 +20,28 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     @CommandLine.Option(names = {"-id", "--id"}, description = "Id", required = true)
     private String id;
 
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "0..1")
-    private QrDependentGroup qrGroup;
+    @CommandLine.Option(
+            names = {"-qrcode", "--qrcode", "-qr", "--qr"},
+            arity = "0..1",
+            defaultValue = "true",
+            fallbackValue = "true",
+            description = "Receive QRCode"
+    )
+    private boolean qrCode;
 
-    static class QrDependentGroup {
+    @CommandLine.Option(
+            names = {"-type", "--type", "-t", "--t"},
+            description = "QRCode type",
+            converter = QRCodeTypeEnumConverter.class
+    )
+    private QRCodeType qrCodeType;
 
-        @CommandLine.Option(
-                names = {"-qr-code", "--qr-code", "-qrcode", "--qrcode", "-qr", "--qr"},
-                required = true,
-                description = "Receive QRCode"
-        )
-        private boolean qrCode;
-
-        @CommandLine.Option(
-                names = {"-type", "--type", "-t", "--t"},
-                description = "QRCode type",
-                converter = QRCodeTypeEnumConverter.class
-        )
-        private QRCodeType qrCodeType;
+    @Override
+    public void run() {
+        if (!qrCode && qrCodeType != null) {
+            throw new RuntimeException("Error: Cannot specify --type when QR code generation is disabled (-qr false)");
+        }
+        super.run();
     }
 
     @Override
@@ -55,14 +59,12 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     protected void print(ApiQuickShareLsResponseDTO object) {
         super.print(object);
 
-        if (qrGroup != null && qrGroup.qrCode) {
+        if (qrCode) {
             printQRCode(object);
         }
     }
 
     private void printQRCode(ApiQuickShareLsResponseDTO object) {
-        QRCodeType qrCodeType = qrGroup.qrCodeType;
-
         String url = extractURL(qrCodeType, object).orElse(null);
         if (ObjectUtils.isEmpty(url)) {
             throw new IllegalStateException("Unable to build QRCode by given type " + qrCodeType);
@@ -90,16 +92,16 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
         throw new RuntimeException("No source found by " + qrCodeType);
     }
 
-    enum QRCodeType {
-        EXTERNAL,
-        WIRELESS,
-        ETHERNET
-    }
-
     private static class QRCodeTypeEnumConverter implements CommandLine.ITypeConverter<QRCodeType> {
         @Override
         public QRCodeType convert(String value) {
             return QRCodeType.valueOf(value.toUpperCase());
         }
+    }
+
+    private enum QRCodeType {
+        EXTERNAL,
+        WIRELESS,
+        ETHERNET
     }
 }
