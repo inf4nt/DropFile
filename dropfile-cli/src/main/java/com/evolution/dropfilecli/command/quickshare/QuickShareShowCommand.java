@@ -9,6 +9,7 @@ import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -65,29 +66,42 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     }
 
     private void printQRCode(ApiQuickShareLsResponseDTO object) {
-        String url = extractURL(qrCodeType, object).orElse(null);
-        if (ObjectUtils.isEmpty(url)) {
+        Map.Entry<QRCodeType, String> entryURL = extractURL(qrCodeType, object).orElse(null);
+        if (entryURL == null) {
             throw new IllegalStateException("Unable to build QRCode by given type " + qrCodeType);
         }
 
-        ConsoleQrPrinter.printUrlAsQr(url);
+        String url = entryURL.getValue();
+        if (ObjectUtils.isEmpty(url) || entryURL.getKey() == QRCodeType.ETHERNET) {
+            System.out.println(
+                    """
+                            ❌ Error: Cannot generate QR code.
+                            Either was specified or only the Ethernet address is available.
+                            QR code generation is not supported for wired connections."""
+            );
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Connection type " + entryURL.getKey());
+        ConsoleQrPrinter.printUrlAsQr(entryURL.getValue());
     }
 
-    private Optional<String> extractURL(QRCodeType qrCodeType, ApiQuickShareLsResponseDTO object) {
+    private Optional<Map.Entry<QRCodeType, String>> extractURL(QRCodeType qrCodeType, ApiQuickShareLsResponseDTO object) {
         if (qrCodeType == null) {
-            return object.external().stream().findFirst()
-                    .or(() -> object.wireless().stream().findFirst())
-                    .or(() -> object.ethernet().stream().findFirst());
+            return object.external().stream().findFirst().map(it -> Map.entry(QRCodeType.EXTERNAL, it))
+                    .or(() -> object.wireless().stream().findFirst().map(it -> Map.entry(QRCodeType.WIRELESS, it)))
+                    .or(() -> object.ethernet().stream().findFirst().map(it -> Map.entry(QRCodeType.ETHERNET, it)));
         }
 
         if (qrCodeType == QRCodeType.EXTERNAL) {
-            return object.external().stream().findFirst();
+            return object.external().stream().findFirst().map(it -> Map.entry(QRCodeType.EXTERNAL, it));
         }
         if (qrCodeType == QRCodeType.WIRELESS) {
-            return object.wireless().stream().findFirst();
+            return object.wireless().stream().findFirst().map(it -> Map.entry(QRCodeType.WIRELESS, it));
         }
         if (qrCodeType == QRCodeType.ETHERNET) {
-            return object.ethernet().stream().findFirst();
+            return object.ethernet().stream().findFirst().map(it -> Map.entry(QRCodeType.ETHERNET, it));
         }
         throw new RuntimeException("No source found by " + qrCodeType);
     }
