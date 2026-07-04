@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
 
 import java.net.Inet4Address;
@@ -9,10 +10,13 @@ import java.util.*;
 
 public class InetAddressUtils {
 
-    public record BestLocalAddress(String name, String ifaceNameDisplay, InetAddress inetAddress) {}
+    public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {}
 
+    public record ConnectionAddress(BestLocalAddress wireless, BestLocalAddress ethernet) {}
+
+    @Nullable
     @SneakyThrows
-    public static BestLocalAddress getBestLocalAddress() {
+    public static ConnectionAddress getConnectionAddress() {
         Enumeration<NetworkInterface> interfaces =
                 NetworkInterface.getNetworkInterfaces();
 
@@ -46,26 +50,23 @@ public class InetAddressUtils {
 
                 String wifiMatch = getWifi(name, display);
                 if (wifiMatch != null) {
-                    BestLocalAddress bestLocalAddress = new BestLocalAddress(wifiMatch, ifaceNameDisplay, addr);
+                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ifaceNameDisplay, addr);
                     wifi.add(bestLocalAddress);
                 }
 
                 String ethernetMatch = getEthernet(name, display);
                 if (ethernetMatch != null) {
-                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ethernetMatch, ifaceNameDisplay, addr);
+                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ifaceNameDisplay, addr);
                     ethernet.add(bestLocalAddress);
                 }
             }
         }
 
-        if (!wifi.isEmpty()) {
-            return wifi.getFirst();
-        }
-        if (!ethernet.isEmpty()) {
-            return ethernet.getFirst();
+        if (!wifi.isEmpty() || !ethernet.isEmpty()) {
+            return new ConnectionAddress(wifi.stream().findFirst().orElse(null), ethernet.stream().findFirst().orElse(null));
         }
 
-        throw new IllegalStateException("No suitable IPv4 address found");
+        return null;
     }
 
     private static String getWifi(String name, String display) {

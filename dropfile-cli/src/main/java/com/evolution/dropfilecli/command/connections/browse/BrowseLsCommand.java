@@ -16,6 +16,7 @@ import java.util.List;
 )
 public class BrowseLsCommand extends AbstractCommandHttpHandler {
 
+    // TODO add show command to show object by id
     @CommandLine.Option(names = {"-id", "--id"}, split = ",", description = "List of ids")
     private List<String> ids;
 

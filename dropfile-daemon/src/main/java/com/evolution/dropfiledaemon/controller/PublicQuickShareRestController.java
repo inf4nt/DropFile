@@ -21,7 +21,7 @@ import java.time.Instant;
 @RequestMapping(PublicQuickShareRestController.ENDPOINT)
 public class PublicQuickShareRestController {
 
-    public static final String ENDPOINT = "public/quick-share";
+    public static final String ENDPOINT = "p/qs";
 
     private final QuickShareEntryStore quickShareEntryStore;
 

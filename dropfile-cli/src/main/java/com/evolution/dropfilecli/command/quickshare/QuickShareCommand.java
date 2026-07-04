@@ -8,11 +8,12 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "quick-share",
         description = "Quick share",
-        aliases = {"-q", "--q"},
+        aliases = {"quickshare","-quickshare", "--quickshare", "-q", "--q"},
         subcommands = {
                 QuickShareAddCommand.class,
                 QuickShareLsCommand.class,
-                QuickShareRmCommand.class
+                QuickShareRmCommand.class,
+                QuickShareShowCommand.class
         }
 )
 public class QuickShareCommand implements SimpleCommandHandler {

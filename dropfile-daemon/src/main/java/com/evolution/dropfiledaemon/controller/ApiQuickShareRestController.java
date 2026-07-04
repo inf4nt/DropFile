@@ -25,6 +25,11 @@ public class ApiQuickShareRestController {
         return facade.ls();
     }
 
+    @GetMapping("/ls/{id}")
+    public ApiQuickShareLsResponseDTO getById(@PathVariable String id) {
+        return facade.ls(id);
+    }
+
     @DeleteMapping("/rm/{id}")
     public void removeById(@PathVariable String id) {
         facade.removeByKeyStartWith(id);

@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-public abstract class AbstractCommandHttpHandler implements Runnable {
+public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
 
     @CommandLine.Option(names = {"-table", "--table"}, description = "Print table", defaultValue = "false")
     protected boolean table;
@@ -38,17 +38,17 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
 
     public abstract HttpResponse<byte[]> execute() throws Exception;
 
-    protected TypeReference<?> getTypeReference() {
+    protected TypeReference<TR> getTypeReference() {
         return null;
     }
 
     protected void handleSuccessful(HttpResponse<byte[]> response) throws Exception {
-        TypeReference<?> typeReference = getTypeReference();
+        TypeReference<TR> typeReference = getTypeReference();
         if (typeReference == null) {
             System.out.println("Completed");
             return;
         }
-        Object object = objectMapper.readValue(response.body(), typeReference);
+        TR object = objectMapper.readValue(response.body(), typeReference);
         print(object);
     }
 
@@ -103,7 +103,7 @@ public abstract class AbstractCommandHttpHandler implements Runnable {
         return PrintModeEnum.LIST;
     }
 
-    protected void print(Object object) {
+    protected void print(TR object) {
         if (table) {
             printTable(object);
         } else if (list) {

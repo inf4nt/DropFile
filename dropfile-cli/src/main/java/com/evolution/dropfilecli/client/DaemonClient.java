@@ -671,6 +671,23 @@ public class DaemonClient {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
 
+    @SneakyThrows
+    public HttpResponse<byte[]> quickShareShow(String id) {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/quick-share/ls/")
+                .resolve(id);
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
     private String getDaemonAuthorizationToken() {
         DaemonSecrets daemonSecrets = daemonSecretsStore.getRequired();
         String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());

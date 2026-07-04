@@ -7,20 +7,17 @@ import com.evolution.dropfile.store.link.QuickShareEntry;
 import com.evolution.dropfile.store.link.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.controller.PublicQuickShareRestController;
 import com.evolution.dropfiledaemon.util.InetAddressUtils;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -71,21 +68,30 @@ public class ApiQuickShareFacade {
         quickShareEntryStore.removeAll();
     }
 
+    public ApiQuickShareLsResponseDTO ls(String id) {
+        String key = quickShareEntryStore.getRequiredByKeyStartWith(id).getKey();
+        Map.Entry<String, QuickShareEntry> entry = quickShareEntryStore.getRequired(key);
+        return map(entry.getKey(), entry.getValue());
+    }
+
     private List<ApiQuickShareLsResponseDTO> map(Collection<? extends Map.Entry<String, QuickShareEntry>> linkShareEntries) {
         return linkShareEntries.stream().map(it -> map(it.getKey(), it.getValue())).toList();
     }
 
-    private ApiQuickShareLsResponseDTO map(String id, QuickShareEntry entry) {
-        String relativeDownloadLink = buildRelativeDownloadLink(id);
-        String downloadLink = buildDownloadLink(id);
+    private ApiQuickShareLsResponseDTO map(String linkId, QuickShareEntry entry) {
+        String relativeDownloadLink = buildRelativeDownloadLink(linkId);
+
+        @Nullable InetAddressUtils.ConnectionAddress connectionAddress = InetAddressUtils.getConnectionAddress();
 
         return new ApiQuickShareLsResponseDTO(
-                id,
+                linkId,
                 entry.alias(),
                 Paths.get(entry.absolutePath()).toString(),
                 entry.secret(),
                 relativeDownloadLink,
-                List.of(downloadLink),
+                List.of(), // TODO external links is a link with provided public IP
+                connectionAddress != null ? buildLinks(connectionAddress.wireless(), linkId) : List.of(),
+                connectionAddress != null ? buildLinks(connectionAddress.ethernet(), linkId) : List.of(),
                 entry.singleUse(),
                 entry.expired(),
                 entry.updated(),
@@ -97,14 +103,16 @@ public class ApiQuickShareFacade {
         return String.format("%s/%s", PublicQuickShareRestController.ENDPOINT, id);
     }
 
-    private String buildDownloadLink(String id) {
-        Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
-        InetAddressUtils.BestLocalAddress bestLocalAddress = InetAddressUtils.getBestLocalAddress();
+    private List<String> buildLinks(@Nullable InetAddressUtils.BestLocalAddress address, String linkId) {
+        if (address == null) {
+            return Collections.emptyList();
+        }
 
-        InetAddress inetAddress = bestLocalAddress.inetAddress();
-        String hostAddress = inetAddress.getHostAddress();
+        String hostAddress = address.inetAddress().getHostAddress();
+        Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
         URI uri = CommonUtils.toURI(hostAddress, serverPort);
-        String relativeDownloadLink = buildRelativeDownloadLink(id);
-        return String.format("%s|%s/%s", bestLocalAddress.name(), uri, relativeDownloadLink);
+        String relativeDownloadLink = buildRelativeDownloadLink(linkId);
+        String format = String.format("%s/%s", uri, relativeDownloadLink);
+        return List.of(format);
     }
 }

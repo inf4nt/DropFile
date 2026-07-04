@@ -21,6 +21,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler {
     @CommandLine.Option(names = {"-limit", "--limit"}, description = "Limit", defaultValue = "0")
     private Integer limit;
 
+    // TODO update the logic to Enum
     private static class Exclusive {
         @CommandLine.Option(names = {"-queue", "--queue", "-q", "--q"}, description = "Find by queue")
         private boolean queue;
