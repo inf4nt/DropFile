@@ -6,18 +6,21 @@ public interface QuickShareEntryStore extends KeyValueStore<QuickShareEntry> {
 
     @Override
     default void validate(String key, QuickShareEntry value) {
-        // TODO add validation
-//        Map.Entry<String, QuickShareEntry> entryState = get(key).orElse(null);
-//        if (entryState == null) {
-//            if (value.used()) {
-//                throw new RuntimeException("'Used' field for new entries must be set as 'false': " + key);
-//            }
-//        }
-//        if (entryState != null) {
-//            if (!entryState.getValue().used() && value.used()) {
-//                return;
-//            }
-//            throw new RuntimeException("Update unsupported: " + key);
-//        }
+        if (value.secure() && (value.secret() == null || value.secret().isBlank())) {
+            throw new IllegalArgumentException("Secure entry must have a non-empty secret: " + key);
+        }
+
+        get(key).ifPresentOrElse(
+                entryState -> {
+                    if (entryState.getValue().expired()) {
+                        throw new IllegalStateException("Unable to UPDATE already expired entry: " + key);
+                    }
+                },
+                () -> {
+                    if (value.expired()) {
+                        throw new IllegalArgumentException("Unable to CREATE already expired entry: " + key);
+                    }
+                }
+        );
     }
 }
