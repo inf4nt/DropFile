@@ -1,21 +1,32 @@
 SHARE_MOUNT=dropfile-daemon-share-mount
 
-echo "⚠️ Warning: The following directory will be created: $HOME/$SHARE_MOUNT"
-echo "This directory will be used as a shared mount between the host OS and Docker."
-echo "⚠️ Place your files in this directory to make them accessible to the daemon."
+echo "ℹ️  A shared directory will be created at: $HOME/$SHARE_MOUNT"
+echo "This directory enables file sharing between your Host OS and the Docker container."
+echo "Simply place your files there to make them accessible to the daemon."
+echo ""
 
-read -p "Press y and Enter to continue: " answer
+read -p "Enable local file sharing? (y/n): " answer
 
 if [[ "$answer" == "y" ]]; then
-    mkdir -p "$HOME/$SHARE_MOUNT"
-    echo "✅ Directory successfully created."
+    SHARE_DIRECTORY=$HOME/$SHARE_MOUNT
+    mkdir -p $SHARE_DIRECTORY
+    echo "✅ Success: Shared directory created at $SHARE_DIRECTORY"
+    echo "🚀 Starting application WITH file access..."
+
+    export SHARE_DIRECTORY
+
+    ./down.sh
+    docker compose -f docker-compose.yaml build
+    docker compose -f docker-compose.yaml up -d
+elif [[ "$answer" == "n" ]]; then
+    echo ""
+    echo "💡 Local file sharing skipped by user."
+    echo "ℹ️  The application will run in isolated mode (no local file access)."
+    echo "🚀 Starting application WITHOUT file access..."
+
+    ./down.sh
+    docker compose -f docker-compose.no-mount.yaml build
+    docker compose -f docker-compose.no-mount.yaml up -d
 else
-    echo "❌ Directory creation canceled by user."
-    exit 1
+  exit 1
 fi
-
-export SHARE_MOUNT
-
-./down.sh
-docker compose build
-docker compose up -d

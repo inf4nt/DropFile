@@ -20,9 +20,6 @@ services:
       DROPFILE_DAEMON_INSTALLATION-SEED_DIRECTORY: /daemon-conf
     volumes:
       - dropfile-daemon-share:/daemon-conf
-      - type: bind
-        source: $SHARE_DIRECTORY
-        target: $SHARE_DIRECTORY
   dropfile-cli:
     networks:
       - dropfile-network
