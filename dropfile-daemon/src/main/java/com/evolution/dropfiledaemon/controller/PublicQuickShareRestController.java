@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
-import com.evolution.dropfiledaemon.util.SecureZipService;
+import com.evolution.dropfiledaemon.service.SecureZipService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

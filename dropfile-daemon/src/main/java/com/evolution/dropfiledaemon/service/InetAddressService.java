@@ -1,27 +1,27 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfiledaemon.service;
 
 import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
+import org.springframework.stereotype.Component;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
-public class InetAddressUtils {
-
-    public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {}
-
-    public record ConnectionAddress(BestLocalAddress wireless, BestLocalAddress ethernet) {}
+@Component
+public class InetAddressService {
 
     @Nullable
     @SneakyThrows
-    public static ConnectionAddress getConnectionAddress() {
+    public ConnectionAddress getConnectionAddress() {
         Enumeration<NetworkInterface> interfaces =
                 NetworkInterface.getNetworkInterfaces();
 
-        List<BestLocalAddress> wifi =  new ArrayList<>();
-        List<BestLocalAddress> ethernet =  new ArrayList<>();
+        List<BestLocalAddress> wifi = new ArrayList<>();
+        List<BestLocalAddress> ethernet = new ArrayList<>();
 
         while (interfaces.hasMoreElements()) {
             NetworkInterface iface = interfaces.nextElement();
@@ -69,7 +69,7 @@ public class InetAddressUtils {
         return null;
     }
 
-    private static String getWifi(String name, String display) {
+    private String getWifi(String name, String display) {
         if (display.contains("wi-fi")) {
             return "wifi";
         }
@@ -106,4 +106,11 @@ public class InetAddressUtils {
         }
         return null;
     }
+
+    public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {
+    }
+
+    public record ConnectionAddress(@Nullable BestLocalAddress wireless, @Nullable BestLocalAddress ethernet) {
+    }
+
 }

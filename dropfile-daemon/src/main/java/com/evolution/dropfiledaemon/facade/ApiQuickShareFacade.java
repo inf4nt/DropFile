@@ -6,7 +6,7 @@ import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.controller.PublicQuickShareRestController;
-import com.evolution.dropfiledaemon.util.InetAddressUtils;
+import com.evolution.dropfiledaemon.service.InetAddressService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -26,6 +26,8 @@ public class ApiQuickShareFacade {
     private final Environment environment;
 
     private final QuickShareEntryStore quickShareEntryStore;
+
+    private final InetAddressService inetAddressService;
 
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
         if (Files.notExists(requestDTO.file().toPath())) {
@@ -96,7 +98,7 @@ public class ApiQuickShareFacade {
     private ApiQuickShareLsResponseDTO map(String linkId, QuickShareEntry entry) {
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
 
-        @Nullable InetAddressUtils.ConnectionAddress connectionAddress = InetAddressUtils.getConnectionAddress();
+        @Nullable InetAddressService.ConnectionAddress connectionAddress = inetAddressService.getConnectionAddress();
 
         return new ApiQuickShareLsResponseDTO(
                 linkId,
@@ -119,16 +121,16 @@ public class ApiQuickShareFacade {
         return String.format("%s/%s", PublicQuickShareRestController.ENDPOINT, id);
     }
 
-    private List<String> buildLinks(@Nullable InetAddressUtils.BestLocalAddress address, String linkId) {
+    private List<String> buildLinks(@Nullable InetAddressService.BestLocalAddress address, String linkId) {
         if (address == null) {
             return Collections.emptyList();
         }
 
         String hostAddress = address.inetAddress().getHostAddress();
         Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
-        URI uri = CommonUtils.toURI(hostAddress, serverPort);
+        URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
-        String format = String.format("%s/%s", uri, relativeDownloadLink);
-        return List.of(format);
+        String link = String.format("%s/%s", daemonRootURI, relativeDownloadLink);
+        return List.of(link);
     }
 }
