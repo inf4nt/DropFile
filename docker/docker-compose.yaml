@@ -18,6 +18,7 @@ services:
       DROPFILE_DAEMON_PORT: 28282
       DROPFILE_DAEMON_DAEMON-SECRETS_DIRECTORY: /daemon-conf
       DROPFILE_DAEMON_INSTALLATION-SEED_DIRECTORY: /daemon-conf
+      DROPFILE_DAEMON_EXTERNAL-HOST: host.docker.internal:28282
     volumes:
       - dropfile-daemon-share:/daemon-conf
       - type: bind

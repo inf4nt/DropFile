@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,9 @@ public class DaemonApplicationProperties {
     public final Path userDir;
 
     public final int serverPort;
+
+    @Nullable
+    public final String daemonExternalHost;
 
     public final Path daemonConfigDirectory;
 
@@ -49,6 +53,7 @@ public class DaemonApplicationProperties {
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
+            @Value("${dropfile.daemon.external-host:#{null}}") String daemonExternalHost,
             @Value("${dropfile.daemon.config.directory}") Path daemonConfigDirectory,
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
@@ -68,6 +73,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize) {
         this.userDir = userDir;
         this.serverPort = serverPort;
+        this.daemonExternalHost = daemonExternalHost;
         this.daemonConfigDirectory = daemonConfigDirectory;
         this.daemonSecretsDirectory = daemonSecretsDirectory;
         this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;

@@ -12,7 +12,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 @Component
-public class InetAddressService {
+public class InetLocalAddressService {
 
     @Nullable
     @SneakyThrows
