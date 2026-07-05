@@ -23,6 +23,7 @@ services:
       - type: bind
         source: $SHARE_DIRECTORY
         target: $SHARE_DIRECTORY
+        read_only: true
   dropfile-cli:
     networks:
       - dropfile-network
