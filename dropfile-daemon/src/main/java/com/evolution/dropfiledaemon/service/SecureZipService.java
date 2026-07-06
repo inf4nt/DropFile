@@ -26,7 +26,8 @@ public class SecureZipService {
     public void zip(OutputStream outputStream,
                     File file,
                     String innerZipName,
-                    String password) throws IOException {
+                    String password,
+                    CompressionLevel compressionLevel) throws IOException {
         try (ZipOutputStream outerZos = new ZipOutputStream(
                 new CloseShieldOutputStream(outputStream), password.toCharArray())) {
 
@@ -43,8 +44,13 @@ public class SecureZipService {
             try (ZipOutputStream innerZos = new ZipOutputStream(new CloseShieldOutputStream(outerZos))) {
                 ZipParameters innerParams = new ZipParameters();
                 innerParams.setFileNameInZip(innerZipName);
-                innerParams.setCompressionMethod(CompressionMethod.STORE);
-                innerParams.setCompressionLevel(CompressionLevel.NO_COMPRESSION);
+                if (compressionLevel.getLevel() == 0) {
+                    innerParams.setCompressionMethod(CompressionMethod.STORE);
+                    innerParams.setCompressionLevel(CompressionLevel.NO_COMPRESSION);
+                } else {
+                    innerParams.setCompressionMethod(CompressionMethod.DEFLATE);
+                    innerParams.setCompressionLevel(compressionLevel);
+                }
                 innerParams.setEntrySize(file.length());
 
                 innerZos.putNextEntry(innerParams);

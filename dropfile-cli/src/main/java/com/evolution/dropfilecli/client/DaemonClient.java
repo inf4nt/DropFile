@@ -582,7 +582,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> quickShareAdd(File file, String alias, boolean singleUse, boolean secure) {
+    public HttpResponse<byte[]> quickShareAdd(File file, String alias, boolean singleUse, boolean secure, String secret) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/quick-share/add");
 
@@ -593,7 +593,7 @@ public class DaemonClient {
                 .uri(daemonURI)
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiQuickShareAddRequestDTO(file, alias, singleUse, secure)
+                        new ApiQuickShareAddRequestDTO(file, alias, singleUse, secure, secret)
                 )))
                 .header("Content-Type", "application/json")
                 .build();

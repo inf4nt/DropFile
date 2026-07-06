@@ -3,25 +3,23 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.service.SecureZipService;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.model.enums.CompressionLevel;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.io.File;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.util.Arrays;
 
 @Slf4j
-@RequiredArgsConstructor
 @RestController
 @RequestMapping(PublicQuickShareRestController.ENDPOINT)
 public class PublicQuickShareRestController {
@@ -34,8 +32,22 @@ public class PublicQuickShareRestController {
 
     private final SecureZipService secureZipService;
 
+    private final CompressionLevel secureCompressLevel;
+
+    public PublicQuickShareRestController(QuickShareEntryStore quickShareEntryStore,
+                                          FileHelper fileHelper,
+                                          SecureZipService secureZipService,
+                                          DaemonApplicationProperties applicationProperties) {
+        this.quickShareEntryStore = quickShareEntryStore;
+        this.fileHelper = fileHelper;
+        this.secureZipService = secureZipService;
+        this.secureCompressLevel = getSecureCompressLevel(applicationProperties.daemonQuickShareSecureCompressLevel);
+    }
+
     @GetMapping("/{id}")
-    public WebAsyncTask<Void> download(@PathVariable String id, HttpServletResponse response) {
+    public WebAsyncTask<Void> download(@PathVariable String id,
+                                       @RequestParam(required = false, name = "compressLevel") Integer compressLevelRequestParam,
+                                       HttpServletResponse response) {
         QuickShareEntry quickShareEntry = quickShareEntryStore
                 .getRequired(id)
                 .getValue();
@@ -58,6 +70,10 @@ public class PublicQuickShareRestController {
                 : quickShareEntry.alias();
 
         if (quickShareEntry.secure()) {
+            CompressionLevel compressLevel = compressLevelRequestParam != null
+                    ? getSecureCompressLevel(compressLevelRequestParam)
+                    : this.secureCompressLevel;
+
             String zipName = String.format("%s-%s.zip", "secure", id);
 
             response.setContentType("application/zip");
@@ -70,7 +86,8 @@ public class PublicQuickShareRestController {
                         outputStream,
                         file,
                         responseFileName,
-                        quickShareEntry.secret()
+                        quickShareEntry.secret(),
+                        compressLevel
                 );
                 outputStream.flush();
                 return null;
@@ -93,5 +110,13 @@ public class PublicQuickShareRestController {
                 return null;
             });
         }
+    }
+
+    private CompressionLevel getSecureCompressLevel(Integer compressLevel) {
+        if (compressLevel == null || compressLevel < 0) {
+            return CompressionLevel.NO_COMPRESSION;
+        }
+        return Arrays.stream(CompressionLevel.values()).filter(it -> it.getLevel() == compressLevel).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported compress level " + compressLevel));
     }
 }

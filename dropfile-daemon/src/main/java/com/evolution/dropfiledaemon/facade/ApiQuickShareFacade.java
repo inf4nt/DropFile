@@ -47,7 +47,10 @@ public class ApiQuickShareFacade {
                 id,
                 () -> {
                     if (requestDTO.secure()) {
-                        String secret = CommonUtils.generateRawSecretNonce12();
+                        String secret = ObjectUtils.isEmpty(requestDTO.secret())
+                                ? CommonUtils.generateRawSecretNonce12()
+                                : requestDTO.secret();
+
                         return new QuickShareEntry(
                                 requestDTO.file().toPath().toAbsolutePath().toString(),
                                 requestDTO.alias(),

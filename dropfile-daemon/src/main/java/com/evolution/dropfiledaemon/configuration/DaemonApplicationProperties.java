@@ -50,6 +50,8 @@ public class DaemonApplicationProperties {
 
     public final int daemonHandshakeServerPayloadLiveTime;
 
+    public final int daemonQuickShareSecureCompressLevel;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -70,7 +72,8 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
             @Value("${dropfile.daemon.tunnel.server.payload.life-time}") int daemonTunnelServerPayloadLifeTime,
-            @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize) {
+            @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize,
+            @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -91,5 +94,6 @@ public class DaemonApplicationProperties {
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
         this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
+        this.daemonQuickShareSecureCompressLevel = daemonQuickShareSecureCompressLevel;
     }
 }

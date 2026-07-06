@@ -24,6 +24,9 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")
     private String alias;
 
+    @CommandLine.Option(names = {"-secret", "--secret"}, description = "Secret password")
+    private String secret;
+
     @CommandLine.Option(
             names = {"-single-use", "--single-use"},
             arity = "0..1",
@@ -55,7 +58,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.quickShareAdd(file, alias, singleUse, secure);
+        return daemonClient.quickShareAdd(file, alias, singleUse, secure, secret);
     }
 
     @Override
