@@ -83,7 +83,7 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public FileProvider installationSeedFileProvider(DirectoryProvider daemonInstallationSeedDirectoryProvider) {
-        return new FileProviderImpl(daemonInstallationSeedDirectoryProvider, Paths.get(".installation.bin"));
+        return new FileProviderImpl(daemonInstallationSeedDirectoryProvider, Paths.get(".installation.json"));
     }
 
     @Primary

@@ -55,7 +55,7 @@ public class DropFileCliConfigurationProd {
     public FileProvider installationSeedFileProvider(CliApplicationProperties cliApplicationProperties) {
         return new FileProviderImpl(
                 new DirectoryProviderImpl(cliApplicationProperties.daemonInstallationSeedDirectory),
-                Paths.get(".installation.bin")
+                Paths.get(".installation.json")
         );
     }
 
