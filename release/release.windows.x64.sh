@@ -1,3 +1,6 @@
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+
 IMAGE_NAME=dropfile-release-windows-x64
 DOCKERFILE_NAME=Dockerfile.release.windows.x64
 ARCHIVE_NAME_INPUT=dropfile.tar.gz

@@ -1,3 +1,6 @@
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+
 SHARE_MOUNT=dropfile-daemon-share-mount
 
 echo "ℹ️  A shared directory will be created at: $HOME/$SHARE_MOUNT"
