@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class ApiDaemonFacade {
 
-    private final StoreCacheResetFacade storeCacheResetFacade;
+    private final CacheResetFacade cacheResetFacade;
 
     private final SystemInfoProvider systemInfoProvider;
 
@@ -39,6 +39,6 @@ public class ApiDaemonFacade {
     }
 
     public void cacheReset() {
-        storeCacheResetFacade.reset();
+        cacheResetFacade.reset();
     }
 }
