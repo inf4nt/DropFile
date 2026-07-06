@@ -8,11 +8,11 @@ public interface DaemonSecretsStore
     @Override
     default void validate(DaemonSecrets value) {
         if (value == null) {
-            throw new RuntimeException("DaemonSecretsEntry is null");
+            throw new IllegalArgumentException("DaemonSecretsEntry is null");
         }
         String daemonToken = value.daemonToken();
         if (daemonToken == null || daemonToken.trim().isEmpty()) {
-            throw new RuntimeException("DaemonSecretsEntry daemonToken is empty");
+            throw new IllegalArgumentException("DaemonSecretsEntry daemonToken is empty");
         }
     }
 }
