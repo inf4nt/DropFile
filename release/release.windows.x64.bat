@@ -1,6 +1,6 @@
+@echo off
 cd %~dp0
 
-@echo off
 set IMAGE_NAME=dropfile-release-windows-x64
 set DOCKERFILE_NAME=Dockerfile.release.windows.x64
 set ARCHIVE_NAME_INPUT=dropfile.tar.gz
