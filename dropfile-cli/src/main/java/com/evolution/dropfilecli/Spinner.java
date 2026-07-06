@@ -20,16 +20,15 @@ public class Spinner {
                 while (EXECUTING.get() && !Thread.currentThread().isInterrupted()) {
                     String progressIndicator = PROGRESS_INDICATOR.getProgressIndicator();
 
-                    System.out.print("\r" + progressIndicator);
-                    System.out.flush();
+                    if (EXECUTING.get() && !Thread.currentThread().isInterrupted()) {
+                        System.out.print("\r" + progressIndicator);
+                        System.out.flush();
+                    }
 
                     Thread.sleep(150);
                 }
             } catch (InterruptedException _) {
 
-            } finally {
-                System.out.print("\r\u001b[K");
-                System.out.flush();
             }
         });
     }
@@ -41,5 +40,7 @@ public class Spinner {
         if (SPINNER_THREAD != null) {
             SPINNER_THREAD.interrupt();
         }
+        System.out.print("\r\u001b[K");
+        System.out.flush();
     }
 }
