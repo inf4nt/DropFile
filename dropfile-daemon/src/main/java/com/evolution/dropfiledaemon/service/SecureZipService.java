@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
 import com.evolution.dropfile.common.FileHelper;
-import lombok.RequiredArgsConstructor;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -14,22 +14,28 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 @Component
-@RequiredArgsConstructor
 public class SecureZipService {
 
     private static final String INNER_ZIP_NAME = "inner.zip";
 
     private final FileHelper fileHelper;
 
+    private final CompressionLevel compressionLevel;
+
+    public SecureZipService(FileHelper fileHelper, DaemonApplicationProperties applicationProperties) {
+        this.fileHelper = fileHelper;
+        this.compressionLevel = getSecureCompressLevel(applicationProperties.daemonQuickShareSecureCompressLevel);
+    }
+
     public void zip(OutputStream outputStream,
                     File file,
                     String innerZipName,
-                    String password,
-                    CompressionLevel compressionLevel) throws IOException {
-        try (ZipOutputStream outerZos = new ZipOutputStream(
-                new CloseShieldOutputStream(outputStream), password.toCharArray())) {
+                    String password) throws IOException {
+        CloseShieldOutputStream closeShieldOutputStream = new CloseShieldOutputStream(outputStream);
+        try (ZipOutputStream outerZos = new ZipOutputStream(closeShieldOutputStream, password.toCharArray())) {
 
             ZipParameters outerParams = new ZipParameters();
             outerParams.setFileNameInZip(INNER_ZIP_NAME);
@@ -41,7 +47,8 @@ public class SecureZipService {
 
             outerZos.putNextEntry(outerParams);
 
-            try (ZipOutputStream innerZos = new ZipOutputStream(new CloseShieldOutputStream(outerZos))) {
+            CloseShieldOutputStream closeShieldOuterZos = new CloseShieldOutputStream(outerZos);
+            try (ZipOutputStream innerZos = new ZipOutputStream(closeShieldOuterZos)) {
                 ZipParameters innerParams = new ZipParameters();
                 innerParams.setFileNameInZip(innerZipName);
                 if (compressionLevel.getLevel() == 0) {
@@ -61,5 +68,13 @@ public class SecureZipService {
             }
             outerZos.closeEntry();
         }
+    }
+
+    private CompressionLevel getSecureCompressLevel(Integer compressLevel) {
+        if (compressLevel == null || compressLevel < 0) {
+            return CompressionLevel.NO_COMPRESSION;
+        }
+        return Arrays.stream(CompressionLevel.values()).filter(it -> it.getLevel() == compressLevel).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported compress level " + compressLevel));
     }
 }
