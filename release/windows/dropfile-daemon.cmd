@@ -10,7 +10,7 @@ set SPRING_APPLICATION_PROPERTIES_PATH=%DROPFILE_HOME%\conf\dropfile-daemon.appl
 "%JAVA_PATH%" ^
         "-Dlogging.path=%LOG_PATH%" ^
          -XX:ActiveProcessorCount=1 ^
-         -Xmx128m -Xms64m ^
+         -Xmx256m -Xms64m ^
          -jar "%JAR_PATH%" ^
          "--spring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
          %*
