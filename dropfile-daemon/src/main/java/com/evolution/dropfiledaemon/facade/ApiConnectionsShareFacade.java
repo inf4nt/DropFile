@@ -25,12 +25,12 @@ public class ApiConnectionsShareFacade {
     @SneakyThrows
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) {
         String alias = Paths.get(requestDTO.alias()).toString();
-        Path absoluteFilePathPath = Paths.get(requestDTO.absoluteFilePath());
-        if (Files.notExists(absoluteFilePathPath)) {
-            throw new FileNotFoundException(absoluteFilePathPath.toString());
+        Path absoluteResourcePath = Paths.get(requestDTO.resourcePath());
+        if (Files.notExists(absoluteResourcePath)) {
+            throw new FileNotFoundException(absoluteResourcePath.toString());
         }
-        if (Files.isDirectory(absoluteFilePathPath)) {
-            throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.absoluteFilePath());
+        if (Files.isDirectory(absoluteResourcePath)) {
+            throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.resourcePath());
         }
 
         String id = CommonUtils.random();
@@ -38,8 +38,8 @@ public class ApiConnectionsShareFacade {
                 id,
                 new ShareFileEntry(
                         alias,
-                        absoluteFilePathPath.toFile().getCanonicalPath(),
-                        absoluteFilePathPath.toFile().length(),
+                        absoluteResourcePath.toFile().getCanonicalPath(),
+                        absoluteResourcePath.toFile().length(),
                         Instant.now()
                 )
         );
@@ -67,7 +67,7 @@ public class ApiConnectionsShareFacade {
         return new ApiConnectionsShareLsResponseDTO(
                 id,
                 shareFileEntry.alias(),
-                shareFileEntry.absolutePath(),
+                shareFileEntry.resourcePath(),
                 CommonUtils.toDisplaySize(shareFileEntry.size()),
                 shareFileEntry.created()
         );

@@ -38,7 +38,7 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getRequired(request.id())
                 .getValue();
 
-        File file = new File(shareFileEntry.absolutePath());
+        File file = new File(shareFileEntry.resourcePath());
         long skip = request.position();
         int take = request.size();
 

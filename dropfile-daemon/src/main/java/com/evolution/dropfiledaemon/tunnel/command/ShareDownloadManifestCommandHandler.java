@@ -40,7 +40,7 @@ public class ShareDownloadManifestCommandHandler
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
 
         return fileManifestBuilder.build(
-                new File(fileEntry.absolutePath()).toPath(),
+                new File(fileEntry.resourcePath()).toPath(),
                 fileEntry.alias(),
                 chunkSize
         );
