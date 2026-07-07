@@ -37,14 +37,16 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
             CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
             commandLine.setUnmatchedArgumentsAllowed(true);
 
-            CommandLine.Model.OptionSpec liveOption = CommandLine.Model.OptionSpec.builder("--live")
+            CommandLine.Model.OptionSpec liveOption = CommandLine.Model.OptionSpec
+                    .builder("-live", "--live")
                     .type(boolean.class)
                     .description("Run this command in live update mode")
                     .scopeType(CommandLine.ScopeType.INHERIT)
                     .build();
             commandLine.getCommandSpec().addOption(liveOption);
 
-            CommandLine.Model.OptionSpec ignoreErrorOption = CommandLine.Model.OptionSpec.builder("--ignore-error")
+            CommandLine.Model.OptionSpec ignoreErrorOption = CommandLine.Model.OptionSpec
+                    .builder("-ignore-error", "--ignore-error")
                     .type(boolean.class)
                     .description("Continue polling even if the command encounters an error")
                     .scopeType(CommandLine.ScopeType.INHERIT)

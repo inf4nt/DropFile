@@ -61,10 +61,6 @@ public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
         System.out.println("HTTP response body: " + new String(body));
     }
 
-    protected void handleError(Exception exception) {
-        exception.printStackTrace();
-    }
-
     protected boolean isSuccessful(HttpResponse<byte[]> response) {
         return response.statusCode() == 200;
     }
@@ -75,7 +71,7 @@ public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
         runCommand();
     }
 
-    private void runCommand() {
+    private void runCommand() throws Exception {
         try {
             HttpResponse<byte[]> httpResponse = execute();
             Spinner.stop();
@@ -86,7 +82,7 @@ public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
             }
         } catch (Exception exception) {
             Spinner.stop();
-            handleError(exception);
+            throw exception;
         }
     }
 
