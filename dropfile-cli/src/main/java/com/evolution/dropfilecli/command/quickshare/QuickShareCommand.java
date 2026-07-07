@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.quickshare;
 
-import com.evolution.dropfilecli.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.SimpleCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 

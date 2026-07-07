@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.util;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;

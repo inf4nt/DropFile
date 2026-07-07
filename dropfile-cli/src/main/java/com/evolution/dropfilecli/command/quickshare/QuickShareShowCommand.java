@@ -1,8 +1,8 @@
 package com.evolution.dropfilecli.command.quickshare;
 
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfilecli.AbstractCommandHttpHandler;
-import com.evolution.dropfilecli.ConsoleQrPrinter;
+import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
+import com.evolution.dropfilecli.util.ConsoleQrPrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;

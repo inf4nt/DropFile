@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfilecli.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.SimpleCommandHandler;
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
 import com.evolution.dropfilecli.command.connections.browse.BrowseCommand;
 import com.evolution.dropfilecli.command.connections.download.DownloadCommand;

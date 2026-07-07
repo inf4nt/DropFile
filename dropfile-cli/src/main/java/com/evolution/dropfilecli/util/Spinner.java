@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

@@ -1,5 +1,7 @@
 package com.evolution.dropfilecli;
 
+import com.evolution.dropfilecli.util.ProgressIndicator;
+import com.evolution.dropfilecli.util.Spinner;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;

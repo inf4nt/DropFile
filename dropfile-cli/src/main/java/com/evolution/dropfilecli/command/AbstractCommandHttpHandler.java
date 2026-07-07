@@ -1,6 +1,7 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.util.Spinner;
 import com.evolution.dropfilecli.util.TablePrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

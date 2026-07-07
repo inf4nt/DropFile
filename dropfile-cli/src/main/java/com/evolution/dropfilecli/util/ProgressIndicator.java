@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.util;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
