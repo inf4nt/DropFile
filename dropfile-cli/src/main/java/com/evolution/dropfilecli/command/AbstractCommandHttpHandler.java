@@ -15,7 +15,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
+public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHandler {
 
     @CommandLine.Option(names = {"-table", "--table"}, description = "Print table", defaultValue = "false")
     protected boolean table;
@@ -69,10 +69,11 @@ public abstract class AbstractCommandHttpHandler<TR> implements Runnable {
     @SneakyThrows
     @Override
     public void run() {
-        runCommand();
+        handle();
     }
 
-    private void runCommand() throws Exception {
+    @Override
+    public void handle() throws Exception {
         try {
             HttpResponse<byte[]> httpResponse = execute();
             Spinner.stop();
