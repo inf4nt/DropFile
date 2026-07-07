@@ -13,7 +13,7 @@ export DROPFILE_HOME=/home/user/dropfile-linux
 ```
 3. Add ``DROPFILE_HOME`` to ``PATH``
 ```
-export $PATH=$PATH:DROPFILE_HOME/bin
+export PATH=$PATH:$DROPFILE_HOME/bin
 ```
 4. Go to the command line
 ```
