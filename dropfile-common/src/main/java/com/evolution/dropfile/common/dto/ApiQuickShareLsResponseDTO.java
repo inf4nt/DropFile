@@ -5,7 +5,7 @@ import java.util.List;
 
 public record ApiQuickShareLsResponseDTO(String id,
                                          String alias,
-                                         String absolutePath,
+                                         String resourcePath,
                                          String secret,
                                          String relative,
                                          List<String> external,

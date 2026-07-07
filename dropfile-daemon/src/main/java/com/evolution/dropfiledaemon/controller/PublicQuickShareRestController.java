@@ -51,7 +51,7 @@ public class PublicQuickShareRestController {
                     );
         }
 
-        File file = new File(quickShareEntry.absolutePath());
+        File file = new File(quickShareEntry.resourcePath());
 
         String responseFileName = ObjectUtils.isEmpty(quickShareEntry.alias())
                 ? file.getName()

@@ -5,7 +5,7 @@ import lombok.With;
 import java.time.Instant;
 
 @With
-public record QuickShareEntry(String absolutePath,
+public record QuickShareEntry(String resourcePath,
                               String alias,
                               String secret,
                               boolean singleUse,

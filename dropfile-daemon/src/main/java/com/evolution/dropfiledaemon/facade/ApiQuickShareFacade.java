@@ -17,6 +17,7 @@ import org.springframework.util.ObjectUtils;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
@@ -34,11 +35,13 @@ public class ApiQuickShareFacade {
     private final DaemonApplicationProperties applicationProperties;
 
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
-        if (Files.notExists(requestDTO.file().toPath())) {
-            throw new RuntimeException(new FileNotFoundException(requestDTO.file().toString()));
+        Path resourceAbsolutePath = Path.of(requestDTO.resourcePath()).toAbsolutePath();
+
+        if (Files.notExists(resourceAbsolutePath)) {
+            throw new RuntimeException(new FileNotFoundException(resourceAbsolutePath.toString()));
         }
-        if (Files.isDirectory(requestDTO.file().toPath())) {
-            throw new UnsupportedOperationException("Directories are unsupported " + requestDTO.file());
+        if (Files.isDirectory(resourceAbsolutePath)) {
+            throw new UnsupportedOperationException("Directories are unsupported " + resourceAbsolutePath);
         }
 
         String id = CommonUtils.random();
@@ -52,7 +55,7 @@ public class ApiQuickShareFacade {
                                 : requestDTO.secret();
 
                         return new QuickShareEntry(
-                                requestDTO.file().toPath().toAbsolutePath().toString(),
+                                resourceAbsolutePath.toString(),
                                 requestDTO.alias(),
                                 secret,
                                 requestDTO.singleUse(),
@@ -63,7 +66,7 @@ public class ApiQuickShareFacade {
                         );
                     }
                     return new QuickShareEntry(
-                            requestDTO.file().toPath().toAbsolutePath().toString(),
+                            resourceAbsolutePath.toString(),
                             requestDTO.alias(),
                             null,
                             requestDTO.singleUse(),
@@ -112,7 +115,7 @@ public class ApiQuickShareFacade {
         return new ApiQuickShareLsResponseDTO(
                 linkId,
                 entry.alias(),
-                Paths.get(entry.absolutePath()).toString(),
+                entry.resourcePath(),
                 entry.secret(),
                 relativeDownloadLink,
                 externalLinks,
