@@ -54,6 +54,8 @@ COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
 COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
 COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
 
+RUN find /dropfile/bin/ -type f -exec sed -i 's/\r$//' {} +
+
 RUN chmod +x dropfile/bin/dropfile dropfile/bin/dropfile-daemon
 
 RUN tar -czf dropfile.tar.gz dropfile
