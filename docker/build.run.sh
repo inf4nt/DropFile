@@ -6,8 +6,9 @@ SCRIPT_DIR=$(dirname "$REAL_SCRIPT_PATH")
 cd "$SCRIPT_DIR"
 
 SHARE_MOUNT=dropfile-daemon-share-mount
+SHARE_DIRECTORY=$HOME/$SHARE_MOUNT
 
-echo "ℹ️  A shared directory will be created at: $HOME/$SHARE_MOUNT"
+echo "ℹ️  A shared directory will be created at: $SHARE_DIRECTORY"
 echo "This directory enables file sharing between your Host OS and the Docker container."
 echo "Simply place your files there to make them accessible to the daemon."
 echo ""
@@ -16,7 +17,6 @@ printf "Enable local file sharing? (y/n): "
 read answer
 
 if [ "$answer" = "y" ]; then
-    SHARE_DIRECTORY=$HOME/$SHARE_MOUNT
     mkdir -p "$SHARE_DIRECTORY"
     echo "✅ Success: Shared directory created at $SHARE_DIRECTORY"
     echo "🚀 Starting application WITH file access..."
