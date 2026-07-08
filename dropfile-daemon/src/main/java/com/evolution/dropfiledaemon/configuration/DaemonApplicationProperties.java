@@ -24,9 +24,6 @@ public class DaemonApplicationProperties {
 
     public final Path daemonDownloadsDirectory;
 
-    // TODO it unused. get rid of it and use server.port
-    public final int daemonPort;
-
     public final int daemonDownloadOrchestratorMaxQueueSize;
 
     public final int daemonDownloadOrchestratorActiveQueueSize;
@@ -61,7 +58,6 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
             @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
-            @Value("${dropfile.daemon.port}") int daemonPort,
             @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
@@ -85,7 +81,6 @@ public class DaemonApplicationProperties {
         this.daemonTunnelClientHttpRequestTimeoutMillis = daemonTunnelClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientStreamDeadlineTimeoutMillis = daemonTunnelClientStreamDeadlineTimeoutMillis;
         this.daemonTunnelServerPayloadLifeTime = daemonTunnelServerPayloadLifeTime;
-        this.daemonPort = daemonPort;
         this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;

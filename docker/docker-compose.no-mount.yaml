@@ -15,7 +15,7 @@ services:
     ports:
       - 28282:28282
     environment:
-      DROPFILE_DAEMON_PORT: 28282
+      SERVER_PORT: 28282
       DROPFILE_DAEMON_DAEMON-SECRETS_DIRECTORY: /daemon-conf
       DROPFILE_DAEMON_INSTALLATION-SEED_DIRECTORY: /daemon-conf
     volumes:
