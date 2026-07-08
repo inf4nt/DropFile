@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -24,8 +25,8 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        String filename = getFilename();
-        return daemonClient.connectionsShareAdd(filename, file.getAbsolutePath());
+        String alias = getAlias();
+        return daemonClient.connectionsShareAdd(file.toPath().toAbsolutePath().normalize().toString(), alias);
     }
 
     @Override
@@ -34,8 +35,8 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
         };
     }
 
-    private String getFilename() {
-        if (alias == null) {
+    private String getAlias() {
+        if (ObjectUtils.isEmpty(alias)) {
             return file.getName();
         }
         return alias;

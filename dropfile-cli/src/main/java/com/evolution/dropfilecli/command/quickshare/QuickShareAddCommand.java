@@ -58,7 +58,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.quickShareAdd(file.getAbsolutePath(), alias, singleUse, secure, secret);
+        return daemonClient.quickShareAdd(file.toPath().toAbsolutePath().normalize().toString(), alias, singleUse, secure, secret);
     }
 
     @Override

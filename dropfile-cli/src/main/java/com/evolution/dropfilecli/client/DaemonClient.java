@@ -194,7 +194,7 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareAdd(String alias, String resourcePath) {
+    public HttpResponse<byte[]> connectionsShareAdd(String resourcePath, String alias) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/connections/share/add");
 
@@ -206,7 +206,7 @@ public class DaemonClient {
                 .header("Authorization", daemonAuthorizationToken)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(
                         objectMapper.writeValueAsBytes(
-                                new ApiConnectionsShareAddRequestDTO(alias, resourcePath)
+                                new ApiConnectionsShareAddRequestDTO(resourcePath, alias)
                         )
                 ))
                 .header("Content-Type", "application/json")

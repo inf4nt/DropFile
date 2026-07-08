@@ -24,8 +24,9 @@ public class ApiConnectionsShareFacade {
 
     @SneakyThrows
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) {
+        Path absoluteResourcePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
         String alias = Paths.get(requestDTO.alias()).toString();
-        Path absoluteResourcePath = Paths.get(requestDTO.resourcePath());
+
         if (Files.notExists(absoluteResourcePath)) {
             throw new FileNotFoundException(absoluteResourcePath.toString());
         }

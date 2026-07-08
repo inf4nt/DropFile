@@ -35,7 +35,7 @@ public class ApiQuickShareFacade {
     private final DaemonApplicationProperties applicationProperties;
 
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
-        Path resourceAbsolutePath = Path.of(requestDTO.resourcePath()).toAbsolutePath();
+        Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
         if (Files.notExists(resourceAbsolutePath)) {
             throw new RuntimeException(new FileNotFoundException(resourceAbsolutePath.toString()));
