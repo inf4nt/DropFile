@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.evolution</groupId>
     <artifactId>dropfile-cli</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <name>dropfile-cli</name>
     <description>dropfile-cli</description>
     <properties>
@@ -18,8 +18,8 @@
         <picocli.version>4.7.7</picocli.version>
         <asciitable.version>0.3.2</asciitable.version>
         <google.zxing.core.version>3.5.3</google.zxing.core.version>
-        <dropfile.common.version>1.4.0</dropfile.common.version>
-        <dropfile.store.version>1.4.0</dropfile.store.version>
+        <dropfile.common.version>1.5.0</dropfile.common.version>
+        <dropfile.store.version>1.5.0</dropfile.store.version>
     </properties>
     <dependencies>
         <dependency>
