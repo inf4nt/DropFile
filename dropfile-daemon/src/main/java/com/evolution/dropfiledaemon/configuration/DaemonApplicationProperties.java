@@ -16,7 +16,7 @@ public class DaemonApplicationProperties {
     @Nullable
     public final String daemonExternalHost;
 
-    public final Path daemonConfigDirectory;
+    public final Path daemonApplicationHomeDirectory;
 
     public final Path daemonSecretsDirectory;
 
@@ -24,6 +24,7 @@ public class DaemonApplicationProperties {
 
     public final Path daemonDownloadsDirectory;
 
+    // TODO it unused. get rid of it and use server.port
     public final int daemonPort;
 
     public final int daemonDownloadOrchestratorMaxQueueSize;
@@ -56,7 +57,7 @@ public class DaemonApplicationProperties {
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
             @Value("${dropfile.daemon.external-host:#{null}}") String daemonExternalHost,
-            @Value("${dropfile.daemon.config.directory}") Path daemonConfigDirectory,
+            @Value("${dropfile.daemon.application-home.directory}") Path daemonApplicationHomeDirectory,
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
             @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
@@ -77,7 +78,7 @@ public class DaemonApplicationProperties {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
-        this.daemonConfigDirectory = daemonConfigDirectory;
+        this.daemonApplicationHomeDirectory = daemonApplicationHomeDirectory;
         this.daemonSecretsDirectory = daemonSecretsDirectory;
         this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;
         this.daemonDownloadsDirectory = daemonDownloadsDirectory;
