@@ -75,6 +75,7 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
     @Override
     public void handle() throws Exception {
         try {
+            Spinner.start();
             HttpResponse<byte[]> httpResponse = execute();
             Spinner.stop();
             if (isSuccessful(httpResponse)) {
@@ -82,9 +83,8 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
             } else {
                 handleUnsuccessful(httpResponse);
             }
-        } catch (Exception exception) {
+        } finally {
             Spinner.stop();
-            throw exception;
         }
     }
 
