@@ -48,7 +48,13 @@ public class DaemonApplicationProperties {
 
     public final int daemonHandshakeServerPayloadLiveTime;
 
+    public final long daemonQuickShareSecureAsyncRequestTimeout;
+
     public final int daemonQuickShareSecureCompressLevel;
+
+    public final boolean daemonQuickShareInsecureCompressEnabled;
+
+    public final int daemonQuickShareInsecureCompressLevel;
 
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
@@ -70,7 +76,10 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
             @Value("${dropfile.daemon.tunnel.server.payload.life-time}") int daemonTunnelServerPayloadLifeTime,
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize,
-            @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel) {
+            @Value("${dropfile.daemon.quick-share.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
+            @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
+            @Value("${dropfile.daemon.quick-share.insecure.compress.enabled}") boolean daemonQuickShareInsecureCompressEnabled,
+            @Value("${dropfile.daemon.quick-share.insecure.compress.level}") int daemonQuickShareInsecureCompressLevel) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -90,6 +99,9 @@ public class DaemonApplicationProperties {
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
         this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
+        this.daemonQuickShareSecureAsyncRequestTimeout = daemonQuickShareSecureAsyncRequestTimeout;
         this.daemonQuickShareSecureCompressLevel = daemonQuickShareSecureCompressLevel;
+        this.daemonQuickShareInsecureCompressEnabled = daemonQuickShareInsecureCompressEnabled;
+        this.daemonQuickShareInsecureCompressLevel = daemonQuickShareInsecureCompressLevel;
     }
 }
