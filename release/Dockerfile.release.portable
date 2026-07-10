@@ -1,17 +1,3 @@
-FROM alpine:3.19 AS runtime_container
-
-RUN apk add --no-cache curl tar binutils xz
-
-WORKDIR /runtime_container
-
-RUN curl -L -O https://packages.termux.dev/apt/termux-main/pool/main/o/openjdk-25/openjdk-25_25.0.3_aarch64.deb
-
-RUN ar x openjdk-25_25.0.3_aarch64.deb
-
-RUN tar -xvf data.tar.xz
-
-RUN mv data/data/com.termux/files/usr/lib/jvm/java-25-openjdk runtime
-
 FROM maven:3.9.13-amazoncorretto-25-alpine AS build
 
 ARG WORKDIR_NAME=/build
@@ -37,23 +23,25 @@ FROM busybox:1.38.0 AS archive_build
 
 RUN mkdir -p dropfile/bin \
     && mkdir -p dropfile/logs \
-    && mkdir -p dropfile/runtime \
     && mkdir -p dropfile/conf \
     && mkdir -p dropfile/downloads \
-    && mkdir -p dropfile/jars
+    && mkdir -p dropfile/jars \
+    && mkdir -p dropfile/installer
 
-COPY /release/unix /dropfile/bin
+COPY /release/portable/bin /dropfile/bin
+COPY /release/portable/installer /dropfile/installer
 COPY /release/common /dropfile/
 COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
 COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/dropfile-cli.application.properties
 
-COPY --from=runtime_container /runtime_container/runtime /dropfile/runtime
 COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
 COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
 
 RUN find /dropfile/bin/ -type f -exec sed -i 's/\r$//' {} +
+RUN find /dropfile/installer -type f -name "*.sh" -exec sed -i 's/\r$//' {} +
 
-RUN chmod +x dropfile/bin/dropfile dropfile/bin/dropfile-daemon
+RUN chmod +x /dropfile/bin/dropfile /dropfile/bin/dropfile-daemon
+RUN find /dropfile/installer -type f -name "*.sh" -exec chmod +x {} +
 
 RUN tar -czf dropfile.tar.gz dropfile
 
