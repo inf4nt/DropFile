@@ -11,6 +11,9 @@ public class SystemInfoProvider {
 
     public Map<String, String> getSystemInfo() {
         return new LinkedHashMap<>() {{
+            putAll(javaInfo());
+            putAll(osInfo());
+
             put("SystemInfoProvider.PROCESS_ID", PROCESS_ID);
             put("Runtime.getRuntime().availableProcessors()", String.valueOf(Runtime.getRuntime().availableProcessors()));
             put("ManagementFactory.getMemoryMXBean().getHeapMemoryUsage()", ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().toString());
@@ -22,6 +25,21 @@ public class SystemInfoProvider {
             put("Runtime.getRuntime().totalMemory()", totalMemory + " bytes (" + CommonUtils.toDisplaySize(totalMemory) + ")");
             long freeMemory = Runtime.getRuntime().freeMemory();
             put("Runtime.getRuntime().freeMemory()", freeMemory + " bytes (" + CommonUtils.toDisplaySize(freeMemory) + ")");
+        }};
+    }
+
+    private Map<String, String> javaInfo() {
+        return new LinkedHashMap<>() {{
+            put("java.version", System.getProperty("java.version"));
+            put("java.vendor", System.getProperty("java.vendor"));
+            put("java.home", System.getProperty("java.home"));
+        }};
+    }
+
+    private Map<String, String> osInfo() {
+        return new LinkedHashMap<>() {{
+            put("os.name", System.getProperty("os.name"));
+            put("os.arch", System.getProperty("os.arch"));
         }};
     }
 }
