@@ -3,6 +3,7 @@ package com.evolution.dropfile.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,7 +30,10 @@ public class WatchdogInputStream extends InputStreamDecorator {
     }
 
     public WatchdogInputStream(InputStream in, long limit, Duration duration) {
-        super(in);
+        if (limit < 0) {
+            throw new IllegalArgumentException("Limit cannot be negative");
+        }
+        super(Objects.requireNonNull(in, "InputStream cannot be null"));
         this.limit = limit;
 
         if (duration != null) {
