@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
