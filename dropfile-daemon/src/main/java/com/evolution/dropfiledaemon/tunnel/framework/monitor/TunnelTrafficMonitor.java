@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -44,40 +46,26 @@ public class TunnelTrafficMonitor {
     }
 
     private Map<String, String> getTraffic(Map<String, DownloadSpeedMeter> traffic) {
-        cleanup();
         Map<String, String> map = traffic.entrySet().stream()
-                .map(entry -> {
-                    String fingerprint = entry.getKey();
-                    long speedBytesPerSec = entry.getValue().getSpeedBytesPerSec();
-                    String displaySize = CommonUtils.toDisplaySize(speedBytesPerSec);
-                    return Map.entry(fingerprint, displaySize);
-                })
                 .collect(Collectors.toMap(
-                        x -> x.getKey(),
-                        x -> x.getValue(),
-                        (s, s2) -> s2,
-                        () -> new TreeMap<>(String::compareTo))
-                );
+                        Map.Entry::getKey,
+                        entry -> CommonUtils.toDisplaySize(entry.getValue().getSpeedBytesPerSec()),
+                        (existing, __) -> existing,
+                        TreeMap::new
+                ));
         return Collections.unmodifiableMap(map);
     }
 
     private void cleanup() {
-        new HashSet<>(outputStreams.keySet()).forEach(fingerprint -> {
-            boolean empty = handshakeTrustedInStore.get(fingerprint).isEmpty();
-            if (empty) {
-                outputStreams.remove(fingerprint);
-            }
-        });
-        new HashSet<>(inputStreams.keySet()).forEach(fingerprint -> {
-            boolean empty = handshakeSessionOutStore.get(fingerprint).isEmpty();
-            if (empty) {
-                inputStreams.remove(fingerprint);
-            }
-        });
+        outputStreams.keySet().removeIf(fingerprint ->
+                handshakeTrustedInStore.get(fingerprint).isEmpty()
+        );
+
+        inputStreams.keySet().removeIf(fingerprint ->
+                handshakeSessionOutStore.get(fingerprint).isEmpty()
+        );
     }
 
-    public record Traffic(Map<String, String> download,
-                          Map<String, String> upload) {
-
+    public record Traffic(Map<String, String> download, Map<String, String> upload) {
     }
 }
