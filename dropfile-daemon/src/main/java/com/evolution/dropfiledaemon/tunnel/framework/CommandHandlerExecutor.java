@@ -2,69 +2,71 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class CommandHandlerExecutor {
 
-    private final Map<String, CommandHandler> handers;
+    private final Map<String, CommandHandler> handlers;
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    public CommandHandlerExecutor(List<CommandHandler> handers,
+    public CommandHandlerExecutor(List<CommandHandler> handlersList,
                                   ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        Map<String, CommandHandler> map = new HashMap<>();
-        for (CommandHandler commandHandler : handers) {
-            if (map.containsKey(commandHandler.getCommandName())) {
-                throw new RuntimeException("Duplicate : " + commandHandler.getCommandName());
-            }
-            map.put(commandHandler.getCommandName(), commandHandler);
-        }
-        this.handers = map;
+
+        this.handlers = handlersList.stream().collect(Collectors.toUnmodifiableMap(
+                CommandHandler::getCommandName,
+                Function.identity(),
+                (existing, __) -> {
+                    throw new IllegalStateException("Duplicate command handler found for: " + existing.getCommandName());
+                }
+        ));
     }
 
     @SneakyThrows
     public Object handle(TunnelRequestDTO.TunnelRequestPayload payload) {
         CommandHandler commandHandler = getHandler(payload.command());
+
         Object handlerArgumentPayload = getBody(commandHandler, payload);
         Object result = commandHandler.handle(handlerArgumentPayload);
+
         Objects.requireNonNull(
                 result,
-                String.format(
-                        "Tunnel command handler %s result is null", commandHandler.getCommandName()
-                )
+                String.format("Tunnel command handler '%s' returned null result", commandHandler.getCommandName())
         );
+
         return result;
     }
 
     @SneakyThrows
-    private Object getBody(CommandHandler commandHandler, TunnelRequestDTO.TunnelRequestPayload payload) {
-        Object body;
-        if (commandHandler.getPayloadType().equals(Void.class)) {
-            body = null;
-        } else if (commandHandler.getPayloadType().equals(String.class)) {
-            body = new String(payload.payload(), StandardCharsets.UTF_8);
-        } else if (commandHandler.getPayloadType().equals(byte[].class)) {
-            body = payload.payload();
-        } else {
-            body = objectMapper.readValue(payload.payload(), commandHandler.getPayloadType());
+    private Object getBody(CommandHandler<?, ?> commandHandler, TunnelRequestDTO.TunnelRequestPayload payload) {
+        Class<?> targetType = commandHandler.getPayloadType();
+
+        if (targetType == Void.class) {
+            return null;
         }
-        return body;
+        if (targetType == String.class) {
+            return new String(payload.payload(), StandardCharsets.UTF_8);
+        }
+        if (targetType == byte[].class) {
+            return payload.payload();
+        }
+
+        return objectMapper.readValue(payload.payload(), targetType);
     }
 
     private CommandHandler getHandler(String command) {
-        CommandHandler commandHandler = handers.get(command);
+        CommandHandler commandHandler = handlers.get(command);
         if (commandHandler == null) {
-            throw new RuntimeException("No handler found: " + command);
+            throw new IllegalArgumentException("No handler found for command: " + command);
         }
         return commandHandler;
     }
