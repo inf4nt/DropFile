@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @Slf4j
 @ControllerAdvice(assignableTypes = PublicQuickShareRestController.class)
-public class PublicLinkShareRestControllerExceptionHandler {
+public class PublicQuickShareExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> exceptionHandler(Exception exception) {
