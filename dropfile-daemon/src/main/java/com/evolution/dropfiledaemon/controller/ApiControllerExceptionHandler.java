@@ -1,8 +1,9 @@
 package com.evolution.dropfiledaemon.controller;
 
+import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.ApiErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -19,15 +20,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ApiControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exception(Exception e) {
-        log.info(e.getMessage(), e);
-        if (ObjectUtils.isEmpty(e.getMessage())) {
-            return ResponseEntity.badRequest().body(
-                    e.getClass().getName()
-            );
-        }
-        return ResponseEntity.badRequest().body(
-                e.getClass().getName() + ". Message: " + e.getMessage()
-        );
+    public ResponseEntity<ApiErrorDTO> exception(Exception e) {
+        log.info("Api call exception. Message: {}", e.getMessage(), e);
+        String stackTraceAsString = CommonUtils.getStackTraceAsString(e);
+        ApiErrorDTO apiErrorDTO = new ApiErrorDTO(e.getClass().getName(), e.getMessage(), stackTraceAsString);
+        return ResponseEntity.badRequest()
+                .body(apiErrorDTO);
     }
 }

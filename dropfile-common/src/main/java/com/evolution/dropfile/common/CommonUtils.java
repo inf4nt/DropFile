@@ -4,6 +4,8 @@ package com.evolution.dropfile.common;
 import com.evolution.dropfile.common.function.IORunnable;
 import lombok.SneakyThrows;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -186,6 +188,12 @@ public class CommonUtils {
             throw new RuntimeException(message);
         }
         return elements.getFirst();
+    }
+
+    public static String getStackTraceAsString(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw, true));
+        return sw.toString();
     }
 
     private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {
