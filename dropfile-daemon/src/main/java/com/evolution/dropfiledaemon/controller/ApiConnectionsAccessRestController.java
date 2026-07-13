@@ -27,14 +27,12 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm/{id}")
-    public ResponseEntity<Void> rm(@PathVariable String id) {
+    public void rm(@PathVariable String id) {
         apiFacade.rm(id);
-        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/rm-all")
-    public ResponseEntity<Void> rmAll() {
+    public void rmAll() {
         apiFacade.rmAll();
-        return ResponseEntity.ok().build();
     }
 }

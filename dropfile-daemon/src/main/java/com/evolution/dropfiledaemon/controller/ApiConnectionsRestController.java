@@ -3,8 +3,6 @@ package com.evolution.dropfiledaemon.controller;
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,33 +15,28 @@ public class ApiConnectionsRestController {
     private final ApiConnectionsFacade apiFacade;
 
     @PostMapping("/revoke/fingerprint/{fingerprint}")
-    public ResponseEntity<Void> revoke(@PathVariable String fingerprint) {
+    public void revoke(@PathVariable String fingerprint) {
         apiFacade.revoke(fingerprint);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/revoke/all")
-    public ResponseEntity<Void> revokeAll() {
+    public void revokeAll() {
         apiFacade.revokeAll();
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/disconnect/fingerprint/{fingerprint}")
-    public ResponseEntity<Void> disconnect(@PathVariable String fingerprint) {
+    public void disconnect(@PathVariable String fingerprint) {
         apiFacade.disconnect(fingerprint);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/disconnect/current")
-    public ResponseEntity<Void> disconnectCurrent() {
+    public void disconnectCurrent() {
         apiFacade.disconnectCurrent();
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/disconnect/all")
-    public ResponseEntity<Void> disconnectAll() {
+    public void disconnectAll() {
         apiFacade.disconnectAll();
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/traffic")
