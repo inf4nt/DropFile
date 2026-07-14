@@ -1,23 +1,24 @@
-FROM maven:3.9.13-amazoncorretto-25-alpine AS build
-
-ARG WORKDIR_NAME=/build
-
-WORKDIR $WORKDIR_NAME
-
+FROM maven:3.9.13-amazoncorretto-25-alpine AS cache
 COPY pom.xml pom.xml
 COPY /dropfile-common/pom.xml dropfile-common/pom.xml
 COPY /dropfile-store/pom.xml dropfile-store/pom.xml
 COPY /dropfile-cli/pom.xml dropfile-cli/pom.xml
 COPY /dropfile-daemon/pom.xml dropfile-daemon/pom.xml
-
 RUN mvn clean verify --fail-never
 
-COPY /dropfile-common/src dropfile-common/src
-COPY /dropfile-store/src dropfile-store/src
-COPY /dropfile-cli/src dropfile-cli/src
-COPY /dropfile-daemon/src dropfile-daemon/src
+FROM cache AS build-shared
+COPY dropfile-common/src dropfile-common/src
+RUN mvn -pl dropfile-common install -DskipTests
+COPY dropfile-store/src dropfile-store/src
+RUN mvn -pl dropfile-store install -DskipTests
 
-RUN mvn package -Dmaven.test.skip=true
+FROM build-shared AS build-dropfile-cli
+COPY /dropfile-cli/src dropfile-cli/src
+RUN mvn -pl dropfile-cli install -DskipTests
+
+FROM build-shared AS build-dropfile-daemon
+COPY /dropfile-daemon/src dropfile-daemon/src
+RUN mvn -pl dropfile-daemon install -DskipTests
 
 FROM busybox:1.38.0 AS archive_build
 
@@ -34,8 +35,8 @@ COPY /release/common /dropfile/
 COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
 COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/dropfile-cli.application.properties
 
-COPY --from=build /build/dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
-COPY --from=build /build/dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
+COPY --from=build-dropfile-cli /dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
+COPY --from=build-dropfile-daemon /dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
 
 RUN find /dropfile/bin/ -type f -exec sed -i 's/\r$//' {} +
 RUN find /dropfile/installer -type f -name "*.sh" -exec sed -i 's/\r$//' {} +
