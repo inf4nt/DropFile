@@ -63,7 +63,7 @@ public class InetLocalAddressService {
         }
 
         if (!wifi.isEmpty() || !ethernet.isEmpty()) {
-            return new ConnectionAddress(wifi.stream().findFirst().orElse(null), ethernet.stream().findFirst().orElse(null));
+            return new ConnectionAddress(List.copyOf(wifi), List.copyOf(ethernet));
         }
 
         return null;
@@ -110,7 +110,7 @@ public class InetLocalAddressService {
     public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {
     }
 
-    public record ConnectionAddress(@Nullable BestLocalAddress wireless, @Nullable BestLocalAddress ethernet) {
+    public record ConnectionAddress(List<BestLocalAddress> wireless, List<BestLocalAddress> ethernet) {
     }
 
 }
