@@ -12,7 +12,6 @@ import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.io.FileNotFoundException;
@@ -142,20 +141,16 @@ public class ApiQuickShareFacade {
         return List.of(link);
     }
 
-    private List<String> buildLinks(@Nullable List<InetLocalAddressService.BestLocalAddress> addresses, String linkId) {
-        if (CollectionUtils.isEmpty(addresses)) {
+    private List<String> buildLinks(@Nullable InetLocalAddressService.BestLocalAddress address, String linkId) {
+        if (address == null) {
             return Collections.emptyList();
         }
 
-        return addresses.stream()
-                .map(address -> {
-                    String hostAddress = address.inetAddress().getHostAddress();
-                    Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
-                    URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
-                    String link = buildLink(daemonRootURI, linkId);
-                    return link;
-                })
-                .toList();
+        String hostAddress = address.inetAddress().getHostAddress();
+        Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
+        URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
+        String link = buildLink(daemonRootURI, linkId);
+        return List.of(link);
     }
 
     private String buildLink(URI daemonRootURI, String linkId) {
