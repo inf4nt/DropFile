@@ -62,14 +62,14 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                      outputStream
              );
              OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(tunnelTrafficMonitorOutputStream, secretKey);
-             OutputStream compressOutputStream = getCompressOutputStream(payload, encryptOutputStream)) {
+             OutputStream compressOutputStream = getCompressOutputStream(payload.configuration(), encryptOutputStream)) {
             inputStreamResult.transferTo(compressOutputStream);
             compressOutputStream.flush();
         }
     }
 
-    private OutputStream getCompressOutputStream(TunnelRequestDTO.TunnelRequestPayload payload, OutputStream outputStream) throws IOException {
-        if (payload.configuration().compress()) {
+    private OutputStream getCompressOutputStream(TunnelRequestDTO.TunnelRequestConfiguration configuration, OutputStream outputStream) throws IOException {
+        if (configuration.compress()) {
             return compressTunnelService.compressWrapper(outputStream);
         }
         return outputStream;
