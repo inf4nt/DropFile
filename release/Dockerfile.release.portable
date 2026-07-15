@@ -31,7 +31,6 @@ RUN mkdir -p dropfile/bin \
 
 COPY /release/portable/bin /dropfile/bin
 COPY /release/portable/installer /dropfile/installer
-COPY /release/common /dropfile/
 COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
 COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/dropfile-cli.application.properties
 
