@@ -48,7 +48,7 @@ system resources (tested over a local loopback `127.0.0.1` interface):
 # System Topology
 - DropFile splits responsibilities between a localized controller (`CLI`) and a persistent network worker (`Daemon`). 
 - The network communication between daemons is fully encrypted, while the control plane is strictly bound to the local loopback interface.
-<img src="./assets/cli-daemon-tunnel-daemon.png" width="600" alt="Schema">
+<img src="./assets/cli-daemon-tunnel-daemon.png" alt="Schema">
 
 # Daemon-to-Daemon Cryptographic Tunnel
 The core strength of DropFile is its ability to route high-volume file transfers over unencrypted networks (like standard HTTP)
@@ -83,12 +83,12 @@ public record Payload(
     long timestamp
 ) {}
 ```
-<img src="./assets/handshake.png" width="600" alt="Schema">
+<img src="./assets/handshake.png" alt="Schema">
 
 ### Scenario B: Initial Bootstrapping (Using Out-of-Band Secret)
 Once trust is established and RSA keys are saved, the manual OOB secret is no longer required.
 When either daemon restarts or a session expires, they perform a password-less handshake via /public/session/.
-<img src="./assets/session.png" width="600" alt="Schema">
+<img src="./assets/session.png" alt="Schema">
 
 # Cryptographic Lifecycle
 - The Pre-Shared Secret (Bootstrap): To initiate the first-ever connection, you must manually share a temporary,
@@ -118,7 +118,7 @@ Even though this local traffic is unencrypted, it never exits the physical machi
 - Multi-Host CLI Scaling: If your infrastructure requires running the CLI on a different machine than the Daemon,
 the `/api/*` endpoints can be exposed remotely. However, because local loopback guarantees are lost,
 you must wrap the remote `/api/*` endpoints in an external secure layer (e.g., HTTPS reverse proxy or wireguard tunnel) to prevent credential sniffing.
-<img src="./assets/cli-daemon.png" width="600" alt="Schema">
+<img src="./assets/cli-daemon.png" alt="Schema">
 
 # Technical Specifications
 
