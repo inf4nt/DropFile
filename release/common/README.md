@@ -1,5 +1,14 @@
 # Installation
-The dropfile supports x64 Windows, Linux, Macos. 
+```
+There are 4 versions: x64 windows, macos, linux and portable version.
+1. The portable version has no runtime and 
+requires installed java 25 or higher on the host machine.
+2. X64 versions include runtime and can go without any preparation
+```
+
+# Support
+The application can run on any platform where Java 25 or higher exists.
+Tested on: Windows 11-10 x64, WSL2, DebianX64, MacosX64, Termux(Android)
 
 #### Windows
 Add DROPFILE_HOME env var and update the PATH. See Linux/MacOS
@@ -7,19 +16,25 @@ Add DROPFILE_HOME env var and update the PATH. See Linux/MacOS
 #### Linux/MacOS
 The executable files ``/bin/dropfile and /bin/dropfile-daemon`` may ask the permissions to execute
 1. Unzip project ``/home/user/dropfile-linux``
-2. Add env var
+2. ``tar -xzvf dropfile-linux.tar``
+3. There are three ways how to work with the application: Add environment variable, symlink, execute executable script from the bin directory
+4. Environment variable. Add env var and update the path. The process is similar to maven
 ```
-export DROPFILE_HOME=/home/user/dropfile-linux
-```
-3. Add ``DROPFILE_HOME`` to ``PATH``
-```
+#1 Environment variable
+export DROPFILE_HOME=~/dropfile-linux
 export PATH=$PATH:$DROPFILE_HOME/bin
 ```
-4. Go to the command line
 ```
-$ dropfile
+#2 Symlink
+Create symlink to ~/.local/bin
+$ ln -sf "$HOME/dropfile-linux/bin/dropfile" "$HOME/.local/bin/dropfile"
 ```
-5. Result 
+```
+#3 Direct execution
+$ ./dropfile/bin/dropfile
+```
+5. Go to the command line ``$ dropfile``
+6. Result 
 ```
 ░███████                                      ░████ ░██░██
 ░██   ░██                                    ░██       ░██
@@ -43,15 +58,18 @@ Commands:
   download, -d, --d     Download commands
   link, -l, --l         Link commands
 ```
-
-# Limitations
-
-Supports only x64. Windows, Linux, MacOS
+# Termux(Android)
+The Termux installation requires java-25 or higher on the host(termux) machine.
+Build the portable version
+1. use ``$ ./full-install.sh`` which installs java-25
+2. use ``$ ./nano-install.sh`` in case you already have java-25
+3. Finally, you will get symlink ``$ dropfile``
 
 # Examples
 First of all it's necessary to start its daemon
 ```
 $ dropfile daemon start
+$ dropfile daemon status
 ```
 #### Daemon commands
 ```
@@ -97,17 +115,23 @@ $ dropfile connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
 ```
 
 # Docker build
-Download sources, go to release dir. Execute build script.
-Once the build finishes, in the "release" dir, there will be an archive dropfile-windows-x64.tar.gz
+The Docker build is absolutely isolated from the host machine. There is no need to install anything except docker.
+Once the sources downloaded, execute script to build X64 or a portable version.
+The application archive will be appeared in "DropFile/release" directory. 
+dropfile-windows.tar.gz, dropfile-linux.tar.gz, dropfile-macos.tar.gz, dropfile-portable.tar.gz
 Windows
 ```
-$ ./release.windows.x64.bat
+$ ./DropFile/release/release.windows.x64.bat
 ```
-Linux
+Linux/WSL
 ```
-$ ./release.linux.x64.sh
+$ ./DropFile/release/release.linux.x64.sh
 ```
 MacOS
 ```
-$ ./release.macos.x64.sh
+$ ./DropFile/release/release.macos.x64.sh
+```
+portable
+```
+$ ./DropFile/release/release.linux.x64.sh
 ```
