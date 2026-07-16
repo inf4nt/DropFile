@@ -1,6 +1,5 @@
 package com.evolution.dropfilecli;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
@@ -16,20 +15,13 @@ import java.util.concurrent.Executors;
 @Component
 public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+
     private final ApplicationContext applicationContext;
 
     private final RootCommand root;
 
     private final LiveExecutionStrategy liveExecutionStrategy;
-
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-
-    @PostConstruct
-    public void postConstruct() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            executorService.shutdownNow();
-        }));
-    }
 
     @Override
     public void run(String... args) {

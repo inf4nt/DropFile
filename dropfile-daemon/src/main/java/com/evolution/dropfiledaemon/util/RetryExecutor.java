@@ -20,10 +20,6 @@ public class RetryExecutor<T> {
 
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newVirtualThreadPerTaskExecutor();
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> EXECUTOR_SERVICE.shutdownNow()));
-    }
-
     private final Callable<T> callable;
 
     private final BiConsumer<Integer, Exception> doOnError;
@@ -59,8 +55,7 @@ public class RetryExecutor<T> {
                     }
                     return call;
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 if (CommonUtils.checkThrowable(e, InterruptedException.class,
                         ClosedChannelException.class)) {
                     throw e;
