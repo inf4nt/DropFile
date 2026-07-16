@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 @RequiredArgsConstructor
 public class InputStreamDecorator extends InputStream {
@@ -36,12 +37,12 @@ public class InputStreamDecorator extends InputStream {
     }
 
     @Override
-    public synchronized void mark(int readlimit) {
+    public void mark(int readlimit) {
         in.mark(readlimit);
     }
 
     @Override
-    public synchronized void reset() throws IOException {
+    public void reset() throws IOException {
         in.reset();
     }
 
@@ -53,5 +54,30 @@ public class InputStreamDecorator extends InputStream {
     @Override
     public void close() throws IOException {
         in.close();
+    }
+
+    @Override
+    public byte[] readAllBytes() throws IOException {
+        return in.readAllBytes();
+    }
+
+    @Override
+    public byte[] readNBytes(int len) throws IOException {
+        return in.readNBytes(len);
+    }
+
+    @Override
+    public int readNBytes(byte[] b, int off, int len) throws IOException {
+        return in.readNBytes(b, off, len);
+    }
+
+    @Override
+    public void skipNBytes(long n) throws IOException {
+        in.skipNBytes(n);
+    }
+
+    @Override
+    public long transferTo(OutputStream out) throws IOException {
+        return in.transferTo(out);
     }
 }
