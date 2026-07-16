@@ -9,6 +9,6 @@ public class CloseShieldInputStream extends InputStreamDecorator {
     }
 
     @Override
-    public void close() {
+    public final void close() {
     }
 }

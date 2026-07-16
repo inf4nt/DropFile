@@ -9,7 +9,7 @@ public class CloseShieldOutputStream extends OutputStreamDecorator {
     }
 
     @Override
-    public void close() {
+    public final void close() {
 
     }
 }
