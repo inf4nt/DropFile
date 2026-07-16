@@ -19,14 +19,14 @@ integrity for your transfers, even when routing over plain, unencrypted HTTP cha
 
 The transport tunnel is highly optimized to maximize throughput while keeping resource consumption at a minimum.
 
-### Network Efficiency via Gzip Compression
+#### Network Efficiency via Gzip Compression
 To maximize network efficiency and payload density,
 the tunnel automatically applies **Gzip (GZ) compression** on the sending 
 Daemon side before encrypting the data. The receiving Daemon then decompresses the payload on the fly.
 This significantly reduces the actual byte size transmitted over the wire,
 especially when transferring compressible files (text, databases, uncompressed logs).
 
-### Speed & Resource Scaling
+#### Speed & Resource Scaling
 Our benchmarks show how the transfer speed scales depending on the allocated 
 system resources (tested over a local loopback `127.0.0.1` interface):
 
@@ -65,7 +65,7 @@ It is exceptionally fast in software implementations, making it ideal for high-t
 
 Before any file transfer can begin, both Daemons must establish trust and derive shared cryptographic secrets. This process is fully containerized inside the `HandshakeRequestDTO` and occurs across the `/public/handshake` and `/public/session/` endpoints.
 
-### Scenario A: Initial Bootstrapping (Using Out-of-Band Secret)
+#### Scenario A: Initial Bootstrapping (Using Out-of-Band Secret)
 This flow occurs during the very first connection. It establishes a secure channel using a manually shared temporary password (OOB Secret).
 
 ```java
@@ -85,7 +85,7 @@ public record Payload(
 ```
 <img src="./assets/handshake.png" alt="Schema">
 
-### Scenario B: Initial Bootstrapping (Using Out-of-Band Secret)
+#### Scenario B: Initial Bootstrapping (Using Out-of-Band Secret)
 Once trust is established and RSA keys are saved, the manual OOB secret is no longer required.
 When either daemon restarts or a session expires, they perform a password-less handshake via /public/session/.
 <img src="./assets/session.png" alt="Schema">
@@ -143,10 +143,10 @@ requires installed java 25 or higher on the host machine.
 The application can run on any platform where Java 25 or higher exists.
 Tested on: Windows 11-10 x64, WSL2, DebianX64, MacosX64, Termux(Android)
 
-#### Windows
+##### Windows
 Add DROPFILE_HOME env var and update the PATH. See Linux/MacOS
 
-#### Linux/MacOS
+##### Linux/MacOS
 The executable files ``/bin/dropfile and /bin/dropfile-daemon`` may ask the permissions to execute
 1. Unzip project ``/home/user/dropfile-linux``
 2. ``tar -xzvf dropfile-linux.tar``
@@ -249,13 +249,48 @@ $ dropfile connections access generate
 $ dropfile connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
 ```
 
+# 🌐 Public Internet Routing (NAT Traversal via Cloudflare Tunnel)
+
+Since DropFile is a peer-to-peer (P2P) application, establishing a direct connection between two daemons behind "double NAT" or firewalls (without public IP addresses) can be challenging.
+
+While you could manually set up port forwarding on your router, a much safer, simpler, and enterprise-grade alternative is to route your traffic through a **free Cloudflare Tunnel (cloudflared)**.
+<img src="./assets/daemon-public-tunnel-daemon.png" alt="Schema">
+Why this is 100% Secure
+Even though Cloudflare acts as a proxy intermediary (routing traffic from Daemon A ➔ Cloudflare ➔ Daemon B),
+Cloudflare cannot read or inspect your files.
+
+#### How to Set It Up
+Expose your Local Daemon:
+Start a Cloudflare Tunnel on your host machine and point it to your local DropFile Daemon port (by default, 127.0.0.1:18181):
+```
+$ cloudflared tunnel --url http://localhost:18181
+```
+Cloudflare will generate a public domain for you, for example: https://your-custom-tunnel.trycloudflare.com.
+- Configure DropFile to Use the Public URL:
+  To make sure the CLI generates correct QR codes and connection links using your new public domain instead of your local IP address, you need to set the external-host parameter.
+
+Open your configuration file located at:
+dropfile/conf/dropfile-daemon.application.properties
+
+And define your public tunnel URL, and restart(shutdown, start) the daemon:
+```
+# The priority host address used for public handshakes and QR Code generation
+dropfile.daemon.external-host=https://your-custom-tunnel.trycloudflare.com
+```
+- Enjoy Seamless Sharing:
+Now, when you run dropfile quickshare add or request connection details, the Daemon will automatically prioritize your external-host URL.
+The generated QR Code and connection links will point directly to your secure public Cloudflare Tunnel,
+allowing anyone on the global internet to securely connect to your local Daemon.
+
+Because DropFile implements true End-to-End (E2E) Encryption at the application layer using ChaCha20-Poly1305, the payload is fully encrypted before it leaves your machine. To Cloudflare's servers, your data looks like completely unreadable, randomized binary noise.
+
 # 📱 Quickshare (Ad-Hoc File Sharing)
 
 Sometimes, establishing a full-blown P2P cryptographic tunnel with handshakes and long-term RSA keys is overkill. If you just need to quickly beam a photo to your smartphone, share a PDF with a colleague on the same Wi-Fi, or grab a log file from a remote server, **Quickshare** is the perfect tool.
 
 Instead of registering permanent peers, Quickshare temporarily exposes an ad-hoc download endpoint on your Daemon, complete with auto-generated security wrappers, single-use self-destruction, and CLI-rendered QR codes for seamless mobile scanning.
 
-### How It Works
+#### How It Works
 
 When you share a file, the local CLI talks to your Daemon to spin up a temporary route. If your host machine has an active network interface, the CLI will automatically render a **QR Code directly in your terminal** for instant wireless sharing.
 
@@ -325,6 +360,29 @@ If you want to use a memorable password instead of a randomly generated string.
 $ dropfile quickshare add -f C:\\cat_photo.img -secret 1234
 ```
 - What happens: The file is packed into a standard secure archive (secure.zip) encrypted with the custom password you provided (e.g., 1234).
+
+# 💾 Backup, Recovery & Local Security Model
+
+DropFile is designed to be **100% portable and self-contained**. There are no complex installers, background system services, or registry keys.
+
+#### How to Backup & Restore
+
+To back up your entire DropFile setup (including your configuration, binary files, downloaded data, identity, and trust stores), you only need to copy one folder:
+
+* **To Backup:** Copy the entire `dropfile` root directory (containing `conf/`, `bin/`, `downloads/`, etc.) to a safe place—like a USB flash drive, external hard drive, or private cloud.
+* **To Restore:** Paste the copied folder onto any machine and run the executable. It will work instantly with all your settings intact.
+
+#### Under the Hood: How Configuration Encryption Works
+
+Inside your `dropfile` folder, there is a `conf/` directory containing sensitive runtime files, such as `.daemon.bin` (your local CLI token), `.trustin.bin` (keys of trusted peers), and `trustout.bin` (your outgoing trust keys).
+
+To prevent unauthorized local reading, all these files are encrypted using a master key derived from a unique installation seed located in `conf/.installation.json`:
+
+```json
+{
+  "seed" : "acg40f4f-2bd6-5672-9a44-fe5a0f15fc7d"
+}
+```
 
 # Docker build
 The Docker build is absolutely isolated from the host machine. There is no need to install anything except docker.
