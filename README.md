@@ -181,15 +181,17 @@ $ ./dropfile/bin/dropfile
 
 Daemon host: 127.0.0.1
 Daemon port: 18181
-Usage: <main class> [-hV] [COMMAND]
-  -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
+Usage: <main class> [-hV] [-ignore-error] [-live] [COMMAND]
+  -h, --help          Show this help message and exit.
+      -ignore-error, --ignore-error
+                      Continue polling even if the command encounters an error
+      -live, --live   Run this command in live update mode
+  -V, --version       Print version information and exit.
 Commands:
-  connections, -c, --c  Connections
-  daemon                Daemon commands
-  share, -s, --s        Share commands
-  download, -d, --d     Download commands
-  link, -l, --l         Link commands
+  connections, -c, --c                      Connections
+  daemon                                    Daemon commands
+  quick-share, quickshare, -quickshare, --quickshare, -q, --q
+                                            Quick share
 ```
 # Termux(Android)
 The Termux installation requires java-25 or higher on the host(termux) machine.
@@ -246,6 +248,83 @@ $ dropfile connections access generate
 
 $ dropfile connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
 ```
+
+# 📱 Quickshare (Ad-Hoc File Sharing)
+
+Sometimes, establishing a full-blown P2P cryptographic tunnel with handshakes and long-term RSA keys is overkill. If you just need to quickly beam a photo to your smartphone, share a PDF with a colleague on the same Wi-Fi, or grab a log file from a remote server, **Quickshare** is the perfect tool.
+
+Instead of registering permanent peers, Quickshare temporarily exposes an ad-hoc download endpoint on your Daemon, complete with auto-generated security wrappers, single-use self-destruction, and CLI-rendered QR codes for seamless mobile scanning.
+
+### How It Works
+
+When you share a file, the local CLI talks to your Daemon to spin up a temporary route. If your host machine has an active network interface, the CLI will automatically render a **QR Code directly in your terminal** for instant wireless sharing.
+
+```text
+  [ Host Machine ]                                       [ Receiver Device ]
+  ┌────────────────────────┐                             ┌─────────────────┐
+  │  dropfile quickshare   │                             │  Camera App     │
+  │     (Spins up temporary│ ─── Renders QR Code ──────> │  (Scans QR)     │
+  │      HTTP endpoint)    │                             └────────┬────────┘
+  └───────────┬────────────┘                                      │
+              │                                                   ▼
+              └═══════════════ Downloads secure-XXX.zip ══════════╝
+                              (Decrypted with shown password)
+```
+By default, Quickshare operates under strict security assumptions to protect your data even over unencrypted LAN/HTTP channels:
+- Double-Archived Security: The file is packed inside a double-nested archive (secure-XXX.zip).
+- Auto-Generated Passwords: The inner archive is encrypted with a strong, random password printed in your terminal next to the QR code.
+- Single-Use Ephemerality: The download link is strictly single-use. The moment the file is fully downloaded, the Daemon destroys the route and wipes the temporary archives from disk.
+
+#### Default Secure Share (Single-use, Encrypted, Auto-password)
+   Ideal for sharing sensitive files securely over untrusted local networks
+```
+$ dropfile quickshare add -f C:\\cat_photo.img
+```
+```
+{
+    "id" : "fc35c9ba35",
+    "alias" : null,
+    "resourcePath" : "C:\\cat_photo.img",
+    "size" : "715B",
+    "secret" : "i7vVW3_4kB5R03Ge",
+    "relative" : "p/qs/fc35c9ba35",
+    "external" : [ ],
+    "wireless" : [ "http://192.168.1.10:18181/p/qs/fc35c9ba35" ],
+    "ethernet" : [ "http://187.40.140.10:18181/p/qs/fc35c9ba35" ],
+    "secure" : true,
+    "singleUse" : true,
+    "expired" : false,
+    "updated" : "2021-01-01 01:34:19",
+    "created" : "2021-01-01 01:34:19"
+}
+
+Connection type WIRELESS
+Scan this QR code to download: URL http://192.168.1.10:18181/p/qs/fc35c9ba35
+```
+<img src="./assets/qrcode_to_google.png"  width="400" alt="Schema">
+
+#### Raw Transfer (As-Is, No Encryption)
+Use this when sharing non-sensitive files,
+or when downloading to a device that cannot easily extract ZIP files (like some smart TVs or embedded devices).
+```
+$ dropfile quickshare add -f C:\\cat_photo.img -secure false
+```
+- What happens: The file is exposed directly over HTTP "as is" (raw). No ZIP creation, no compression, and no password required.
+
+#### Persistent Multi-Use Sharing
+Perfect when you need to share a file with multiple people at once (e.g., during a team meeting) or download it onto several devices.
+```
+$ dropfile quickshare add -f C:\\cat_photo.img -single-use false
+```
+- What happens: The link remains active indefinitely.
+The Daemon will keep serving the file until you manually delete the share or stop the Daemon.
+
+#### Custom Passphrase
+If you want to use a memorable password instead of a randomly generated string.
+```
+$ dropfile quickshare add -f C:\\cat_photo.img -secret 1234
+```
+- What happens: The file is packed into a standard secure archive (secure.zip) encrypted with the custom password you provided (e.g., 1234).
 
 # Docker build
 The Docker build is absolutely isolated from the host machine. There is no need to install anything except docker.
