@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -9,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WatchdogInputStream extends InputStreamDecorator {
+public class WatchdogInputStream extends FilterInputStream {
 
     private static final ExecutorService WATCHDOG_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -45,11 +46,6 @@ public class WatchdogInputStream extends InputStreamDecorator {
         } else {
             this.watchdogTask = null;
         }
-    }
-
-    @Override
-    public int read(byte[] b) throws IOException {
-        return read(b, 0, b.length);
     }
 
     @Override
@@ -95,8 +91,21 @@ public class WatchdogInputStream extends InputStreamDecorator {
         return result;
     }
 
-    private boolean isLimitReached() {
-        return limit > 0 && bytesRead >= limit;
+    @Override
+    public long skip(long n) throws IOException {
+        ensureOpen();
+        if (isLimitReached() || n <= 0) {
+            return 0;
+        }
+
+        long maxToSkip = (limit > 0) ? Math.min(n, limit - bytesRead) : n;
+        long skipped = super.skip(maxToSkip);
+
+        bytesRead += skipped;
+        if (isLimitReached()) {
+            finalizeStream();
+        }
+        return skipped;
     }
 
     @Override
@@ -105,6 +114,10 @@ public class WatchdogInputStream extends InputStreamDecorator {
             finalizeStream();
             super.close();
         }
+    }
+
+    private boolean isLimitReached() {
+        return limit > 0 && bytesRead >= limit;
     }
 
     private void finalizeStream() {
