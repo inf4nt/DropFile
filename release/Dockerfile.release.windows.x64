@@ -5,9 +5,7 @@ ARG JDK_DOWNLOAD_URL="https://github.com/adoptium/temurin25-binaries/releases/do
 ARG JDK_ARCHIVE="jre-25.zip"
 ARG JAVA_HOME="jdk-25.0.3+9-jre"
 
-RUN apk add --no-cache curl
-
-RUN curl -L -o $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
+RUN wget -O $JDK_ARCHIVE $JDK_DOWNLOAD_URL \
     && unzip $JDK_ARCHIVE \
     && rm $JDK_ARCHIVE \
     && mv $JAVA_HOME $RUNTIME_DIR_NAME
