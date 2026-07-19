@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.handshake;
+package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
@@ -6,7 +6,7 @@ import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
+import com.evolution.dropfiledaemon.handshake.HandshakeHelper;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;

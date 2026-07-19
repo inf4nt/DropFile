@@ -1,6 +1,7 @@
-package com.evolution.dropfiledaemon.handshake;
+package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

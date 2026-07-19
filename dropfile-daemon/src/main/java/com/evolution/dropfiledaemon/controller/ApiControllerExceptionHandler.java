@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
         ApiDaemonRestController.class,
         ApiConnectionsShareRestController.class,
         ApiDownloadRestController.class,
-        ApiQuickShareRestController.class
+        ApiQuickShareRestController.class,
+        ApiHandshakeRestController.class
 })
 public class ApiControllerExceptionHandler {
 
