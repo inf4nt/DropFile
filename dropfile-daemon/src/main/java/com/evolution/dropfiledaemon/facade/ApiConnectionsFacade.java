@@ -45,7 +45,7 @@ public class ApiConnectionsFacade {
     }
 
     public synchronized void disconnectCurrent() {
-        String key = handshakeSessionOutStore.getRequiredLatestUpdated().getKey();
+        String key = handshakeSessionOutStore.getRequiredLatestCreated().getKey();
         handshakeSessionOutStore.remove(key);
         handshakeTrustedOutStore.remove(key);
     }

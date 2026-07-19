@@ -195,7 +195,7 @@ public class ApiHandshakeFacade {
 
     public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
         String currentConnectionFingerprint = handshakeSessionOutStore
-                .getRequiredLatestUpdated().getKey();
+                .getRequiredLatestCreated().getKey();
         URI addressURI = handshakeTrustedOutStore
                 .getRequired(currentConnectionFingerprint)
                 .getValue()
@@ -217,7 +217,7 @@ public class ApiHandshakeFacade {
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
         Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = handshakeSessionOutStore
-                .getRequiredLatestUpdated();
+                .getRequiredLatestCreated();
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(sessionEntry.getKey())
                 .getValue();
         return handshakeHelper.mapToHandshakeApiTrustOutResponseDTO(sessionEntry.getKey(), trustedOut, sessionEntry.getValue());

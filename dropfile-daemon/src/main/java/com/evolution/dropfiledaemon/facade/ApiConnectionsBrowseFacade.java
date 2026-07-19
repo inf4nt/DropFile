@@ -32,7 +32,7 @@ public class ApiConnectionsBrowseFacade {
     private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     public List<ApiConnectionsBrowseLsResponseDTO> ls(ApiConnectionsBrowseLsRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
+        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestCreated()
                 .getKey();
         return ls(fingerprintConnection, requestDTO);
     }
@@ -71,7 +71,7 @@ public class ApiConnectionsBrowseFacade {
     }
 
     public ApiConnectionsBrowseGetResponseDTO get(ApiConnectionsBrowseGetRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestUpdated()
+        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestCreated()
                 .getKey();
 
         FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);

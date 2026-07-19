@@ -11,14 +11,14 @@ public interface HandshakeSessionStore extends KeyValueStore<HandshakeSessionSto
     record SessionValue(byte[] publicDH,
                         byte[] privateDH,
                         byte[] remotePublicDH,
-                        Instant updated) {
+                        Instant created) {
 
     }
 
-    default Map.Entry<String, HandshakeSessionStore.SessionValue> getRequiredLatestUpdated() {
+    default Map.Entry<String, HandshakeSessionStore.SessionValue> getRequiredLatestCreated() {
         return getAll().entrySet()
                 .stream()
-                .max(Comparator.comparing(o -> o.getValue().updated()))
+                .max(Comparator.comparing(o -> o.getValue().created()))
                 .orElseThrow(() -> new RuntimeException("No sessions found"));
     }
 }

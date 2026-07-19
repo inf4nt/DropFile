@@ -69,7 +69,7 @@ public class HandshakeHelper {
                 sessionValue == null ? null : CommonUtils.encodeBase64(sessionValue.remotePublicDH()),
                 trustedOut.addressURI().toString(),
                 trustedOut.created(),
-                sessionValue == null ? null : sessionValue.updated()
+                sessionValue == null ? null : sessionValue.created()
         );
     }
 
@@ -95,7 +95,7 @@ public class HandshakeHelper {
                 sessionValue == null ? null : CommonUtils.encodeBase64(sessionValue.publicDH()),
                 sessionValue == null ? null : CommonUtils.encodeBase64(sessionValue.remotePublicDH()),
                 trustedIn.created(),
-                sessionValue == null ? null : sessionValue.updated()
+                sessionValue == null ? null : sessionValue.created()
         );
     }
 }
