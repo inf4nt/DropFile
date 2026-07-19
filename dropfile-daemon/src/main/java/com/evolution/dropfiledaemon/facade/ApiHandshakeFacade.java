@@ -164,6 +164,12 @@ public class ApiHandshakeFacade {
                 signature
         );
         HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
+        try {
+            handshakeClient.handshakeSession(addressURI, sessionRequest);
+        } catch (Exception t) {
+            t.printStackTrace();
+        }
+
         CryptoRSA.verify(
                 sessionResponse.payload(),
                 sessionResponse.signature(),

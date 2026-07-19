@@ -109,6 +109,7 @@ public class HandshakeFacade {
                                 dhKeyPair.getPublic().getEncoded(),
                                 dhKeyPair.getPrivate().getEncoded(),
                                 publicKeyDH,
+                                Instant.now().toEpochMilli(),
                                 Instant.now()
                         )
                 );
@@ -131,10 +132,19 @@ public class HandshakeFacade {
                 CryptoRSA.getPublicKey(trustedIn.remoteRSA())
         );
 
-        HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(
+        HandshakeSessionDTO.SessionPayload sessionPayloadRequest = objectMapper.readValue(
                 sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
         );
-        handshakeHelper.validateHandshakeLiveTimeout(sessionPayload.timestamp());
+        handshakeHelper.validateHandshakeLiveTimeout(sessionPayloadRequest.timestamp());
+        HandshakeSessionInStore.SessionIn currentSessionIn = handshakeSessionInStore
+                .get(remoteFingerprint).map(it -> it.getValue()).orElse(null);
+        if (currentSessionIn != null && currentSessionIn.requestTimestamp() >= sessionPayloadRequest.timestamp()) {
+            throw new IllegalArgumentException(String.format(
+                    "Handshake session timestamp is stale. Expected strictly greater than %d, but got %d",
+                    currentSessionIn.requestTimestamp(),
+                    sessionPayloadRequest.timestamp()
+            ));
+        }
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
@@ -156,7 +166,8 @@ public class HandshakeFacade {
                         new HandshakeSessionInStore.SessionIn(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
-                                sessionPayload.publicKey(),
+                                sessionPayloadRequest.publicKey(),
+                                sessionPayloadRequest.timestamp(),
                                 Instant.now()
                         )
                 );

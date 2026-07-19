@@ -9,6 +9,7 @@ public interface HandshakeSessionInStore extends KeyValueStore<HandshakeSessionI
     record SessionIn(byte[] publicDH,
                      byte[] privateDH,
                      byte[] remotePublicDH,
+                     long requestTimestamp,
                      Instant created) {
 
     }
