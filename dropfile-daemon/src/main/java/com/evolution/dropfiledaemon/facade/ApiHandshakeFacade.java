@@ -11,7 +11,10 @@ import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
-import com.evolution.dropfiledaemon.handshake.store.*;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -164,11 +167,6 @@ public class ApiHandshakeFacade {
                 signature
         );
         HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
-        try {
-            handshakeClient.handshakeSession(addressURI, sessionRequest);
-        } catch (Exception t) {
-            t.printStackTrace();
-        }
 
         CryptoRSA.verify(
                 sessionResponse.payload(),
