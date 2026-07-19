@@ -132,7 +132,7 @@ public class ApiHandshakeFacade {
         handshakeSessionOutStore
                 .save(
                         remoteFingerprint,
-                        new HandshakeSessionStore.SessionValue(
+                        new HandshakeSessionOutStore.SessionOut(
                                 dhKeyPair.getPublic().getEncoded(),
                                 dhKeyPair.getPrivate().getEncoded(),
                                 responsePayload.publicKeyDH(),
@@ -179,7 +179,7 @@ public class ApiHandshakeFacade {
         handshakeSessionOutStore
                 .save(
                         remoteFingerprint,
-                        new HandshakeSessionStore.SessionValue(
+                        new HandshakeSessionOutStore.SessionOut(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
                                 sessionPayload.publicKey(),
@@ -205,18 +205,18 @@ public class ApiHandshakeFacade {
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
         Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = handshakeTrustedOutStore.getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = handshakeSessionOutStore.getAll();
+        Map<String, HandshakeSessionOutStore.SessionOut> sessions = handshakeSessionOutStore.getAll();
         return handshakeHelper.mapToHandshakeApiTrustOutResponseDTOList(trusts, sessions);
     }
 
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
         Map<String, HandshakeTrustedInStore.TrustedIn> trusts = handshakeTrustedInStore.getAll();
-        Map<String, HandshakeSessionStore.SessionValue> sessions = handshakeSessionInStore.getAll();
+        Map<String, HandshakeSessionInStore.SessionIn> sessions = handshakeSessionInStore.getAll();
         return handshakeHelper.mapToHandshakeApiTrustInResponseDTOList(trusts, sessions);
     }
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
-        Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = handshakeSessionOutStore
+        Map.Entry<String, HandshakeSessionOutStore.SessionOut> sessionEntry = handshakeSessionOutStore
                 .getRequiredLatestCreated();
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(sessionEntry.getKey())
                 .getValue();

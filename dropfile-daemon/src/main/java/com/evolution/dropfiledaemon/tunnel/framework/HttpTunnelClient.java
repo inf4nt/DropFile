@@ -8,7 +8,6 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
@@ -56,9 +55,9 @@ public class HttpTunnelClient implements TunnelClient {
     public <T> T send(Request request, TypeReference<T> responseType) {
         HttpResponse<InputStream> httpResponse = null;
         try {
-            Map.Entry<String, HandshakeSessionStore.SessionValue> sessionEntry = getSession(request);
+            Map.Entry<String, HandshakeSessionOutStore.SessionOut> sessionEntry = getSession(request);
 
-            HandshakeSessionStore.SessionValue session = sessionEntry.getValue();
+            HandshakeSessionOutStore.SessionOut session = sessionEntry.getValue();
             String fingerprint = sessionEntry.getKey();
 
             SecretKey secretKey = getSecretKey(session);
@@ -153,7 +152,7 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
-    private Map.Entry<String, HandshakeSessionStore.SessionValue> getSession(Request request) {
+    private Map.Entry<String, HandshakeSessionOutStore.SessionOut> getSession(Request request) {
         if (ObjectUtils.isEmpty(request.getFingerprint())) {
             return handshakeSessionOutStore
                     .getRequiredLatestCreated();
@@ -162,7 +161,7 @@ public class HttpTunnelClient implements TunnelClient {
                 .getRequired(request.getFingerprint());
     }
 
-    private SecretKey getSecretKey(HandshakeSessionStore.SessionValue session) {
+    private SecretKey getSecretKey(HandshakeSessionOutStore.SessionOut session) {
         byte[] secret = CryptoECDH.getSecretKey(
                 CryptoECDH.getPrivateKey(session.privateDH()),
                 CryptoECDH.getPublicKey(session.remotePublicDH())

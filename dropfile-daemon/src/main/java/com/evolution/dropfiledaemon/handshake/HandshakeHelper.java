@@ -4,9 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.*;
 import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -47,12 +45,12 @@ public class HandshakeHelper {
     }
 
     public List<HandshakeApiTrustOutResponseDTO> mapToHandshakeApiTrustOutResponseDTOList(Map<String, HandshakeTrustedOutStore.TrustedOut> trusts,
-                                                                                          Map<String, HandshakeSessionStore.SessionValue> sessions) {
+                                                                                          Map<String, HandshakeSessionOutStore.SessionOut> sessions) {
         return trusts.entrySet()
                 .stream()
                 .map(entry -> {
                     String fingerprint = entry.getKey();
-                    HandshakeSessionStore.SessionValue sessionValue = sessions.get(fingerprint);
+                    HandshakeSessionOutStore.SessionOut sessionValue = sessions.get(fingerprint);
                     return mapToHandshakeApiTrustOutResponseDTO(fingerprint, entry.getValue(), sessionValue);
                 })
                 .toList();
@@ -60,7 +58,7 @@ public class HandshakeHelper {
 
     public HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String fingerprint,
                                                                                 HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                                                                @Nullable HandshakeSessionStore.SessionValue sessionValue) {
+                                                                                @Nullable HandshakeSessionOutStore.SessionOut sessionValue) {
         return new HandshakeApiTrustOutResponseDTO(
                 fingerprint,
                 CommonUtils.encodeBase64(trustedOut.publicRSA()),
@@ -74,12 +72,12 @@ public class HandshakeHelper {
     }
 
     public List<HandshakeApiTrustInResponseDTO> mapToHandshakeApiTrustInResponseDTOList(Map<String, HandshakeTrustedInStore.TrustedIn> trusts,
-                                                                                        Map<String, HandshakeSessionStore.SessionValue> sessions) {
+                                                                                        Map<String, HandshakeSessionInStore.SessionIn> sessions) {
         return trusts.entrySet()
                 .stream()
                 .map(entry -> {
                     String fingerprint = entry.getKey();
-                    HandshakeSessionStore.SessionValue sessionValue = sessions.get(fingerprint);
+                    HandshakeSessionInStore.SessionIn sessionValue = sessions.get(fingerprint);
                     return mapToHandshakeApiTrustInResponseDTO(fingerprint, entry.getValue(), sessionValue);
                 })
                 .toList();
@@ -87,7 +85,7 @@ public class HandshakeHelper {
 
     public HandshakeApiTrustInResponseDTO mapToHandshakeApiTrustInResponseDTO(String fingerprint,
                                                                               HandshakeTrustedInStore.TrustedIn trustedIn,
-                                                                              @Nullable HandshakeSessionStore.SessionValue sessionValue) {
+                                                                              @Nullable HandshakeSessionInStore.SessionIn sessionValue) {
         return new HandshakeApiTrustInResponseDTO(
                 fingerprint,
                 CommonUtils.encodeBase64(trustedIn.publicRSA()),

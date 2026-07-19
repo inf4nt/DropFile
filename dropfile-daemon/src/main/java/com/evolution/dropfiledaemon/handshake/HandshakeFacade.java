@@ -11,7 +11,6 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -106,7 +105,7 @@ public class HandshakeFacade {
         handshakeSessionInStore
                 .save(
                         remoteFingerprint,
-                        new HandshakeSessionStore.SessionValue(
+                        new HandshakeSessionInStore.SessionIn(
                                 dhKeyPair.getPublic().getEncoded(),
                                 dhKeyPair.getPrivate().getEncoded(),
                                 publicKeyDH,
@@ -154,7 +153,7 @@ public class HandshakeFacade {
         handshakeSessionInStore
                 .save(
                         remoteFingerprint,
-                        new HandshakeSessionStore.SessionValue(
+                        new HandshakeSessionInStore.SessionIn(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
                                 sessionPayload.publicKey(),

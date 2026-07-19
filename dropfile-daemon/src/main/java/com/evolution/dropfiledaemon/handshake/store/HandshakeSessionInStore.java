@@ -1,4 +1,15 @@
 package com.evolution.dropfiledaemon.handshake.store;
 
-public interface HandshakeSessionInStore extends HandshakeSessionStore {
+import com.evolution.dropfile.store.framework.KeyValueStore;
+
+import java.time.Instant;
+
+public interface HandshakeSessionInStore extends KeyValueStore<HandshakeSessionInStore.SessionIn> {
+
+    record SessionIn(byte[] publicDH,
+                     byte[] privateDH,
+                     byte[] remotePublicDH,
+                     Instant created) {
+
+    }
 }
