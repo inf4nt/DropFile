@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 @Component
 public class TunnelTrafficMonitor {
 
-    private final Map<String, DownloadSpeedMeter> inputStreams = new ConcurrentHashMap<>();
+    private final Map<String, ThroughputMeter> inputStreams = new ConcurrentHashMap<>();
 
-    private final Map<String, DownloadSpeedMeter> outputStreams = new ConcurrentHashMap<>();
+    private final Map<String, ThroughputMeter> outputStreams = new ConcurrentHashMap<>();
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
@@ -31,25 +31,38 @@ public class TunnelTrafficMonitor {
         cleanup();
         return new Traffic(
                 getTraffic(inputStreams),
-                getTraffic(outputStreams)
+                getTraffic(outputStreams),
+                getTotalTraffic(inputStreams),
+                getTotalTraffic(outputStreams)
         );
     }
 
     public OutputStream outputStreamWrapper(String fingerprint, OutputStream outputStream) {
-        DownloadSpeedMeter downloadSpeedMeter = outputStreams.computeIfAbsent(fingerprint, value -> new DownloadSpeedMeter());
-        return new MonitoringOutputStream(outputStream, downloadSpeedMeter);
+        ThroughputMeter throughputMeter = outputStreams.computeIfAbsent(fingerprint, value -> new ThroughputMeter());
+        return new MonitoringOutputStream(outputStream, throughputMeter);
     }
 
     public InputStream inputStreamWrapper(String fingerprint, InputStream inputStream) {
-        DownloadSpeedMeter downloadSpeedMeter = inputStreams.computeIfAbsent(fingerprint, value -> new DownloadSpeedMeter());
-        return new MonitoringInputStream(inputStream, downloadSpeedMeter);
+        ThroughputMeter throughputMeter = inputStreams.computeIfAbsent(fingerprint, value -> new ThroughputMeter());
+        return new MonitoringInputStream(inputStream, throughputMeter);
     }
 
-    private Map<String, String> getTraffic(Map<String, DownloadSpeedMeter> traffic) {
+    private Map<String, String> getTraffic(Map<String, ThroughputMeter> traffic) {
         Map<String, String> map = traffic.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> CommonUtils.toDisplaySize(entry.getValue().getSpeedBytesPerSec()),
+                        (existing, __) -> existing,
+                        TreeMap::new
+                ));
+        return Collections.unmodifiableMap(map);
+    }
+
+    private Map<String, String> getTotalTraffic(Map<String, ThroughputMeter> traffic) {
+        Map<String, String> map = traffic.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> CommonUtils.toDisplaySize(entry.getValue().getTotalThroughput()),
                         (existing, __) -> existing,
                         TreeMap::new
                 ));
@@ -66,6 +79,9 @@ public class TunnelTrafficMonitor {
         );
     }
 
-    public record Traffic(Map<String, String> download, Map<String, String> upload) {
+    public record Traffic(Map<String, String> download,
+                          Map<String, String> upload,
+                          Map<String, String> totalDownload,
+                          Map<String, String> totalUpload) {
     }
 }

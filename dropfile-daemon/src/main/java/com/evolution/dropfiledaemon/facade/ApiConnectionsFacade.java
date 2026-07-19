@@ -61,7 +61,9 @@ public class ApiConnectionsFacade {
                 .map(fingerprint -> {
                     String download = traffic.download().get(fingerprint);
                     String upload = traffic.upload().get(fingerprint);
-                    return new TunnelTrafficResponseDTO(fingerprint, download, upload);
+                    String totalDownload = traffic.totalDownload().get(fingerprint);
+                    String totalUpload = traffic.totalUpload().get(fingerprint);
+                    return new TunnelTrafficResponseDTO(fingerprint, download, upload, totalDownload, totalUpload);
                 })
                 .toList();
     }

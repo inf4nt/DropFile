@@ -13,11 +13,11 @@ import static org.mockito.Mockito.*;
 
 class MonitoringInputStreamTest {
 
-    private DownloadSpeedMeter speedMeter;
+    private ThroughputMeter speedMeter;
 
     @BeforeEach
     void setUp() {
-        speedMeter = mock(DownloadSpeedMeter.class);
+        speedMeter = mock(ThroughputMeter.class);
     }
 
     @Test
@@ -29,7 +29,7 @@ class MonitoringInputStreamTest {
             int result = mis.read();
 
             assertEquals(42, result);
-            verify(speedMeter, times(1)).addChunk(1);
+            verify(speedMeter, times(1)).add(1);
         }
     }
 
@@ -57,7 +57,7 @@ class MonitoringInputStreamTest {
 
             assertEquals(3, bytesRead);
             assertArrayEquals(new byte[]{10, 20, 30}, buffer);
-            verify(speedMeter, times(1)).addChunk(3);
+            verify(speedMeter, times(1)).add(3);
         }
     }
 
@@ -86,9 +86,9 @@ class MonitoringInputStreamTest {
 
             assertEquals(3, bytesRead);
 
-            verify(speedMeter, times(1)).addChunk(3);
+            verify(speedMeter, times(1)).add(3);
 
-            verify(speedMeter, never()).addChunk(1);
+            verify(speedMeter, never()).add(1);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
-import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.ThroughputMeter;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -8,11 +8,11 @@ import java.io.InputStream;
 
 public class MonitoringInputStream extends FilterInputStream {
 
-    private final DownloadSpeedMeter downloadSpeedMeter;
+    private final ThroughputMeter throughputMeter;
 
-    public MonitoringInputStream(InputStream in, DownloadSpeedMeter downloadSpeedMeter) {
+    public MonitoringInputStream(InputStream in, ThroughputMeter throughputMeter) {
         super(in);
-        this.downloadSpeedMeter = downloadSpeedMeter;
+        this.throughputMeter = throughputMeter;
     }
 
     @Override
@@ -21,7 +21,7 @@ public class MonitoringInputStream extends FilterInputStream {
         if (result == -1) {
             return -1;
         }
-        downloadSpeedMeter.addChunk(1);
+        throughputMeter.add(1);
         return result;
     }
 
@@ -31,7 +31,7 @@ public class MonitoringInputStream extends FilterInputStream {
         if (result == -1) {
             return -1;
         }
-        downloadSpeedMeter.addChunk(result);
+        throughputMeter.add(result);
         return result;
     }
 }

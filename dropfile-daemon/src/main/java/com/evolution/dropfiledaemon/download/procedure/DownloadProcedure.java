@@ -9,7 +9,7 @@ import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.util.DownloadSpeedMeter;
+import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import lombok.Getter;
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class DownloadProcedure {
 
-    private final DownloadSpeedMeter downloadSpeedMeter = new DownloadSpeedMeter();
+    private final ThroughputMeter throughputMeter = new ThroughputMeter();
 
     private final ObjectMapper objectMapper;
 
@@ -152,8 +152,8 @@ public class DownloadProcedure {
             );
         }
 
-        long totalDownloaded = downloadSpeedMeter.getTotalDownloaded();
-        long speedBytesPerSec = downloadSpeedMeter.getSpeedBytesPerSec();
+        long totalDownloaded = throughputMeter.getTotalThroughput();
+        long speedBytesPerSec = throughputMeter.getSpeedBytesPerSec();
         String percent = CommonUtils.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
@@ -237,7 +237,7 @@ public class DownloadProcedure {
                             }
                             try {
                                 handleSingleChunk(fileChannel, chunkManifest);
-                                downloadSpeedMeter.addChunk(chunkManifest.size());
+                                throughputMeter.add(chunkManifest.size());
                             } catch (Exception exception) {
                                 exceptionAtomicReference.set(exception);
                             }
