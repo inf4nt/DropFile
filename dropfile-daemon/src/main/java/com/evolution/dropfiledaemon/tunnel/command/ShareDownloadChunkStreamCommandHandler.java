@@ -17,13 +17,15 @@ import java.io.InputStream;
 public class ShareDownloadChunkStreamCommandHandler
         implements CommandHandler<ShareDownloadChunkStreamTunnelRequest, InputStream> {
 
+    public static final String COMMAND_NAME = "share-download-chunk-stream";
+
     private final FileHelper fileHelper;
 
     private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
-        return "share-download-chunk-stream";
+        return COMMAND_NAME;
     }
 
     @Override

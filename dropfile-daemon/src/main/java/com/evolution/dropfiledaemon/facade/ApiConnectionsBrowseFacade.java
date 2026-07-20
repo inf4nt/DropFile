@@ -9,6 +9,7 @@ import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
@@ -41,10 +42,8 @@ public class ApiConnectionsBrowseFacade {
     private List<ApiConnectionsBrowseLsResponseDTO> ls(String fingerprint,
                                                        ApiConnectionsBrowseLsRequestDTO requestDTO) {
         List<ShareLsTunnelResponse> files = tunnelClient.send(
-                TunnelClient.Request.builder()
-                        .command("share-ls")
+                TunnelClient.Request.builder(ShareLsCommandHandler.COMMAND_NAME, fingerprint)
                         .body(new ShareLsTunnelRequest(requestDTO.ids()))
-                        .fingerprint(fingerprint)
                         .build(),
                 new TypeReference<List<ShareLsTunnelResponse>>() {
                 }

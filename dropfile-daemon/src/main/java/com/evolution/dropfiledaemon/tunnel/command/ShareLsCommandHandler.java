@@ -14,11 +14,13 @@ import java.util.List;
 @Component
 public class ShareLsCommandHandler implements CommandHandler<ShareLsTunnelRequest, List<ShareLsTunnelResponse>> {
 
+    public static final String COMMAND_NAME = "share-ls";
+
     private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
-        return "share-ls";
+        return COMMAND_NAME;
     }
 
     @Override

@@ -24,12 +24,15 @@ public interface TunnelClient {
 
     <T> T send(Request request, TypeReference<T> responseType);
 
-    // TODO drop the builder. Create a record with two constructors, without the body
     @Builder
     @Getter
     class Request {
         private final String command;
         private final String fingerprint;
         private final Object body;
+
+        public static RequestBuilder builder(String command, String fingerprint) {
+            return new RequestBuilder().command(command).fingerprint(fingerprint);
+        }
     }
 }

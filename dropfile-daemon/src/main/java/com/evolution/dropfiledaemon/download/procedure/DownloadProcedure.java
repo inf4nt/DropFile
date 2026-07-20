@@ -6,12 +6,14 @@ import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
+import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
+import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -175,13 +177,11 @@ public class DownloadProcedure {
                     int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
 
                     FileManifest fileManifest = tunnelClient.send(
-                            TunnelClient.Request.builder()
-                                    .command("share-download-manifest")
+                            TunnelClient.Request.builder(ShareDownloadManifestCommandHandler.COMMAND_NAME, request.fingerprint())
                                     .body(new ShareDownloadManifestCommandRequest(
                                             request.fileId(),
                                             manifestChunkMaxSize
                                     ))
-                                    .fingerprint(request.fingerprint())
                                     .build(),
                             FileManifest.class
                     );
@@ -260,14 +260,14 @@ public class DownloadProcedure {
         RetryExecutor
                 .call(() -> {
                     isInterrupted();
-                    TunnelClient.Request tunnelRequest = TunnelClient.Request.builder()
-                            .command("share-download-chunk-stream")
+                    TunnelClient.Request tunnelRequest = TunnelClient.Request.builder(
+                                    ShareDownloadChunkStreamCommandHandler.COMMAND_NAME, request.fingerprint()
+                            )
                             .body(new ShareDownloadChunkStreamTunnelRequest(
                                     request.fileId(),
                                     chunkManifest.size(),
                                     chunkManifest.position()
                             ))
-                            .fingerprint(request.fingerprint())
                             .build();
                     try (InputStream stream = tunnelClient.stream(tunnelRequest)) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());

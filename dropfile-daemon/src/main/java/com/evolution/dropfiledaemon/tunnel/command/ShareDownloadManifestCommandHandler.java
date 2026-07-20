@@ -17,13 +17,15 @@ import java.io.File;
 public class ShareDownloadManifestCommandHandler
         implements CommandHandler<ShareDownloadManifestCommandRequest, FileManifest> {
 
+    public static final String COMMAND_NAME = "share-download-manifest";
+
     private final FileManifestBuilder fileManifestBuilder;
 
     private final ShareFileEntryStore shareFileEntryStore;
 
     @Override
     public String getCommandName() {
-        return "share-download-manifest";
+        return COMMAND_NAME;
     }
 
     @Override
