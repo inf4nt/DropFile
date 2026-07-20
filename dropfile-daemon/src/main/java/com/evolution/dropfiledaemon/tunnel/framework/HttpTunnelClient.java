@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -45,9 +44,8 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
-    @SneakyThrows
     @Override
-    public <T> T send(Request request, TypeReference<T> responseType) {
+    public InputStream stream(Request request) {
         HttpResponse<InputStream> httpResponse = null;
         try {
             String fingerprint = request.getFingerprint();
@@ -79,17 +77,7 @@ public class HttpTunnelClient implements TunnelClient {
                 throw new RuntimeException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
             }
 
-            if (isInputStream(responseType)) {
-                InputStream inputStream = getInputStreamResponse(httpResponse, fingerprint, secretKey);
-                return (T) inputStream;
-            }
-
-            try (InputStream inputStream = getInputStreamResponse(httpResponse, fingerprint, secretKey)) {
-                if (responseType.getType().equals(String.class)) {
-                    return (T) new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                return objectMapper.readValue(inputStream, responseType);
-            }
+            return getInputStreamResponse(httpResponse, fingerprint, secretKey);
         } catch (Exception e) {
             if (httpResponse != null) {
                 try {
@@ -98,7 +86,7 @@ public class HttpTunnelClient implements TunnelClient {
                     closeException.printStackTrace();
                 }
             }
-            throw e;
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 

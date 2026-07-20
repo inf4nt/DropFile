@@ -9,12 +9,10 @@ import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -27,7 +25,7 @@ import java.util.Map;
 @Component
 public class ApiConnectionsBrowseFacade {
 
-    private final TunnelClient tunnelClient;
+    private final TunnelClientGateway tunnelClientGateway;
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
@@ -39,15 +37,10 @@ public class ApiConnectionsBrowseFacade {
         return ls(fingerprintConnection, requestDTO);
     }
 
+    @SneakyThrows
     private List<ApiConnectionsBrowseLsResponseDTO> ls(String fingerprint,
                                                        ApiConnectionsBrowseLsRequestDTO requestDTO) {
-        List<ShareLsTunnelResponse> files = tunnelClient.send(
-                TunnelClient.Request.builder(ShareLsCommandHandler.COMMAND_NAME, fingerprint)
-                        .body(new ShareLsTunnelRequest(requestDTO.ids()))
-                        .build(),
-                new TypeReference<List<ShareLsTunnelResponse>>() {
-                }
-        );
+        List<ShareLsTunnelResponse> files = tunnelClientGateway.shareLs(fingerprint, requestDTO.ids());
         return files.stream()
                 .map(it -> new ApiConnectionsBrowseLsResponseDTO(
                         it.id(),

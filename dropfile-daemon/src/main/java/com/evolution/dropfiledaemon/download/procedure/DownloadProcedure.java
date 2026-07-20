@@ -6,11 +6,7 @@ import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
-import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.ThroughputMeter;
@@ -43,7 +39,7 @@ public class DownloadProcedure {
 
     private final ObjectMapper objectMapper;
 
-    private final TunnelClient tunnelClient;
+    private final TunnelClientGateway tunnelClientGateway;
 
     private final FileHelper fileHelper;
 
@@ -176,14 +172,10 @@ public class DownloadProcedure {
                     isInterrupted();
                     int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
 
-                    FileManifest fileManifest = tunnelClient.send(
-                            TunnelClient.Request.builder(ShareDownloadManifestCommandHandler.COMMAND_NAME, request.fingerprint())
-                                    .body(new ShareDownloadManifestCommandRequest(
-                                            request.fileId(),
-                                            manifestChunkMaxSize
-                                    ))
-                                    .build(),
-                            FileManifest.class
+                    FileManifest fileManifest = tunnelClientGateway.shareDownloadManifest(
+                            request.fingerprint(),
+                            request.fileId(),
+                            manifestChunkMaxSize
                     );
                     fileManifestBuilder.validate(fileManifest);
                     return fileManifest;
@@ -260,16 +252,7 @@ public class DownloadProcedure {
         RetryExecutor
                 .call(() -> {
                     isInterrupted();
-                    TunnelClient.Request tunnelRequest = TunnelClient.Request.builder(
-                                    ShareDownloadChunkStreamCommandHandler.COMMAND_NAME, request.fingerprint()
-                            )
-                            .body(new ShareDownloadChunkStreamTunnelRequest(
-                                    request.fileId(),
-                                    chunkManifest.size(),
-                                    chunkManifest.position()
-                            ))
-                            .build();
-                    try (InputStream stream = tunnelClient.stream(tunnelRequest)) {
+                    try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(), request.fileId(), chunkManifest.size(), chunkManifest.position())) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
                     return 1;

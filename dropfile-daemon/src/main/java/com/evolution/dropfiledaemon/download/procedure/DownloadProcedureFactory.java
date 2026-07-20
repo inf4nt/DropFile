@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.download.procedure;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -16,7 +16,7 @@ public class DownloadProcedureFactory {
 
     private final ObjectMapper objectMapper;
 
-    private final TunnelClient tunnelClient;
+    private final TunnelClientGateway tunnelClientGateway;
 
     private final FileHelper fileHelper;
 
@@ -36,7 +36,7 @@ public class DownloadProcedureFactory {
 
         return new DownloadProcedure(
                 objectMapper,
-                tunnelClient,
+                tunnelClientGateway,
                 fileHelper,
                 fileManifestBuilder,
                 new DownloadProcedureConfiguration(
