@@ -139,6 +139,7 @@ public class DropFileDaemonConfigurationProd {
         );
     }
 
+    // TODO move it back
 //    @Bean
 //    public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
 //                                                             CryptoFileOperations fileOperations,
