@@ -8,7 +8,7 @@ import com.evolution.dropfile.common.dto.ApiConnectionsBrowseLsResponseDTO;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.FileDownloadRequest;
 import com.evolution.dropfiledaemon.download.FileDownloadResponse;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -27,13 +28,13 @@ public class ApiConnectionsBrowseFacade {
 
     private final TunnelClient tunnelClient;
 
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
-
     public List<ApiConnectionsBrowseLsResponseDTO> ls(ApiConnectionsBrowseLsRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestCreated()
-                .getKey();
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated();
+        String fingerprintConnection = lastHandshake.getKey();
         return ls(fingerprintConnection, requestDTO);
     }
 
@@ -71,8 +72,8 @@ public class ApiConnectionsBrowseFacade {
     }
 
     public ApiConnectionsBrowseGetResponseDTO get(ApiConnectionsBrowseGetRequestDTO requestDTO) {
-        String fingerprintConnection = handshakeSessionOutStore.getRequiredLatestCreated()
-                .getKey();
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated();
+        String fingerprintConnection = lastHandshake.getKey();
 
         FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
 

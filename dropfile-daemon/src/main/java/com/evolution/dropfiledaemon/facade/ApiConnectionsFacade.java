@@ -1,8 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
@@ -20,38 +18,29 @@ public class ApiConnectionsFacade {
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
-    private final HandshakeSessionInStore handshakeSessionInStore;
-
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
-
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     public synchronized void revoke(String fingerprint) {
         String key = handshakeTrustedInStore.getRequiredByKeyStartWith(fingerprint)
                 .getKey();
-        handshakeSessionInStore.remove(key);
         handshakeTrustedInStore.remove(key);
     }
 
     public synchronized void revokeAll() {
-        handshakeSessionInStore.removeAll();
         handshakeTrustedInStore.removeAll();
     }
 
     public synchronized void disconnect(String fingerprint) {
         String key = handshakeTrustedOutStore.getRequiredByKeyStartWith(fingerprint).getKey();
-        handshakeSessionOutStore.remove(key);
         handshakeTrustedOutStore.remove(key);
     }
 
     public synchronized void disconnectCurrent() {
-        String key = handshakeSessionOutStore.getRequiredLatestCreated().getKey();
-        handshakeSessionOutStore.remove(key);
-        handshakeTrustedOutStore.remove(key);
+        String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
+        handshakeTrustedOutStore.remove(fingerprint);
     }
 
     public synchronized void disconnectAll() {
-        handshakeSessionOutStore.removeAll();
         handshakeTrustedOutStore.removeAll();
     }
 

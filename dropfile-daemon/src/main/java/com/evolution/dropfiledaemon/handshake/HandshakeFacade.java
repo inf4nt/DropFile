@@ -10,7 +10,6 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +35,6 @@ public class HandshakeFacade {
     private final AccessKeyStore accessKeyStore;
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
-
-    private final HandshakeSessionInStore handshakeSessionInStore;
 
     @SneakyThrows
     public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
@@ -90,27 +87,29 @@ public class HandshakeFacade {
 
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
+        byte[] publicKeyDH = requestPayload.publicKeyDH();
+
+        Instant createInstantTime = Instant.now();
         handshakeTrustedInStore
                 .save(
                         remoteFingerprint,
                         new HandshakeTrustedInStore.TrustedIn(
-                                rsaKeyPair.getPublic().getEncoded(),
-                                rsaKeyPair.getPrivate().getEncoded(),
-                                publicKeyRSA,
-                                Instant.now()
-                        )
-                );
-
-        byte[] publicKeyDH = requestPayload.publicKeyDH();
-        handshakeSessionInStore
-                .save(
-                        remoteFingerprint,
-                        new HandshakeSessionInStore.SessionIn(
-                                dhKeyPair.getPublic().getEncoded(),
-                                dhKeyPair.getPrivate().getEncoded(),
-                                publicKeyDH,
-                                Instant.now().toEpochMilli(),
-                                Instant.now()
+                                new HandshakeTrustedInStore.HandshakeKeys(
+                                        rsaKeyPair.getPublic().getEncoded(),
+                                        rsaKeyPair.getPrivate().getEncoded(),
+                                        publicKeyRSA
+                                ),
+                                new HandshakeTrustedInStore.SessionKeys(
+                                        dhKeyPair.getPublic().getEncoded(),
+                                        dhKeyPair.getPrivate().getEncoded(),
+                                        publicKeyDH
+                                ),
+                                // TODO implement TTL
+                                null,
+                                null,
+                                0,
+                                createInstantTime,
+                                createInstantTime
                         )
                 );
         return handshakeResponseDTO;
@@ -121,27 +120,26 @@ public class HandshakeFacade {
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore
                 .getRequired(sessionDTO.fingerprint())
                 .getValue();
+
         String remoteFingerprint = sessionDTO.fingerprint();
-        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedIn.remoteRSA()));
+        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA()));
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
 
         CryptoRSA.verify(
                 sessionPayloadDTOBytes,
                 sessionDTO.signature(),
-                CryptoRSA.getPublicKey(trustedIn.remoteRSA())
+                CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
         );
 
         HandshakeSessionDTO.SessionPayload sessionPayloadRequest = objectMapper.readValue(
                 sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
         );
         handshakeHelper.validateHandshakeLiveTimeout(sessionPayloadRequest.timestamp());
-        HandshakeSessionInStore.SessionIn currentSessionIn = handshakeSessionInStore
-                .get(remoteFingerprint).map(it -> it.getValue()).orElse(null);
-        if (currentSessionIn != null && currentSessionIn.requestTimestamp() >= sessionPayloadRequest.timestamp()) {
+        if (trustedIn.sessionRefreshRequestTimestamp() >= sessionPayloadRequest.timestamp()) {
             throw new IllegalArgumentException(String.format(
-                    "Handshake session timestamp is stale. Expected strictly greater than %d, but got %d",
-                    currentSessionIn.requestTimestamp(),
+                    "Handshake session request timestamp is stale. Expected strictly greater than %d, but got %d",
+                    trustedIn.sessionRefreshRequestTimestamp(),
                     sessionPayloadRequest.timestamp()
             ));
         }
@@ -153,24 +151,24 @@ public class HandshakeFacade {
                 System.currentTimeMillis()
         );
         byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
-        byte[] signature = CryptoRSA.sign(sessionPayloadResponseBytes, CryptoRSA.getPrivateKey(trustedIn.privateRSA()));
+        byte[] signature = CryptoRSA.sign(sessionPayloadResponseBytes, CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA()));
         HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
-                CommonUtils.getFingerprint(trustedIn.publicRSA()),
+                CommonUtils.getFingerprint(trustedIn.handshake().publicRSA()),
                 sessionPayloadResponseBytes,
                 signature
         );
 
-        handshakeSessionInStore
-                .save(
-                        remoteFingerprint,
-                        new HandshakeSessionInStore.SessionIn(
+        handshakeTrustedInStore.update(remoteFingerprint, value -> value
+                .withSession(
+                        new HandshakeTrustedInStore.SessionKeys(
                                 keyPairDH.getPublic().getEncoded(),
                                 keyPairDH.getPrivate().getEncoded(),
-                                sessionPayloadRequest.publicKey(),
-                                sessionPayloadRequest.timestamp(),
-                                Instant.now()
+                                sessionPayloadRequest.publicKey()
                         )
-                );
+                )
+                .withSessionRefreshRequestTimestamp(sessionPayloadRequest.timestamp())
+                .withUpdated(Instant.now())
+        );
 
         return sessionResponse;
     }

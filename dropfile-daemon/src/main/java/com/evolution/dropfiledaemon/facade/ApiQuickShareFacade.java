@@ -49,6 +49,8 @@ public class ApiQuickShareFacade {
         QuickShareEntry quickShareEntry = quickShareEntryStore.save(
                 id,
                 () -> {
+                    Instant createInstantTime = Instant.now();
+
                     if (requestDTO.secure()) {
                         String secret = ObjectUtils.isEmpty(requestDTO.secret())
                                 ? CommonUtils.generateRawSecretNonce12()
@@ -61,8 +63,8 @@ public class ApiQuickShareFacade {
                                 requestDTO.singleUse(),
                                 true,
                                 false,
-                                Instant.now(),
-                                Instant.now()
+                                createInstantTime,
+                                createInstantTime
                         );
                     }
                     return new QuickShareEntry(
@@ -72,8 +74,8 @@ public class ApiQuickShareFacade {
                             requestDTO.singleUse(),
                             false,
                             false,
-                            Instant.now(),
-                            Instant.now()
+                            createInstantTime,
+                            createInstantTime
                     );
                 }
         );

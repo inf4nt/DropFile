@@ -5,11 +5,10 @@ import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelRestController;
+import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,7 +16,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
@@ -28,7 +26,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
@@ -48,26 +45,21 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
-
     @SneakyThrows
     @Override
     public <T> T send(Request request, TypeReference<T> responseType) {
         HttpResponse<InputStream> httpResponse = null;
         try {
-            Map.Entry<String, HandshakeSessionOutStore.SessionOut> sessionEntry = getSession(request);
-
-            HandshakeSessionOutStore.SessionOut session = sessionEntry.getValue();
-            String fingerprint = sessionEntry.getKey();
-
-            SecretKey secretKey = getSecretKey(session);
-
-            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+            String fingerprint = request.getFingerprint();
 
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
 
+            SecretKey secretKey = getSecretKey(trustedOut);
+
+            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(trustedOut.publicRSA()),
+                    CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
                     secureEnvelope.payload(),
                     secureEnvelope.nonce()
             );
@@ -152,19 +144,10 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
-    private Map.Entry<String, HandshakeSessionOutStore.SessionOut> getSession(Request request) {
-        if (ObjectUtils.isEmpty(request.getFingerprint())) {
-            return handshakeSessionOutStore
-                    .getRequiredLatestCreated();
-        }
-        return handshakeSessionOutStore
-                .getRequired(request.getFingerprint());
-    }
-
-    private SecretKey getSecretKey(HandshakeSessionOutStore.SessionOut session) {
+    private SecretKey getSecretKey(HandshakeTrustedOutStore.TrustedOut trustedOut) {
         byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(session.privateDH()),
-                CryptoECDH.getPublicKey(session.remotePublicDH())
+                CryptoECDH.getPrivateKey(trustedOut.session().privateDH()),
+                CryptoECDH.getPublicKey(trustedOut.session().remotePublicDH())
         );
         return cryptoTunnel.secretKey(secret);
     }

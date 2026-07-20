@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +23,6 @@ public class TunnelTrafficMonitor {
     private final Map<String, ThroughputMeter> outputStreams = new ConcurrentHashMap<>();
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
-
-    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     public Traffic getTraffic() {
         cleanup();
@@ -70,13 +67,7 @@ public class TunnelTrafficMonitor {
     }
 
     private void cleanup() {
-        outputStreams.keySet().removeIf(fingerprint ->
-                handshakeTrustedInStore.get(fingerprint).isEmpty()
-        );
-
-        inputStreams.keySet().removeIf(fingerprint ->
-                handshakeSessionOutStore.get(fingerprint).isEmpty()
-        );
+        outputStreams.keySet().removeIf(fingerprint -> handshakeTrustedInStore.get(fingerprint).isEmpty());
     }
 
     public record Traffic(Map<String, String> download,

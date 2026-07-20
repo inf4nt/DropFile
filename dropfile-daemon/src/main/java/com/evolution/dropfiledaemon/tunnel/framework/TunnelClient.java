@@ -24,6 +24,7 @@ public interface TunnelClient {
 
     <T> T send(Request request, TypeReference<T> responseType);
 
+    // TODO drop the builder. Create a record with two constructors, without the body
     @Builder
     @Getter
     class Request {

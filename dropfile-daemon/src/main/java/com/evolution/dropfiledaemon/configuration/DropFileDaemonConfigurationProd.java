@@ -18,14 +18,10 @@ import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.crypto.HandshakeTrustedInStoreImpl;
 import com.evolution.dropfiledaemon.handshake.store.crypto.HandshakeTrustedOutStoreImpl;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -143,9 +139,39 @@ public class DropFileDaemonConfigurationProd {
         );
     }
 
+//    @Bean
+//    public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
+//                                                             CryptoFileOperations fileOperations,
+//                                                             ObjectMapper objectMapper) {
+//        SerdeOperations<HandshakeTrustedOutStore.TrustedOut> serdeOperations = new JsonSerdeOperations<>(
+//                objectMapper,
+//                HandshakeTrustedOutStore.TrustedOut.class
+//        );
+//        return new HandshakeTrustedOutStoreImpl(
+//                trustOutFileProvider,
+//                fileOperations,
+//                serdeOperations
+//        );
+//    }
+//
+//    @Bean
+//    public HandshakeTrustedInStore handshakeTrustedInStore(FileProvider trustInFileProvider,
+//                                                           CryptoFileOperations fileOperations,
+//                                                           ObjectMapper objectMapper) {
+//        SerdeOperations<HandshakeTrustedInStore.TrustedIn> serdeOperations = new JsonSerdeOperations<>(
+//                objectMapper,
+//                HandshakeTrustedInStore.TrustedIn.class
+//        );
+//        return new HandshakeTrustedInStoreImpl(
+//                trustInFileProvider,
+//                fileOperations,
+//                serdeOperations
+//        );
+//    }
+
     @Bean
     public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
-                                                             CryptoFileOperations fileOperations,
+                                                             FileOperations fileOperations,
                                                              ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedOutStore.TrustedOut> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
@@ -160,7 +186,7 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public HandshakeTrustedInStore handshakeTrustedInStore(FileProvider trustInFileProvider,
-                                                           CryptoFileOperations fileOperations,
+                                                           FileOperations fileOperations,
                                                            ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedInStore.TrustedIn> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
@@ -171,16 +197,6 @@ public class DropFileDaemonConfigurationProd {
                 fileOperations,
                 serdeOperations
         );
-    }
-
-    @Bean
-    public HandshakeSessionOutStore handshakeSessionOutStore() {
-        return new RuntimeHandshakeSessionOutStore();
-    }
-
-    @Bean
-    public HandshakeSessionInStore handshakeSessionInStore() {
-        return new RuntimeHandshakeSessionInStore();
     }
 
     @Bean

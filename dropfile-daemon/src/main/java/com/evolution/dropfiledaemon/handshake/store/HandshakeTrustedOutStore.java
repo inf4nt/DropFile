@@ -1,20 +1,42 @@
 package com.evolution.dropfiledaemon.handshake.store;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
+import lombok.With;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
 
+    @With
     record TrustedOut(URI addressURI,
-                      byte[] publicRSA,
-                      byte[] privateRSA,
-                      byte[] remoteRSA,
-                      Instant created) {
+                      HandshakeKeys handshake,
+                      SessionKeys session,
+                      Duration handshakeTtl,
+                      Duration sessionTtl,
+                      Instant created,
+                      Instant updated) {
+    }
 
+    record HandshakeKeys(byte[] publicRSA,
+                         byte[] privateRSA,
+                         byte[] remoteRSA) {
+    }
+
+    record SessionKeys(byte[] publicDH,
+                       byte[] privateDH,
+                       byte[] remotePublicDH) {
+    }
+
+    default Map.Entry<String, TrustedOut> getRequiredLastUpdated() {
+        return getAll().entrySet()
+                .stream()
+                .max(Comparator.comparing(o -> o.getValue().updated()))
+                .orElseThrow(() -> new RuntimeException("No trusted in found"));
     }
 
     default Optional<Map.Entry<String, TrustedOut>> getByAddressURI(URI addressURI) {

@@ -11,12 +11,8 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
 import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedOutStore;
 import lombok.extern.slf4j.Slf4j;
@@ -53,16 +49,6 @@ public class DropFileDaemonConfigurationDev {
     @Bean
     public HandshakeTrustedInStore handshakeTrustedInStore() {
         return new RuntimeHandshakeTrustedInStore();
-    }
-
-    @Bean
-    public HandshakeSessionOutStore handshakeSessionOutStore() {
-        return new RuntimeHandshakeSessionOutStore();
-    }
-
-    @Bean
-    public HandshakeSessionInStore handshakeSessionInStore() {
-        return new RuntimeHandshakeSessionInStore();
     }
 
     @Bean

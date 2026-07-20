@@ -113,19 +113,21 @@ public class FileDownloadOrchestrator {
         fileDownloadingExecutorService.execute(() -> {
             try {
                 downloadProcedure.run(
-                        () -> fileDownloadEntryStore.save(
-                                operationId,
-                                new DownloadFileEntry(
-                                        fingerprint,
-                                        fileId,
-                                        destinationFilePath.toAbsolutePath().toString(),
-                                        temporaryFilePath.toAbsolutePath().toString(),
-                                        manifestFilePath.toAbsolutePath().toString(),
-                                        DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
-                                        Instant.now(),
-                                        Instant.now()
-                                )
-                        ),
+                        () -> {
+                            Instant createInstantTime = Instant.now();
+                            fileDownloadEntryStore.save(
+                                    operationId,
+                                    new DownloadFileEntry(
+                                            fingerprint,
+                                            fileId,
+                                            destinationFilePath.toAbsolutePath().toString(),
+                                            temporaryFilePath.toAbsolutePath().toString(),
+                                            manifestFilePath.toAbsolutePath().toString(),
+                                            DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                                            createInstantTime,
+                                            createInstantTime
+                                    ));
+                        },
                         () -> fileDownloadEntryStore
                                 .update(
                                         operationId,
@@ -258,6 +260,8 @@ public class FileDownloadOrchestrator {
                                         .withTotal(downloadProcedure.getProgress().total());
                                 return Map.entry(operationId, updated);
                             }
+
+                            Instant createInstantTime = Instant.now();
                             DownloadFileEntry newOne = new DownloadFileEntry(
                                     downloadProcedure.getRequest().fingerprint(),
                                     downloadProcedure.getProgress().fileId(),
@@ -265,8 +269,8 @@ public class FileDownloadOrchestrator {
                                     downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
                                     downloadProcedure.getRequest().manifestFilePath().toAbsolutePath().toString(),
                                     DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
-                                    Instant.now(),
-                                    Instant.now()
+                                    createInstantTime,
+                                    createInstantTime
                             );
                             return Map.entry(operationId, newOne);
                         })
