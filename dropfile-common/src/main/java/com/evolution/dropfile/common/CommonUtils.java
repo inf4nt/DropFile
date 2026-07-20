@@ -43,10 +43,15 @@ public class CommonUtils {
     }
 
     public static String generateRawSecretNonce12() {
-        byte[] bytes = nonce12();
-        return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(bytes);
+        String secret;
+        do {
+            byte[] bytes = nonce12();
+            secret = Base64.getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(bytes);
+        } while (secret.startsWith("-"));
+
+        return secret;
     }
 
     public static URI toURI(String host) {

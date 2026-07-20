@@ -139,40 +139,9 @@ public class DropFileDaemonConfigurationProd {
         );
     }
 
-    // TODO move it back
-//    @Bean
-//    public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
-//                                                             CryptoFileOperations fileOperations,
-//                                                             ObjectMapper objectMapper) {
-//        SerdeOperations<HandshakeTrustedOutStore.TrustedOut> serdeOperations = new JsonSerdeOperations<>(
-//                objectMapper,
-//                HandshakeTrustedOutStore.TrustedOut.class
-//        );
-//        return new HandshakeTrustedOutStoreImpl(
-//                trustOutFileProvider,
-//                fileOperations,
-//                serdeOperations
-//        );
-//    }
-//
-//    @Bean
-//    public HandshakeTrustedInStore handshakeTrustedInStore(FileProvider trustInFileProvider,
-//                                                           CryptoFileOperations fileOperations,
-//                                                           ObjectMapper objectMapper) {
-//        SerdeOperations<HandshakeTrustedInStore.TrustedIn> serdeOperations = new JsonSerdeOperations<>(
-//                objectMapper,
-//                HandshakeTrustedInStore.TrustedIn.class
-//        );
-//        return new HandshakeTrustedInStoreImpl(
-//                trustInFileProvider,
-//                fileOperations,
-//                serdeOperations
-//        );
-//    }
-
     @Bean
     public HandshakeTrustedOutStore handshakeTrustedOutStore(FileProvider trustOutFileProvider,
-                                                             FileOperations fileOperations,
+                                                             CryptoFileOperations fileOperations,
                                                              ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedOutStore.TrustedOut> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
@@ -187,7 +156,7 @@ public class DropFileDaemonConfigurationProd {
 
     @Bean
     public HandshakeTrustedInStore handshakeTrustedInStore(FileProvider trustInFileProvider,
-                                                           FileOperations fileOperations,
+                                                           CryptoFileOperations fileOperations,
                                                            ObjectMapper objectMapper) {
         SerdeOperations<HandshakeTrustedInStore.TrustedIn> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
