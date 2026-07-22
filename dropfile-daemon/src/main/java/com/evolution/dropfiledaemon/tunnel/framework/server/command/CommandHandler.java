@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.framework;
+package com.evolution.dropfiledaemon.tunnel.framework.server.command;
 
 public interface CommandHandler<T, R> {
 

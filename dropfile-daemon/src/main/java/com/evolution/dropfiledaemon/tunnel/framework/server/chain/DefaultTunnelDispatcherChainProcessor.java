@@ -1,23 +1,23 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure.TunnelServerChainProcedure;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure.TunnelDispatcherChain;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class DefaultTunnelServerChainProcedureProcessor implements TunnelServerChainProcedureProcessor {
+public class DefaultTunnelDispatcherChainProcessor implements TunnelDispatcherChainProcessor {
 
     private int currentPosition = 0;
 
-    private final List<TunnelServerChainProcedure> procedures;
+    private final List<TunnelDispatcherChain> procedures;
 
     @Override
-    public void doChain(TunnelServerChainProcedureContext ctx) throws IOException {
+    public void proceed(TunnelDispatcherChainProcessorContext ctx) throws IOException {
         if (currentPosition < procedures.size()) {
-            TunnelServerChainProcedure procedure = procedures.get(currentPosition);
+            TunnelDispatcherChain procedure = procedures.get(currentPosition);
             currentPosition = currentPosition + 1;
             procedure.doChain(
                     ctx.withOutputStream(new CloseShieldOutputStream(ctx.outputStream())),

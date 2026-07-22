@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client.handler;
 
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelServer;
+import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientHandshakeExpiredException;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,7 @@ public class HandshakeExpiredTunnelClientHandler implements TunnelClientHandler 
 
     @Override
     public int getStatusCode() {
-        return TunnelServer.TunnelDispatcherStatus.HANDSHAKE_EXPIRED.getStatusCode();
+        return TunnelDispatcher.TunnelDispatcherStatus.HANDSHAKE_EXPIRED.getStatusCode();
     }
 
     @Override

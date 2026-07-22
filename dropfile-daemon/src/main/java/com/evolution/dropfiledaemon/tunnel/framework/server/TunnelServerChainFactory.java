@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.DefaultTunnelServerChainProcedureProcessor;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.DefaultTunnelDispatcherChainProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,29 +13,29 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TunnelServerChainFactory {
 
-    private final ObjectProvider<PayloadTimeoutValidationTunnelServerChainProcedure> payloadTimeoutProvider;
+    private final ObjectProvider<PayloadTimeoutValidationTunnelDispatcherChain> payloadTimeoutProvider;
 
-    private final ObjectProvider<TrafficMonitorTunnelServerChainProcedure> trafficMonitorProvider;
+    private final ObjectProvider<TrafficMonitorTunnelDispatcherChain> trafficMonitorProvider;
 
-    private final ObjectProvider<HandshakeExpiredTunnelServerChainProcedure> handshakeExpiredProvider;
+    private final ObjectProvider<HandshakeExpiredTunnelDispatcherChain> handshakeExpiredProvider;
 
-    private final ObjectProvider<SessionExpiredTunnelServerChainProcedure> sessionExpiredProvider;
+    private final ObjectProvider<SessionExpiredTunnelDispatcherChain> sessionExpiredProvider;
 
-    private final ObjectProvider<SuccessMarkerWriterTunnelServerChainProcedure> successMarkerWriterProvider;
+    private final ObjectProvider<SuccessMarkerWriterTunnelDispatcherChain> successMarkerWriterProvider;
 
-    private final ObjectProvider<CryptoTunnelServerChainProcedure> cryptoTunnelProvider;
+    private final ObjectProvider<CryptoTunnelDispatcherChain> cryptoTunnelProvider;
 
-    private final ObjectProvider<CompressTunnelServerChainProcedure> compressTunnelProvider;
+    private final ObjectProvider<CompressTunnelDispatcherChain> compressTunnelProvider;
 
-    private final ObjectProvider<CommandTunnelServerChainProcedure> commandTunnelProvider;
+    private final ObjectProvider<CommandTunnelDispatcherChain> commandTunnelProvider;
 
-    public TunnelServerChainProcedureProcessor createProcessor() {
-        List<TunnelServerChainProcedure> procedures = buildChain();
-        return new DefaultTunnelServerChainProcedureProcessor(procedures);
+    public TunnelDispatcherChainProcessor createProcessor() {
+        List<TunnelDispatcherChain> procedures = buildChain();
+        return new DefaultTunnelDispatcherChainProcessor(procedures);
     }
 
-    private List<TunnelServerChainProcedure> buildChain() {
-        return  List.of(
+    private List<TunnelDispatcherChain> buildChain() {
+        return List.of(
                 payloadTimeoutProvider.getObject(),
                 trafficMonitorProvider.getObject(),
                 handshakeExpiredProvider.getObject(),

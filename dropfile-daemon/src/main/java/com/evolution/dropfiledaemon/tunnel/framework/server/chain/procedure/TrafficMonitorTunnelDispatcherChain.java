@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -14,17 +14,17 @@ import java.io.OutputStream;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Component
 @RequiredArgsConstructor
-public class TrafficMonitorTunnelServerChainProcedure implements TunnelServerChainProcedure {
+public class TrafficMonitorTunnelDispatcherChain implements TunnelDispatcherChain {
 
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
     @Override
-    public void doChain(TunnelServerChainProcedureContext ctx,
-                        TunnelServerChainProcedureProcessor processor) throws IOException {
+    public void doChain(TunnelDispatcherChainProcessorContext ctx,
+                        TunnelDispatcherChainProcessor processor) throws IOException {
         try (OutputStream tunnelTrafficOutputStream = tunnelTrafficMonitor.outputStreamWrapper(
                 ctx.fingerprint(),
                 ctx.outputStream())) {
-            processor.doChain(ctx.withOutputStream(tunnelTrafficOutputStream));
+            processor.proceed(ctx.withOutputStream(tunnelTrafficOutputStream));
         }
     }
 }

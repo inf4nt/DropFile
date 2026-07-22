@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
-import com.evolution.dropfiledaemon.tunnel.framework.CommandHandlerExecutor;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
+import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -18,14 +18,14 @@ import java.io.OutputStream;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Component
-public class CommandTunnelServerChainProcedure implements TunnelServerChainProcedure {
+public class CommandTunnelDispatcherChain implements TunnelDispatcherChain {
 
     private final CommandHandlerExecutor commandHandlerExecutor;
 
     private final ObjectMapper objectMapper;
 
     @Override
-    public void doChain(TunnelServerChainProcedureContext ctx, TunnelServerChainProcedureProcessor processor) throws IOException {
+    public void doChain(TunnelDispatcherChainProcessorContext ctx, TunnelDispatcherChainProcessor processor) throws IOException {
         Object result = commandHandlerExecutor.handle(ctx.tunnelRequestPayload());
         try (OutputStream outputStream = ctx.outputStream();
              InputStream inputStream = handlerResultToInputStream(result)) {

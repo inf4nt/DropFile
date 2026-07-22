@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -14,17 +14,17 @@ import java.io.OutputStream;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Component
-public class CryptoTunnelServerChainProcedure implements TunnelServerChainProcedure {
+public class CryptoTunnelDispatcherChain implements TunnelDispatcherChain {
 
     private final CryptoTunnel cryptoTunnel;
 
     @Override
-    public void doChain(TunnelServerChainProcedureContext ctx,
-                        TunnelServerChainProcedureProcessor processor) throws IOException {
+    public void doChain(TunnelDispatcherChainProcessorContext ctx,
+                        TunnelDispatcherChainProcessor processor) throws IOException {
         try (OutputStream encryptOutputStream = cryptoTunnel.encryptWrapper(
                 ctx.outputStream(),
                 ctx.secretKey())) {
-            processor.doChain(ctx.withOutputStream(encryptOutputStream));
+            processor.proceed(ctx.withOutputStream(encryptOutputStream));
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.command;
 
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfiledaemon.tunnel.framework.CommandHandler;
+import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import lombok.RequiredArgsConstructor;

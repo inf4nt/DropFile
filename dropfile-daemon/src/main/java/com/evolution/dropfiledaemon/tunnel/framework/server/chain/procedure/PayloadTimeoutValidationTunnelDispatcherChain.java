@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerChainProcedureProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -13,13 +13,13 @@ import java.io.IOException;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Component
-public class PayloadTimeoutValidationTunnelServerChainProcedure implements TunnelServerChainProcedure {
+public class PayloadTimeoutValidationTunnelDispatcherChain implements TunnelDispatcherChain {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
     @Override
-    public void doChain(TunnelServerChainProcedureContext ctx,
-                        TunnelServerChainProcedureProcessor processor) throws IOException {
+    public void doChain(TunnelDispatcherChainProcessorContext ctx,
+                        TunnelDispatcherChainProcessor processor) throws IOException {
         long requestTime = Math.abs(System.currentTimeMillis() - ctx.tunnelRequestPayload().timestamp());
         int tunnelServerPayloadLifeTime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
         if (requestTime > tunnelServerPayloadLifeTime) {
@@ -31,6 +31,6 @@ public class PayloadTimeoutValidationTunnelServerChainProcedure implements Tunne
             );
         }
 
-        processor.doChain(ctx);
+        processor.proceed(ctx);
     }
 }

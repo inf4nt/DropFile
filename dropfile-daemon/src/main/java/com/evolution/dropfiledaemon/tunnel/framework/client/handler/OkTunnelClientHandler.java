@@ -4,7 +4,7 @@ import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelServer;
+import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
@@ -18,7 +18,7 @@ import java.time.Duration;
 
 @RequiredArgsConstructor
 @Component
-public class CommonTunnelClientHandler implements TunnelClientHandler {
+public class OkTunnelClientHandler implements TunnelClientHandler {
 
     private final CryptoTunnel cryptoTunnel;
 
@@ -30,7 +30,7 @@ public class CommonTunnelClientHandler implements TunnelClientHandler {
 
     @Override
     public int getStatusCode() {
-        return TunnelServer.TunnelDispatcherStatus.OK.getStatusCode();
+        return TunnelDispatcher.TunnelDispatcherStatus.OK.getStatusCode();
     }
 
     @Override

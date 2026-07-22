@@ -1,5 +1,6 @@
-package com.evolution.dropfiledaemon.tunnel.framework;
+package com.evolution.dropfiledaemon.tunnel.framework.server.command;
 
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
