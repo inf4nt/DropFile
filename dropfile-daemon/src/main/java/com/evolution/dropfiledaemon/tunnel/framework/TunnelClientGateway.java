@@ -80,9 +80,8 @@ public class TunnelClientGateway {
         try {
             return callable.call();
         } catch (Exception e) {
-            Throwable throwable = CommonUtils.getThrowable(e, TunnelClientSessionExpiredException.class);
-            if (throwable != null) {
-                TunnelClientSessionExpiredException expiredException = (TunnelClientSessionExpiredException) throwable;
+            TunnelClientSessionExpiredException expiredException = CommonUtils.getThrowable(e, TunnelClientSessionExpiredException.class);
+            if (expiredException != null) {
                 log.info("Session has been expired fingerprint {}. Refreshing", fingerprint);
                 apiHandshakeFacade.systemHandshakeSessionRefresh(fingerprint, expiredException.getTimestamp());
                 return callable.call();

@@ -143,15 +143,16 @@ public class CommonUtils {
     }
 
     @SafeVarargs
-    public static Throwable getThrowable(Throwable throwable,
-                                         Class<? extends Throwable>... lookFor) {
+    public static <T extends Throwable> T getThrowable(Throwable throwable,
+                                                       Class<T>... lookFor) {
         Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         Throwable cause = throwable;
 
         while (cause != null && visited.add(cause)) {
             for (Class<? extends Throwable> targetClass : lookFor) {
                 if (targetClass.isInstance(cause)) {
-                    return cause;
+                    //noinspection ReassignedVariable,unchecked
+                    return (T) cause;
                 }
             }
             cause = cause.getCause();
@@ -160,9 +161,10 @@ public class CommonUtils {
         return null;
     }
 
+    @SafeVarargs
     public static boolean checkThrowable(Throwable throwable,
-                                           Class<? extends Throwable>... lookFor) {
-        return getThrowable(throwable, lookFor) != null;
+                                         Class<? extends Throwable>... lookFor) {
+        return getThrowable(throwable, (Class<Throwable>[]) lookFor) != null;
     }
 
     public static <T> T requireOne(Collection<T> source) {
