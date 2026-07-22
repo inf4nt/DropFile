@@ -15,6 +15,7 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -134,6 +135,9 @@ public class ApiHandshakeFacade {
                                 null, // TODO implement TTL
                                 null,
                                 createInstantTime,
+                                0,
+                                createInstantTime,
+                                null,
                                 createInstantTime
                         )
                 );
@@ -145,9 +149,23 @@ public class ApiHandshakeFacade {
 
     @SneakyThrows
     public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        URI addressURI = CommonUtils.toURI(requestDTO.address());
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = handshakeTrustedOutStore
-                .getRequiredByAddressURI(addressURI);
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
+                .getValue();
+        return handshakeReconnect(trustedOut, true, null);
+    }
+
+    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint, long sessionRefreshRequestTimestamp) {
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                .getRequired(fingerprint).getValue();
+        return handshakeReconnect(trustedOut, false, sessionRefreshRequestTimestamp);
+    }
+
+    @SneakyThrows
+    public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(HandshakeTrustedOutStore.TrustedOut trustedOut,
+                                                                         boolean byUser,
+                                                                         @Nullable Long sessionRefreshRequestTimestamp) {
+        URI addressURI = trustedOut.addressURI();
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
         HandshakeSessionDTO.SessionPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionPayload(
@@ -155,9 +173,9 @@ public class ApiHandshakeFacade {
                 System.currentTimeMillis()
         );
         byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
-        byte[] signature = CryptoRSA.sign(sessionPayloadRequestBytes, CryptoRSA.getPrivateKey(trustedOutEntry.getValue().handshake().privateRSA()));
+        byte[] signature = CryptoRSA.sign(sessionPayloadRequestBytes, CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA()));
         HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
-                CommonUtils.getFingerprint(trustedOutEntry.getValue().handshake().publicRSA()),
+                CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
                 sessionPayloadRequestBytes,
                 signature
         );
@@ -166,34 +184,43 @@ public class ApiHandshakeFacade {
         CryptoRSA.verify(
                 sessionResponse.payload(),
                 sessionResponse.signature(),
-                CryptoRSA.getPublicKey(trustedOutEntry.getValue().handshake().remoteRSA())
+                CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
         );
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionPayload.class);
 
         handshakeHelper.validateHandshakeLiveTimeout(sessionPayload.timestamp());
 
         String remoteFingerprint = sessionResponse.fingerprint();
-        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOutEntry.getValue().handshake().remoteRSA()));
+        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
 
-        handshakeTrustedOutStore.update(remoteFingerprint, value -> value
-                .withSession(new HandshakeTrustedOutStore.SessionKeys(
-                        keyPairDH.getPublic().getEncoded(),
-                        keyPairDH.getPrivate().getEncoded(),
-                        sessionPayload.publicKey()
-                ))
-                .withUpdated(Instant.now())
-        );
+        handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+            Instant now = Instant.now();
+            HandshakeTrustedOutStore.TrustedOut next = value
+                    .withSession(new HandshakeTrustedOutStore.SessionKeys(
+                            keyPairDH.getPublic().getEncoded(),
+                            keyPairDH.getPrivate().getEncoded(),
+                            sessionPayload.publicKey()
+                    ))
+                    .withUpdated(now);
+            if (byUser) {
+                next = next.withSessionUpdatedByUser(now);
+            } else {
+                next = next.withSessionUpdatedBySystem(now);
+            }
+
+            // TODO can i use this timestamp instead of sessionRefreshRequestTimestamp ?
+            long timestamp = sessionPayload.timestamp();
+
+            if (sessionRefreshRequestTimestamp != null) {
+                next = next.withSessionRefreshRequestTimestamp(sessionRefreshRequestTimestamp);
+            }
+            return next;
+        });
 
         return new ApiHandshakeStatusResponseDTO(
                 remoteFingerprint,
                 addressURI.toString()
         );
-    }
-
-    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint, long timestamp) {
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = handshakeTrustedOutStore
-                .getRequired(fingerprint);
-        return handshakeReconnect(new ApiHandshakeReconnectRequestDTO(trustedOutEntry.getValue().addressURI().toString()));
     }
 
     public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
