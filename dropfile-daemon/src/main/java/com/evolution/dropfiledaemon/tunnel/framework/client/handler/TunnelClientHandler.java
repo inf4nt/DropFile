@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client.handler;
 
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;

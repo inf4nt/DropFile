@@ -190,7 +190,6 @@ public class ApiHandshakeFacade {
         );
     }
 
-    // TODO implement me
     public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint, long timestamp) {
         Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = handshakeTrustedOutStore
                 .getRequired(fingerprint);

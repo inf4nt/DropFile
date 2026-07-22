@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import lombok.Builder;
 import lombok.Getter;
 

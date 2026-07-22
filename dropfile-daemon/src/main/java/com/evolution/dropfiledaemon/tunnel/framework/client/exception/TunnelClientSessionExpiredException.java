@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.framework.exception;
+package com.evolution.dropfiledaemon.tunnel.framework.client.exception;
 
 // TODO make it
 public class TunnelClientSessionExpiredException extends TunnelClientExpirationException {

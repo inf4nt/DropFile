@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client.handler;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientSessionExpiredException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientSessionExpiredException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;

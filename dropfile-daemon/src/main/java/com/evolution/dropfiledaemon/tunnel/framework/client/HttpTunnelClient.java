@@ -8,7 +8,7 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelServerRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.client.handler.TunnelClientHandler;
 import com.evolution.dropfiledaemon.tunnel.framework.client.handler.TunnelClientHandlerProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;

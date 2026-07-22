@@ -6,7 +6,7 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -11,7 +11,7 @@ import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestComm
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientSessionExpiredException;
+import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientSessionExpiredException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -83,8 +83,7 @@ public class TunnelClientGateway {
             Throwable throwable = CommonUtils.getThrowable(e, TunnelClientSessionExpiredException.class);
             if (throwable != null) {
                 TunnelClientSessionExpiredException expiredException = (TunnelClientSessionExpiredException) throwable;
-                log.info("Session has been expired. Refreshing it");
-
+                log.info("Session has been expired fingerprint {}. Refreshing", fingerprint);
                 apiHandshakeFacade.systemHandshakeSessionRefresh(fingerprint, expiredException.getTimestamp());
                 return callable.call();
             }
