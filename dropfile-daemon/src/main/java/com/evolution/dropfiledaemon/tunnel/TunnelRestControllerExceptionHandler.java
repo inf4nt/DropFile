@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @Slf4j
-@ControllerAdvice(assignableTypes = TunnelRestController.class)
+@ControllerAdvice(assignableTypes = TunnelServerRestController.class)
 public class TunnelRestControllerExceptionHandler {
 
     // TODO If there a valid connection, and an error has happened

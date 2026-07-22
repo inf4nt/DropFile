@@ -89,28 +89,34 @@ public class HandshakeFacade {
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
         byte[] publicKeyDH = requestPayload.publicKeyDH();
 
-        Instant createInstantTime = Instant.now();
+
         handshakeTrustedInStore
                 .save(
                         remoteFingerprint,
-                        new HandshakeTrustedInStore.TrustedIn(
-                                new HandshakeTrustedInStore.HandshakeKeys(
-                                        rsaKeyPair.getPublic().getEncoded(),
-                                        rsaKeyPair.getPrivate().getEncoded(),
-                                        publicKeyRSA
-                                ),
-                                new HandshakeTrustedInStore.SessionKeys(
-                                        dhKeyPair.getPublic().getEncoded(),
-                                        dhKeyPair.getPrivate().getEncoded(),
-                                        publicKeyDH
-                                ),
-                                // TODO implement TTL
-                                null,
-                                null,
-                                0,
-                                createInstantTime,
-                                createInstantTime
-                        )
+                        () -> {
+                            Instant now = Instant.now();
+                            return new HandshakeTrustedInStore.TrustedIn(
+                                    new HandshakeTrustedInStore.HandshakeKeys(
+                                            rsaKeyPair.getPublic().getEncoded(),
+                                            rsaKeyPair.getPrivate().getEncoded(),
+                                            publicKeyRSA
+                                    ),
+                                    new HandshakeTrustedInStore.SessionKeys(
+                                            dhKeyPair.getPublic().getEncoded(),
+                                            dhKeyPair.getPrivate().getEncoded(),
+                                            publicKeyDH
+                                    ),
+                                    // TODO implement TTL
+                                    null,
+                                    null,
+                                    now,
+                                    0,
+                                    Instant.now(),
+                                    null,
+                                    now,
+                                    null
+                            );
+                        }
                 );
         return handshakeResponseDTO;
     }
@@ -158,16 +164,20 @@ public class HandshakeFacade {
                 signature
         );
 
-        handshakeTrustedInStore.update(remoteFingerprint, value -> value
-                .withSession(
-                        new HandshakeTrustedInStore.SessionKeys(
-                                keyPairDH.getPublic().getEncoded(),
-                                keyPairDH.getPrivate().getEncoded(),
-                                sessionPayloadRequest.publicKey()
-                        )
-                )
-                .withSessionRefreshRequestTimestamp(sessionPayloadRequest.timestamp())
-                .withUpdated(Instant.now())
+        handshakeTrustedInStore.update(remoteFingerprint, value -> {
+                    Instant now = Instant.now();
+                    return value
+                            .withSession(
+                                    new HandshakeTrustedInStore.SessionKeys(
+                                            keyPairDH.getPublic().getEncoded(),
+                                            keyPairDH.getPrivate().getEncoded(),
+                                            sessionPayloadRequest.publicKey()
+                                    )
+                            )
+                            .withSessionRefreshRequestTimestamp(sessionPayloadRequest.timestamp())
+                            .withSessionUpdatedByUser(now)
+                            .withUpdatedByUser(now);
+                }
         );
 
         return sessionResponse;

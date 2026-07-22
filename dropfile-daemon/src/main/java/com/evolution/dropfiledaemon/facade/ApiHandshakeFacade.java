@@ -190,6 +190,13 @@ public class ApiHandshakeFacade {
         );
     }
 
+    // TODO implement me
+    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint, long timestamp) {
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutEntry = handshakeTrustedOutStore
+                .getRequired(fingerprint);
+        return handshakeReconnect(new ApiHandshakeReconnectRequestDTO(trustedOutEntry.getValue().addressURI().toString()));
+    }
+
     public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
         Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated();
         URI addressURI = lastHandshake.getValue().addressURI();
@@ -226,6 +233,7 @@ public class ApiHandshakeFacade {
             String remoteFingerprint = entry.getKey();
             HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
 
+            // TODO add updated by user/system
             return new HandshakeApiTrustInResponseDTO(
                     remoteFingerprint,
                     CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
@@ -233,7 +241,7 @@ public class ApiHandshakeFacade {
                     CommonUtils.encodeBase64(trustedIn.session().publicDH()),
                     CommonUtils.encodeBase64(trustedIn.session().remotePublicDH()),
                     trustedIn.created(),
-                    trustedIn.updated()
+                    trustedIn.updatedByUser()
             );
         }).toList();
     }

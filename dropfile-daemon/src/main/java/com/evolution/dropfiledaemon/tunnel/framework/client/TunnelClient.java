@@ -1,5 +1,6 @@
-package com.evolution.dropfiledaemon.tunnel.framework;
+package com.evolution.dropfiledaemon.tunnel.framework.client;
 
+import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientException;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,7 +8,7 @@ import java.io.InputStream;
 
 public interface TunnelClient {
 
-    InputStream stream(Request request);
+    InputStream stream(Request request) throws TunnelClientException;
 
     @Builder
     @Getter

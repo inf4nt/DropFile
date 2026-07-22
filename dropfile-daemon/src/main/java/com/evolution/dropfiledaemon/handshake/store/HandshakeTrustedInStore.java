@@ -13,9 +13,12 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
                      SessionKeys session,
                      Duration handshakeTtl,
                      Duration sessionTtl,
-                     long sessionRefreshRequestTimestamp,
                      Instant created,
-                     Instant updated) {
+                     long sessionRefreshRequestTimestamp,
+                     Instant sessionUpdatedByUser,
+                     Instant sessionUpdatedBySystem,
+                     Instant updatedByUser,
+                     Instant updatedBySystem) {
 
     }
 
