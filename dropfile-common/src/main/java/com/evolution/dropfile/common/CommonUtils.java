@@ -28,10 +28,6 @@ public class CommonUtils {
         return bytes;
     }
 
-    public static byte[] nonce32() {
-        return nonce(32);
-    }
-
     public static byte[] nonce12() {
         return nonce(12);
     }
@@ -54,11 +50,11 @@ public class CommonUtils {
         return secret;
     }
 
-    public static URI toURI(String host) {
-        if (!host.startsWith("http://") && !host.startsWith("https://")) {
-            return URI.create("http://" + host);
+    public static URI toURI(String string) {
+        if (!string.startsWith("http://") && !string.startsWith("https://")) {
+            return URI.create("http://" + string);
         }
-        return URI.create(host);
+        return URI.create(string);
     }
 
     public static URI toURI(String host, Integer port) {
@@ -143,28 +139,21 @@ public class CommonUtils {
     }
 
     @SafeVarargs
-    public static <T extends Throwable> T getThrowable(Throwable throwable,
-                                                       Class<T>... lookFor) {
+    public static boolean checkThrowable(Throwable throwable,
+                                         Class<? extends Throwable>... lookFor) {
         Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         Throwable cause = throwable;
 
         while (cause != null && visited.add(cause)) {
             for (Class<? extends Throwable> targetClass : lookFor) {
                 if (targetClass.isInstance(cause)) {
-                    //noinspection ReassignedVariable,unchecked
-                    return (T) cause;
+                    return true;
                 }
             }
             cause = cause.getCause();
         }
 
-        return null;
-    }
-
-    @SafeVarargs
-    public static boolean checkThrowable(Throwable throwable,
-                                         Class<? extends Throwable>... lookFor) {
-        return getThrowable(throwable, (Class<Throwable>[]) lookFor) != null;
+        return false;
     }
 
     public static <T> T requireOne(Collection<T> source) {
