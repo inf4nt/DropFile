@@ -18,6 +18,8 @@ public class ApiDaemonFacade {
 
     private final CacheResetFacade cacheResetFacade;
 
+    private final GarbageCollectorFacade garbageCollectorFacade;
+
     private final SystemInfoProvider systemInfoProvider;
 
     private final DaemonApplicationProperties daemonApplicationProperties;
@@ -27,7 +29,8 @@ public class ApiDaemonFacade {
     @SneakyThrows
     public DaemonInfoResponseDTO info() {
         String json = objectMapper.writeValueAsString(daemonApplicationProperties);
-        Map<String, String> daemonProperties = objectMapper.readValue(json, new TypeReference<>() {});
+        Map<String, String> daemonProperties = objectMapper.readValue(json, new TypeReference<>() {
+        });
         return new DaemonInfoResponseDTO(
                 systemInfoProvider.getSystemInfo(),
                 daemonProperties
@@ -40,5 +43,9 @@ public class ApiDaemonFacade {
 
     public void cacheReset() {
         cacheResetFacade.reset();
+    }
+
+    public void garbageCollector() {
+        garbageCollectorFacade.purge();
     }
 }

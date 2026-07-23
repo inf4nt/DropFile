@@ -29,4 +29,9 @@ public class ApiDaemonRestController {
     public void cacheReset() {
         apiDaemonFacade.cacheReset();
     }
+
+    @PostMapping("/garbage-collector")
+    public void garbageCollector() {
+        apiDaemonFacade.garbageCollector();
+    }
 }

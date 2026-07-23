@@ -12,7 +12,8 @@ import picocli.CommandLine;
                 ShutdownCommand.class,
                 RetrieveInfoCommand.class,
                 StartCommand.class,
-                CacheResetCommand.class
+                CacheResetCommand.class,
+                SystemGarbageCollectorCommand.class
         }
 )
 public class DaemonCommand implements SimpleCommandHandler {

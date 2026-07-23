@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -410,6 +410,22 @@ public class DaemonClient {
     public HttpResponse<byte[]> daemonCacheReset() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve("/api/daemon/cache-reset");
+
+        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(daemonURI)
+                .header("Authorization", daemonAuthorizationToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
+    public HttpResponse<byte[]> daemonGarbageCollector() throws IOException, InterruptedException {
+        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve("/api/daemon/garbage-collector");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
