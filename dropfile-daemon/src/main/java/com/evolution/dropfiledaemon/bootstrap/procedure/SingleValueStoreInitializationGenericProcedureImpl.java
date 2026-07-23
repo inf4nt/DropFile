@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.framework.single.SingleValueStore;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +22,7 @@ public class SingleValueStoreInitializationGenericProcedureImpl
     @Override
     public void init() {
         for (SingleValueStore store : stores) {
-            String storeName = store.getClass().getSimpleName();
+            String storeName = AopUtils.getTargetClass(store).getSimpleName();
             log.info("Fetching data to trigger its logic {}", storeName);
             var object = store.get();
             log.info("{} triggered record exists {}", storeName, object.isPresent());

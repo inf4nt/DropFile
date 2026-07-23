@@ -23,7 +23,7 @@ public class InstallationSeedBootstrapStoreInitializationProcedure
     public void init() {
         Optional<UUID> seed = store.get();
         if (seed.isEmpty()) {
-            log.info("No seed found. Initialization in progress");
+            log.info("No seed found. Initialization");
             store.save(UUID.randomUUID());
         }
     }
