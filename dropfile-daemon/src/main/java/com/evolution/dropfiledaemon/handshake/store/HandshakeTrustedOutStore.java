@@ -4,7 +4,6 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.With;
 
 import java.net.URI;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Map;
@@ -16,12 +15,9 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
     record TrustedOut(URI addressURI,
                       HandshakeKeys handshake,
                       SessionKeys session,
-                      Duration handshakeTtl,
-                      Duration sessionTtl,
-                      Instant created,
-                      long sessionRefreshRequestTimestamp,
                       Instant sessionUpdatedByUser,
                       Instant sessionUpdatedBySystem,
+                      Instant created,
                       Instant updated) {
     }
 

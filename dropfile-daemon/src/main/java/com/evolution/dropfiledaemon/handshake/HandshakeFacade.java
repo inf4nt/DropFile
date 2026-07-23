@@ -106,15 +106,9 @@ public class HandshakeFacade {
                                             dhKeyPair.getPrivate().getEncoded(),
                                             publicKeyDH
                                     ),
-                                    // TODO implement TTL
-                                    null,
-                                    null,
                                     now,
-                                    0,
-                                    Instant.now(),
-                                    null,
                                     now,
-                                    null
+                                    now
                             );
                         }
                 );
@@ -142,13 +136,6 @@ public class HandshakeFacade {
                 sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
         );
         handshakeHelper.validateHandshakeLiveTimeout(sessionPayloadRequest.timestamp());
-        if (trustedIn.sessionRefreshRequestTimestamp() >= sessionPayloadRequest.timestamp()) {
-            throw new IllegalArgumentException(String.format(
-                    "Handshake session request timestamp is stale. Expected strictly greater than %d, but got %d",
-                    trustedIn.sessionRefreshRequestTimestamp(),
-                    sessionPayloadRequest.timestamp()
-            ));
-        }
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
@@ -174,9 +161,8 @@ public class HandshakeFacade {
                                             sessionPayloadRequest.publicKey()
                                     )
                             )
-                            .withSessionRefreshRequestTimestamp(sessionPayloadRequest.timestamp())
-                            .withSessionUpdatedByUser(now)
-                            .withUpdatedByUser(now);
+                            .withSessionUpdated(now)
+                            .withUpdated(now);
                 }
         );
 

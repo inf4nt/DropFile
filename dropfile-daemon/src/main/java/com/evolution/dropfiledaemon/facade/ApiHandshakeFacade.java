@@ -116,7 +116,7 @@ public class ApiHandshakeFacade {
 
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
 
-        Instant createInstantTime = Instant.now();
+        Instant now = Instant.now();
         handshakeTrustedOutStore
                 .save(
                         remoteFingerprint,
@@ -132,13 +132,10 @@ public class ApiHandshakeFacade {
                                         dhKeyPair.getPrivate().getEncoded(),
                                         responsePayload.publicKeyDH()
                                 ),
-                                null, // TODO implement TTL
-                                null,
-                                createInstantTime,
-                                0,
-                                createInstantTime,
-                                null,
-                                createInstantTime
+                                now,
+                                now,
+                                now,
+                                now
                         )
                 );
         return new ApiHandshakeStatusResponseDTO(
@@ -152,19 +149,18 @@ public class ApiHandshakeFacade {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
                 .getValue();
-        return handshakeReconnect(trustedOut, true, null);
+        return handshakeReconnect(trustedOut, true);
     }
 
-    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint, long sessionRefreshRequestTimestamp) {
+    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint) {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequired(fingerprint).getValue();
-        return handshakeReconnect(trustedOut, false, sessionRefreshRequestTimestamp);
+        return handshakeReconnect(trustedOut, false);
     }
 
     @SneakyThrows
     public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                                                         boolean byUser,
-                                                                         @Nullable Long sessionRefreshRequestTimestamp) {
+                                                                         boolean byUser) {
         URI addressURI = trustedOut.addressURI();
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
@@ -202,18 +198,7 @@ public class ApiHandshakeFacade {
                             sessionPayload.publicKey()
                     ))
                     .withUpdated(now);
-            if (byUser) {
-                next = next.withSessionUpdatedByUser(now);
-            } else {
-                next = next.withSessionUpdatedBySystem(now);
-            }
-
-            // TODO can i use this timestamp instead of sessionRefreshRequestTimestamp ?
-            long timestamp = sessionPayload.timestamp();
-
-            if (sessionRefreshRequestTimestamp != null) {
-                next = next.withSessionRefreshRequestTimestamp(sessionRefreshRequestTimestamp);
-            }
+            next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
             return next;
         });
 
@@ -267,7 +252,7 @@ public class ApiHandshakeFacade {
                     CommonUtils.encodeBase64(trustedIn.session().publicDH()),
                     CommonUtils.encodeBase64(trustedIn.session().remotePublicDH()),
                     trustedIn.created(),
-                    trustedIn.updatedByUser()
+                    trustedIn.updated()
             );
         }).toList();
     }

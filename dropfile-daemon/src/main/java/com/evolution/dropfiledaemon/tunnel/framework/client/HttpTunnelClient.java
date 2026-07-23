@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
@@ -9,15 +10,16 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelServerRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
-import com.evolution.dropfiledaemon.tunnel.framework.client.handler.TunnelClientHandler;
-import com.evolution.dropfiledaemon.tunnel.framework.client.handler.TunnelClientHandlerProvider;
+import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,6 +27,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class HttpTunnelClient implements TunnelClient {
@@ -35,20 +38,21 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final HttpClient httpClient;
 
-    private final ObjectMapper objectMapper;
-
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
-    private final TunnelClientHandlerProvider tunnelClientHandlerProvider;
+    private final TunnelTrafficMonitor tunnelTrafficMonitor;
+
+    private final CompressTunnelService compressTunnelService;
+
+    private final ObjectMapper objectMapper;
 
     @Override
-    public InputStream stream(Request request) throws TunnelClientException {
+    public InputStream stream(Request request) {
         HttpResponse<InputStream> httpResponse = null;
         try {
             String fingerprint = request.getFingerprint();
 
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
-
             SecretKey secretKey = getSecretKey(trustedOut);
 
             SecureEnvelope secureEnvelope = encrypt(request, secretKey);
@@ -68,26 +72,42 @@ public class HttpTunnelClient implements TunnelClient {
                     .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
                     .build();
 
-            httpResponse = httpClient
-                    .send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+
             if (httpResponse.statusCode() != 200) {
-                throw new IllegalStateException("Unexpected tunnel http response status code. Expected: 200, actual: " + httpResponse.statusCode());
+                throw new RuntimeException(
+                        "Unexpected tunnel HTTP response status code. Expected: 200, actual: " + httpResponse.statusCode()
+                );
             }
 
-            InputStream httpResponseInputStream = httpResponse.body();
-            int markerStatusCode = httpResponseInputStream.read();
-            TunnelClientHandler tunnelClientHandler = tunnelClientHandlerProvider.getHandler(markerStatusCode);
-            return tunnelClientHandler.handle(fingerprint, trustedOut, secretKey, httpResponseInputStream);
+            return getInputStreamResponse(httpResponse.body(), fingerprint, secretKey);
         } catch (Exception e) {
             if (httpResponse != null) {
                 try {
                     httpResponse.body().close();
                 } catch (Exception closeException) {
-                    closeException.printStackTrace();
+                    log.error("Failed to close HTTP response body stream during failure cleanup", closeException);
                 }
             }
-            throw new TunnelClientException(e.getMessage(), e);
+            throw new RuntimeException("Tunnel streaming request failed: " + e.getMessage(), e);
         }
+    }
+
+    private InputStream getInputStreamResponse(InputStream inputStream,
+                                               String fingerprint,
+                                               SecretKey secretKey) throws IOException {
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(
+                inputStream,
+                daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
+                Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
+        );
+        InputStream trafficMonitorInputStream = tunnelTrafficMonitor.inputStreamWrapper(fingerprint, watchdogInputStream);
+        InputStream decryptedStream = cryptoTunnel.decrypt(trafficMonitorInputStream, secretKey);
+
+        if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
+            return compressTunnelService.decompress(decryptedStream);
+        }
+        return decryptedStream;
     }
 
     private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
@@ -122,7 +142,6 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
-        return handshakeTrustedOutStore.getRequired(fingerprint)
-                .getValue();
+        return handshakeTrustedOutStore.getRequired(fingerprint).getValue();
     }
 }

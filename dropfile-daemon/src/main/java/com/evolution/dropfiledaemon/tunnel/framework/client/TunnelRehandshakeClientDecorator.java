@@ -1,17 +1,15 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
-import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientSessionExpiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
@@ -23,6 +21,9 @@ import java.util.stream.Stream;
 @Component
 public class TunnelRehandshakeClientDecorator implements TunnelClient, Purgeable {
 
+    // TODO create an env var
+    private static final Duration SESSION_TTL = Duration.ofHours(1);
+
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
 
     private final TunnelClient tunnelClient;
@@ -32,37 +33,29 @@ public class TunnelRehandshakeClientDecorator implements TunnelClient, Purgeable
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     @Override
-    public InputStream stream(Request request) throws TunnelClientException {
-        try {
-            return tunnelClient.stream(request);
-        } catch (Exception e) {
-            TunnelClientSessionExpiredException expiredException = CommonUtils.getThrowable(e, TunnelClientSessionExpiredException.class);
-            if (expiredException != null) {
-                String fingerprint = request.getFingerprint();
-                Object mutex = locks.computeIfAbsent(fingerprint, s -> new Object());
-                synchronized (mutex) {
-                    if (isSessionStillExpired(fingerprint, expiredException.getTimestamp())) {
-                        log.info("Session fingerprint {} has been expired. Refreshing", fingerprint);
-                        apiHandshakeFacade.systemHandshakeSessionRefresh(fingerprint, expiredException.getTimestamp());
-                    }
+    public InputStream stream(Request request) {
+        String fingerprint = request.getFingerprint();
+        if (isSessionExpired(fingerprint)) {
+            Object lock = locks.computeIfAbsent(fingerprint, __ -> new Object());
+            synchronized (lock) {
+                if (isSessionExpired(fingerprint)) {
+                    log.info("Session fingerprint {} has been expired. Refreshing", fingerprint);
+                    apiHandshakeFacade.systemHandshakeSessionRefresh(fingerprint);
                 }
-                return tunnelClient.stream(request);
             }
-            throw e;
         }
+        return tunnelClient.stream(request);
     }
 
-    private boolean isSessionStillExpired(String fingerprint, long failedSessionTimestamp) {
+    private boolean isSessionExpired(String fingerprint) {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequired(fingerprint)
-                .getValue();
-
-        Instant lastUpdated = Stream.of(trustedOut.sessionUpdatedByUser(), trustedOut.sessionUpdatedBySystem())
+                .getRequired(fingerprint).getValue();
+        Instant sessionLastUpdated = Stream.of(trustedOut.sessionUpdatedBySystem(), trustedOut.sessionUpdatedByUser())
                 .filter(Objects::nonNull)
                 .max(Instant::compareTo)
-                .orElse(Instant.EPOCH);
+                .orElseThrow();
 
-        return lastUpdated.toEpochMilli() <= failedSessionTimestamp;
+        return Instant.now().isAfter(sessionLastUpdated.plus(SESSION_TTL));
     }
 
     @Override

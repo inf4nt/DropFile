@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.handshake.store;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.With;
 
-import java.time.Duration;
 import java.time.Instant;
 
 public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedInStore.TrustedIn> {
@@ -11,14 +10,9 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
     @With
     record TrustedIn(HandshakeKeys handshake,
                      SessionKeys session,
-                     Duration handshakeTtl,
-                     Duration sessionTtl,
                      Instant created,
-                     long sessionRefreshRequestTimestamp,
-                     Instant sessionUpdatedByUser,
-                     Instant sessionUpdatedBySystem,
-                     Instant updatedByUser,
-                     Instant updatedBySystem) {
+                     Instant sessionUpdated,
+                     Instant updated) {
 
     }
 
