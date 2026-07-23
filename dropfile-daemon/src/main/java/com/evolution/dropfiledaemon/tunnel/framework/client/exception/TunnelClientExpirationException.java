@@ -2,7 +2,8 @@ package com.evolution.dropfiledaemon.tunnel.framework.client.exception;
 
 import lombok.Getter;
 
-public class TunnelClientExpirationException extends TunnelClientException {
+public class TunnelClientExpirationException
+        extends TunnelClientException {
 
     @Getter
     private final long timestamp;

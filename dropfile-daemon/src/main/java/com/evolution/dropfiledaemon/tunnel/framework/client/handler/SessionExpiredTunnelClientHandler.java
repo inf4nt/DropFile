@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client.handler;
 
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelServerDispatcherStatus;
 import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientSessionExpiredException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ public class SessionExpiredTunnelClientHandler implements TunnelClientHandler {
 
     @Override
     public int getStatusCode() {
-        return TunnelDispatcher.TunnelDispatcherStatus.SESSION_EXPIRED.getStatusCode();
+        return TunnelServerDispatcherStatus.SESSION_EXPIRED.getStatusCode();
     }
 
     @Override

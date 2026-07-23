@@ -4,8 +4,8 @@ import com.evolution.dropfile.common.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
-import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelServerDispatcherStatus;
+import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class OkTunnelClientHandler implements TunnelClientHandler {
 
     @Override
     public int getStatusCode() {
-        return TunnelDispatcher.TunnelDispatcherStatus.OK.getStatusCode();
+        return TunnelServerDispatcherStatus.OK.getStatusCode();
     }
 
     @Override

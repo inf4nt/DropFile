@@ -1,12 +1,12 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
 import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerDispatcherChainProcessor;
 
 import java.io.IOException;
 
-public interface TunnelDispatcherChain {
+public interface TunnelServerDispatcherChain {
 
     void doChain(TunnelDispatcherChainProcessorContext ctx,
-                 TunnelDispatcherChainProcessor processor) throws IOException;
+                 TunnelServerDispatcherChainProcessor processor) throws IOException;
 }

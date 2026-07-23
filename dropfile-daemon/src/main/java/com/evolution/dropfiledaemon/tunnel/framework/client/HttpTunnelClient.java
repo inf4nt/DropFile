@@ -7,6 +7,7 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.TunnelServerRestController;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.client.handler.TunnelClientHandler;
@@ -99,10 +100,10 @@ public class HttpTunnelClient implements TunnelClient {
 
         return cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(
-                        new TunnelRequestDTO.TunnelRequestPayload(
+                        new TunnelRequestDTO.Payload(
                                 request.getCommand(),
                                 payload,
-                                new TunnelRequestDTO.TunnelRequestConfiguration(
+                                new TunnelRequestDTO.Configuration(
                                         daemonApplicationProperties.daemonTunnelClientCompressEnabled
                                 ),
                                 System.currentTimeMillis()

@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.framework.compress;
+package com.evolution.dropfiledaemon.tunnel.framework.server.compress;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.RequiredArgsConstructor;

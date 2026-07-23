@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
-import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerDispatcherChainProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -14,14 +14,14 @@ import java.io.OutputStream;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Component
-public class CompressTunnelDispatcherChain implements TunnelDispatcherChain {
+public class CompressTunnelServerDispatcherChain implements TunnelServerDispatcherChain {
 
     private final CompressTunnelService compressTunnelService;
 
     @Override
     public void doChain(TunnelDispatcherChainProcessorContext ctx,
-                        TunnelDispatcherChainProcessor processor) throws IOException {
-        if (ctx.tunnelRequestPayload().configuration().compress()) {
+                        TunnelServerDispatcherChainProcessor processor) throws IOException {
+        if (ctx.payload().configuration().compress()) {
             try (OutputStream compressOutputStream = compressTunnelService.compressWrapper(
                     ctx.outputStream())) {
                 processor.proceed(ctx.withOutputStream(compressOutputStream));

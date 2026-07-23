@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.tunnel.framework.server.chain.procedure;
 
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.tunnel.framework.server.TunnelDispatcher;
-import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessor;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelServerDispatcherStatus;
+import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelServerDispatcherChainProcessor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatcherChainProcessorContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,14 +20,14 @@ import java.util.stream.Stream;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Component
-public class SessionExpiredTunnelDispatcherChain
-        implements TunnelDispatcherChain {
+public class SessionExpiredTunnelServerDispatcherChain
+        implements TunnelServerDispatcherChain {
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
     @Override
     public void doChain(TunnelDispatcherChainProcessorContext ctx,
-                        TunnelDispatcherChainProcessor processor) throws IOException {
+                        TunnelServerDispatcherChainProcessor processor) throws IOException {
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore
                 .getRequired(ctx.fingerprint())
                 .getValue();
@@ -46,7 +46,7 @@ public class SessionExpiredTunnelDispatcherChain
                         .array();
                 byte[] sign = CryptoRSA.sign(payload, CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA()));
 
-                outputStream.write(TunnelDispatcher.TunnelDispatcherStatus.SESSION_EXPIRED.getStatusCode());
+                outputStream.write(TunnelServerDispatcherStatus.SESSION_EXPIRED.getStatusCode());
                 outputStream.flush();
 
                 outputStream.write(payload);

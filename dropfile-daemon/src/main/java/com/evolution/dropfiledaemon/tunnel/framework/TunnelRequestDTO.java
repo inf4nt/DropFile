@@ -4,12 +4,12 @@ public record TunnelRequestDTO(String fingerprint,
                                byte[] payload,
                                byte[] nonce) {
 
-    public record TunnelRequestPayload(String command,
-                                       byte[] payload,
-                                       TunnelRequestConfiguration configuration,
-                                       long timestamp) {
+    public record Payload(String command,
+                          byte[] payload,
+                          Configuration configuration,
+                          long timestamp) {
     }
 
-    public record TunnelRequestConfiguration(boolean compress) {
+    public record Configuration(boolean compress) {
     }
 }

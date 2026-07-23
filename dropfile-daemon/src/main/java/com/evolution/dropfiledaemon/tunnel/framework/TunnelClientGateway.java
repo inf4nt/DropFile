@@ -8,7 +8,7 @@ import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamT
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
-import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelRehandshakeClientDecorator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,14 +1,22 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server.chain;
 
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import lombok.With;
 
 import javax.crypto.SecretKey;
 import java.io.OutputStream;
+import java.util.Objects;
 
-@With
 public record TunnelDispatcherChainProcessorContext(String fingerprint,
-                                                    TunnelRequestDTO.TunnelRequestPayload tunnelRequestPayload,
+                                                    TunnelRequestDTO.Payload payload,
                                                     SecretKey secretKey,
                                                     OutputStream outputStream) {
+
+    public TunnelDispatcherChainProcessorContext withOutputStream(OutputStream outputStream) {
+        return new TunnelDispatcherChainProcessorContext(
+                fingerprint,
+                payload,
+                secretKey,
+                Objects.requireNonNull(outputStream)
+        );
+    }
 }

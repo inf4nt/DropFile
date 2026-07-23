@@ -1,10 +1,10 @@
-package com.evolution.dropfiledaemon.tunnel.framework;
+package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelClient;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientException;
 import com.evolution.dropfiledaemon.tunnel.framework.client.exception.TunnelClientSessionExpiredException;
 import lombok.RequiredArgsConstructor;

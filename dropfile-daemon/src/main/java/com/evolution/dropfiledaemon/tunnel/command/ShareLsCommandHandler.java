@@ -12,7 +12,8 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Component
-public class ShareLsCommandHandler implements CommandHandler<ShareLsTunnelRequest, List<ShareLsTunnelResponse>> {
+public class ShareLsCommandHandler
+        implements CommandHandler<ShareLsTunnelRequest, List<ShareLsTunnelResponse>> {
 
     public static final String COMMAND_NAME = "share-ls";
 

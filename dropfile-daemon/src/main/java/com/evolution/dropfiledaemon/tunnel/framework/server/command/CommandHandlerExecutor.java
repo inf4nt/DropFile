@@ -33,7 +33,7 @@ public class CommandHandlerExecutor {
     }
 
     @SneakyThrows
-    public Object handle(TunnelRequestDTO.TunnelRequestPayload payload) {
+    public Object handle(TunnelRequestDTO.Payload payload) {
         CommandHandler commandHandler = getHandler(payload.command());
 
         @Nullable
