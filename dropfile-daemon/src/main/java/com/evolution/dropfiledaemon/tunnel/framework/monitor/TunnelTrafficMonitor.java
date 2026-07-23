@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,8 @@ public class TunnelTrafficMonitor implements Purgeable {
     private final Map<String, ThroughputMeter> outputStreams = new ConcurrentHashMap<>();
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     public Traffic getTraffic() {
         return new Traffic(
@@ -69,6 +72,8 @@ public class TunnelTrafficMonitor implements Purgeable {
     @Override
     public void purge() {
         outputStreams.keySet().removeIf(fingerprint -> handshakeTrustedInStore.get(fingerprint).isEmpty());
+
+        inputStreams.keySet().removeIf(fingerprint -> handshakeTrustedOutStore.get(fingerprint).isEmpty());
     }
 
     public record Traffic(Map<String, String> download,
