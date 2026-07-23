@@ -15,4 +15,6 @@ public class GarbageCollectorFacade {
     public void purge() {
         purgeables.forEach(it -> it.purge());
     }
+
+    // TODO add Scheduled to run it hourly
 }
