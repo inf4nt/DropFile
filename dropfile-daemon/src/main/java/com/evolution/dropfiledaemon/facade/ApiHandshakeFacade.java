@@ -152,10 +152,10 @@ public class ApiHandshakeFacade {
         return handshakeReconnect(trustedOut, true);
     }
 
-    public synchronized ApiHandshakeStatusResponseDTO systemHandshakeSessionRefresh(String fingerprint) {
+    public synchronized void systemHandshakeSessionRefresh(String fingerprint) {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequired(fingerprint).getValue();
-        return handshakeReconnect(trustedOut, false);
+        handshakeReconnect(trustedOut, false);
     }
 
     @SneakyThrows
