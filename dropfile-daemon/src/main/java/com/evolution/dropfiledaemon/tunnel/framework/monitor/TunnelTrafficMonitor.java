@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.util.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
-public class TunnelTrafficMonitor {
+public class TunnelTrafficMonitor implements Purgeable {
 
     private final Map<String, ThroughputMeter> inputStreams = new ConcurrentHashMap<>();
 
@@ -25,7 +26,6 @@ public class TunnelTrafficMonitor {
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
     public Traffic getTraffic() {
-        cleanup();
         return new Traffic(
                 getTraffic(inputStreams),
                 getTraffic(outputStreams),
@@ -66,7 +66,8 @@ public class TunnelTrafficMonitor {
         return Collections.unmodifiableMap(map);
     }
 
-    private void cleanup() {
+    @Override
+    public void purge() {
         outputStreams.keySet().removeIf(fingerprint -> handshakeTrustedInStore.get(fingerprint).isEmpty());
     }
 
