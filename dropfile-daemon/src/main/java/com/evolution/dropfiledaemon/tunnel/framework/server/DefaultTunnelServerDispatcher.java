@@ -10,6 +10,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.server.chain.TunnelDispatch
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -26,7 +27,7 @@ public class DefaultTunnelServerDispatcher implements TunnelServerDispatcher {
 
     private final ObjectMapper objectMapper;
 
-    private final TunnelServerDispatcherChainProcessorFactory tunnelServerDispatcherChainProcessorFactory;
+    private final ObjectProvider<TunnelServerDispatcherChainProcessor> tunnelServerDispatcherChainProcessorProvider;
 
     @Override
     public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream) throws IOException {
@@ -35,7 +36,7 @@ public class DefaultTunnelServerDispatcher implements TunnelServerDispatcher {
 
         TunnelRequestDTO.Payload payload = decrypt(requestDTO, secretKey);
 
-        TunnelServerDispatcherChainProcessor processor = tunnelServerDispatcherChainProcessorFactory.createProcessor();
+        TunnelServerDispatcherChainProcessor processor = tunnelServerDispatcherChainProcessorProvider.getObject();
         processor.proceed(new TunnelDispatcherChainProcessorContext(
                 fingerprint,
                 payload,
