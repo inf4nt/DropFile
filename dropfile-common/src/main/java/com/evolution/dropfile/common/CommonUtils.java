@@ -73,9 +73,12 @@ public class CommonUtils {
     }
 
     @SneakyThrows
-    public static String getFingerprint(byte[] data) {
+    public static String getFingerprint(byte[] ...data) {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
-        byte[] hash = md.digest(data);
+        for (byte[] datum : data) {
+            md.update(datum);
+        }
+        byte[] hash = md.digest();
         return HEX_FORMAT.formatHex(hash);
     }
 

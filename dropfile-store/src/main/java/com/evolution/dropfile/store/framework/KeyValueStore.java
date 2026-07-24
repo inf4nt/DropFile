@@ -36,8 +36,6 @@ public interface KeyValueStore<V> {
         ).iterator().next();
     }
 
-    V putIfAbsent(String key, V value);
-
     V remove(String key);
 
     void removeAll();
