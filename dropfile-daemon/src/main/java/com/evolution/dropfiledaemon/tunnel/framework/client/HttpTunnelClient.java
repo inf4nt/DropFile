@@ -118,9 +118,12 @@ public class HttpTunnelClient implements TunnelClient {
             default -> objectMapper.writeValueAsBytes(request.getBody());
         };
 
+        String requestId = CommonUtils.generateRawSecretNonce12();
+
         return cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(
                         new TunnelRequestDTO.Payload(
+                                requestId,
                                 request.getCommand(),
                                 payload,
                                 new TunnelRequestDTO.Configuration(

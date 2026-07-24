@@ -1,17 +1,19 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
+import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -23,10 +25,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
-public class DefaultTunnelDispatcher implements TunnelDispatcher {
+public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
+
+    private final Map<String, Instant> requests = new ConcurrentHashMap<>();
 
     // TODO create an env var
     // 1 hour + 15 min grace period
@@ -58,7 +64,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
 
         TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
-        validatePayloadTimestamp(tunnelRequestPayload);
+        validatePayloadTimestamp(tunnelRequestPayload.timestamp());
+        validateRequestForReplyAttack(fingerprint, tunnelRequestPayload.requestId());
 
         commandHandler(fingerprint, tunnelRequestPayload, secretKey, outputStream);
     }
@@ -111,8 +118,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         return objectMapper.readValue(decrypt, TunnelRequestDTO.Payload.class);
     }
 
-    private void validatePayloadTimestamp(TunnelRequestDTO.Payload tunnelRequestPayload) {
-        long requestTime = Math.abs(System.currentTimeMillis() - tunnelRequestPayload.timestamp());
+    private void validatePayloadTimestamp(long timestamp) {
+        long requestTime = Math.abs(System.currentTimeMillis() - timestamp);
         int maxLifetime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
         if (requestTime > maxLifetime) {
             throw new RuntimeException(
@@ -135,5 +142,28 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         byte[] bytes = objectMapper.writeValueAsBytes(handlerResult);
         return new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public void purge() {
+        long maxLifetime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
+        long cutoff = System.currentTimeMillis() - maxLifetime;
+
+        requests.values().removeIf(instant -> instant.toEpochMilli() < cutoff);
+    }
+
+    private void validateRequestForReplyAttack(String fingerprint, String requestId) {
+        String requestKey = getRequestKey(fingerprint, requestId);
+
+        Instant existing = requests.putIfAbsent(requestKey, Instant.now());
+
+        if (existing != null) {
+            log.warn("Replay attack detected for key: {}", requestKey);
+            throw new RuntimeException("Replay attack detected!");
+        }
+    }
+
+    private String getRequestKey(String fingerprint, String requestId) {
+        return fingerprint + ":" + requestId;
     }
 }
