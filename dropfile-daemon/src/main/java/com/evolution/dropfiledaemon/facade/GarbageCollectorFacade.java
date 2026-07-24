@@ -26,9 +26,9 @@ public class GarbageCollectorFacade {
 
     private final DaemonApplicationProperties applicationProperties;
 
-    volatile private long lastRunTimestamp = 0;
-
     private final TaskScheduler taskScheduler;
+
+    volatile private long lastRunTimestamp = 0;
 
     @EventListener(DropFileDaemonApplicationReadyEvent.class)
     public void readyListener() {
