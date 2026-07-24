@@ -1,10 +1,9 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
-import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
@@ -25,20 +24,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
-
-    private final Map<String, Instant> requests = new ConcurrentHashMap<>();
+public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     // TODO create an env var
     // 1 hour + 15 min grace period
     private static final Duration SESSION_TTL = Duration.ofHours(1).plusMinutes(15);
-
-    private final DaemonApplicationProperties daemonApplicationProperties;
 
     private final CommandHandlerExecutor commandHandlerExecutor;
 
@@ -49,6 +43,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final ReplyAttackGuard replyAttackGuard;
 
     private final ObjectMapper objectMapper;
 
@@ -64,8 +60,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
         SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
 
         TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
-        validatePayloadTimestamp(tunnelRequestPayload.timestamp());
-        validateRequestForReplyAttack(fingerprint, tunnelRequestPayload.requestId());
+        replyAttackGuard.tryToAddTunnelRequest(fingerprint, tunnelRequestPayload);
 
         commandHandler(fingerprint, tunnelRequestPayload, secretKey, outputStream);
     }
@@ -118,16 +113,6 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
         return objectMapper.readValue(decrypt, TunnelRequestDTO.Payload.class);
     }
 
-    private void validatePayloadTimestamp(long timestamp) {
-        long requestTime = Math.abs(System.currentTimeMillis() - timestamp);
-        int maxLifetime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
-        if (requestTime > maxLifetime) {
-            throw new RuntimeException(
-                    String.format("Tunnel request timeout. Expected max %sms, actual drift %sms", maxLifetime, requestTime)
-            );
-        }
-    }
-
     @SneakyThrows
     private InputStream handlerResultToInputStream(Object handlerResult) {
         if (handlerResult instanceof InputStream inputStream) {
@@ -142,28 +127,5 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher, Purgeable {
 
         byte[] bytes = objectMapper.writeValueAsBytes(handlerResult);
         return new ByteArrayInputStream(bytes);
-    }
-
-    @Override
-    public void purge() {
-        long maxLifetime = daemonApplicationProperties.daemonTunnelServerPayloadLifeTime;
-        long cutoff = System.currentTimeMillis() - maxLifetime;
-
-        requests.values().removeIf(instant -> instant.toEpochMilli() < cutoff);
-    }
-
-    private void validateRequestForReplyAttack(String fingerprint, String requestId) {
-        String requestKey = getRequestKey(fingerprint, requestId);
-
-        Instant existing = requests.putIfAbsent(requestKey, Instant.now());
-
-        if (existing != null) {
-            log.warn("Replay attack detected for key: {}", requestKey);
-            throw new RuntimeException("Replay attack detected!");
-        }
-    }
-
-    private String getRequestKey(String fingerprint, String requestId) {
-        return fingerprint + ":" + requestId;
     }
 }

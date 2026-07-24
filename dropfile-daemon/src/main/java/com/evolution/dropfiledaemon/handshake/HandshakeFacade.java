@@ -11,6 +11,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -36,6 +37,9 @@ public class HandshakeFacade {
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
+    private final ReplyAttackGuard replyAttackGuard;
+
+    // TODO get rid of synchronized ?
     @SneakyThrows
     public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.id();
@@ -54,12 +58,13 @@ public class HandshakeFacade {
         );
         HandshakeRequestDTO.Payload requestPayload = objectMapper
                 .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
+
+        replyAttackGuard.tryToAddHandshakeRequest(requestPayload);
         CryptoRSA.verify(
                 decryptMessage,
                 requestDTO.signature(),
                 CryptoRSA.getPublicKey(requestPayload.publicKeyRSA())
         );
-        handshakeHelper.validateHandshakeLiveTimeout(requestPayload.timestamp());
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -126,16 +131,16 @@ public class HandshakeFacade {
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
 
+        HandshakeSessionDTO.SessionPayload sessionPayloadRequest = objectMapper.readValue(
+                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
+        );
+
+        replyAttackGuard.tryToAddSessionRequest(sessionPayloadRequest);
         CryptoRSA.verify(
                 sessionPayloadDTOBytes,
                 sessionDTO.signature(),
                 CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
         );
-
-        HandshakeSessionDTO.SessionPayload sessionPayloadRequest = objectMapper.readValue(
-                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
-        );
-        handshakeHelper.validateHandshakeLiveTimeout(sessionPayloadRequest.timestamp());
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 

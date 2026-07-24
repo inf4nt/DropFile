@@ -106,15 +106,16 @@ public class ApiHandshakeFacade {
                 decryptResponsePayload,
                 HandshakeResponseDTO.Payload.class
         );
+
         handshakeHelper.validateHandshakeLiveTimeout(responsePayload.timestamp());
+
+        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
 
         CryptoRSA.verify(
                 decryptResponsePayload,
                 handshakeResponseDTO.signature(),
                 CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
-
-        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
 
         Instant now = Instant.now();
         handshakeTrustedOutStore
@@ -177,17 +178,18 @@ public class ApiHandshakeFacade {
         );
         HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
 
-        CryptoRSA.verify(
-                sessionResponse.payload(),
-                sessionResponse.signature(),
-                CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
-        );
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionPayload.class);
 
         handshakeHelper.validateHandshakeLiveTimeout(sessionPayload.timestamp());
 
         String remoteFingerprint = sessionResponse.fingerprint();
         handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
+
+        CryptoRSA.verify(
+                sessionResponse.payload(),
+                sessionResponse.signature(),
+                CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
+        );
 
         handshakeTrustedOutStore.update(remoteFingerprint, value -> {
             Instant now = Instant.now();
