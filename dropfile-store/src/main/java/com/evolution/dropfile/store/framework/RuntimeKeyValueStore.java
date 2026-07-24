@@ -46,6 +46,18 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
+    public synchronized V putIfAbsent(String key, V value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+        V v = store.get(key);
+        if (v != null) {
+            return v;
+        }
+        save(key, value);
+        return null;
+    }
+
+    @Override
     public synchronized V remove(String key) {
         return store.remove(key);
     }

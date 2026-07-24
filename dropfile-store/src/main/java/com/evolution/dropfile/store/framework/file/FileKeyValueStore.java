@@ -65,6 +65,18 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         return Collections.unmodifiableCollection(toSave.values());
     }
 
+    @Override
+    public synchronized V putIfAbsent(String key, V value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+        Optional<Map.Entry<String, V>> current = get(key);
+        if (current.isPresent()) {
+            return current.get().getValue();
+        }
+        save(key, value);
+        return null;
+    }
+
     @SneakyThrows
     @Override
     public synchronized V remove(String key) {

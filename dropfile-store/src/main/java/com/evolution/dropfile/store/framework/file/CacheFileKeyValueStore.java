@@ -63,6 +63,15 @@ public class CacheFileKeyValueStore<V>
     }
 
     @Override
+    public synchronized V putIfAbsent(String key, V value) {
+        try {
+            return super.putIfAbsent(key, value);
+        } finally {
+            reset();
+        }
+    }
+
+    @Override
     public synchronized void reset() {
         cache = null;
     }

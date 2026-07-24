@@ -30,13 +30,13 @@ public interface KeyValueStore<V> {
                 () -> {
                     Map.Entry<String, V> current = getRequired(key);
                     V newValue = updateFunction.apply(current.getValue());
-                    Objects.requireNonNull(newValue);
-                    validate(key, newValue);
                     return Map.of(key, newValue);
                 },
                 ValidatePolicy.STRICT
         ).iterator().next();
     }
+
+    V putIfAbsent(String key, V value);
 
     V remove(String key);
 
