@@ -116,6 +116,11 @@ public class ApiHandshakeFacade {
         );
         replyAttackGuard.tryToAddHandshakeResponse(responsePayload);
 
+        byte[] sessionKey = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
+                CryptoECDH.getPublicKey(responsePayload.publicKeyDH())
+        );
+
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         Instant now = Instant.now();
         handshakeTrustedOutStore
@@ -131,7 +136,8 @@ public class ApiHandshakeFacade {
                                 new HandshakeTrustedOutStore.SessionKeys(
                                         dhKeyPair.getPublic().getEncoded(),
                                         dhKeyPair.getPrivate().getEncoded(),
-                                        responsePayload.publicKeyDH()
+                                        responsePayload.publicKeyDH(),
+                                        sessionKey
                                 ),
                                 now,
                                 now,
@@ -189,13 +195,19 @@ public class ApiHandshakeFacade {
         );
         replyAttackGuard.tryToAddSessionResponse(sessionPayload);
 
+        byte[] sessionKey = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                CryptoECDH.getPublicKey(sessionPayload.publicKeyDH())
+        );
+
         handshakeTrustedOutStore.update(remoteFingerprint, value -> {
             Instant now = Instant.now();
             HandshakeTrustedOutStore.TrustedOut next = value
                     .withSession(new HandshakeTrustedOutStore.SessionKeys(
                             keyPairDH.getPublic().getEncoded(),
                             keyPairDH.getPrivate().getEncoded(),
-                            sessionPayload.publicKeyDH()
+                            sessionPayload.publicKeyDH(),
+                            sessionKey
                     ))
                     .withUpdated(now);
             next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);

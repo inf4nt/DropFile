@@ -90,6 +90,11 @@ public class HandshakeFacade {
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
         byte[] publicKeyDH = requestPayload.publicKeyDH();
 
+        byte[] sessionKey = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
+                CryptoECDH.getPublicKey(publicKeyDH)
+        );
+
         handshakeTrustedInStore.save(
                 remoteFingerprint,
                 () -> {
@@ -103,7 +108,8 @@ public class HandshakeFacade {
                             new HandshakeTrustedInStore.SessionKeys(
                                     dhKeyPair.getPublic().getEncoded(),
                                     dhKeyPair.getPrivate().getEncoded(),
-                                    publicKeyDH
+                                    publicKeyDH,
+                                    sessionKey
                             ),
                             now,
                             now,
@@ -154,6 +160,11 @@ public class HandshakeFacade {
                 signature
         );
 
+        byte[] sessionKey = CryptoECDH.getSecretKey(
+                CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                CryptoECDH.getPublicKey(sessionPayloadRequest.publicKeyDH())
+        );
+
         handshakeTrustedInStore.update(remoteFingerprint, value -> {
             Instant now = Instant.now();
             return value
@@ -161,7 +172,8 @@ public class HandshakeFacade {
                             new HandshakeTrustedInStore.SessionKeys(
                                     keyPairDH.getPublic().getEncoded(),
                                     keyPairDH.getPrivate().getEncoded(),
-                                    sessionPayloadRequest.publicKeyDH()
+                                    sessionPayloadRequest.publicKeyDH(),
+                                    sessionKey
                             )
                     )
                     .withSessionUpdated(now)

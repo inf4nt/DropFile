@@ -142,10 +142,7 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private SecretKey getSecretKey(HandshakeTrustedOutStore.TrustedOut trustedOut) {
-        byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(trustedOut.session().privateDH()),
-                CryptoECDH.getPublicKey(trustedOut.session().remotePublicDH())
-        );
+        byte[] secret = trustedOut.session().sessionKey();
         return cryptoTunnel.secretKey(secret);
     }
 

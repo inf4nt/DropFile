@@ -23,6 +23,7 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
 
     record SessionKeys(byte[] publicDH,
                        byte[] privateDH,
-                       byte[] remotePublicDH) {
+                       byte[] remotePublicDH,
+                       byte[] sessionKey) {
     }
 }

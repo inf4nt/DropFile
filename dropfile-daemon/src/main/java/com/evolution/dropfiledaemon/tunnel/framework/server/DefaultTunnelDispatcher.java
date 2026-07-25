@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
-import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
@@ -94,10 +93,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     private SecretKey getSecretKey(HandshakeTrustedInStore.TrustedIn trustedIn) {
-        byte[] secret = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(trustedIn.session().privateDH()),
-                CryptoECDH.getPublicKey(trustedIn.session().remotePublicDH())
-        );
+        byte[] secret = trustedIn.session().sessionKey();
         return cryptoTunnel.secretKey(secret);
     }
 

@@ -28,7 +28,8 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
 
     record SessionKeys(byte[] publicDH,
                        byte[] privateDH,
-                       byte[] remotePublicDH) {
+                       byte[] remotePublicDH,
+                       byte[] sessionKey) {
     }
 
     default Map.Entry<String, TrustedOut> getRequiredLastUpdated() {
