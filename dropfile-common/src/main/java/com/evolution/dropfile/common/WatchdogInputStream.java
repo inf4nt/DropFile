@@ -5,14 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WatchdogInputStream extends FilterInputStream {
 
-    private static final ExecutorService WATCHDOG_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+    private static final ScheduledExecutorService WATCHDOG_EXECUTOR =
+            Executors.newScheduledThreadPool(1);
 
     private final long limit;
 
@@ -31,18 +33,28 @@ public class WatchdogInputStream extends FilterInputStream {
     }
 
     public WatchdogInputStream(InputStream in, long limit, Duration duration) {
-        if (limit < 0) {
+        if (limit <= 0) {
             throw new IllegalArgumentException("Limit cannot be negative");
         }
         super(Objects.requireNonNull(in, "InputStream cannot be null"));
         this.limit = limit;
 
         if (duration != null) {
-            this.watchdogTask = WATCHDOG_EXECUTOR.submit(() -> {
-                Thread.sleep(duration);
-                close();
-                return null;
-            });
+            if (duration.isZero() || duration.isNegative()) {
+                throw new IllegalArgumentException("Duration must be positive");
+            }
+
+            this.watchdogTask = WATCHDOG_EXECUTOR.schedule(
+                    () -> {
+                        try {
+                            close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    },
+                    duration.toMillis(),
+                    TimeUnit.MILLISECONDS
+            );
         } else {
             this.watchdogTask = null;
         }
@@ -122,7 +134,6 @@ public class WatchdogInputStream extends FilterInputStream {
 
     private void finalizeStream() {
         if (watchdogTask != null && !watchdogTask.isDone()) {
-            // TODO test cancel(false) vs .cancel(true)
             watchdogTask.cancel(false);
         }
     }
