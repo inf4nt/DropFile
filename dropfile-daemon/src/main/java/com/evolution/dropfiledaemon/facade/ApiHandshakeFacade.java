@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -187,7 +188,7 @@ public class ApiHandshakeFacade {
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionPayload.class);
 
         String remoteFingerprint = sessionResponse.fingerprint();
-        handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
+        matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
         CryptoRSA.verify(
                 sessionResponse.payload(),
                 sessionResponse.signature(),
@@ -280,5 +281,14 @@ public class ApiHandshakeFacade {
                 trustedOut.created(),
                 trustedOut.updated()
         );
+    }
+
+    private void matchFingerprint(String fingerprint, PublicKey publicKey) {
+        String fingerprintExpected = CommonUtils.getFingerprint(publicKey.getEncoded());
+        if (!fingerprintExpected.equals(fingerprint)) {
+            throw new IllegalStateException(String.format(
+                    "Fingerprint mismatch %s vs %s", fingerprint, fingerprintExpected
+            ));
+        }
     }
 }

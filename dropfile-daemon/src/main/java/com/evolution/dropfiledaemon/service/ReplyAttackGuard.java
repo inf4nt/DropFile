@@ -7,6 +7,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -14,11 +15,16 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class ReplyAttackGuard implements Purgeable {
 
     private static final Duration TTL = Duration.ofSeconds(30);
+
+    private static final Duration CLOCK_DRIFT_TOLERANCE = Duration.ofSeconds(10);
+
+    private static final Duration RETENTION_PERIOD = TTL.multipliedBy(2).plus(CLOCK_DRIFT_TOLERANCE);
 
     private final Map<String, Instant> requests = new ConcurrentHashMap<>();
 
@@ -26,50 +32,35 @@ public class ReplyAttackGuard implements Purgeable {
         validatePayloadTime("Session request", payload.timestamp());
 
         String key = getSessionRequestKey(payload);
-        Instant instant = requests.putIfAbsent(key, Instant.now());
-        if (instant != null) {
-            throw new RuntimeException("Session request reply detected. Rejected %s".formatted(key));
-        }
+        checkAndRegisterKey(key, "Session request");
     }
 
     public void tryToAddSessionResponse(HandshakeSessionDTO.SessionPayload payload) {
         validatePayloadTime("Session response", payload.timestamp());
 
         String key = getSessionResponseKey(payload);
-        Instant instant = requests.putIfAbsent(key, Instant.now());
-        if (instant != null) {
-            throw new RuntimeException("Session response reply detected. Rejected %s".formatted(key));
-        }
+        checkAndRegisterKey(key, "Session response");
     }
 
     public void tryToAddHandshakeRequest(HandshakeRequestDTO.Payload payload) {
         validatePayloadTime("Handshake request", payload.timestamp());
 
         String key = getHandshakeRequestKey(payload);
-        Instant instant = requests.putIfAbsent(key, Instant.now());
-        if (instant != null) {
-            throw new RuntimeException("Handshake request reply detected. Rejected %s".formatted(key));
-        }
+        checkAndRegisterKey(key, "Handshake request");
     }
 
     public void tryToAddHandshakeResponse(HandshakeResponseDTO.Payload payload) {
         validatePayloadTime("Handshake response", payload.timestamp());
 
         String key = getHandshakeResponseKey(payload);
-        Instant instant = requests.putIfAbsent(key, Instant.now());
-        if (instant != null) {
-            throw new RuntimeException("Handshake response reply detected. Rejected %s".formatted(key));
-        }
+        checkAndRegisterKey(key, "Handshake response");
     }
 
     public void tryToAddTunnelDispatcherRequest(String fingerprint, TunnelRequestDTO.Payload payload) {
         validatePayloadTime("Tunnel dispatcher request", payload.timestamp());
 
         String key = getTunnelDispatcherRequestKey(fingerprint, payload.requestId());
-        Instant instant = requests.putIfAbsent(key, Instant.now());
-        if (instant != null) {
-            throw new RuntimeException("Tunnel dispatcher request reply detected. Rejected %s".formatted(key));
-        }
+        checkAndRegisterKey(key, "Tunnel dispatcher request");
     }
 
     public void validatePayloadTime(String operation, long timestamp) {
@@ -78,14 +69,21 @@ public class ReplyAttackGuard implements Purgeable {
         }
         long drift = Math.abs(System.currentTimeMillis() - timestamp);
         if (drift > TTL.toMillis()) {
-            throw new RuntimeException("%s payload expired or clock drift too large".formatted(operation));
+            throw new SecurityException("%s payload expired or clock drift too large".formatted(operation));
         }
     }
 
     @Override
     public void purge() {
-        long cutoff = System.currentTimeMillis() - (TTL.toMillis() + 30_000);
-        requests.values().removeIf(instant -> instant.toEpochMilli() < cutoff);
+        Instant cutoff = Instant.now().minus(RETENTION_PERIOD);
+        requests.values().removeIf(insertedAt -> insertedAt.isBefore(cutoff));
+    }
+
+    private void checkAndRegisterKey(String key, String operation) {
+        Instant existing = requests.putIfAbsent(key, Instant.now());
+        if (existing != null) {
+            throw new SecurityException("%s replay detected. Rejected %s".formatted(operation, key));
+        }
     }
 
     private String getTunnelDispatcherRequestKey(String fingerprint, String requestId) {
@@ -93,19 +91,17 @@ public class ReplyAttackGuard implements Purgeable {
     }
 
     private String getHandshakeRequestKey(HandshakeRequestDTO.Payload payload) {
-        return "h.req:" + CommonUtils
-                .getFingerprint(
-                        payload.publicKeyRSA(),
-                        payload.publicKeyDH()
-                );
+        return "h.req:" + CommonUtils.getFingerprint(
+                payload.publicKeyRSA(),
+                payload.publicKeyDH()
+        );
     }
 
     private String getHandshakeResponseKey(HandshakeResponseDTO.Payload payload) {
-        return "h.res:" + CommonUtils
-                .getFingerprint(
-                        payload.publicKeyRSA(),
-                        payload.publicKeyDH()
-                );
+        return "h.res:" + CommonUtils.getFingerprint(
+                payload.publicKeyRSA(),
+                payload.publicKeyDH()
+        );
     }
 
     private String getSessionRequestKey(HandshakeSessionDTO.SessionPayload payload) {

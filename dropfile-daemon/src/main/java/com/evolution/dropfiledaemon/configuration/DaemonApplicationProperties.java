@@ -40,13 +40,9 @@ public class DaemonApplicationProperties {
 
     public final int daemonTunnelServerCompressLevel;
 
-    public final int daemonTunnelServerPayloadLifeTime;
-
     public final int daemonManifestChunkMaxSize;
 
     public final int daemonHandshakeClientHttpRequestTimeoutMillis;
-
-    public final int daemonHandshakeServerPayloadLiveTime;
 
     public final long daemonQuickShareSecureAsyncRequestTimeout;
 
@@ -70,13 +66,11 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
             @Value("${dropfile.daemon.handshake.client.http.request-timeout-millis}") int daemonHandshakeClientHttpRequestTimeoutMillis,
-            @Value("${dropfile.daemon.handshake.server.payload.life-time}") int daemonHandshakeServerPayloadLiveTime,
             @Value("${dropfile.daemon.tunnel.client.compress.enabled}") boolean daemonTunnelClientCompressEnabled,
             @Value("${dropfile.daemon.tunnel.client.stream.max-size}") int daemonTunnelClientStreamMaxSize,
             @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
-            @Value("${dropfile.daemon.tunnel.server.payload.life-time}") int daemonTunnelServerPayloadLifeTime,
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize,
             @Value("${dropfile.daemon.quick-share.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
             @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
@@ -92,12 +86,10 @@ public class DaemonApplicationProperties {
         this.daemonDownloadsDirectory = daemonDownloadsDirectory;
         this.daemonTunnelClientHttpRequestTimeoutMillis = daemonTunnelClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientStreamDeadlineTimeoutMillis = daemonTunnelClientStreamDeadlineTimeoutMillis;
-        this.daemonTunnelServerPayloadLifeTime = daemonTunnelServerPayloadLifeTime;
         this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;
         this.daemonHandshakeClientHttpRequestTimeoutMillis = daemonHandshakeClientHttpRequestTimeoutMillis;
-        this.daemonHandshakeServerPayloadLiveTime = daemonHandshakeServerPayloadLiveTime;
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
