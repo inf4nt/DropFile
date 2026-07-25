@@ -38,7 +38,7 @@ public class FileHelper {
                       InputStream inputStream,
                       long position,
                       long size) throws IOException {
-        CloseShieldInputStream closeShieldInputStream = new CloseShieldInputStream(inputStream);
+        CloseShieldInputStream closeShieldInputStream = CloseShieldInputStream.stream(inputStream);
         try (ReadableByteChannel readableByteChannel = Channels.newChannel(closeShieldInputStream)) {
             long offset = position;
             long remaining = size;

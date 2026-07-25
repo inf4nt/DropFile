@@ -26,12 +26,11 @@ public class CryptoFileOperations implements FileOperations {
         delegate.removeAll(destination);
     }
 
-
     @Override
     public void write(Path destination, InputStream inputStream) throws IOException {
         byte[] fingerprint = getFingerprint();
         SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-        CloseShieldInputStream shieldStream = new CloseShieldInputStream(inputStream);
+        CloseShieldInputStream shieldStream = CloseShieldInputStream.stream(inputStream);
 
         try (InputStream encryptStream = cryptoTunnel.encryptSealStream(shieldStream, secretKey)) {
             delegate.write(destination, encryptStream);
