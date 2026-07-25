@@ -39,10 +39,13 @@ public class HandshakeFacade {
 
     @SneakyThrows
     public synchronized HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
-        String accessKeyId = requestDTO.id();
+        String accessKeyId = requestDTO.accessKeyId();
 
         AccessKey accessKey = accessKeyStore
                 .remove(accessKeyId);
+        if (accessKey == null) {
+            throw new SecurityException("Access key %s not found or already consumed".formatted(accessKeyId));
+        }
 
         String rawSecret = accessKey.key();
         SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes());
@@ -66,9 +69,9 @@ public class HandshakeFacade {
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
+                requestPayload.requestId(),
                 rsaKeyPair.getPublic().getEncoded(),
-                dhKeyPair.getPublic().getEncoded(),
-                System.currentTimeMillis()
+                dhKeyPair.getPublic().getEncoded()
         );
         byte[] responsePayloadByteArray = objectMapper.writeValueAsBytes(responsePayload);
 
@@ -130,8 +133,8 @@ public class HandshakeFacade {
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
 
-        HandshakeSessionDTO.SessionPayload sessionPayloadRequest = objectMapper.readValue(
-                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionPayload.class
+        HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = objectMapper.readValue(
+                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionRequestPayload.class
         );
 
         CryptoRSA.verify(
@@ -144,9 +147,9 @@ public class HandshakeFacade {
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
-        HandshakeSessionDTO.SessionPayload sessionPayloadResponse = new HandshakeSessionDTO.SessionPayload(
-                keyPairDH.getPublic().getEncoded(),
-                System.currentTimeMillis()
+        HandshakeSessionDTO.SessionResponsePayload sessionPayloadResponse = new HandshakeSessionDTO.SessionResponsePayload(
+                sessionPayloadRequest.requestId(),
+                keyPairDH.getPublic().getEncoded()
         );
         byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
         byte[] signature = CryptoRSA.sign(

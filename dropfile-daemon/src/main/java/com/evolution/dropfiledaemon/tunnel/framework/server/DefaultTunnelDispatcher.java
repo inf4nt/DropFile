@@ -133,9 +133,5 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private void writeMarkersToOutputStream(String requestId, OutputStream outputStream) throws IOException {
         outputStream.write(requestId.getBytes(StandardCharsets.UTF_8));
-        outputStream.write(ByteBuffer.allocate(Long.BYTES)
-                .putLong(Instant.now().toEpochMilli())
-                .array()
-        );
     }
 }

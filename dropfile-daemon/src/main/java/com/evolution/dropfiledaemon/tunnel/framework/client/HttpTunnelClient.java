@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -58,7 +59,7 @@ public class HttpTunnelClient implements TunnelClient {
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
             SecretKey secretKey = getSecretKey(trustedOut);
 
-            String requestId = CommonUtils.generateRawSecretNonce12();
+            String requestId = UUID.randomUUID().toString();
 
             SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
 
@@ -158,18 +159,6 @@ public class HttpTunnelClient implements TunnelClient {
         if (actualRequestIdBytes.length < expectedRequestIdBytes.length
                 || !MessageDigest.isEqual(actualRequestIdBytes, expectedRequestIdBytes)) {
             throw new SecurityException("Tunnel response request ID mismatch or stream truncated");
-        }
-
-        byte[] timestampAsBytes = inputStream.readNBytes(Long.BYTES);
-        if (timestampAsBytes.length < Long.BYTES) {
-            throw new SecurityException("Premature EOF while reading response timestamp");
-        }
-
-        long timestamp = ByteBuffer.wrap(timestampAsBytes).getLong();
-        long clockDrift = Math.abs(System.currentTimeMillis() - timestamp);
-
-        if (clockDrift > Duration.ofSeconds(30).toMillis()) {
-            throw new SecurityException("Tunnel response expired or clock drift too large: " + clockDrift + " ms");
         }
     }
 }

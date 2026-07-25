@@ -3,7 +3,6 @@ package com.evolution.dropfiledaemon.service;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import lombok.RequiredArgsConstructor;
@@ -28,18 +27,11 @@ public class ReplyAttackGuard implements Purgeable {
 
     private final Map<String, Instant> requests = new ConcurrentHashMap<>();
 
-    public void tryToAddSessionRequest(HandshakeSessionDTO.SessionPayload payload) {
+    public void tryToAddSessionRequest(HandshakeSessionDTO.SessionRequestPayload payload) {
         validatePayloadTime("Session request", payload.timestamp());
 
         String key = getSessionRequestKey(payload);
         checkAndRegisterKey(key, "Session request");
-    }
-
-    public void tryToAddSessionResponse(HandshakeSessionDTO.SessionPayload payload) {
-        validatePayloadTime("Session response", payload.timestamp());
-
-        String key = getSessionResponseKey(payload);
-        checkAndRegisterKey(key, "Session response");
     }
 
     public void tryToAddHandshakeRequest(HandshakeRequestDTO.Payload payload) {
@@ -49,13 +41,6 @@ public class ReplyAttackGuard implements Purgeable {
         checkAndRegisterKey(key, "Handshake request");
     }
 
-    public void tryToAddHandshakeResponse(HandshakeResponseDTO.Payload payload) {
-        validatePayloadTime("Handshake response", payload.timestamp());
-
-        String key = getHandshakeResponseKey(payload);
-        checkAndRegisterKey(key, "Handshake response");
-    }
-
     public void tryToAddTunnelDispatcherRequest(String fingerprint, TunnelRequestDTO.Payload payload) {
         validatePayloadTime("Tunnel dispatcher request", payload.timestamp());
 
@@ -63,7 +48,7 @@ public class ReplyAttackGuard implements Purgeable {
         checkAndRegisterKey(key, "Tunnel dispatcher request");
     }
 
-    public void validatePayloadTime(String operation, long timestamp) {
+    private void validatePayloadTime(String operation, long timestamp) {
         if (timestamp <= 0) {
             throw new IllegalArgumentException("%s payload timestamp must be greater than zero".formatted(operation));
         }
@@ -97,18 +82,7 @@ public class ReplyAttackGuard implements Purgeable {
         );
     }
 
-    private String getHandshakeResponseKey(HandshakeResponseDTO.Payload payload) {
-        return "h.res:" + CommonUtils.getFingerprint(
-                payload.publicKeyRSA(),
-                payload.publicKeyDH()
-        );
-    }
-
-    private String getSessionRequestKey(HandshakeSessionDTO.SessionPayload payload) {
+    private String getSessionRequestKey(HandshakeSessionDTO.SessionRequestPayload payload) {
         return "s.req:" + CommonUtils.getFingerprint(payload.publicKeyDH());
-    }
-
-    private String getSessionResponseKey(HandshakeSessionDTO.SessionPayload payload) {
-        return "s.res:" + CommonUtils.getFingerprint(payload.publicKeyDH());
     }
 }
