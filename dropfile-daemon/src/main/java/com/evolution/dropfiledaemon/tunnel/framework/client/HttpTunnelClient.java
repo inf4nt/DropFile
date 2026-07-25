@@ -15,6 +15,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTun
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,9 @@ import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Duration;
 
 @Slf4j
@@ -55,7 +58,9 @@ public class HttpTunnelClient implements TunnelClient {
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
             SecretKey secretKey = getSecretKey(trustedOut);
 
-            SecureEnvelope secureEnvelope = encrypt(request, secretKey);
+            String requestId = CommonUtils.generateRawSecretNonce12();
+
+            SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
 
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
                     CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
@@ -80,7 +85,9 @@ public class HttpTunnelClient implements TunnelClient {
                 );
             }
 
-            return getInputStreamResponse(httpResponse.body(), fingerprint, secretKey);
+            InputStream inputStreamResponse = getInputStreamResponse(httpResponse.body(), fingerprint, secretKey);
+            validateInputStream(requestId, inputStreamResponse);
+            return inputStreamResponse;
         } catch (Exception e) {
             if (httpResponse != null) {
                 try {
@@ -110,15 +117,13 @@ public class HttpTunnelClient implements TunnelClient {
         return decryptedStream;
     }
 
-    private SecureEnvelope encrypt(Request request, SecretKey secretKey) throws JsonProcessingException {
+    private SecureEnvelope encrypt(String requestId, Request request, SecretKey secretKey) throws JsonProcessingException {
         byte[] payload = switch (request.getBody()) {
             case null -> null;
             case String string -> string.getBytes(StandardCharsets.UTF_8);
             case byte[] byteArray -> byteArray;
             default -> objectMapper.writeValueAsBytes(request.getBody());
         };
-
-        String requestId = CommonUtils.generateRawSecretNonce12();
 
         return cryptoTunnel.encrypt(
                 objectMapper.writeValueAsBytes(
@@ -146,5 +151,28 @@ public class HttpTunnelClient implements TunnelClient {
 
     private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
         return handshakeTrustedOutStore.getRequired(fingerprint).getValue();
+    }
+
+    @SneakyThrows
+    private void validateInputStream(String requestId, InputStream inputStream) {
+        byte[] expectedRequestIdBytes = requestId.getBytes(StandardCharsets.UTF_8);
+
+        byte[] actualRequestIdBytes = inputStream.readNBytes(expectedRequestIdBytes.length);
+        if (actualRequestIdBytes.length < expectedRequestIdBytes.length
+                || !MessageDigest.isEqual(actualRequestIdBytes, expectedRequestIdBytes)) {
+            throw new SecurityException("Tunnel response request ID mismatch or stream truncated");
+        }
+
+        byte[] timestampAsBytes = inputStream.readNBytes(Long.BYTES);
+        if (timestampAsBytes.length < Long.BYTES) {
+            throw new SecurityException("Premature EOF while reading response timestamp");
+        }
+
+        long timestamp = ByteBuffer.wrap(timestampAsBytes).getLong();
+        long clockDrift = Math.abs(System.currentTimeMillis() - timestamp);
+
+        if (clockDrift > Duration.ofSeconds(30).toMillis()) {
+            throw new SecurityException("Tunnel response expired or clock drift too large: " + clockDrift + " ms");
+        }
     }
 }

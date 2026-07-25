@@ -18,7 +18,7 @@ class CloseShieldOutputStreamTest {
     @BeforeEach
     void setUp() {
         underlyingStream = mock(OutputStream.class);
-        shieldStream = new CloseShieldOutputStream(underlyingStream);
+        shieldStream = CloseShieldOutputStream.stream(underlyingStream);
     }
 
     @Test

@@ -95,7 +95,7 @@ public class PublicQuickShareRestController {
             return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
                 OutputStream outputStream = response.getOutputStream();
 
-                try (GZIPOutputStream gzipOut = new GZIPOutputStream(new CloseShieldOutputStream(outputStream)) {{
+                try (GZIPOutputStream gzipOut = new GZIPOutputStream(CloseShieldOutputStream.stream(outputStream)) {{
                     def.setLevel(daemonApplicationProperties.daemonQuickShareInsecureCompressLevel);
                 }}) {
                     fileHelper.transferTo(file.toPath(), gzipOut);

@@ -18,7 +18,7 @@ public class FileHelper {
     private static final String SHA256 = "SHA-256";
 
     public void transferTo(Path path, OutputStream outputStream) throws IOException {
-        CloseShieldOutputStream closeShieldOutputStream = new CloseShieldOutputStream(outputStream);
+        CloseShieldOutputStream closeShieldOutputStream = CloseShieldOutputStream.stream(outputStream);
 
         try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
              WritableByteChannel writableByteChannel = Channels.newChannel(closeShieldOutputStream)) {

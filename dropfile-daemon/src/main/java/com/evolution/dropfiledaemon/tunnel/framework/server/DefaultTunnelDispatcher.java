@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
+import com.evolution.dropfile.common.CloseShieldOutputStream;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
@@ -20,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -72,18 +74,14 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
 
         try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
-             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
-             OutputStream encryptStream = cryptoTunnel.encryptWrapper(monitorStream, secretKey)) {
+             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, CloseShieldOutputStream.stream(outputStream));
+             OutputStream encryptStream = cryptoTunnel.encryptWrapper(CloseShieldOutputStream.stream(monitorStream), secretKey);
+             OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream))) {
 
-            if (tunnelRequestPayload.configuration().compress()) {
-                try (OutputStream compressStream = compressTunnelService.compressWrapper(encryptStream)) {
-                    inputStreamResult.transferTo(compressStream);
-                    compressStream.flush();
-                }
-            } else {
-                inputStreamResult.transferTo(encryptStream);
-                encryptStream.flush();
-            }
+            writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
+
+            inputStreamResult.transferTo(compressOutputStream);
+            compressOutputStream.flush();
         }
     }
 
@@ -127,5 +125,21 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
         byte[] bytes = objectMapper.writeValueAsBytes(handlerResult);
         return new ByteArrayInputStream(bytes);
+    }
+
+    private OutputStream compress(TunnelRequestDTO.Configuration configuration, OutputStream outputStream) throws IOException {
+        if (configuration.compress()) {
+            return compressTunnelService.compressWrapper(outputStream);
+        }
+
+        return CloseShieldOutputStream.stream(outputStream);
+    }
+
+    private void writeMarkersToOutputStream(String requestId, OutputStream outputStream) throws IOException {
+        outputStream.write(requestId.getBytes(StandardCharsets.UTF_8));
+        outputStream.write(ByteBuffer.allocate(Long.BYTES)
+                .putLong(Instant.now().toEpochMilli())
+                .array()
+        );
     }
 }

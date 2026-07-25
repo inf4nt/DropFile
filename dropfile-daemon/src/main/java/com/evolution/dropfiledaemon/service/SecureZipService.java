@@ -34,7 +34,7 @@ public class SecureZipService {
                     File file,
                     String innerZipName,
                     String password) throws IOException {
-        CloseShieldOutputStream closeShieldOutputStream = new CloseShieldOutputStream(outputStream);
+        CloseShieldOutputStream closeShieldOutputStream = CloseShieldOutputStream.stream(outputStream);
         try (ZipOutputStream outerZos = new ZipOutputStream(closeShieldOutputStream, password.toCharArray())) {
 
             ZipParameters outerParams = new ZipParameters();
@@ -47,7 +47,7 @@ public class SecureZipService {
 
             outerZos.putNextEntry(outerParams);
 
-            CloseShieldOutputStream closeShieldOuterZos = new CloseShieldOutputStream(outerZos);
+            CloseShieldOutputStream closeShieldOuterZos = CloseShieldOutputStream.stream(outerZos);
             try (ZipOutputStream innerZos = new ZipOutputStream(closeShieldOuterZos)) {
                 ZipParameters innerParams = new ZipParameters();
                 innerParams.setFileNameInZip(innerZipName);

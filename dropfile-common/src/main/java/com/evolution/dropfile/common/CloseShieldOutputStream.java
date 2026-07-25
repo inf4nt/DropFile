@@ -3,10 +3,11 @@ package com.evolution.dropfile.common;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
-public class CloseShieldOutputStream extends FilterOutputStream {
+public final class CloseShieldOutputStream extends FilterOutputStream {
 
-    public CloseShieldOutputStream(OutputStream out) {
+    private CloseShieldOutputStream(OutputStream out) {
         super(out);
     }
 
@@ -16,7 +17,16 @@ public class CloseShieldOutputStream extends FilterOutputStream {
     }
 
     @Override
-    public final void close() throws IOException {
+    public void close() throws IOException {
         out.flush();
+    }
+
+    public static CloseShieldOutputStream stream(OutputStream outputStream) {
+        Objects.requireNonNull(outputStream);
+
+        if (outputStream instanceof CloseShieldOutputStream closeShieldOutputStream) {
+            return closeShieldOutputStream;
+        }
+        return new CloseShieldOutputStream(outputStream);
     }
 }
