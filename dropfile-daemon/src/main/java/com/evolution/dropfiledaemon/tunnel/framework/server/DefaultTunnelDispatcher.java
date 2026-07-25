@@ -60,7 +60,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
 
         TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
-        replyAttackGuard.tryToAddTunnelRequest(fingerprint, tunnelRequestPayload);
+        replyAttackGuard.tryToAddTunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
 
         commandHandler(fingerprint, tunnelRequestPayload, secretKey, outputStream);
     }

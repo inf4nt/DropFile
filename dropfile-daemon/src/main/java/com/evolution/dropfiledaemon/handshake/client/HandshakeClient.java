@@ -26,45 +26,47 @@ public class HandshakeClient {
 
     private final ObjectMapper objectMapper;
 
-    @SneakyThrows
     public HandshakeResponseDTO handshake(URI addressURI,
                                           HandshakeRequestDTO handshakeRequestDTO) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(addressURI.resolve(HandshakeRestController.HANDSHAKE_ENDPOINT))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(handshakeRequestDTO))
-                )
-                .header("Content-Type", "application/json")
-                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
-                .build();
+        return post(
+                addressURI.resolve(HandshakeRestController.HANDSHAKE_ENDPOINT),
+                handshakeRequestDTO,
+                HandshakeResponseDTO.class
+        );
+    }
 
-        HttpResponse<byte[]> httpResponse = execute(httpRequest);
-        return objectMapper.readValue(httpResponse.body(), HandshakeResponseDTO.class);
+    public HandshakeSessionDTO.Session handshakeSession(URI addressURI,
+                                                        HandshakeSessionDTO.Session session) {
+        return post(
+                addressURI.resolve(HandshakeRestController.HANDSHAKE_SESSION_ENDPOINT),
+                session,
+                HandshakeSessionDTO.Session.class
+        );
     }
 
     @SneakyThrows
-    public HandshakeSessionDTO.Session handshakeSession(URI addressURI,
-                                                        HandshakeSessionDTO.Session session) {
-        HttpRequest httpRequest = HttpRequest
-                .newBuilder()
-                .uri(addressURI.resolve(HandshakeRestController.HANDSHAKE_SESSION_ENDPOINT))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(session))
-                )
-                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
+    private <T> T post(URI uri, Object requestBody, Class<T> responseClass) {
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(uri)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(requestBody)))
                 .header("Content-Type", "application/json")
+                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
                 .build();
 
         HttpResponse<byte[]> httpResponse = execute(httpRequest);
-        return objectMapper.readValue(httpResponse.body(), HandshakeSessionDTO.Session.class);
+        return objectMapper.readValue(httpResponse.body(), responseClass);
     }
 
     @SneakyThrows
     private HttpResponse<byte[]> execute(HttpRequest httpRequest) {
         HttpResponse<byte[]> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
         if (httpResponse.statusCode() != 200) {
-            throw new RuntimeException(String.format("Handshake %s %s failed: status code %s", httpRequest.method(), httpRequest.uri(), httpResponse.statusCode()));
+            throw new RuntimeException(String.format("Handshake %s %s failed: status code %s",
+                    httpRequest.method(), httpRequest.uri(), httpResponse.statusCode()));
+        }
+        byte[] body = httpResponse.body();
+        if (body == null || body.length == 0) {
+            throw new IllegalStateException("Handshake server returned 200 OK but empty body");
         }
         return httpResponse;
     }

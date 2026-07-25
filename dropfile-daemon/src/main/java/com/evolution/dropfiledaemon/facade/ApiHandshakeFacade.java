@@ -13,9 +13,9 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +46,8 @@ public class ApiHandshakeFacade {
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final ReplyAttackGuard replyAttackGuard;
 
     @SneakyThrows
     public synchronized ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
@@ -107,16 +109,14 @@ public class ApiHandshakeFacade {
                 HandshakeResponseDTO.Payload.class
         );
 
-        handshakeHelper.validateHandshakeLiveTimeout(responsePayload.timestamp());
-
-        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
-
         CryptoRSA.verify(
                 decryptResponsePayload,
                 handshakeResponseDTO.signature(),
                 CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
+        replyAttackGuard.tryToAddHandshakeResponse(responsePayload);
 
+        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         Instant now = Instant.now();
         handshakeTrustedOutStore
                 .save(
@@ -180,16 +180,14 @@ public class ApiHandshakeFacade {
 
         HandshakeSessionDTO.SessionPayload sessionPayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionPayload.class);
 
-        handshakeHelper.validateHandshakeLiveTimeout(sessionPayload.timestamp());
-
         String remoteFingerprint = sessionResponse.fingerprint();
         handshakeHelper.matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
-
         CryptoRSA.verify(
                 sessionResponse.payload(),
                 sessionResponse.signature(),
                 CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
         );
+        replyAttackGuard.tryToAddSessionResponse(sessionPayload);
 
         handshakeTrustedOutStore.update(remoteFingerprint, value -> {
             Instant now = Instant.now();
@@ -197,7 +195,7 @@ public class ApiHandshakeFacade {
                     .withSession(new HandshakeTrustedOutStore.SessionKeys(
                             keyPairDH.getPublic().getEncoded(),
                             keyPairDH.getPrivate().getEncoded(),
-                            sessionPayload.publicKey()
+                            sessionPayload.publicKeyDH()
                     ))
                     .withUpdated(now);
             next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);

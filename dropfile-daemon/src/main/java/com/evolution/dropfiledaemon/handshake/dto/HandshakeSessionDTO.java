@@ -7,7 +7,7 @@ public class HandshakeSessionDTO {
                           byte[] signature) {
     }
 
-    public record SessionPayload(byte[] publicKey, long timestamp) {
+    public record SessionPayload(byte[] publicKeyDH, long timestamp) {
 
     }
 }
