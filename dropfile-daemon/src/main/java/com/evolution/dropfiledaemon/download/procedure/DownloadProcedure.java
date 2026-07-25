@@ -6,6 +6,7 @@ import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
+import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
@@ -172,11 +173,16 @@ public class DownloadProcedure {
                     isInterrupted();
                     int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
 
-                    FileManifest fileManifest = tunnelClientGateway.shareDownloadManifest(
+                    ShareDownloadManifestCommandResponse response = tunnelClientGateway.shareDownloadManifest(
                             request.fingerprint(),
                             request.fileId(),
                             manifestChunkMaxSize
                     );
+                    if (!request.fileId().equals(response.fileId())) {
+                        throw new SecurityException("Mismatched fileId in manifest response! Requested: %s, but got: %s"
+                                .formatted(request.fileId(), response.fileId()));
+                    }
+                    FileManifest fileManifest = response.fileManifest();
                     fileManifestBuilder.validate(fileManifest);
                     return fileManifest;
                 })

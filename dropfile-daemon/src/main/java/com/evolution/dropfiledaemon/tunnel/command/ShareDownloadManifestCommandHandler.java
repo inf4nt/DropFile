@@ -4,8 +4,9 @@ import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
+import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandResponse;
+import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import java.io.File;
 @RequiredArgsConstructor
 @Component
 public class ShareDownloadManifestCommandHandler
-        implements CommandHandler<ShareDownloadManifestCommandRequest, FileManifest> {
+        implements CommandHandler<ShareDownloadManifestCommandRequest, ShareDownloadManifestCommandResponse> {
 
     public static final String COMMAND_NAME = "share-download-manifest";
 
@@ -35,16 +36,17 @@ public class ShareDownloadManifestCommandHandler
 
     @SneakyThrows
     @Override
-    public FileManifest handle(ShareDownloadManifestCommandRequest request) {
+    public ShareDownloadManifestCommandResponse handle(ShareDownloadManifestCommandRequest request) {
         ShareFileEntry fileEntry = shareFileEntryStore
                 .getRequired(request.fileId()).getValue();
 
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
 
-        return fileManifestBuilder.build(
+        FileManifest fileManifest = fileManifestBuilder.build(
                 new File(fileEntry.resourcePath()).toPath(),
                 fileEntry.alias(),
                 chunkSize
         );
+        return new ShareDownloadManifestCommandResponse(request.fileId(), fileManifest);
     }
 }

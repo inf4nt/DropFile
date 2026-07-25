@@ -4,10 +4,7 @@ import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandRequest;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
+import com.evolution.dropfiledaemon.tunnel.command.dto.*;
 import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelRehandshakeClientDecorator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +37,7 @@ public class TunnelClientGateway {
     }
 
     @SneakyThrows
-    public FileManifest shareDownloadManifest(String fingerprint, String fileId, int chunkSize) {
+    public ShareDownloadManifestCommandResponse shareDownloadManifest(String fingerprint, String fileId, int chunkSize) {
         TunnelClient.Request request = TunnelClient.Request.builder(ShareDownloadManifestCommandHandler.COMMAND_NAME, fingerprint)
                 .body(new ShareDownloadManifestCommandRequest(
                         fileId,
@@ -48,7 +45,7 @@ public class TunnelClientGateway {
                 ))
                 .build();
         try (InputStream stream = tunnelClient.stream(request)) {
-            return objectMapper.readValue(stream, FileManifest.class);
+            return objectMapper.readValue(stream, ShareDownloadManifestCommandResponse.class);
         }
     }
 
