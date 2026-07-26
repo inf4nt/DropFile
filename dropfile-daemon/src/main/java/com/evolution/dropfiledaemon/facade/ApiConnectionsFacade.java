@@ -16,34 +16,6 @@ public class ApiConnectionsFacade {
 
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
-    private final HandshakeTrustedInStore handshakeTrustedInStore;
-
-    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
-
-    public synchronized void revoke(String fingerprint) {
-        String key = handshakeTrustedInStore.getRequiredByKeyStartWith(fingerprint)
-                .getKey();
-        handshakeTrustedInStore.remove(key);
-    }
-
-    public synchronized void revokeAll() {
-        handshakeTrustedInStore.removeAll();
-    }
-
-    public synchronized void disconnect(String fingerprint) {
-        String key = handshakeTrustedOutStore.getRequiredByKeyStartWith(fingerprint).getKey();
-        handshakeTrustedOutStore.remove(key);
-    }
-
-    public synchronized void disconnectCurrent() {
-        String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
-        handshakeTrustedOutStore.remove(fingerprint);
-    }
-
-    public synchronized void disconnectAll() {
-        handshakeTrustedOutStore.removeAll();
-    }
-
     public List<TunnelTrafficResponseDTO> getTraffic() {
         TunnelTrafficMonitor.Traffic traffic = tunnelTrafficMonitor.getTraffic();
         return Stream.concat(traffic.download().keySet().stream(), traffic.upload().keySet().stream())

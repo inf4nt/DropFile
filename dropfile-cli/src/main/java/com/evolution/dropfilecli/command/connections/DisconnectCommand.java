@@ -33,10 +33,10 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
     @Override
     public HttpResponse<byte[]> execute() {
         if (exclusive.all) {
-            return daemonClient.connectionsDisconnectAll();
+            return daemonClient.handshakeDisconnectAll();
         } else if (exclusive.current) {
-            return daemonClient.connectionsDisconnectCurrent();
+            return daemonClient.handshakeDisconnectCurrent();
         }
-        return daemonClient.connectionsDisconnect(exclusive.fingerprint);
+        return daemonClient.handshakeDisconnect(exclusive.fingerprint);
     }
 }

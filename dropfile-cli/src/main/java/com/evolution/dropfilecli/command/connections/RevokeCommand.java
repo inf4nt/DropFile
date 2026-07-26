@@ -30,8 +30,8 @@ public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
     @Override
     public HttpResponse<byte[]> execute() {
         if (exclusive.all) {
-            return daemonClient.connectionsRevokeAll();
+            return daemonClient.handshakeRevokeAll();
         }
-        return daemonClient.connectionsRevoke(exclusive.fingerprint);
+        return daemonClient.handshakeRevoke(exclusive.fingerprint);
     }
 }

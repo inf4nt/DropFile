@@ -31,9 +31,9 @@ public class DaemonClient {
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDisconnect(String fingerprint) {
+    public HttpResponse<byte[]> handshakeDisconnect(String fingerprint) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/disconnect/fingerprint/")
+                .resolve("/api/handshake/disconnect/fingerprint/")
                 .resolve(fingerprint);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -49,9 +49,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDisconnectCurrent() {
+    public HttpResponse<byte[]> handshakeDisconnectCurrent() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/disconnect/current");
+                .resolve("/api/handshake/disconnect/current");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -66,9 +66,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsDisconnectAll() {
+    public HttpResponse<byte[]> handshakeDisconnectAll() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/disconnect/all");
+                .resolve("/api/handshake/disconnect/all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 
@@ -83,9 +83,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsRevoke(String fingerprint) {
+    public HttpResponse<byte[]> handshakeRevoke(String fingerprint) {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/revoke/fingerprint/")
+                .resolve("/api/handshake/revoke/fingerprint/")
                 .resolve(fingerprint);
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
@@ -101,9 +101,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> connectionsRevokeAll() {
+    public HttpResponse<byte[]> handshakeRevokeAll() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/revoke/all");
+                .resolve("/api/handshake/revoke/all");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

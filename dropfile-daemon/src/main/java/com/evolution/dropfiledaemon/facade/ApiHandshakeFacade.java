@@ -33,8 +33,6 @@ import java.util.UUID;
 @Component
 public class ApiHandshakeFacade {
 
-    private final ApiConnectionsFacade apiConnectionsFacade;
-
     private final HandshakeClient handshakeClient;
 
     private final CryptoTunnel cryptoTunnel;
@@ -58,7 +56,7 @@ public class ApiHandshakeFacade {
                         addressURI, existingAddressURI.getKey()
                 ));
             }
-            apiConnectionsFacade.disconnect(existingAddressURI.getKey());
+            disconnect(existingAddressURI.getKey());
         }
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
@@ -230,6 +228,30 @@ public class ApiHandshakeFacade {
                 remoteFingerprint,
                 addressURI.toString()
         );
+    }
+
+    public synchronized void revoke(String fingerprint) {
+        String key = handshakeTrustedInStore.getRequiredByKeyStartWith(fingerprint)
+                .getKey();
+        handshakeTrustedInStore.remove(key);
+    }
+
+    public synchronized void revokeAll() {
+        handshakeTrustedInStore.removeAll();
+    }
+
+    public synchronized void disconnect(String fingerprint) {
+        String key = handshakeTrustedOutStore.getRequiredByKeyStartWith(fingerprint).getKey();
+        handshakeTrustedOutStore.remove(key);
+    }
+
+    public synchronized void disconnectCurrent() {
+        String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
+        handshakeTrustedOutStore.remove(fingerprint);
+    }
+
+    public synchronized void disconnectAll() {
+        handshakeTrustedOutStore.removeAll();
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {

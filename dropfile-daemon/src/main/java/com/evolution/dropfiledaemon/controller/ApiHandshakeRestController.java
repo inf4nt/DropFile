@@ -43,4 +43,30 @@ public class ApiHandshakeRestController {
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
         return apiHandshakeFacade.getLatestTrustOut();
     }
+
+    @PostMapping("/revoke/fingerprint/{fingerprint}")
+    public void revoke(@PathVariable String fingerprint) {
+        apiHandshakeFacade.revoke(fingerprint);
+    }
+
+    @PostMapping("/revoke/all")
+    public void revokeAll() {
+        apiHandshakeFacade.revokeAll();
+    }
+
+    @PostMapping("/disconnect/fingerprint/{fingerprint}")
+    public void disconnect(@PathVariable String fingerprint) {
+        apiHandshakeFacade.disconnect(fingerprint);
+    }
+
+    @PostMapping("/disconnect/current")
+    public void disconnectCurrent() {
+        apiHandshakeFacade.disconnectCurrent();
+    }
+
+    @PostMapping("/disconnect/all")
+    public void disconnectAll() {
+        apiHandshakeFacade.disconnectAll();
+    }
+
 }
