@@ -1,11 +1,10 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
-import com.evolution.dropfiledaemon.manifest.FileManifest;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.*;
-import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelRehandshakeClientDecorator;
+import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelClientRefreshableSessionDecorator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,7 @@ public class TunnelClientGateway {
 
     private final ObjectMapper objectMapper;
 
-    private final TunnelRehandshakeClientDecorator tunnelClient;
+    private final TunnelClientRefreshableSessionDecorator tunnelClient;
 
     @SneakyThrows
     public List<ShareLsTunnelResponse> shareLs(String fingerprint, List<String> ids) {

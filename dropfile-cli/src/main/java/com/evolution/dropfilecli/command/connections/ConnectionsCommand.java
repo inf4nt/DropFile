@@ -21,7 +21,7 @@ import picocli.CommandLine;
                 DisconnectCommand.class,
                 RevokeCommand.class,
                 AccessCommand.class,
-                StatusConnectionCommand.class,
+                ReconnectConnectionCommand.class,
                 BrowseCommand.class,
                 ShareCommand.class,
                 DownloadCommand.class,

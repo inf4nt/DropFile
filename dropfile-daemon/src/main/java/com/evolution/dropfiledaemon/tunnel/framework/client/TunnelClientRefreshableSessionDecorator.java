@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class TunnelRehandshakeClientDecorator implements TunnelClient, Purgeable {
+public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Purgeable {
 
     // TODO create an env var
     private static final Duration SESSION_TTL = Duration.ofHours(1);
@@ -40,7 +40,7 @@ public class TunnelRehandshakeClientDecorator implements TunnelClient, Purgeable
             synchronized (lock) {
                 if (isSessionExpired(fingerprint)) {
                     log.info("Session fingerprint {} has been expired. Refreshing", fingerprint);
-                    apiHandshakeFacade.systemHandshakeSessionRefresh(fingerprint);
+                    apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
                 }
             }
         }

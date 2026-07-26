@@ -24,9 +24,9 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.handshakeReconnect(requestDTO);
     }
 
-    @PostMapping("/status")
-    public ApiHandshakeStatusResponseDTO handshakeStatus() {
-        return apiHandshakeFacade.handshakeStatus();
+    @PostMapping("/current/reconnect")
+    public ApiHandshakeStatusResponseDTO handshakeCurrentReconnect() {
+        return apiHandshakeFacade.handshakeCurrentReconnect();
     }
 
     @GetMapping("/trust/in")

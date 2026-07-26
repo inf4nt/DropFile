@@ -153,8 +153,27 @@ public class ApiHandshakeFacade {
     }
 
     @SneakyThrows
+    public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
+                .getValue();
+        return handshakeReconnect(trustedOut, true);
+    }
+
+    public synchronized void systemHandshakeReconnect(String fingerprint) {
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                .getRequired(fingerprint).getValue();
+        handshakeReconnect(trustedOut, false);
+    }
+
+    public synchronized ApiHandshakeStatusResponseDTO handshakeCurrentReconnect() {
+        HandshakeTrustedOutStore.TrustedOut lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated().getValue();
+        return handshakeReconnect(lastHandshake, true);
+    }
+
+    @SneakyThrows
     private synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                                                         boolean byUser) {
+                                                                          boolean byUser) {
         URI addressURI = trustedOut.addressURI();
 
         KeyPair keyPairDH = CryptoECDH.generateKeyPair();
@@ -211,26 +230,6 @@ public class ApiHandshakeFacade {
                 remoteFingerprint,
                 addressURI.toString()
         );
-    }
-
-    @SneakyThrows
-    public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
-                .getValue();
-        return handshakeReconnect(trustedOut, true);
-    }
-
-    public synchronized void systemHandshakeSessionRefresh(String fingerprint) {
-        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequired(fingerprint).getValue();
-        handshakeReconnect(trustedOut, false);
-    }
-
-    public synchronized ApiHandshakeStatusResponseDTO handshakeStatus() {
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated();
-        URI addressURI = lastHandshake.getValue().addressURI();
-        return handshakeReconnect(new ApiHandshakeReconnectRequestDTO(addressURI.toString()));
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {

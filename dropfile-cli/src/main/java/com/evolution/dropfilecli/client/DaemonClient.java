@@ -488,9 +488,9 @@ public class DaemonClient {
     }
 
     @SneakyThrows
-    public HttpResponse<byte[]> handshakeStatus() {
+    public HttpResponse<byte[]> handshakeCurrentReconnect() {
         URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/status");
+                .resolve("/api/handshake/current/reconnect");
 
         String daemonAuthorizationToken = getDaemonAuthorizationToken();
 

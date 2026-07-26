@@ -10,14 +10,14 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "status",
-        description = "Retrieve status of current connection"
+        name = "reconnect",
+        description = "Reconnect to the current connection and rotate session keys"
 )
-public class StatusConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
+public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.handshakeStatus();
+        return daemonClient.handshakeCurrentReconnect();
     }
 
     @Override
