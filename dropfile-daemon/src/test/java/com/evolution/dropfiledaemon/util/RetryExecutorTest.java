@@ -1,17 +1,22 @@
 package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -698,5 +703,116 @@ public class RetryExecutorTest {
             assertThat("First error before delay should be caught in doOnError", errorsCaughtInDoOnError.size(), is(1));
             assertThat("isInterrupted() flag should be true", wasInterrupted.get(), is(true));
         }
+    }
+
+    @Test
+    void shouldInterruptActivePollingLoopOnTimeout() throws Exception {
+        AtomicBoolean loopExited = new AtomicBoolean(false);
+        CountDownLatch taskStarted = new CountDownLatch(1);
+
+        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+                RetryExecutor
+                        .call(() -> {
+                            taskStarted.countDown();
+                            while (!Thread.currentThread().isInterrupted()) {
+
+                            }
+                            loopExited.set(true);
+                            throw new RuntimeException("Exited loop via interrupt");
+                        })
+                        .callTimeout(Duration.ofMillis(100))
+                        .attempts(1)
+                        .run()
+        );
+
+        assertThat("Task should have started", taskStarted.await(1, TimeUnit.SECONDS), is(true));
+
+        Thread.sleep(200);
+
+        assertThat(
+                "Task should exit the while-loop when interrupted by timeout",
+                loopExited.get(),
+                is(true)
+        );
+    }
+
+    @Test
+    void shouldNotSleepAfterLastFailedAttempt() {
+        long start = System.currentTimeMillis();
+
+        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+                RetryExecutor
+                        .call(() -> {
+                            throw new RuntimeException("Instant failure");
+                        })
+                        .attempts(1)
+                        .delay(Duration.ofMillis(2000))
+                        .run()
+        );
+
+        long executionTime = System.currentTimeMillis() - start;
+
+        assertThat(
+                "Execution should fail immediately without delay after the last attempt",
+                executionTime < 500,
+                is(true)
+        );
+    }
+
+    @Test
+    void shouldCancelBackgroundTaskOnTimeout() throws Exception {
+        CountDownLatch taskStarted = new CountDownLatch(1);
+        AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+        AtomicBoolean completedPastTimeout = new AtomicBoolean(false);
+
+        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+                RetryExecutor
+                        .call(() -> {
+                            taskStarted.countDown();
+                            try {
+                                Thread.sleep(500);
+                                completedPastTimeout.set(true);
+                            } catch (InterruptedException e) {
+                                wasInterrupted.set(true);
+                                throw e;
+                            }
+                            return true;
+                        })
+                        .attempts(1)
+                        .callTimeout(Duration.ofMillis(100))
+                        .run()
+        );
+
+        Thread.sleep(500);
+
+        assertThat("Background task should be interrupted on timeout", wasInterrupted.get(), is(true));
+        assertThat("Background task should not finish work after timeout", completedPastTimeout.get(), is(false));
+    }
+
+    @Test
+    void shouldInterruptTaskWhenCallTimeoutExpires() throws Exception {
+        CountDownLatch taskStarted = new CountDownLatch(1);
+        AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+
+        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+                RetryExecutor
+                        .call(() -> {
+                            taskStarted.countDown();
+                            while (!Thread.currentThread().isInterrupted()) {
+
+                            }
+                            wasInterrupted.set(true);
+                            return true;
+                        })
+                        .attempts(1)
+                        .callTimeout(Duration.ofMillis(100))
+                        .run()
+        );
+
+        assertThat("Task should have started before timeout", taskStarted.await(1, TimeUnit.SECONDS), is(true));
+
+        Thread.sleep(200);
+
+        assertThat("Background task should be interrupted on timeout", wasInterrupted.get(), is(true));
     }
 }

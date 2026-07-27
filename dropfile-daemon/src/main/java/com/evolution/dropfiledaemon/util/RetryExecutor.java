@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 public class RetryExecutor<T> {
@@ -81,13 +80,15 @@ public class RetryExecutor<T> {
                 }
             }
             currentAttempt++;
-            try {
-                Thread.sleep(delay.toMillis());
-            } catch (InterruptedException e) {
-                if (!Thread.currentThread().isInterrupted()) {
-                    Thread.currentThread().interrupt();
+            if (currentAttempt <= attempts) {
+                try {
+                    Thread.sleep(delay.toMillis());
+                } catch (InterruptedException e) {
+                    if (!Thread.currentThread().isInterrupted()) {
+                        Thread.currentThread().interrupt();
+                    }
+                    throw e;
                 }
-                throw e;
             }
         }
         throw new RetryExecutorException(exceptions);
@@ -99,25 +100,18 @@ public class RetryExecutor<T> {
             return callable.call();
         }
 
+        Future<T> future = EXECUTOR_SERVICE.submit(callable);
+
         try {
-            CompletableFuture<T> future = CompletableFuture
-                    .supplyAsync(
-                            new Supplier<T>() {
-                                @Override
-                                @SneakyThrows
-                                public T get() {
-                                    return callable.call();
-                                }
-                            },
-                            EXECUTOR_SERVICE
-                    );
             long millis = callTimeout.toMillis();
             return future.get(millis, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            if (e instanceof ExecutionException executionException
-                    && executionException.getCause() != null) {
-                throw executionException.getCause();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof Exception exceptionCause) {
+                throw exceptionCause;
             }
+            throw e;
+        } catch (Exception e) {
+            future.cancel(true);
             throw e;
         }
     }
