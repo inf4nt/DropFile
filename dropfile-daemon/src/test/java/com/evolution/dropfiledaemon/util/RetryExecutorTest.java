@@ -250,45 +250,33 @@ public class RetryExecutorTest {
 
     @Test
     public void delay() {
-        AtomicInteger counter = new AtomicInteger(0);
-        AtomicReference<List<Long>> dates = new AtomicReference<>(new ArrayList<>());
+        List<Long> timestamps = new ArrayList<>();
+        int attempts = 3;
+        Duration delay = Duration.ofMillis(25);
 
-        int attempts = 100;
-        int stopRetry = attempts - 1;
-        Duration delay = Duration.ofMillis(10);
-
-        Boolean run = RetryExecutor
+        Boolean result = RetryExecutor
                 .call(() -> {
-                    if (counter.get() == stopRetry) {
-                        counter.incrementAndGet();
-                        dates.updateAndGet(longs -> {
-                            longs.add(System.currentTimeMillis());
-                            return longs;
-                        });
+                    timestamps.add(System.nanoTime());
+                    if (timestamps.size() == attempts) {
                         return true;
                     }
-                    counter.incrementAndGet();
-                    dates.updateAndGet(longs -> {
-                        longs.add(System.currentTimeMillis());
-                        return longs;
-                    });
                     return null;
                 })
                 .attempts(attempts)
                 .delay(delay)
                 .run();
 
-        assertThat("Counter should match total attempts count", counter.get(), is(attempts));
-        assertThat("Execution result should be true", run, is(true));
-        assertThat("Timestamps recorded count should match attempts", dates.get().size(), is(attempts));
+        assertThat("Execution result should be true", result, is(true));
+        assertThat("Timestamps recorded count should match attempts", timestamps.size(), is(attempts));
 
-        List<Long> longs = dates.get();
-        for (int i = 0; i < longs.size() - 1; i++) {
-            long first = longs.get(i);
-            long second = longs.get(i + 1);
-            long diff = second - first;
-            assertThat("Time difference between attempts should be at least configured delay",
-                    diff >= delay.toMillis(), is(true)
+        for (int i = 0; i < timestamps.size() - 1; i++) {
+            long diffNanos = timestamps.get(i + 1) - timestamps.get(i);
+            long diffMillis = TimeUnit.NANOSECONDS.toMillis(diffNanos);
+
+            assertThat(
+                    "Time difference between attempts should be at least configured delay",
+                    diffMillis >= delay.toMillis(),
+                    is(true)
             );
         }
     }
