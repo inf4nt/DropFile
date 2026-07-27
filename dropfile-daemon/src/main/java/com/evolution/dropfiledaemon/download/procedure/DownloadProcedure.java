@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,8 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DownloadProcedure {
 
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
-
-    private final ObjectMapper objectMapper;
 
     private final TunnelClientGateway tunnelClientGateway;
 
@@ -192,24 +189,6 @@ public class DownloadProcedure {
                     );
                 })
                 .run();
-
-//        RetryExecutor
-//                .call(() -> {
-//                    try (FileChannel fileChannel = FileChannel.open(
-//                            request.manifestFilePath(),
-//                            StandardOpenOption.CREATE,
-//                            StandardOpenOption.WRITE)) {
-//                        byte[] bytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest);
-//                        fileHelper.write(fileChannel, bytes, 0);
-//                    }
-//                    return 1;
-//                })
-//                .doOnError((attempt, exception) -> {
-//                    log.info("Retry 'write-file-manifest'. Operation: {} fingerprint {} manifest: {} attempt: {} exception: {}",
-//                            request.operation(), request.fingerprint(), request.manifestFilePath().toAbsolutePath(), attempt, exception.getMessage(), exception
-//                    );
-//                })
-//                .run();
     }
 
     private void chunksHandler() throws Exception {
@@ -222,10 +201,7 @@ public class DownloadProcedure {
                 StandardOpenOption.TRUNCATE_EXISTING)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
             Iterator<ChunkManifest> iterator = manifest.chunkManifests().iterator();
-            while (iterator.hasNext()) {
-                if (exceptionAtomicReference.get() != null) {
-                    throw exceptionAtomicReference.get();
-                }
+            while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
                 isInterrupted();
                 ChunkManifest chunkManifest = iterator.next();
                 CompletableFuture<Void> future = CompletableFuture.runAsync(
@@ -237,7 +213,7 @@ public class DownloadProcedure {
                                 handleSingleChunk(fileChannel, chunkManifest);
                                 throughputMeter.add(chunkManifest.size());
                             } catch (Exception exception) {
-                                exceptionAtomicReference.set(exception);
+                                exceptionAtomicReference.compareAndSet(null, exception);
                             }
                         },
                         executorService
@@ -250,6 +226,14 @@ public class DownloadProcedure {
                     CompletableFuture.anyOf(activeFutures.toArray(new CompletableFuture[0])).join();
                     activeFutures.removeIf(it -> it.isDone());
                 }
+            }
+
+            if (!activeFutures.isEmpty()) {
+                CompletableFuture.allOf(activeFutures.toArray(new CompletableFuture[0])).join();
+            }
+
+            if (exceptionAtomicReference.get() != null) {
+                throw exceptionAtomicReference.get();
             }
         }
     }

@@ -21,10 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +37,7 @@ public class FileDownloadOrchestrator {
 
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
-    private final Map<String, DownloadProcedure> downloadProcedures = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, DownloadProcedure> downloadProcedures = new LinkedHashMap<>();
 
     private final ArrayDeque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
 
@@ -57,6 +54,7 @@ public class FileDownloadOrchestrator {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorMaxQueueSize;
         DownloadProcedure downloadProcedure;
         synchronized (this) {
+            checkIfClosed();
             if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
                 throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
             }
@@ -89,7 +87,6 @@ public class FileDownloadOrchestrator {
 
     private void tryToStartNext() {
         int activeQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorActiveQueueSize;
-
         Map<String, DownloadProcedure> toStart = new LinkedHashMap<>();
         synchronized (this) {
             while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
@@ -109,9 +106,9 @@ public class FileDownloadOrchestrator {
         Path manifestFilePath = downloadProcedure.getRequest().manifestFilePath();
         Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
 
-        checkIfClosed();
         fileDownloadingExecutorService.execute(() -> {
             try {
+                checkIfClosed();
                 downloadProcedure.run(
                         () -> {
                             Instant createInstantTime = Instant.now();
@@ -128,16 +125,15 @@ public class FileDownloadOrchestrator {
                                             createInstantTime
                                     ));
                         },
-                        () -> fileDownloadEntryStore
-                                .update(
-                                        operationId,
-                                        downloadFileEntry -> downloadFileEntry
-                                                .withHash(downloadProcedure.getProgress().hash())
-                                                .withTotal(downloadProcedure.getProgress().total())
-                                                .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                                .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
-                                                .withUpdated(Instant.now())
-                                )
+                        () -> fileDownloadEntryStore.update(
+                                operationId,
+                                downloadFileEntry -> downloadFileEntry
+                                        .withHash(downloadProcedure.getProgress().hash())
+                                        .withTotal(downloadProcedure.getProgress().total())
+                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
+                                        .withUpdated(Instant.now())
+                        )
                 );
             } catch (Exception exception) {
                 log.info("Exception occurred during download process operation {} fingerprint {} {}",
@@ -147,20 +143,21 @@ public class FileDownloadOrchestrator {
                     if (downloadProcedure.isStopped()) {
                         return;
                     }
-                    fileDownloadEntryStore
-                            .update(
-                                    operationId,
-                                    downloadFileEntry -> downloadFileEntry
-                                            .withHash(downloadProcedure.getProgress().hash())
-                                            .withTotal(downloadProcedure.getProgress().total())
-                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
-                                            .withUpdated(Instant.now())
-                            );
+                    fileDownloadEntryStore.update(
+                            operationId,
+                            downloadFileEntry -> downloadFileEntry
+                                    .withHash(downloadProcedure.getProgress().hash())
+                                    .withTotal(downloadProcedure.getProgress().total())
+                                    .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                    .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
+                                    .withUpdated(Instant.now())
+                    );
                 });
                 throw new RuntimeException(exception);
             } finally {
-                CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
+                synchronized (this) {
+                    CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
+                }
                 CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
                 CommonUtils.executeSafety(() -> tryToStartNext());
             }
@@ -168,52 +165,68 @@ public class FileDownloadOrchestrator {
     }
 
     public Map<String, DownloadProgress> getWaitingQueue() {
-        return waitingQueue
-                .stream()
+        List<Map.Entry<String, DownloadProcedure>> snapshot;
+        synchronized (this) {
+            snapshot = new ArrayList<>(waitingQueue);
+        }
+
+        return snapshot.stream()
                 .collect(Collectors.toMap(
-                        x -> x.getKey(),
+                        Map.Entry::getKey,
                         x -> x.getValue().getProgress(),
                         (o, o2) -> o2,
-                        () -> new LinkedHashMap<>()
+                        LinkedHashMap::new
                 ));
     }
 
     public Map<String, DownloadProgress> getDownloadProcedures() {
-        return downloadProcedures.entrySet().stream()
+        Map<String, DownloadProcedure> snapshot;
+        synchronized (this) {
+            snapshot = new LinkedHashMap<>(downloadProcedures);
+        }
+
+        return snapshot.entrySet().stream()
                 .collect(Collectors.toMap(
-                        x -> x.getKey(),
+                        Map.Entry::getKey,
                         x -> x.getValue().getProgress(),
                         (o, o2) -> o2,
-                        () -> new LinkedHashMap<>()
+                        LinkedHashMap::new
                 ));
     }
 
     public void stop(String startWithOperationId) {
-        String operation = CommonUtils.requireOne(
-                Stream.concat(
-                                getWaitingQueue().keySet().stream(),
-                                getDownloadProcedures().keySet().stream()
-                        )
-                        .collect(Collectors.toSet()),
-                it -> it.startsWith(startWithOperationId)
-        );
+        Map<String, DownloadProcedure> targetOperation = new LinkedHashMap<>();
 
-        DownloadProcedure downloadProcedure;
         synchronized (this) {
-            downloadProcedure = downloadProcedures.get(operation);
+            String operation = CommonUtils.requireOne(
+                    Stream.concat(
+                                    waitingQueue.stream().map(Map.Entry::getKey),
+                                    downloadProcedures.keySet().stream()
+                            )
+                            .collect(Collectors.toSet()),
+                    it -> it.startsWith(startWithOperationId)
+            );
+
+            DownloadProcedure downloadProcedure = downloadProcedures.get(operation);
             if (downloadProcedure != null) {
                 downloadProcedures.remove(operation);
+                targetOperation.put(operation, downloadProcedure);
             } else {
-                downloadProcedure = waitingQueue.stream()
+                waitingQueue.stream()
                         .filter(it -> it.getKey().equals(operation))
-                        .map(it -> it.getValue())
-                        .findAny()
-                        .orElseThrow(() -> new RuntimeException("No operation found: " + operation));
-                waitingQueue.removeIf(it -> it.getKey().equals(operation));
+                        .findFirst()
+                        .ifPresent(entry -> {
+                            targetOperation.put(entry.getKey(), entry.getValue());
+                            waitingQueue.remove(entry);
+                        });
+
+                if (targetOperation.isEmpty()) {
+                    throw new RuntimeException("No operation found: " + operation);
+                }
             }
         }
 
-        stop(Map.of(operation, downloadProcedure), Collections.emptyMap());
+        stop(targetOperation, Collections.emptyMap());
     }
 
     public void stopAll() {
@@ -222,12 +235,13 @@ public class FileDownloadOrchestrator {
 
         synchronized (this) {
             waitingQueueSnapshot = waitingQueue.stream().collect(Collectors.toMap(
-                    x -> x.getKey(),
-                    x -> x.getValue(),
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
                     (o, o2) -> o2,
-                    () -> new LinkedHashMap<>()
+                    LinkedHashMap::new
             ));
             waitingQueue.clear();
+
             proceduresSnapshot = new LinkedHashMap<>(downloadProcedures);
             downloadProcedures.clear();
         }
@@ -237,7 +251,7 @@ public class FileDownloadOrchestrator {
 
     private void stop(Map<String, DownloadProcedure> operations,
                       Map<String, DownloadProcedure> waiting) {
-        operations.values().forEach(it -> it.stop());
+        operations.values().forEach(DownloadProcedure::stop);
 
         fileDownloadEntryStore.save(
                 () -> Stream
@@ -246,7 +260,7 @@ public class FileDownloadOrchestrator {
                             String operationId = downloadProcedureEntry.getKey();
 
                             DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
-                                    .map(it -> it.getValue())
+                                    .map(Map.Entry::getValue)
                                     .orElse(null);
 
                             DownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
@@ -275,10 +289,10 @@ public class FileDownloadOrchestrator {
                             return Map.entry(operationId, newOne);
                         })
                         .collect(Collectors.toMap(
-                                x -> x.getKey(),
-                                x -> x.getValue(),
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
                                 (v1, v2) -> v2,
-                                () -> new LinkedHashMap<>()
+                                LinkedHashMap::new
                         )),
                 KeyValueStore.ValidatePolicy.GENTLE
         );
@@ -296,7 +310,7 @@ public class FileDownloadOrchestrator {
         return manifestPath;
     }
 
-    private Path getDestinationFilePath(FileDownloadRequest request) {
+    private synchronized Path getDestinationFilePath(FileDownloadRequest request) {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
@@ -307,7 +321,10 @@ public class FileDownloadOrchestrator {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
         Path downloadFilePath = downloadDirectoryPath.resolve(request.filename());
 
-        Map.Entry<String, DownloadProgress> duplicate = Stream.concat(getWaitingQueue().entrySet().stream(), getDownloadProcedures().entrySet().stream())
+        Map.Entry<String, DownloadProgress> duplicate = Stream.concat(
+                        waitingQueue.stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress())),
+                        downloadProcedures.entrySet().stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress()))
+                )
                 .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
                 .findAny()
                 .orElse(null);
