@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfile.common.CommonUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -7,6 +8,9 @@ import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -583,5 +587,98 @@ public class RetryExecutorTest {
         }
 
         assertThat(callCounter.get(), is(6));
+    }
+
+    @Test
+    void shouldPreserveInterruptStatusWhenThreadIsInterrupted() throws Exception {
+        CountDownLatch taskStarted = new CountDownLatch(1);
+        CountDownLatch taskFinished = new CountDownLatch(1);
+
+        AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+        AtomicReference<Throwable> caughtException = new AtomicReference<>();
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            executor.submit(() -> {
+                try {
+                    RetryExecutor
+                            .call(() -> {
+                                taskStarted.countDown();
+                                Thread.sleep(5000);
+                                throw new RuntimeException("Simulated error");
+                            })
+                            .run();
+                } catch (Throwable e) {
+                    wasInterrupted.set(Thread.currentThread().isInterrupted());
+                    caughtException.set(e);
+                } finally {
+                    taskFinished.countDown();
+                }
+            });
+
+            assertThat("Task did not start in time", taskStarted.await(2, TimeUnit.SECONDS), is(true));
+
+            executor.shutdownNow();
+
+            assertThat("Task did not complete after interruption", taskFinished.await(2, TimeUnit.SECONDS), is(true));
+
+            assertThat("Expected exception to be thrown", caughtException.get(), is(notNullValue()));
+
+            assertThat("Exception chain should contain InterruptedException",
+                    CommonUtils.checkThrowable(
+                            caughtException.get(),
+                            InterruptedException.class
+                    ),
+                    is(true)
+            );
+
+            assertThat("isInterrupted() flag should be true", wasInterrupted.get(), is(true));
+        }
+    }
+
+    @Test
+    void shouldThrowInterruptedExceptionAndPreserveFlagWhenInterrupted() throws Exception {
+        CountDownLatch taskStarted = new CountDownLatch(1);
+        CountDownLatch taskFinished = new CountDownLatch(1);
+
+        AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+        AtomicReference<Throwable> caughtException = new AtomicReference<>();
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            executor.submit(() -> {
+                try {
+                    RetryExecutor
+                            .call(() -> {
+                                taskStarted.countDown();
+                                throw new RuntimeException("Simulated error to trigger retry delay");
+                            })
+                            .delay(Duration.ofSeconds(5000))
+                            .run();
+                } catch (Throwable e) {
+                    wasInterrupted.set(Thread.currentThread().isInterrupted());
+                    caughtException.set(e);
+                } finally {
+                    taskFinished.countDown();
+                }
+            });
+
+            assertThat("Task did not start in time", taskStarted.await(2, TimeUnit.SECONDS), is(true));
+
+            executor.shutdownNow();
+
+            assertThat("Task did not complete after interruption", taskFinished.await(2, TimeUnit.SECONDS), is(true));
+
+            assertThat("Expected exception to be thrown", caughtException.get(), is(notNullValue()));
+
+            assertThat(
+                    "Exception chain should contain InterruptedException",
+                    CommonUtils.checkThrowable(
+                            caughtException.get(),
+                            InterruptedException.class
+                    ),
+                    is(true)
+            );
+
+            assertThat("isInterrupted() flag should be true", wasInterrupted.get(), is(true));
+        }
     }
 }

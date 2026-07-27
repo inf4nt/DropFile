@@ -56,10 +56,16 @@ public class RetryExecutor<T> {
                     return call;
                 }
             } catch (Exception e) {
-                if (CommonUtils.checkThrowable(e, InterruptedException.class,
-                        ClosedChannelException.class)) {
+                if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                    if (!Thread.currentThread().isInterrupted()) {
+                        Thread.currentThread().interrupt();
+                    }
                     throw e;
                 }
+                if (CommonUtils.checkThrowable(e, ClosedChannelException.class)) {
+                    throw e;
+                }
+
                 boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
                 if (!continueRetry) {
                     throw e;
@@ -75,8 +81,14 @@ public class RetryExecutor<T> {
                 }
             }
             currentAttempt++;
-            // TODO catch InterruptedException and set Thread.currentThread().interrupt()
-            Thread.sleep(delay.toMillis());
+            try {
+                Thread.sleep(delay.toMillis());
+            } catch (InterruptedException e) {
+                if (!Thread.currentThread().isInterrupted()) {
+                    Thread.currentThread().interrupt();
+                }
+                throw e;
+            }
         }
         throw new RetryExecutorException(exceptions);
     }
