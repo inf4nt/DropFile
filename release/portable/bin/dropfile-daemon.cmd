@@ -1,4 +1,5 @@
 @echo off
+setlocal
 
 set "BIN_DIR=%~dp0"
 for %%I in ("%BIN_DIR%..") do set "APPLICATION_HOME=%%~fI"
@@ -11,10 +12,23 @@ IF NOT DEFINED DROPFILE_DAEMON_APPLICATION_HOME_DIRECTORY (
     SET "DROPFILE_DAEMON_APPLICATION_HOME_DIRECTORY=%APPLICATION_HOME%"
 )
 
+IF NOT DEFINED DROPFILE_DAEMON_CPU_COUNT (
+    SET "DROPFILE_DAEMON_CPU_COUNT=1"
+)
+
+IF NOT DEFINED DROPFILE_DAEMON_RAM_MB_XMX (
+    SET "DROPFILE_DAEMON_RAM_MB_XMX=256"
+)
+
+IF NOT DEFINED DROPFILE_DAEMON_RAM_MB_XMS (
+    SET "DROPFILE_DAEMON_RAM_MB_XMS=64"
+)
+
 java ^
          -Dlogging.path="%LOG_PATH%" ^
-         -XX:ActiveProcessorCount=1 ^
-         -Xmx256m -Xms64m ^
+        "-XX:ActiveProcessorCount=%DROPFILE_DAEMON_CPU_COUNT%" ^
+        "-Xmx%DROPFILE_DAEMON_RAM_MB_XMX%m" ^
+        "-Xms%DROPFILE_DAEMON_RAM_MB_XMS%m" ^
          -jar "%JAR_PATH%" ^
          "--spring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
          "--dropfile.daemon.application-home.directory=%DROPFILE_DAEMON_APPLICATION_HOME_DIRECTORY%" ^
