@@ -1,16 +1,19 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,10 +44,10 @@ public class ApiHandshakeFacade {
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
-    private final HandshakeTrustedInStore handshakeTrustedInStore;
+    private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
     @SneakyThrows
-    public synchronized ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
+    public ApiHandshakeStatusResponseDTO handshake(ApiHandshakeRequestDTO requestDTO) {
         URI addressURI = CommonUtils.toURI(requestDTO.address());
         Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
                 .getByAddressURI(addressURI)
@@ -56,7 +59,7 @@ public class ApiHandshakeFacade {
                         addressURI, existingAddressURI.getKey()
                 ));
             }
-            disconnect(existingAddressURI.getKey());
+            disconnectByFingerprint(existingAddressURI.getKey());
         }
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
@@ -121,147 +124,144 @@ public class ApiHandshakeFacade {
         );
 
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
-        Instant now = Instant.now();
-        handshakeTrustedOutStore
-                .save(
-                        remoteFingerprint,
-                        new HandshakeTrustedOutStore.TrustedOut(
-                                addressURI,
-                                new HandshakeTrustedOutStore.HandshakeKeys(
-                                        rsaKeyPair.getPublic().getEncoded(),
-                                        rsaKeyPair.getPrivate().getEncoded(),
-                                        responsePayload.publicKeyRSA()
-                                ),
-                                new HandshakeTrustedOutStore.SessionKeys(
-                                        dhKeyPair.getPublic().getEncoded(),
-                                        dhKeyPair.getPrivate().getEncoded(),
-                                        responsePayload.publicKeyDH(),
-                                        sessionKey
-                                ),
-                                now,
-                                now,
-                                now,
-                                now
-                        )
-                );
-        return new ApiHandshakeStatusResponseDTO(
-                remoteFingerprint,
-                addressURI.toString()
-        );
-    }
+        return lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
 
-    @SneakyThrows
-    public synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
-        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address()))
-                .getValue();
-        return handshakeReconnect(trustedOut, true);
-    }
-
-    public synchronized void systemHandshakeReconnect(String fingerprint) {
-        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequired(fingerprint).getValue();
-        handshakeReconnect(trustedOut, false);
-    }
-
-    public synchronized ApiHandshakeStatusResponseDTO handshakeCurrentReconnect() {
-        HandshakeTrustedOutStore.TrustedOut lastHandshake = handshakeTrustedOutStore.getRequiredLastUpdated().getValue();
-        return handshakeReconnect(lastHandshake, true);
-    }
-
-    @SneakyThrows
-    private synchronized ApiHandshakeStatusResponseDTO handshakeReconnect(HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                                                          boolean byUser) {
-        URI addressURI = trustedOut.addressURI();
-
-        KeyPair keyPairDH = CryptoECDH.generateKeyPair();
-
-        String sessionRequestId = UUID.randomUUID().toString();
-        HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
-                sessionRequestId,
-                keyPairDH.getPublic().getEncoded(),
-                System.currentTimeMillis()
-        );
-        byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
-        byte[] signature = CryptoRSA.sign(sessionPayloadRequestBytes, CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA()));
-        HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
-                CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
-                sessionPayloadRequestBytes,
-                signature
-        );
-        HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
-
-        HandshakeSessionDTO.SessionResponsePayload sessionResponsePayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionResponsePayload.class);
-
-        String remoteFingerprint = sessionResponse.fingerprint();
-        matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
-        CryptoRSA.verify(
-                sessionResponse.payload(),
-                sessionResponse.signature(),
-                CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
-        );
-        if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
-            throw new SecurityException("Session response requestId mismatch! Expected %s, got %s"
-                    .formatted(sessionRequestId, sessionResponsePayload.requestId()));
-        }
-
-        byte[] sessionKey = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
-                CryptoECDH.getPublicKey(sessionResponsePayload.publicKeyDH())
-        );
-
-        handshakeTrustedOutStore.update(remoteFingerprint, value -> {
             Instant now = Instant.now();
-            HandshakeTrustedOutStore.TrustedOut next = value
-                    .withSession(new HandshakeTrustedOutStore.SessionKeys(
-                            keyPairDH.getPublic().getEncoded(),
-                            keyPairDH.getPrivate().getEncoded(),
-                            sessionResponsePayload.publicKeyDH(),
-                            sessionKey
-                    ))
-                    .withUpdated(now);
-            next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
-            return next;
+            handshakeTrustedOutStore
+                    .save(
+                            remoteFingerprint,
+                            new HandshakeTrustedOutStore.TrustedOut(
+                                    addressURI,
+                                    new HandshakeTrustedOutStore.HandshakeKeys(
+                                            rsaKeyPair.getPublic().getEncoded(),
+                                            rsaKeyPair.getPrivate().getEncoded(),
+                                            responsePayload.publicKeyRSA()
+                                    ),
+                                    new HandshakeTrustedOutStore.SessionKeys(
+                                            dhKeyPair.getPublic().getEncoded(),
+                                            dhKeyPair.getPrivate().getEncoded(),
+                                            responsePayload.publicKeyDH(),
+                                            sessionKey
+                                    ),
+                                    now,
+                                    now,
+                                    now,
+                                    now
+                            )
+                    );
+            return new ApiHandshakeStatusResponseDTO(
+                    remoteFingerprint,
+                    addressURI.toString()
+            );
         });
-
-        return new ApiHandshakeStatusResponseDTO(
-                remoteFingerprint,
-                addressURI.toString()
-        );
     }
 
-    public synchronized void revoke(String fingerprint) {
-        String key = handshakeTrustedInStore.getRequiredByKeyStartWith(fingerprint)
-                .getKey();
-        handshakeTrustedInStore.remove(key);
+    @SneakyThrows
+    public ApiHandshakeStatusResponseDTO handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
+        String fingerprint = handshakeTrustedOutStore
+                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
+        return handshakeReconnect(fingerprint, true);
     }
 
-    public synchronized void revokeAll() {
-        handshakeTrustedInStore.removeAll();
+    public void systemHandshakeReconnect(String fingerprint) {
+        handshakeReconnect(fingerprint, false);
     }
 
-    public synchronized void disconnect(String fingerprint) {
-        String key = handshakeTrustedOutStore.getRequiredByKeyStartWith(fingerprint).getKey();
-        handshakeTrustedOutStore.remove(key);
-    }
-
-    public synchronized void disconnectCurrent() {
+    public ApiHandshakeStatusResponseDTO handshakeCurrentReconnect() {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
-        handshakeTrustedOutStore.remove(fingerprint);
+        return handshakeReconnect(fingerprint, true);
     }
 
-    public synchronized void disconnectAll() {
-        handshakeTrustedOutStore.removeAll();
+    @SneakyThrows
+    private ApiHandshakeStatusResponseDTO handshakeReconnect(String fingerprint,
+                                                             boolean byUser) {
+        return lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
+            HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
+
+            URI addressURI = trustedOut.addressURI();
+
+            KeyPair keyPairDH = CryptoECDH.generateKeyPair();
+
+            String sessionRequestId = UUID.randomUUID().toString();
+            HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
+                    sessionRequestId,
+                    keyPairDH.getPublic().getEncoded(),
+                    System.currentTimeMillis()
+            );
+            byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
+            byte[] signature = CryptoRSA.sign(sessionPayloadRequestBytes, CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA()));
+            HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
+                    CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
+                    sessionPayloadRequestBytes,
+                    signature
+            );
+            HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
+
+            HandshakeSessionDTO.SessionResponsePayload sessionResponsePayload = objectMapper.readValue(sessionResponse.payload(), HandshakeSessionDTO.SessionResponsePayload.class);
+
+            String remoteFingerprint = sessionResponse.fingerprint();
+            matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
+            CryptoRSA.verify(
+                    sessionResponse.payload(),
+                    sessionResponse.signature(),
+                    CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
+            );
+            if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
+                throw new SecurityException("Session response requestId mismatch! Expected %s, got %s"
+                        .formatted(sessionRequestId, sessionResponsePayload.requestId()));
+            }
+
+            byte[] sessionKey = CryptoECDH.getSecretKey(
+                    CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                    CryptoECDH.getPublicKey(sessionResponsePayload.publicKeyDH())
+            );
+
+            handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+                Instant now = Instant.now();
+                HandshakeTrustedOutStore.TrustedOut next = value
+                        .withSession(new HandshakeTrustedOutStore.SessionKeys(
+                                keyPairDH.getPublic().getEncoded(),
+                                keyPairDH.getPrivate().getEncoded(),
+                                sessionResponsePayload.publicKeyDH(),
+                                sessionKey
+                        ))
+                        .withUpdated(now);
+                next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
+                return next;
+            });
+
+            return new ApiHandshakeStatusResponseDTO(
+                    remoteFingerprint,
+                    addressURI.toString()
+            );
+        });
+    }
+
+    public void disconnect(String mightFingerprint) {
+        String fingerprint = handshakeTrustedOutStore.getRequiredByKeyStartWith(mightFingerprint).getKey();
+        disconnectByFingerprint(fingerprint);
+    }
+
+    private void disconnectByFingerprint(String fingerprint) {
+        lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
+            handshakeTrustedOutStore.remove(fingerprint);
+        });
+    }
+
+    public void disconnectCurrent() {
+        String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
+        disconnectByFingerprint(fingerprint);
+    }
+
+    public void disconnectAll() {
+        lockableOperationHandshakeTrustedOutStore.executeWithGlobalLock(() -> {
+            handshakeTrustedOutStore.removeAll();
+        });
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
         Map<String, HandshakeTrustedOutStore.TrustedOut> trusts = handshakeTrustedOutStore.getAll();
         return mapToHandshakeApiTrustOutResponseDTOList(trusts);
-    }
-
-    public List<HandshakeApiTrustInResponseDTO> getTrustIt() {
-        Map<String, HandshakeTrustedInStore.TrustedIn> trusts = handshakeTrustedInStore.getAll();
-        return mapToHandshakeApiTrustInResponseDTOList(trusts);
     }
 
     public HandshakeApiTrustOutResponseDTO getLatestTrustOut() {
@@ -277,24 +277,6 @@ public class ApiHandshakeFacade {
                     return mapToHandshakeApiTrustOutResponseDTO(remoteFingerprint, trustedOut);
                 })
                 .toList();
-    }
-
-    private List<HandshakeApiTrustInResponseDTO> mapToHandshakeApiTrustInResponseDTOList(Map<String, HandshakeTrustedInStore.TrustedIn> trusts) {
-        return trusts.entrySet().stream().map(entry -> {
-            String remoteFingerprint = entry.getKey();
-            HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
-
-            // TODO add updated by user/system
-            return new HandshakeApiTrustInResponseDTO(
-                    remoteFingerprint,
-                    CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
-                    CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
-                    CommonUtils.encodeBase64(trustedIn.session().publicDH()),
-                    CommonUtils.encodeBase64(trustedIn.session().remotePublicDH()),
-                    trustedIn.created(),
-                    trustedIn.updated()
-            );
-        }).toList();
     }
 
     private HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String remoteFingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {

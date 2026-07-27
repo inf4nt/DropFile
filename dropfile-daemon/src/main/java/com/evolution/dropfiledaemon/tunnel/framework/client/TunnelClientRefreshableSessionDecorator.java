@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
+import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
@@ -19,12 +20,12 @@ import java.util.stream.Stream;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Purgeable {
+public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
 
     // TODO create an env var
     private static final Duration SESSION_TTL = Duration.ofHours(1);
 
-    private final Map<String, Object> locks = new ConcurrentHashMap<>();
+    private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
     private final TunnelClient tunnelClient;
 
@@ -36,13 +37,12 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
     public InputStream stream(Request request) {
         String fingerprint = request.getFingerprint();
         if (isSessionExpired(fingerprint)) {
-            Object lock = locks.computeIfAbsent(fingerprint, __ -> new Object());
-            synchronized (lock) {
+            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
                 if (isSessionExpired(fingerprint)) {
                     log.info("Session fingerprint {} has been expired. Refreshing", fingerprint);
                     apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
                 }
-            }
+            });
         }
         return tunnelClient.stream(request);
     }
@@ -56,10 +56,5 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
                 .orElseThrow();
 
         return Instant.now().isAfter(sessionLastUpdated.plus(SESSION_TTL));
-    }
-
-    @Override
-    public void purge() {
-        locks.keySet().removeIf(fingerprint -> handshakeTrustedOutStore.get(fingerprint).isEmpty());
     }
 }

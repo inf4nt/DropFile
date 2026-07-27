@@ -1,11 +1,14 @@
 package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfile.store.framework.file.DirectoryProviderImpl;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
@@ -46,5 +49,19 @@ public class DropFileDaemonConfiguration {
     @Bean
     public DirectoryProvider daemonDownloadsDirectoryProvider(DaemonApplicationProperties applicationProperties) {
         return new DirectoryProviderImpl(applicationProperties.daemonDownloadsDirectory);
+    }
+
+    @Bean
+    public LockableOperation lockableOperationHandshakeTrustedInStore(HandshakeTrustedInStore store) {
+        return new LockableOperation(key -> {
+            return store.get(key).isEmpty();
+        });
+    }
+
+    @Bean
+    public LockableOperation lockableOperationHandshakeTrustedOutStore(HandshakeTrustedOutStore store) {
+        return new LockableOperation(key -> {
+            return store.get(key).isEmpty();
+        });
     }
 }

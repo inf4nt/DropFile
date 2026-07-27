@@ -75,6 +75,7 @@ public class RetryExecutor<T> {
                 }
             }
             currentAttempt++;
+            // TODO catch InterruptedException and set Thread.currentThread().interrupt()
             Thread.sleep(delay.toMillis());
         }
         throw new RetryExecutorException(exceptions);

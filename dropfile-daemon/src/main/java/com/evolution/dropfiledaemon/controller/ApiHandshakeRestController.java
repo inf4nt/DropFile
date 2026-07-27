@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.controller;
 
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
+import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,8 @@ import java.util.List;
 public class ApiHandshakeRestController {
 
     private final ApiHandshakeFacade apiHandshakeFacade;
+
+    private final HandshakeFacade handshakeFacade;
 
     @PostMapping
     public ApiHandshakeStatusResponseDTO handshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
@@ -31,7 +34,7 @@ public class ApiHandshakeRestController {
 
     @GetMapping("/trust/in")
     public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
-        return apiHandshakeFacade.getTrustIt();
+        return handshakeFacade.getTrustIt();
     }
 
     @GetMapping("/trust/out")
@@ -46,12 +49,12 @@ public class ApiHandshakeRestController {
 
     @PostMapping("/revoke/fingerprint/{fingerprint}")
     public void revoke(@PathVariable String fingerprint) {
-        apiHandshakeFacade.revoke(fingerprint);
+        handshakeFacade.revoke(fingerprint);
     }
 
     @PostMapping("/revoke/all")
     public void revokeAll() {
-        apiHandshakeFacade.revokeAll();
+        handshakeFacade.revokeAll();
     }
 
     @PostMapping("/disconnect/fingerprint/{fingerprint}")

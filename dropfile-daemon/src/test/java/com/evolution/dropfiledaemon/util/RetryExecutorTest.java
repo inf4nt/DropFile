@@ -490,6 +490,30 @@ public class RetryExecutorTest {
     }
 
     @Test
+    public void doNotRetryInterruptedFlag() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        assertThrows(InterruptedException.class, () -> {
+            RetryExecutor
+                    .call(() -> {
+                        if (callCounter.get() <= 5) {
+                            callCounter.incrementAndGet();
+                            return 1;
+                        }
+                        Thread.currentThread().interrupt();
+                        // CommonUtils.isInterrupted() throws InterruptedException
+                        return 1;
+                    })
+                    .delay(Duration.ofMillis(0))
+                    .attempts(10)
+                    .retryIf(it -> true)
+                    .run();
+        });
+
+        assertThat(callCounter.get(), is(6));
+    }
+
+    @Test
     public void doNotRetryCauseInterruptedException() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
