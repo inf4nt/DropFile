@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Component
 public class FileManifestBuilder {
 
-    volatile private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     private static final String SHA256 = "SHA-256";
 
@@ -175,12 +176,16 @@ public class FileManifestBuilder {
 
     @EventListener(ContextClosedEvent.class)
     public void contextClosedEventListener() {
+        boolean set = closed.compareAndSet(false, true);
+        if (!set) {
+            return;
+        }
+
         log.info("Closing {} by {}", FileManifestBuilder.class, ContextClosedEvent.class);
-        closed = true;
     }
 
     private void checkIfClosed() {
-        if (closed) {
+        if (closed.get()) {
             throw new RuntimeException("Already closed " + FileManifestBuilder.class);
         }
     }
