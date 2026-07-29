@@ -186,7 +186,7 @@ public class DownloadProcedure {
                     return fileManifest;
                 })
                 .doOnError((attempt, exception) -> {
-                    log.info("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
+                    log.error("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage(), exception
                     );
                 })
@@ -250,7 +250,7 @@ public class DownloadProcedure {
                     return 1;
                 })
                 .doOnError((attempt, exception) -> {
-                    log.info("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
+                    log.error("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
                             request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
                             chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
                     );

@@ -14,7 +14,7 @@ public class TunnelRestControllerExceptionHandler {
     //  let the client know what has happened on the server side.
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleAsyncTimeoutException(Exception exception) {
-        log.info("Tunnel exception: {}", exception.getMessage(), exception);
+        log.error("Tunnel exception: {}", exception.getMessage(), exception);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .build();

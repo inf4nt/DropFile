@@ -22,7 +22,7 @@ public class ApiControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> exception(Exception e) {
-        log.info("Api call exception. Message: {}", e.getMessage(), e);
+        log.error("Api call exception. Message: {}", e.getMessage(), e);
         String stackTraceAsString = CommonUtils.getStackTraceAsString(e);
         ApiErrorDTO apiErrorDTO = new ApiErrorDTO(e.getClass().getName(), e.getMessage(), stackTraceAsString);
         return ResponseEntity.badRequest()

@@ -13,7 +13,7 @@ public class HandshakeRestControllerExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<HandshakeResponseDTO> exception(Exception exception) {
-        log.info("Handshake error: {}", exception.getMessage(), exception);
+        log.error("Handshake error: {}", exception.getMessage(), exception);
         byte[] payload = CommonUtils.nonce12();
         byte[] signature = CommonUtils.nonce12();
         return ResponseEntity.ok(

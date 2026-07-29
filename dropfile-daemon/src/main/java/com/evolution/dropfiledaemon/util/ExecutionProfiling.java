@@ -35,7 +35,7 @@ public class ExecutionProfiling {
             long end = System.currentTimeMillis();
             long duration = end - start;
             long seconds = TimeUnit.MILLISECONDS.toSeconds(duration);
-            log.info("[{}] finished with error. Millis {} seconds {}", operation, duration, seconds);
+            log.error("[{}] finished with error. Millis {} seconds {}", operation, duration, seconds);
             throw e;
         }
     }

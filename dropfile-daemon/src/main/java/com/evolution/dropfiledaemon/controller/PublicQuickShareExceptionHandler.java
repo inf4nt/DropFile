@@ -11,7 +11,7 @@ public class PublicQuickShareExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> exceptionHandler(Exception exception) {
-        log.info("PublicLinkShareRestController exception: {}", exception.getMessage(), exception);
+        log.error("PublicLinkShareRestController exception: {}", exception.getMessage(), exception);
         return ResponseEntity.notFound().build();
     }
 }
