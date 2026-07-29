@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,13 +34,13 @@ import java.util.stream.Stream;
 @Component
 public class FileDownloadOrchestrator {
 
-    volatile private boolean closed;
-
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Map<String, DownloadProcedure> downloadProcedures = new LinkedHashMap<>();
 
     private final ArrayDeque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
+
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     private final DownloadProcedureFactory downloadProcedureFactory;
 
@@ -100,8 +101,8 @@ public class FileDownloadOrchestrator {
     }
 
     private void runDownload(String operationId, DownloadProcedure downloadProcedure) {
-        String fingerprint = downloadProcedure.getProgress().fingerprint();
-        String fileId = downloadProcedure.getProgress().fileId();
+        String fingerprint = downloadProcedure.getRequest().fingerprint();
+        String fileId = downloadProcedure.getRequest().fileId();
         Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
         Path manifestFilePath = downloadProcedure.getRequest().manifestFilePath();
         Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
@@ -255,46 +256,48 @@ public class FileDownloadOrchestrator {
         operations.values().forEach(DownloadProcedure::stop);
 
         fileDownloadEntryStore.save(
-                () -> Stream
-                        .concat(operations.entrySet().stream(), waiting.entrySet().stream())
-                        .map(downloadProcedureEntry -> {
-                            String operationId = downloadProcedureEntry.getKey();
+                () -> {
+                    Instant now = Instant.now();
 
-                            DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
-                                    .map(Map.Entry::getValue)
-                                    .orElse(null);
+                    return Stream
+                            .concat(operations.entrySet().stream(), waiting.entrySet().stream())
+                            .map(downloadProcedureEntry -> {
+                                String operationId = downloadProcedureEntry.getKey();
+                                DownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
 
-                            DownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
+                                DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
+                                        .map(Map.Entry::getValue)
+                                        .orElse(null);
 
-                            if (downloadFileEntry != null) {
-                                DownloadFileEntry updated = downloadFileEntry
-                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.STOPPED)
-                                        .withUpdated(Instant.now())
-                                        .withHash(downloadProcedure.getProgress().hash())
-                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                        .withTotal(downloadProcedure.getProgress().total());
-                                return Map.entry(operationId, updated);
-                            }
+                                if (downloadFileEntry != null) {
+                                    DownloadFileEntry updated = downloadFileEntry
+                                            .withStatus(DownloadFileEntry.DownloadFileEntryStatus.STOPPED)
+                                            .withUpdated(now)
+                                            .withHash(downloadProcedure.getProgress().hash())
+                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                            .withTotal(downloadProcedure.getProgress().total());
+                                    return Map.entry(operationId, updated);
+                                }
 
-                            Instant createInstantTime = Instant.now();
-                            DownloadFileEntry newOne = new DownloadFileEntry(
-                                    downloadProcedure.getRequest().fingerprint(),
-                                    downloadProcedure.getProgress().fileId(),
-                                    downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
-                                    downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
-                                    downloadProcedure.getRequest().manifestFilePath().toAbsolutePath().toString(),
-                                    DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
-                                    createInstantTime,
-                                    createInstantTime
-                            );
-                            return Map.entry(operationId, newOne);
-                        })
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                Map.Entry::getValue,
-                                (v1, v2) -> v2,
-                                LinkedHashMap::new
-                        )),
+                                DownloadFileEntry newOne = new DownloadFileEntry(
+                                        downloadProcedure.getRequest().fingerprint(),
+                                        downloadProcedure.getRequest().fileId(),
+                                        downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
+                                        downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
+                                        downloadProcedure.getRequest().manifestFilePath().toAbsolutePath().toString(),
+                                        DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
+                                        now,
+                                        now
+                                );
+                                return Map.entry(operationId, newOne);
+                            })
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    (v1, v2) -> v2,
+                                    LinkedHashMap::new
+                            ));
+                },
                 KeyValueStore.ValidatePolicy.GENTLE
         );
     }
@@ -352,8 +355,12 @@ public class FileDownloadOrchestrator {
 
     @EventListener(ContextClosedEvent.class)
     public void contextClosedEventListener() throws InterruptedException {
+        boolean set = closed.compareAndSet(false, true);
+        if (!set) {
+            return;
+        }
+
         log.info("Closing {} by {}", FileDownloadOrchestrator.class, ContextClosedEvent.class);
-        closed = true;
 
         log.info("Stop All download procedures");
         stopAll();
@@ -375,7 +382,7 @@ public class FileDownloadOrchestrator {
     }
 
     private void checkIfClosed() {
-        if (closed) {
+        if (closed.get()) {
             throw new RuntimeException("Already closed " + FileDownloadOrchestrator.class);
         }
     }
