@@ -351,9 +351,7 @@ public class FileDownloadOrchestrator {
 
     @EventListener(ContextClosedEvent.class)
     public void contextClosedEventListener() throws InterruptedException {
-        log.info("Closing by " + ContextClosedEvent.class);
-
-        log.info("Closing FileDownloadOrchestrator");
+        log.info("Closing {} by {}", FileDownloadOrchestrator.class, ContextClosedEvent.class);
         closed = true;
 
         log.info("Stop All download procedures");
@@ -377,7 +375,7 @@ public class FileDownloadOrchestrator {
 
     private void checkIfClosed() {
         if (closed) {
-            throw new RuntimeException("Closed");
+            throw new RuntimeException("Already closed " + FileDownloadOrchestrator.class);
         }
     }
 

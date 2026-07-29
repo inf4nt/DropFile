@@ -25,7 +25,7 @@ public class Spinner {
                         System.out.flush();
                     }
 
-                    Thread.sleep(150);
+                    Thread.sleep(500);
                 }
             } catch (InterruptedException _) {
 

@@ -1,7 +1,10 @@
 package com.evolution.dropfiledaemon.manifest;
 
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -21,8 +24,11 @@ import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 
+@Slf4j
 @Component
 public class FileManifestBuilder {
+
+    volatile private boolean closed;
 
     private static final String SHA256 = "SHA-256";
 
@@ -121,10 +127,13 @@ public class FileManifestBuilder {
             long position = 0;
 
             while (position < fileSize) {
+                checkIfClosed();
+
                 int bytesInChunk = (int) Math.min(chunkSize, fileSize - position);
                 long bytesTransferredInChunk = 0;
 
                 while (bytesTransferredInChunk < bytesInChunk) {
+
                     long transferred = fileChannel.transferTo(
                             position + bytesTransferredInChunk,
                             bytesInChunk - bytesTransferredInChunk,
@@ -162,5 +171,17 @@ public class FileManifestBuilder {
 
     public int getChunkSize(int requestChunkSize) {
         return Math.min(requestChunkSize, chunkMaxSize);
+    }
+
+    @EventListener(ContextClosedEvent.class)
+    public void contextClosedEventListener() {
+        log.info("Closing {} by {}", FileManifestBuilder.class, ContextClosedEvent.class);
+        closed = true;
+    }
+
+    private void checkIfClosed() {
+        if (closed) {
+            throw new RuntimeException("Already closed " + FileManifestBuilder.class);
+        }
     }
 }
