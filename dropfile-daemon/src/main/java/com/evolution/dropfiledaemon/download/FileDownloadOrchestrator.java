@@ -136,24 +136,25 @@ public class FileDownloadOrchestrator {
                         )
                 );
             } catch (Exception exception) {
-                log.info("Exception occurred during download process operation {} fingerprint {} {}",
+                if (downloadProcedure.isStopped()) {
+                    log.info("Download operation {} (fingerprint {}) was stopped by user request.",
+                            operationId, fingerprint);
+                    return;
+                }
+
+                log.error("Exception occurred during download process operation {} fingerprint {} {}",
                         operationId, fingerprint, exception.getMessage(), exception
                 );
-                CommonUtils.executeSafety(() -> {
-                    if (downloadProcedure.isStopped()) {
-                        return;
-                    }
-                    fileDownloadEntryStore.update(
-                            operationId,
-                            downloadFileEntry -> downloadFileEntry
-                                    .withHash(downloadProcedure.getProgress().hash())
-                                    .withTotal(downloadProcedure.getProgress().total())
-                                    .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                    .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
-                                    .withUpdated(Instant.now())
-                    );
-                });
-                throw new RuntimeException(exception);
+                fileDownloadEntryStore.update(
+                        operationId,
+                        downloadFileEntry -> downloadFileEntry
+                                .withHash(downloadProcedure.getProgress().hash())
+                                .withTotal(downloadProcedure.getProgress().total())
+                                .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
+                                .withUpdated(Instant.now())
+                );
+                throw exception;
             } finally {
                 synchronized (this) {
                     CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));

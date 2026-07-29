@@ -29,13 +29,20 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RequiredArgsConstructor
 public class DownloadProcedure {
 
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
+
+    private final AtomicBoolean stopped = new AtomicBoolean();
+
+    private final AtomicBoolean completed = new AtomicBoolean();
 
     private final TunnelClientGateway tunnelClientGateway;
 
@@ -45,58 +52,53 @@ public class DownloadProcedure {
 
     private final DownloadProcedureConfiguration configuration;
 
-    @Getter
     private final DownloadProcedureRequest request;
 
     private FileManifest manifest;
 
-    volatile private ExecutorService executorService;
+    public DownloadProcedureRequest getRequest() {
+        return request;
+    }
 
-    @Getter
-    volatile private boolean stopped;
+    public boolean isStopped() {
+        return stopped.get();
+    }
+
+    public boolean isCompleted() {
+        return completed.get();
+    }
 
     public void stop() {
-        if (stopped) {
+        if (completed.get()) {
             return;
         }
-        synchronized (this) {
-            if (stopped) {
-                return;
-            }
-            stopped = true;
-            if (executorService != null) {
-                executorService.shutdownNow();
-            }
+        if (stopped.compareAndSet(false, true)) {
+            executorService.shutdownNow();
         }
     }
 
-    private ExecutorService getExecutorService() {
-        if (stopped) {
-            throw new IllegalStateException("Download procedure already stopped: " + request.operation());
+    private void checkIfDone() {
+        if (stopped.get()) {
+            throw new IllegalStateException("Download procedure was forcibly stopped: " + request.operation());
         }
-        if (executorService == null) {
-            synchronized (this) {
-                if (stopped) {
-                    throw new IllegalStateException("Download procedure already stopped: " + request.operation());
-                }
-                if (executorService == null) {
-                    executorService = Executors.newVirtualThreadPerTaskExecutor();
-                }
-            }
+        if (completed.get()) {
+            throw new IllegalStateException("Download procedure is already completed: " + request.operation());
         }
-        return executorService;
     }
 
     public void run(Runnable beforeProcedureCallback,
                     Runnable successCallback) {
-        try (ExecutorService executorService = getExecutorService()) {
+        checkIfDone();
+
+        try (ExecutorService service = executorService) {
             CompletableFuture.runAsync(
                             () -> {
                                 beforeProcedureCallback.run();
                                 runProcedure();
                                 successCallback.run();
+                                completed.set(true);
                             },
-                            executorService
+                            service
                     )
                     .join();
         }
