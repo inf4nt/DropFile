@@ -17,11 +17,13 @@ public class FileHelper {
 
     private static final String SHA256 = "SHA-256";
 
-    public void transferTo(Path path, OutputStream outputStream) throws IOException {
-        CloseShieldOutputStream closeShieldOutputStream = CloseShieldOutputStream.stream(outputStream);
+    public void transferTo(Path path, OutputStream outputStreamArgument) throws IOException {
+        InterruptibleOutputStream interruptibleOutputStream = InterruptibleOutputStream.stream(
+                CloseShieldOutputStream.stream(outputStreamArgument)
+        );
 
         try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-             WritableByteChannel writableByteChannel = Channels.newChannel(closeShieldOutputStream)) {
+             WritableByteChannel writableByteChannel = Channels.newChannel(interruptibleOutputStream)) {
             fileChannel.transferTo(0, Long.MAX_VALUE, writableByteChannel);
         }
     }
@@ -75,17 +77,19 @@ public class FileHelper {
     public String sha256(Path path) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
 
-        OutputStream digestOutputStream = new OutputStream() {
-            @Override
-            public void write(int b) {
-                digest.update((byte) b);
-            }
+        OutputStream digestOutputStream = InterruptibleOutputStream.stream(
+                new OutputStream() {
+                    @Override
+                    public void write(int b) {
+                        digest.update((byte) b);
+                    }
 
-            @Override
-            public void write(byte[] b, int off, int len) {
-                digest.update(b, off, len);
-            }
-        };
+                    @Override
+                    public void write(byte[] b, int off, int len) {
+                        digest.update(b, off, len);
+                    }
+                }
+        );
 
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
              InputStream inputStream = Channels.newInputStream(channel)) {

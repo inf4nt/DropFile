@@ -1,11 +1,10 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.CloseShieldOutputStream;
 import com.evolution.dropfile.common.FileHelper;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.service.SecureZipService;
+import com.evolution.dropfiledaemon.service.StreamingArchiveService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.zip.GZIPOutputStream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -40,7 +38,7 @@ public class PublicQuickShareRestController {
 
     private final FileHelper fileHelper;
 
-    private final SecureZipService secureZipService;
+    private final StreamingArchiveService streamingArchiveService;
 
     @GetMapping("/{id}")
     public WebAsyncTask<Void> download(@PathVariable String id, HttpServletResponse response) throws IOException {
@@ -77,9 +75,9 @@ public class PublicQuickShareRestController {
 
             return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
                 OutputStream outputStream = response.getOutputStream();
-                secureZipService.zip(
+                streamingArchiveService.secureZip(
                         outputStream,
-                        file,
+                        file.toPath(),
                         responseFileName,
                         quickShareEntry.secret()
                 );
@@ -94,12 +92,8 @@ public class PublicQuickShareRestController {
             response.setHeader("Content-Disposition", "attachment; filename=" + responseFileName);
             return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
                 OutputStream outputStream = response.getOutputStream();
-
-                try (GZIPOutputStream gzipOut = new GZIPOutputStream(CloseShieldOutputStream.stream(outputStream)) {{
-                    def.setLevel(daemonApplicationProperties.daemonQuickShareInsecureCompressLevel);
-                }}) {
-                    fileHelper.transferTo(file.toPath(), gzipOut);
-                }
+                streamingArchiveService.gzip(file.toPath(), outputStream);
+                outputStream.flush();
                 return null;
             });
         }
