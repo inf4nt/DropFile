@@ -13,6 +13,7 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,11 +50,11 @@ public class StreamingArchiveService {
                           Path source,
                           String innerZipName,
                           String password) throws IOException {
-        InterruptibleOutputStream interruptibleOutputStream = InterruptibleOutputStream.stream(
+        InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
                 CloseShieldOutputStream.stream(outputStreamArgument)
         );
 
-        ZipOutputStream outerZos = new ZipOutputStream(interruptibleOutputStream, password.toCharArray());
+        ZipOutputStream outerZos = new ZipOutputStream(outputStream, password.toCharArray());
         ZipParameters outerParams = new ZipParameters();
         outerParams.setFileNameInZip(INNER_ZIP_NAME);
         outerParams.setEncryptionMethod(EncryptionMethod.AES);

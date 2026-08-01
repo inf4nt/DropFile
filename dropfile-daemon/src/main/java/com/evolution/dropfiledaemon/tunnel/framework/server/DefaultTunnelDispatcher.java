@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
+import com.evolution.dropfile.common.InterruptibleOutputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
@@ -50,7 +51,11 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream) throws IOException {
+    public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStreamArgument) throws IOException {
+        InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
+                CloseShieldOutputStream.stream(outputStreamArgument)
+        );
+
         String fingerprint = requestDTO.fingerprint();
 
         Map.Entry<String, HandshakeTrustedInStore.TrustedIn> trustedInEntry = handshakeTrustedInStore
@@ -72,15 +77,18 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                                 OutputStream outputStream) throws IOException {
         Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
 
-        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult);
-             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, CloseShieldOutputStream.stream(outputStream));
-             OutputStream encryptStream = cryptoTunnel.encryptWrapper(CloseShieldOutputStream.stream(monitorStream), secretKey);
-             OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream))) {
+        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult)) {
+
+            OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
+            OutputStream encryptStream = cryptoTunnel.encryptWrapper(monitorStream, secretKey);
+            OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), encryptStream);
 
             writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
 
             inputStreamResult.transferTo(compressOutputStream);
+
             compressOutputStream.flush();
+            compressOutputStream.close();
         }
     }
 

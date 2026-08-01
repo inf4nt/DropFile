@@ -26,7 +26,7 @@ public class TunnelServerRestController {
     @PostMapping(TunnelServerRestController.TUNNEL_ENDPOINT)
     public ResponseEntity<StreamingResponseBody> stream(@RequestBody TunnelRequestDTO requestDTO) {
         StreamingResponseBody stream = outputStream -> {
-            tunnelDispatcher.dispatchStream(requestDTO, CloseShieldOutputStream.stream(outputStream));
+            tunnelDispatcher.dispatchStream(requestDTO, outputStream);
         };
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)

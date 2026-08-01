@@ -18,12 +18,12 @@ public class FileHelper {
     private static final String SHA256 = "SHA-256";
 
     public void transferTo(Path path, OutputStream outputStreamArgument) throws IOException {
-        InterruptibleOutputStream interruptibleOutputStream = InterruptibleOutputStream.stream(
+        InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
                 CloseShieldOutputStream.stream(outputStreamArgument)
         );
 
         try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-             WritableByteChannel writableByteChannel = Channels.newChannel(interruptibleOutputStream)) {
+             WritableByteChannel writableByteChannel = Channels.newChannel(outputStream)) {
             fileChannel.transferTo(0, Long.MAX_VALUE, writableByteChannel);
         }
     }
@@ -32,7 +32,7 @@ public class FileHelper {
         try (FileChannel channel = FileChannel.open(path,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING)) {
-            write(channel, inputStream, 0, Long.MAX_VALUE);
+            write(channel, CloseShieldInputStream.stream(inputStream), 0, Long.MAX_VALUE);
         }
     }
 
@@ -40,8 +40,7 @@ public class FileHelper {
                       InputStream inputStream,
                       long position,
                       long size) throws IOException {
-        CloseShieldInputStream closeShieldInputStream = CloseShieldInputStream.stream(inputStream);
-        try (ReadableByteChannel readableByteChannel = Channels.newChannel(closeShieldInputStream)) {
+        try (ReadableByteChannel readableByteChannel = Channels.newChannel(CloseShieldInputStream.stream(inputStream))) {
             long offset = position;
             long remaining = size;
 
