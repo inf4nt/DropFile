@@ -1,7 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
-import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.io.FileHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 

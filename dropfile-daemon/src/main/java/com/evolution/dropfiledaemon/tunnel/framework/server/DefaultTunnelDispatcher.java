@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
-import com.evolution.dropfile.common.CloseShieldOutputStream;
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.InterruptibleOutputStream;
+import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;

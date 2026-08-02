@@ -1,6 +1,5 @@
 package com.evolution.dropfile.common;
 
-
 import com.evolution.dropfile.common.function.IORunnable;
 import lombok.SneakyThrows;
 

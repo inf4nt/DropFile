@@ -1,4 +1,4 @@
-package com.evolution.dropfile.common;
+package com.evolution.dropfile.common.io;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;

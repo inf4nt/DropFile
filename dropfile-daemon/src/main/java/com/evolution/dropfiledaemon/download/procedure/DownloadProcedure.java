@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
@@ -11,7 +11,6 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import com.evolution.dropfiledaemon.util.ThroughputMeter;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

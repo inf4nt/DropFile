@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.config;
 
-import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.file.*;
 import com.evolution.dropfile.store.secret.DaemonSecrets;

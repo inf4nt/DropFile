@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.WatchdogInputStream;
+import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;

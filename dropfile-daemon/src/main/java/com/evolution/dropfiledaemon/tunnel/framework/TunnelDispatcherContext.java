@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
-import com.evolution.dropfile.common.OnceCloseableInputStream;
+import com.evolution.dropfile.common.io.OnceCloseableInputStream;
 
 import javax.crypto.SecretKey;
 import java.io.Closeable;

@@ -1,6 +1,6 @@
 package com.evolution.dropfile.store.framework.file;
 
-import com.evolution.dropfile.common.CloseShieldInputStream;
+import com.evolution.dropfile.common.io.CloseShieldInputStream;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;

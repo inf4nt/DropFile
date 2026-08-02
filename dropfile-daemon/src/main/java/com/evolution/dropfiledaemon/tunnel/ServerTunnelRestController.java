@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel;
 
-import com.evolution.dropfile.common.CloseShieldOutputStream;
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;

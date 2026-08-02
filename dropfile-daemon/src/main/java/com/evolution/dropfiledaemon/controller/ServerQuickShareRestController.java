@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;

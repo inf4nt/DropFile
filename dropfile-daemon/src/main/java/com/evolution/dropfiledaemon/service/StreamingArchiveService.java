@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.service;
 
-import com.evolution.dropfile.common.CloseShieldOutputStream;
-import com.evolution.dropfile.common.FileHelper;
-import com.evolution.dropfile.common.InterruptibleOutputStream;
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
+import com.evolution.dropfile.common.io.FileHelper;
+import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
@@ -13,7 +13,6 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;

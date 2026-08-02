@@ -1,4 +1,4 @@
-package com.evolution.dropfile.common;
+package com.evolution.dropfile.common.io;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

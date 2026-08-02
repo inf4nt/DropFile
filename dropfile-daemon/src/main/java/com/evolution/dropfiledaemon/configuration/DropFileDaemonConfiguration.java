@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.configuration;
 
-import com.evolution.dropfile.common.FileHelper;
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
