@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -166,5 +166,52 @@ public class CommonUtilsTest {
                 CommonUtils.decodeBase64("YWJjZGVmZw"),
                 is("abcdefg".getBytes())
         );
+    }
+
+    @Test
+    void shouldJoinPathsAndRemoveRedundantSlashes() {
+        String result = CommonUtils.joinPaths("/api/", "/v1/", "/users/");
+        assertThat(result, is("/api/v1/users/"));
+    }
+
+    @Test
+    void shouldHandleBaseUrlAndEndpointsCorrectly() {
+        String result = CommonUtils.joinPaths("http://localhost:8080/", "/api/tunnel/", "/12345");
+        assertThat(result, is("http://localhost:8080/api/tunnel/12345"));
+    }
+
+    @Test
+    void shouldReturnEmptyStringWhenAllPartsAreEmptyOrNull() {
+        String result = CommonUtils.joinPaths(null, "", "/", "///");
+        assertThat(result, emptyString());
+    }
+
+    @Test
+    void shouldThrowExceptionForNoArguments() {
+        assertThrows(IllegalArgumentException.class, () -> CommonUtils.joinPaths());
+    }
+
+    @Test
+    void shouldPreserveFirstAndLastSlashes() {
+        String result = CommonUtils.joinPaths("//api", "test/");
+        assertThat(result, is("/api/test/"));
+    }
+
+    @Test
+    void shouldHandleMiddleSlashesWithoutAffectingEdges() {
+        String result = CommonUtils.joinPaths("/api/", "//v1/", "test");
+        assertThat(result, is("/api/v1/test"));
+    }
+
+    @Test
+    void shouldNotAddSlashesIfNoneWerePresent() {
+        String result = CommonUtils.joinPaths("api", "test");
+        assertThat(result, is("api/test"));
+    }
+
+    @Test
+    void shouldSkipNullAndEmptyValues() {
+        String result = CommonUtils.joinPaths(null, "//", "/api", null, "test/");
+        assertThat(result, is("/api/test/"));
     }
 }

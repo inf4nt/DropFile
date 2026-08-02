@@ -17,22 +17,21 @@ import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
-public class TunnelServerRestController {
+public class ServerTunnelRestController {
 
-    public static final String TUNNEL_ENDPOINT = "public/tunnel";
+    public static final String TUNNEL_ENDPOINT = "/s/t";
 
     private final TunnelDispatcher tunnelDispatcher;
 
     private final DaemonApplicationProperties applicationProperties;
 
-    @PostMapping(TunnelServerRestController.TUNNEL_ENDPOINT)
+    @PostMapping(ServerTunnelRestController.TUNNEL_ENDPOINT)
     public WebAsyncTask<Void> stream(@RequestBody TunnelRequestDTO requestDTO,
                                      HttpServletResponse response) {
 

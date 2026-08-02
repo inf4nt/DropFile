@@ -1,7 +1,8 @@
 package com.evolution.dropfiledaemon.handshake.client;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.handshake.HandshakeRestController;
+import com.evolution.dropfiledaemon.handshake.ServerHandshakeRestController;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
@@ -29,7 +30,10 @@ public class HandshakeClient {
     public HandshakeResponseDTO handshake(URI addressURI,
                                           HandshakeRequestDTO handshakeRequestDTO) {
         return post(
-                addressURI.resolve(HandshakeRestController.HANDSHAKE_ENDPOINT),
+                URI.create(CommonUtils.joinPaths(
+                        addressURI.toString(),
+                        ServerHandshakeRestController.HANDSHAKE_ENDPOINT
+                )),
                 handshakeRequestDTO,
                 HandshakeResponseDTO.class
         );
@@ -38,7 +42,10 @@ public class HandshakeClient {
     public HandshakeSessionDTO.Session handshakeSession(URI addressURI,
                                                         HandshakeSessionDTO.Session session) {
         return post(
-                addressURI.resolve(HandshakeRestController.HANDSHAKE_SESSION_ENDPOINT),
+                URI.create(CommonUtils.joinPaths(
+                        addressURI.toString(),
+                        ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT
+                )),
                 session,
                 HandshakeSessionDTO.Session.class
         );

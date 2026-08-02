@@ -12,20 +12,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping
-public class HandshakeRestController {
+public class ServerHandshakeRestController {
 
-    public static final String HANDSHAKE_ENDPOINT = "public/handshake";
+    public static final String HANDSHAKE_ENDPOINT = "/s/h";
 
-    public static final String HANDSHAKE_SESSION_ENDPOINT = "public/handshake/session";
+    public static final String HANDSHAKE_SESSION_ENDPOINT = "/s/h/s";
 
     private final HandshakeFacade handshakeFacade;
 
-    @PostMapping(HandshakeRestController.HANDSHAKE_ENDPOINT)
+    @PostMapping(ServerHandshakeRestController.HANDSHAKE_ENDPOINT)
     public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
         return handshakeFacade.handshake(requestDTO);
     }
 
-    @PostMapping(HandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)
+    @PostMapping(ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)
     public HandshakeSessionDTO.Session sessionHandshake(@RequestBody HandshakeSessionDTO.Session sessionDTO) {
         return handshakeFacade.handshakeSession(sessionDTO);
     }

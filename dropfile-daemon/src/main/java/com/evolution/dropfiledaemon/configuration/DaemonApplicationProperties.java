@@ -77,7 +77,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
-            @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerAsyncRequestTimeout,
+            @Value("${dropfile.daemon.tunnel.server.async.request-timeout}") int daemonTunnelServerAsyncRequestTimeout,
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize,
             @Value("${dropfile.daemon.quick-share.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
             @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel,

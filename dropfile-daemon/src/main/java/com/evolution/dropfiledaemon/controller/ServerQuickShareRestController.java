@@ -27,10 +27,10 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @Slf4j
 @RestController
-@RequestMapping(PublicQuickShareRestController.ENDPOINT)
-public class PublicQuickShareRestController {
+@RequestMapping(ServerQuickShareRestController.QUICKSHARE_ENDPOINT)
+public class ServerQuickShareRestController {
 
-    public static final String ENDPOINT = "p/qs";
+    public static final String QUICKSHARE_ENDPOINT = "/s/qs";
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 

@@ -211,6 +211,57 @@ public class CommonUtils {
         return new RuntimeException(throwable);
     }
 
+    public static String joinPaths(String... parts) {
+        if (parts == null || parts.length == 0) {
+            throw new IllegalArgumentException();
+        }
+
+        List<String> validParts = new ArrayList<>();
+        for (String part : parts) {
+            if (part != null && !part.isEmpty()) {
+                validParts.add(part);
+            }
+        }
+
+        if (validParts.isEmpty()) {
+            return "";
+        }
+
+        String first = validParts.getFirst();
+        String last = validParts.getLast();
+
+        boolean startsWithSlash = first.startsWith("/");
+        boolean endsWithSlash = last.endsWith("/");
+
+        StringBuilder result = new StringBuilder();
+        boolean hasContent = false;
+
+        for (String part : validParts) {
+            String stripped = part.replaceAll("^/+|/+$", "");
+            if (!stripped.isEmpty()) {
+                hasContent = true;
+                if (!result.isEmpty()) {
+                    result.append("/");
+                }
+                result.append(stripped);
+            }
+        }
+
+        if (!hasContent) {
+            return "";
+        }
+
+        if (startsWithSlash && !result.toString().startsWith("/")) {
+            result.insert(0, "/");
+        }
+
+        if (endsWithSlash && !result.toString().endsWith("/")) {
+            result.append("/");
+        }
+
+        return result.toString();
+    }
+
     private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {
         if (prefixSupplier == null) {
             return message;

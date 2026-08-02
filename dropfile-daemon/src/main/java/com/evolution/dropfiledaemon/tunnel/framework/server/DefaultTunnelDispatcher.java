@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.InterruptibleOutputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
@@ -88,8 +89,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     @Override
-    public void transfer(TunnelDispatcherContext context, OutputStream outputStream) {
+    public void transfer(TunnelDispatcherContext context, OutputStream outputStreamArgument) {
         try {
+            InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
+                    CloseShieldOutputStream.stream(outputStreamArgument)
+            );
+
             String fingerprint = context.getFingerprint();
             SecretKey secretKey = context.getSecretKey();
             TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
@@ -97,8 +102,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             InputStream inputStream = context.getInputStream();
 
             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
-            OutputStream encryptStream = cryptoTunnel.encryptWrapper(monitorStream, secretKey);
-            OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), encryptStream);
+            OutputStream encryptStream = cryptoTunnel.encryptWrapper(CloseShieldOutputStream.stream(monitorStream), secretKey);
+            OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream));
 
             writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
 
@@ -106,6 +111,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
             compressOutputStream.flush();
             compressOutputStream.close();
+            encryptStream.close();
+            monitorStream.close();
         } catch (Throwable throwable) {
             throw CommonUtils.toRuntimeException(throwable);
         }

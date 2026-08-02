@@ -32,7 +32,7 @@ public class FileHelper {
         try (FileChannel channel = FileChannel.open(path,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING)) {
-            write(channel, CloseShieldInputStream.stream(inputStream), 0, Long.MAX_VALUE);
+            write(channel, inputStream, 0, Long.MAX_VALUE);
         }
     }
 

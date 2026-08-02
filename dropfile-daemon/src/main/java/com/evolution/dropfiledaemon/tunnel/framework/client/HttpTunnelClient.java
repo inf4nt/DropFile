@@ -2,12 +2,11 @@ package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.WatchdogInputStream;
-import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.tunnel.TunnelServerRestController;
+import com.evolution.dropfiledaemon.tunnel.ServerTunnelRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
@@ -22,10 +21,10 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -70,7 +69,12 @@ public class HttpTunnelClient implements TunnelClient {
             );
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(trustedOut.addressURI().resolve(TunnelServerRestController.TUNNEL_ENDPOINT))
+                    .uri(URI.create(
+                            CommonUtils.joinPaths(
+                                    trustedOut.addressURI().toString(),
+                                    ServerTunnelRestController.TUNNEL_ENDPOINT
+                            )
+                    ))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )

@@ -6,7 +6,7 @@ import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfile.store.quickshare.QuickShareEntry;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.controller.PublicQuickShareRestController;
+import com.evolution.dropfiledaemon.controller.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -157,13 +157,10 @@ public class ApiQuickShareFacade {
 
     private String buildLink(URI daemonRootURI, String linkId) {
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
-        if (daemonRootURI.toString().endsWith("/")) {
-            return String.format("%s%s", daemonRootURI, relativeDownloadLink);
-        }
-        return String.format("%s/%s", daemonRootURI, relativeDownloadLink);
+        return CommonUtils.joinPaths(daemonRootURI.toString(), relativeDownloadLink);
     }
 
     private String buildRelativeDownloadLink(String id) {
-        return String.format("%s/%s", PublicQuickShareRestController.ENDPOINT, id);
+        return CommonUtils.joinPaths(ServerQuickShareRestController.QUICKSHARE_ENDPOINT, id);
     }
 }

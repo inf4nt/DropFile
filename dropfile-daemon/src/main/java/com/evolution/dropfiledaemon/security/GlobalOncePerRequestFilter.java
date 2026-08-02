@@ -1,7 +1,11 @@
 package com.evolution.dropfiledaemon.security;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.activity.ActivityTracker;
 import com.evolution.dropfiledaemon.activity.TrafficAwareResponseWrapper;
+import com.evolution.dropfiledaemon.controller.ServerQuickShareRestController;
+import com.evolution.dropfiledaemon.handshake.ServerHandshakeRestController;
+import com.evolution.dropfiledaemon.tunnel.ServerTunnelRestController;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -96,9 +100,10 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
             return false;
         }
         return path.startsWith("/api") ||
-                path.startsWith("/public/tunnel") ||
-                path.startsWith("/public/handshake") ||
-                path.startsWith("/p/qs");
+                path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
+                path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
+                path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)) ||
+                path.startsWith(CommonUtils.joinPaths("/" + ServerQuickShareRestController.QUICKSHARE_ENDPOINT));
     }
 
     private void handleCompletion(HttpServletRequest request, HttpServletResponse response) {
