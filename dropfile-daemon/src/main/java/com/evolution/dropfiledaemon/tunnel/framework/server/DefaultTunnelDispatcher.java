@@ -1,11 +1,12 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CloseShieldOutputStream;
-import com.evolution.dropfile.common.InterruptibleOutputStream;
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
+import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
@@ -21,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,33 +51,50 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStreamArgument) throws IOException {
-        InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
-                CloseShieldOutputStream.stream(outputStreamArgument)
-        );
+    public TunnelDispatcherContext dispatch(TunnelRequestDTO requestDTO) {
+        InputStream inputStream = null;
+        try {
+            String fingerprint = requestDTO.fingerprint();
 
-        String fingerprint = requestDTO.fingerprint();
+            Map.Entry<String, HandshakeTrustedInStore.TrustedIn> trustedInEntry = handshakeTrustedInStore
+                    .getRequired(fingerprint);
 
-        Map.Entry<String, HandshakeTrustedInStore.TrustedIn> trustedInEntry = handshakeTrustedInStore
-                .getRequired(fingerprint);
+            validateSession(trustedInEntry);
 
-        validateSession(trustedInEntry);
+            SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
 
-        SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
+            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
+            replyAttackGuard.tryToAddTunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
 
-        TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
-        replyAttackGuard.tryToAddTunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
+            Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
 
-        commandHandler(fingerprint, tunnelRequestPayload, secretKey, outputStream);
+            inputStream = handlerResultToInputStream(handlerResult);
+            return new TunnelDispatcherContext(
+                    fingerprint,
+                    secretKey,
+                    tunnelRequestPayload,
+                    inputStream
+            );
+        } catch (Throwable throwable) {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    throwable.addSuppressed(e);
+                }
+            }
+            throw CommonUtils.toRuntimeException(throwable);
+        }
     }
 
-    private void commandHandler(String fingerprint,
-                                TunnelRequestDTO.Payload tunnelRequestPayload,
-                                SecretKey secretKey,
-                                OutputStream outputStream) throws IOException {
-        Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
+    @Override
+    public void transfer(TunnelDispatcherContext context, OutputStream outputStream) {
+        try {
+            String fingerprint = context.getFingerprint();
+            SecretKey secretKey = context.getSecretKey();
+            TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
 
-        try (InputStream inputStreamResult = handlerResultToInputStream(handlerResult)) {
+            InputStream inputStream = context.getInputStream();
 
             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
             OutputStream encryptStream = cryptoTunnel.encryptWrapper(monitorStream, secretKey);
@@ -85,10 +102,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
             writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
 
-            inputStreamResult.transferTo(compressOutputStream);
+            inputStream.transferTo(compressOutputStream);
 
             compressOutputStream.flush();
             compressOutputStream.close();
+        } catch (Throwable throwable) {
+            throw CommonUtils.toRuntimeException(throwable);
         }
     }
 

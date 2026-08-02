@@ -5,5 +5,7 @@ import java.io.OutputStream;
 
 public interface TunnelDispatcher {
 
-    void dispatchStream(TunnelRequestDTO requestDTO, OutputStream outputStream) throws IOException;
+    TunnelDispatcherContext dispatch(TunnelRequestDTO requestDTO);
+
+    void transfer(TunnelDispatcherContext context, OutputStream outputStream) throws IOException;
 }

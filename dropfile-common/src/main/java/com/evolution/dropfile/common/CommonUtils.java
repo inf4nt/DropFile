@@ -73,7 +73,7 @@ public class CommonUtils {
     }
 
     @SneakyThrows
-    public static String getFingerprint(byte[] ...data) {
+    public static String getFingerprint(byte[]... data) {
         MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
         for (byte[] datum : data) {
             md.update(datum);
@@ -198,6 +198,18 @@ public class CommonUtils {
         StringWriter sw = new StringWriter();
         throwable.printStackTrace(new PrintWriter(sw, true));
         return sw.toString();
+    }
+
+    public static RuntimeException toRuntimeException(Throwable throwable) {
+        if (throwable instanceof RuntimeException runtimeException) {
+            return runtimeException;
+        }
+
+        if (throwable instanceof Error error) {
+            throw error;
+        }
+
+        return new RuntimeException(throwable);
     }
 
     private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {

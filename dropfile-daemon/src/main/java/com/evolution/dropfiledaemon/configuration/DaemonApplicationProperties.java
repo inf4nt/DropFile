@@ -40,6 +40,8 @@ public class DaemonApplicationProperties {
 
     public final int daemonTunnelServerCompressLevel;
 
+    public final long daemonTunnelServerAsyncRequestTimeout;
+
     public final int daemonManifestChunkMaxSize;
 
     public final int daemonHandshakeClientHttpRequestTimeoutMillis;
@@ -71,6 +73,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
+            @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerAsyncRequestTimeout,
             @Value("${dropfile.daemon.manifest.chunk-max-size}") int daemonManifestChunkMaxSize,
             @Value("${dropfile.daemon.quick-share.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
             @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
@@ -92,6 +95,7 @@ public class DaemonApplicationProperties {
         this.daemonHandshakeClientHttpRequestTimeoutMillis = daemonHandshakeClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
+        this.daemonTunnelServerAsyncRequestTimeout = daemonTunnelServerAsyncRequestTimeout;
         this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
         this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
         this.daemonQuickShareSecureAsyncRequestTimeout = daemonQuickShareSecureAsyncRequestTimeout;
