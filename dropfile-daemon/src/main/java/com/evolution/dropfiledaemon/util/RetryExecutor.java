@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -48,8 +47,8 @@ public class RetryExecutor<T> {
                     if (doOnSuccessful != null) {
                         try {
                             doOnSuccessful.accept(currentAttempt, call);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } catch (Exception __) {
+
                         }
                     }
                     return call;
@@ -74,8 +73,8 @@ public class RetryExecutor<T> {
                 if (doOnError != null) {
                     try {
                         doOnError.accept(currentAttempt, e);
-                    } catch (Exception doOnErrorException) {
-                        doOnErrorException.printStackTrace();
+                    } catch (Exception __) {
+
                     }
                 }
             }
@@ -91,7 +90,28 @@ public class RetryExecutor<T> {
                 }
             }
         }
-        throw new RetryExecutorException(exceptions);
+
+        if (exceptions.isEmpty()) {
+            throw new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
+        }
+
+        Exception exception = buildException(exceptions);
+        throw exception;
+    }
+
+    private Exception buildException(List<Exception> exceptions) {
+        Exception first = exceptions.getFirst();
+        if (exceptions.size() == 1) {
+            return first;
+        }
+
+        for (int i = 1; i < exceptions.size(); i++) {
+            Exception nested = exceptions.get(i);
+            if (first != nested) {
+                first.addSuppressed(nested);
+            }
+        }
+        return first;
     }
 
     @SneakyThrows
@@ -182,12 +202,6 @@ public class RetryExecutor<T> {
             );
             return retry.run();
         }
-    }
-
-    @RequiredArgsConstructor
-    public static class RetryExecutorException extends RuntimeException {
-        @Getter
-        private final List<Exception> exceptions;
     }
 
     public record RetryIfContainer<T>(Integer attempt, T result, Exception exception) {

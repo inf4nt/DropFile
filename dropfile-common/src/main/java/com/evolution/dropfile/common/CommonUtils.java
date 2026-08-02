@@ -136,8 +136,7 @@ public class CommonUtils {
     public static void executeSafety(IORunnable runnable) {
         try {
             runnable.run();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception __) {
         }
     }
 

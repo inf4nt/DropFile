@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -71,8 +72,8 @@ public class RetryExecutorTest {
         AtomicReference<List<Integer>> attemptsRetryIf = new AtomicReference<>(new ArrayList<>());
         AtomicReference<List<Exception>> exceptionRetryIf = new AtomicReference<>(new ArrayList<>());
 
-        RetryExecutor.RetryExecutorException e = assertThrows(
-                RetryExecutor.RetryExecutorException.class,
+        RuntimeException e = assertThrows(
+                RuntimeException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             int i = called.incrementAndGet();
@@ -95,7 +96,11 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Should contain 3 recorded exceptions", e.getExceptions().size(), is(3));
+        List<Throwable> allThrownExceptions = new ArrayList<>();
+        allThrownExceptions.add(e);
+        Collections.addAll(allThrownExceptions, e.getSuppressed());
+
+        assertThat("Should contain 3 recorded exceptions in chain (1 primary + 2 suppressed)", allThrownExceptions.size(), is(3));
         assertThat("Task should be called exactly 3 times", called.get(), is(3));
         assertThat("retryIf predicate should be invoked 3 times", retryIf.get(), is(3));
         assertThat("Recorded attempt numbers should be 1, 2, 3", attemptsRetryIf.get(), hasItems(1, 2, 3));
@@ -118,8 +123,8 @@ public class RetryExecutorTest {
     public void failsIfResultIsNull() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        RetryExecutor.RetryExecutorException e = assertThrows(
-                RetryExecutor.RetryExecutorException.class,
+        IllegalStateException e = assertThrows(
+                IllegalStateException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
@@ -130,10 +135,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Exceptions list should be empty when result is null without explicit retryIf",
-                e.getExceptions().size(),
-                is(0)
-        );
+        assertThat("Suppressed exceptions list should be empty when result is null", e.getSuppressed().length, is(0));
         assertThat("Task should have been called once", called.get(), is(true));
     }
 
@@ -141,8 +143,8 @@ public class RetryExecutorTest {
     public void failsIfExceptionIsThrown() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        RetryExecutor.RetryExecutorException e = assertThrows(
-                RetryExecutor.RetryExecutorException.class,
+        RuntimeException e = assertThrows(
+                RuntimeException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
@@ -153,7 +155,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Exceptions list should contain 1 exception", e.getExceptions().size(), is(1));
+        assertThat("Suppressed exceptions list should be empty for single attempt", e.getSuppressed().length, is(0));
         assertThat("Task should have been called once", called.get(), is(true));
     }
 
@@ -161,8 +163,8 @@ public class RetryExecutorTest {
     public void throwsDuringCall() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        RetryExecutor.RetryExecutorException e = assertThrows(
-                RetryExecutor.RetryExecutorException.class,
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
@@ -173,8 +175,6 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Exceptions list should contain 1 exception", e.getExceptions().size(), is(1));
-        Exception exception = e.getExceptions().getFirst();
         assertThat("Exception class should be RuntimeException", exception.getClass(), is(RuntimeException.class));
         assertThat("Exception message should match the thrown message", exception.getMessage(), is("test message"));
         assertThat("Task should have been called once", called.get(), is(true));
@@ -323,6 +323,7 @@ public class RetryExecutorTest {
         assertThat("doOnError should be called 3 times for failed attempts", attemptReference.get().size(), is(3));
         assertThat("Recorded attempt numbers in doOnError should be 1, 2, 3", attemptReference.get(), hasItems(1, 2, 3));
 
+        @SuppressWarnings("unchecked")
         List<Class<?>> list = (List) exceptionReference.get().stream().map(Object::getClass).toList();
         assertThat(
                 "Caught exception types should match thrown types",
@@ -372,7 +373,7 @@ public class RetryExecutorTest {
         List<Exception> exceptions = new ArrayList<>();
 
         long start = System.currentTimeMillis();
-        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+        assertThrows(TimeoutException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
@@ -657,8 +658,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Should be or wrap InterruptedException",
-                CommonUtils.checkThrowable(thrown, InterruptedException.class), is(true));
+        assertThat("Should be or wrap InterruptedException", CommonUtils.checkThrowable(thrown, InterruptedException.class), is(true));
         assertThat("Call counter should remain 0", callCounter.get(), is(0));
         assertThat("Thread interrupt flag should remain true", Thread.currentThread().isInterrupted(), is(true));
     }
@@ -705,7 +705,7 @@ public class RetryExecutorTest {
         AtomicBoolean loopExited = new AtomicBoolean(false);
         CountDownLatch taskStarted = new CountDownLatch(1);
 
-        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+        assertThrows(TimeoutException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -735,7 +735,7 @@ public class RetryExecutorTest {
     void shouldNotSleepAfterLastFailedAttempt() {
         long start = System.currentTimeMillis();
 
-        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+        assertThrows(RuntimeException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             throw new RuntimeException("Instant failure");
@@ -760,7 +760,7 @@ public class RetryExecutorTest {
         AtomicBoolean wasInterrupted = new AtomicBoolean(false);
         AtomicBoolean completedPastTimeout = new AtomicBoolean(false);
 
-        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+        assertThrows(TimeoutException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -789,7 +789,7 @@ public class RetryExecutorTest {
         CountDownLatch taskStarted = new CountDownLatch(1);
         AtomicBoolean wasInterrupted = new AtomicBoolean(false);
 
-        assertThrows(RetryExecutor.RetryExecutorException.class, () ->
+        assertThrows(TimeoutException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -804,10 +804,100 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Task should have started before timeout", taskStarted.await(1, TimeUnit.SECONDS), is(true));
-
+        assertThat("Task should have started", taskStarted.await(1, TimeUnit.SECONDS), is(true));
         Thread.sleep(200);
+        assertThat("Task should be interrupted", wasInterrupted.get(), is(true));
+    }
 
-        assertThat("Background task should be interrupted on timeout", wasInterrupted.get(), is(true));
+    @Test
+    void shouldNotFailWithSelfSuppressionWhenThrowingSingletonException() {
+        RuntimeException singletonException = new RuntimeException("I am a singleton");
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        RuntimeException e = assertThrows(
+                RuntimeException.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            callCounter.incrementAndGet();
+                            throw singletonException;
+                        })
+                        .attempts(3)
+                        .delay(Duration.ofMillis(0))
+                        .run()
+        );
+
+        assertThat("Task should be called 3 times", callCounter.get(), is(3));
+        assertThat("Should be the exact singleton instance", e, sameInstance(singletonException));
+        assertThat("Should not contain self-suppressed exceptions", e.getSuppressed().length, is(0));
+    }
+
+    @Test
+    void shouldNotBreakRetryLoopWhenExceptionIsThrownInDoOnError() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        IOException e = assertThrows(
+                IOException.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            callCounter.incrementAndGet();
+                            throw new IOException("Original error");
+                        })
+                        .attempts(3)
+                        .delay(Duration.ofMillis(0))
+                        .doOnError((attempt, ex) -> {
+                            throw new RuntimeException("Error in callback");
+                        })
+                        .run()
+        );
+
+        assertThat("Task should be called 3 times despite callback errors", callCounter.get(), is(3));
+        assertThat("The exception thrown should be the original one", e.getMessage(), is("Original error"));
+        assertThat("Should contain suppressed exceptions for attempts 2 and 3", e.getSuppressed().length, is(2));
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionOnInvalidAttempts() {
+        assertThrows(IllegalArgumentException.class, () ->
+                RetryExecutor.call(() -> true).attempts(0).run()
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                RetryExecutor.call(() -> true).attempts(-5).run()
+        );
+    }
+
+    @Test
+    void shouldThrowNullPointerExceptionOnNullDelay() {
+        assertThrows(NullPointerException.class, () ->
+                RetryExecutor.call(() -> true).delay(null)
+        );
+    }
+
+    @Test
+    void mixedExceptionsShouldBeAggregatedCorrectly() {
+        AtomicInteger counter = new AtomicInteger(0);
+
+        Exception e = assertThrows(
+                Exception.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            int current = counter.incrementAndGet();
+                            if (current == 1) {
+                                throw new TimeoutException("First timeout");
+                            }
+                            if (current == 2) {
+                                throw new IOException("Network glitch");
+                            }
+                            throw new IllegalStateException("Final failure");
+                        })
+                        .attempts(3)
+                        .delay(Duration.ofMillis(0))
+                        .run()
+        );
+
+        assertThat(e, instanceOf(TimeoutException.class));
+        assertThat(e.getSuppressed().length, is(2));
+        assertThat(e.getSuppressed()[0], instanceOf(IOException.class));
+        assertThat(e.getSuppressed()[1], instanceOf(IllegalStateException.class));
     }
 }
