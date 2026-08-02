@@ -101,7 +101,7 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
         }
         return path.startsWith("/api") ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
-                path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
+                path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_ENDPOINT)) ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)) ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerQuickShareRestController.QUICKSHARE_ENDPOINT));
     }
