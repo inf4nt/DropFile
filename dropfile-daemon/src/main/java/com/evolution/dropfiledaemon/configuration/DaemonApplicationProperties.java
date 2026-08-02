@@ -56,6 +56,10 @@ public class DaemonApplicationProperties {
 
     public final int daemonGcRateMillis;
 
+    public final long daemonIdleTimeoutMillis;
+
+    public final long daemonIdleRateMillis;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -79,7 +83,9 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.quick-share.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
             @Value("${dropfile.daemon.quick-share.insecure.compress.enabled}") boolean daemonQuickShareInsecureCompressEnabled,
             @Value("${dropfile.daemon.quick-share.insecure.compress.level}") int daemonQuickShareInsecureCompressLevel,
-            @Value("${dropfile.daemon.gc.rate-millis}") int daemonGcRateMillis) {
+            @Value("${dropfile.daemon.gc.rate-millis}") int daemonGcRateMillis,
+            @Value("${dropfile.daemon.idle.timeout-millis}") long daemonIdleTimeoutMillis,
+            @Value("${dropfile.daemon.idle.rate-millis}") long daemonIdleRateMillis) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -103,5 +109,7 @@ public class DaemonApplicationProperties {
         this.daemonQuickShareInsecureCompressEnabled = daemonQuickShareInsecureCompressEnabled;
         this.daemonQuickShareInsecureCompressLevel = daemonQuickShareInsecureCompressLevel;
         this.daemonGcRateMillis = daemonGcRateMillis;
+        this.daemonIdleTimeoutMillis = daemonIdleTimeoutMillis;
+        this.daemonIdleRateMillis = daemonIdleRateMillis;
     }
 }

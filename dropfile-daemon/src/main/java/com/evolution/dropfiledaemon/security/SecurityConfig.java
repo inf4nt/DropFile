@@ -12,13 +12,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http,
-                                        ApiAuthFilter apiAuthFilter) throws Exception {
+                                        GlobalOncePerRequestFilter globalOncePerRequestFilter) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterBefore(apiAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(globalOncePerRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(it -> {
                     it.requestMatchers("/api/**").permitAll();
                     it.anyRequest().permitAll();
