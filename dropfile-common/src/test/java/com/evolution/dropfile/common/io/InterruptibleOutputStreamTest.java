@@ -155,7 +155,6 @@ class InterruptibleOutputStreamTest {
 
         Thread.currentThread().interrupt();
 
-        // Первое обращение фиксирует состояние прерывания
         assertThatThrownBy(() -> stream.write(100))
                 .isInstanceOf(IOException.class);
 
