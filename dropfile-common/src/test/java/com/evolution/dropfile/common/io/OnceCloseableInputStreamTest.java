@@ -2,9 +2,7 @@ package com.evolution.dropfile.common.io;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -143,5 +141,103 @@ class OnceCloseableInputStreamTest {
         stream.close();
 
         verify(delegateMock, times(1)).close();
+    }
+
+    @Test
+    void available_ShouldThrowIOException_WhenClosed() throws IOException {
+        OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)));
+        stream.close();
+
+        assertThrows(IOException.class, stream::available);
+    }
+
+    @Test
+    void reset_ShouldThrowIOException_WhenClosed() throws IOException {
+        OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)));
+        stream.close();
+
+        assertThrows(IOException.class, stream::reset);
+    }
+
+    @Test
+    void readAllBytes_ShouldDelegateToUnderlyingStream() throws IOException {
+        try (OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)))) {
+
+            assertArrayEquals(
+                    "1234".getBytes(StandardCharsets.UTF_8),
+                    stream.readAllBytes());
+        }
+    }
+
+    @Test
+    void readNBytes_ShouldDelegateToUnderlyingStream() throws IOException {
+        try (OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)))) {
+
+            assertArrayEquals(
+                    "12".getBytes(StandardCharsets.UTF_8),
+                    stream.readNBytes(2));
+        }
+    }
+
+    @Test
+    void readNBytesWithOffset_ShouldDelegateToUnderlyingStream() throws IOException {
+        try (OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)))) {
+
+            byte[] buffer = new byte[4];
+
+            assertEquals(2, stream.readNBytes(buffer, 1, 2));
+            assertEquals((byte) '1', buffer[1]);
+            assertEquals((byte) '2', buffer[2]);
+        }
+    }
+
+    @Test
+    void transferTo_ShouldDelegateToUnderlyingStream() throws IOException {
+        try (OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("1234".getBytes(StandardCharsets.UTF_8)))) {
+
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+            assertEquals(4, stream.transferTo(output));
+            assertArrayEquals("1234".getBytes(StandardCharsets.UTF_8), output.toByteArray());
+        }
+    }
+
+    @Test
+    void close_ShouldNotRetryClose_WhenUnderlyingCloseThrowsException() throws IOException {
+        InputStream delegateMock = mock(InputStream.class);
+        doThrow(new IOException("Close failed")).when(delegateMock).close();
+
+        OnceCloseableInputStream stream = new OnceCloseableInputStream(delegateMock);
+
+        assertThrows(IOException.class, stream::close);
+
+        stream.close();
+
+        verify(delegateMock, times(1)).close();
+    }
+
+    @Test
+    void skipNBytes_ShouldDelegateToUnderlyingStream() throws IOException {
+        try (OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("12345".getBytes(StandardCharsets.UTF_8)))) {
+
+            stream.skipNBytes(2);
+            assertEquals('3', stream.read());
+        }
+    }
+
+    @Test
+    void skipNBytes_ShouldThrowIOException_WhenClosed() throws IOException {
+        OnceCloseableInputStream stream = new OnceCloseableInputStream(
+                new ByteArrayInputStream("12345".getBytes(StandardCharsets.UTF_8)));
+        stream.close();
+
+        assertThrows(IOException.class, () -> stream.skipNBytes(2));
     }
 }
