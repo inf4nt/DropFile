@@ -33,15 +33,15 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DownloadProcedure {
+public class SingleRunDownloadProcedure {
 
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
 
-    private final AtomicBoolean stopped = new AtomicBoolean();
+    private final AtomicBoolean running = new AtomicBoolean();
 
-    private final AtomicBoolean completed = new AtomicBoolean();
+    private final AtomicBoolean stopped = new AtomicBoolean();
 
     private final TunnelClientGateway tunnelClientGateway;
 
@@ -63,31 +63,28 @@ public class DownloadProcedure {
         return stopped.get();
     }
 
-    public boolean isCompleted() {
-        return completed.get();
-    }
-
     public void stop() {
-        if (completed.get()) {
-            return;
-        }
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
         }
     }
 
-    private void checkIfDone() {
+    private void checkIfStopped() {
         if (stopped.get()) {
             throw new IllegalStateException("Download procedure was forcibly stopped: " + request.operation());
         }
-        if (completed.get()) {
-            throw new IllegalStateException("Download procedure is already completed: " + request.operation());
+    }
+
+    private void tryToRun() {
+        if (!running.compareAndSet(false, true)) {
+            throw new IllegalStateException("Download procedure is running: " + request.operation());
         }
     }
 
     public void run(Runnable beforeProcedureCallback,
                     Runnable successCallback) {
-        checkIfDone();
+        checkIfStopped();
+        tryToRun();
 
         try (ExecutorService service = executorService) {
             CompletableFuture.runAsync(
@@ -95,7 +92,6 @@ public class DownloadProcedure {
                                 beforeProcedureCallback.run();
                                 runProcedure();
                                 successCallback.run();
-                                completed.set(true);
                             },
                             service
                     )

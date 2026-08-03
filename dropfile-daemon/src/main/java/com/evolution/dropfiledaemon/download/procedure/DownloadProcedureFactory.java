@@ -21,17 +21,17 @@ public class DownloadProcedureFactory {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    public DownloadProcedure get(String operation,
-                                 String fingerprint,
-                                 String fileId,
-                                 String filename,
-                                 Path destinationFilePath,
-                                 Path temporaryFilePath,
-                                 Path manifestFilePath) {
+    public SingleRunDownloadProcedure get(String operation,
+                                          String fingerprint,
+                                          String fileId,
+                                          String filename,
+                                          Path destinationFilePath,
+                                          Path temporaryFilePath,
+                                          Path manifestFilePath) {
         int downloadProcedureThreadSize = daemonApplicationProperties.daemonDownloadProcedureThreadSize;
         int manifestChunkMaxSize = daemonApplicationProperties.daemonManifestChunkMaxSize;
 
-        return new DownloadProcedure(
+        return new SingleRunDownloadProcedure(
                 tunnelClientGateway,
                 fileHelper,
                 fileManifestBuilder,

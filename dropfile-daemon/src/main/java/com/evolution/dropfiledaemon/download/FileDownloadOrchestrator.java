@@ -7,7 +7,7 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.download.procedure.DownloadProcedure;
+import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -36,9 +36,9 @@ public class FileDownloadOrchestrator {
 
     private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
-    private final Map<String, DownloadProcedure> downloadProcedures = new LinkedHashMap<>();
+    private final Map<String, SingleRunDownloadProcedure> downloadProcedures = new LinkedHashMap<>();
 
-    private final ArrayDeque<Map.Entry<String, DownloadProcedure>> waitingQueue = new ArrayDeque<>();
+    private final ArrayDeque<Map.Entry<String, SingleRunDownloadProcedure>> waitingQueue = new ArrayDeque<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -53,7 +53,7 @@ public class FileDownloadOrchestrator {
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorMaxQueueSize;
-        DownloadProcedure downloadProcedure;
+        SingleRunDownloadProcedure downloadProcedure;
         synchronized (this) {
             checkIfClosed();
             if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
@@ -88,10 +88,10 @@ public class FileDownloadOrchestrator {
 
     private void tryToStartNext() {
         int activeQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorActiveQueueSize;
-        Map<String, DownloadProcedure> toStart = new LinkedHashMap<>();
+        Map<String, SingleRunDownloadProcedure> toStart = new LinkedHashMap<>();
         synchronized (this) {
             while (downloadProcedures.size() < activeQueueSize && !waitingQueue.isEmpty()) {
-                Map.Entry<String, DownloadProcedure> nextTask = waitingQueue.pollFirst();
+                Map.Entry<String, SingleRunDownloadProcedure> nextTask = waitingQueue.pollFirst();
                 downloadProcedures.put(nextTask.getKey(), nextTask.getValue());
                 toStart.put(nextTask.getKey(), nextTask.getValue());
             }
@@ -100,7 +100,7 @@ public class FileDownloadOrchestrator {
         toStart.forEach((operation, downloadProcedure) -> runDownload(operation, downloadProcedure));
     }
 
-    private void runDownload(String operationId, DownloadProcedure downloadProcedure) {
+    private void runDownload(String operationId, SingleRunDownloadProcedure downloadProcedure) {
         String fingerprint = downloadProcedure.getRequest().fingerprint();
         String fileId = downloadProcedure.getRequest().fileId();
         Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
@@ -167,7 +167,7 @@ public class FileDownloadOrchestrator {
     }
 
     public Map<String, DownloadProgress> getWaitingQueue() {
-        List<Map.Entry<String, DownloadProcedure>> snapshot;
+        List<Map.Entry<String, SingleRunDownloadProcedure>> snapshot;
         synchronized (this) {
             snapshot = new ArrayList<>(waitingQueue);
         }
@@ -182,7 +182,7 @@ public class FileDownloadOrchestrator {
     }
 
     public Map<String, DownloadProgress> getDownloadProcedures() {
-        Map<String, DownloadProcedure> snapshot;
+        Map<String, SingleRunDownloadProcedure> snapshot;
         synchronized (this) {
             snapshot = new LinkedHashMap<>(downloadProcedures);
         }
@@ -197,7 +197,7 @@ public class FileDownloadOrchestrator {
     }
 
     public void stop(String startWithOperationId) {
-        Map<String, DownloadProcedure> targetOperation = new LinkedHashMap<>();
+        Map<String, SingleRunDownloadProcedure> targetOperation = new LinkedHashMap<>();
 
         synchronized (this) {
             String operation = CommonUtils.requireOne(
@@ -209,7 +209,7 @@ public class FileDownloadOrchestrator {
                     it -> it.startsWith(startWithOperationId)
             );
 
-            DownloadProcedure downloadProcedure = downloadProcedures.get(operation);
+            SingleRunDownloadProcedure downloadProcedure = downloadProcedures.get(operation);
             if (downloadProcedure != null) {
                 downloadProcedures.remove(operation);
                 targetOperation.put(operation, downloadProcedure);
@@ -232,8 +232,8 @@ public class FileDownloadOrchestrator {
     }
 
     public void stopAll() {
-        Map<String, DownloadProcedure> waitingQueueSnapshot;
-        Map<String, DownloadProcedure> proceduresSnapshot;
+        Map<String, SingleRunDownloadProcedure> waitingQueueSnapshot;
+        Map<String, SingleRunDownloadProcedure> proceduresSnapshot;
 
         synchronized (this) {
             waitingQueueSnapshot = waitingQueue.stream().collect(Collectors.toMap(
@@ -251,9 +251,9 @@ public class FileDownloadOrchestrator {
         stop(proceduresSnapshot, waitingQueueSnapshot);
     }
 
-    private void stop(Map<String, DownloadProcedure> operations,
-                      Map<String, DownloadProcedure> waiting) {
-        operations.values().forEach(DownloadProcedure::stop);
+    private void stop(Map<String, SingleRunDownloadProcedure> operations,
+                      Map<String, SingleRunDownloadProcedure> waiting) {
+        operations.values().forEach(SingleRunDownloadProcedure::stop);
 
         fileDownloadEntryStore.save(
                 () -> {
@@ -263,7 +263,7 @@ public class FileDownloadOrchestrator {
                             .concat(operations.entrySet().stream(), waiting.entrySet().stream())
                             .map(downloadProcedureEntry -> {
                                 String operationId = downloadProcedureEntry.getKey();
-                                DownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
+                                SingleRunDownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
 
                                 DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
                                         .map(Map.Entry::getValue)
