@@ -41,9 +41,17 @@ public class StreamingArchiveService {
     }
 
     /**
-     * Streams an encrypted ZIP file directly to the client output stream.
-     * <p>
-     * CRITICAL ARCHITECTURAL WARNING — DO NOT REFACTOR TO TRY-WITH-RESOURCES
+     * Streams an encrypted ZIP directly to the client.
+     *
+     * This method intentionally does not use try-with-resources for the ZIP streams.
+     *
+     * Closing a ZipOutputStream finalizes the ZIP archive by writing the Central Directory.
+     * If streaming fails (for example due to client disconnect or timeout), the archive
+     * must NOT be finalized. Otherwise the client may receive a logically corrupted ZIP
+     * instead of a cleanly truncated stream.
+     *
+     * ZIP streams are therefore finalized only after the payload has been written
+     * successfully.
      */
     public void secureZip(OutputStream outputStreamArgument,
                           Path source,

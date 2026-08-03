@@ -24,7 +24,19 @@ public class FileHelper {
 
         try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
              WritableByteChannel writableByteChannel = Channels.newChannel(outputStream)) {
-            fileChannel.transferTo(0, Long.MAX_VALUE, writableByteChannel);
+
+            long position = 0;
+            long size = fileChannel.size();
+
+            while (position < size) {
+                long transferred = fileChannel.transferTo(position, size - position, writableByteChannel);
+
+                if (transferred <= 0) {
+                    throw new IOException("Failed to transfer remaining file content");
+                }
+
+                position += transferred;
+            }
         }
     }
 
