@@ -3,6 +3,7 @@ package com.evolution.dropfile.common.io;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -12,6 +13,7 @@ import java.io.OutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -192,5 +194,26 @@ class InterruptibleOutputStreamTest {
         reset(delegateMock);
         stream.write(2);
         verify(delegateMock).write(2);
+    }
+
+    @Test
+    void close_ShouldCallFlushAndCloseInCorrectOrder() throws IOException {
+        InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
+
+        stream.close();
+
+        InOrder inOrder = inOrder(delegateMock);
+        inOrder.verify(delegateMock).flush();
+        inOrder.verify(delegateMock).close();
+    }
+
+    @Test
+    void close_ShouldStillCallUnderlyingClose_EvenIfFlushThrowsException() throws IOException {
+        doThrow(new IOException("Flush failed")).when(delegateMock).flush();
+        InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
+
+        assertThrows(IOException.class, stream::close);
+
+        verify(delegateMock).close();
     }
 }

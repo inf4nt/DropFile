@@ -17,7 +17,7 @@ public final class InterruptibleOutputStream extends FilterOutputStream {
     @Override
     public void write(int b) throws IOException {
         checkInterrupted();
-        out.write(b);
+        super.write(b);
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class InterruptibleOutputStream extends FilterOutputStream {
     @Override
     public void flush() throws IOException {
         checkInterrupted();
-        out.flush();
+        super.flush();
     }
 
     @Override
