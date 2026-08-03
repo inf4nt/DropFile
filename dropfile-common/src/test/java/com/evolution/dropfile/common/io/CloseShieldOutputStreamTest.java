@@ -95,4 +95,41 @@ class CloseShieldOutputStreamTest {
 
         assertThrows(IOException.class, () -> shieldStream.close());
     }
+
+    @Test
+    void close_ShouldFlushOnlyOnce_OnMultipleCalls() throws IOException {
+        shieldStream.close();
+        shieldStream.close();
+        shieldStream.close();
+
+        verify(underlyingStream, times(1)).flush();
+        verify(underlyingStream, never()).close();
+    }
+
+    @Test
+    void write_ShouldDelegateDirectlyWithoutStateChecks() throws IOException {
+        byte[] data = {1, 2, 3};
+        shieldStream.write(data, 0, 3);
+
+        verify(underlyingStream).write(data, 0, 3);
+    }
+
+    @Test
+    void flush_ShouldDelegateDirectlyWithoutStateChecks() throws IOException {
+        shieldStream.flush();
+
+        verify(underlyingStream).flush();
+    }
+
+    @Test
+    void stream_ShouldThrowNullPointerException_WhenNullPassed() {
+        assertThrows(NullPointerException.class, () -> CloseShieldOutputStream.stream(null));
+    }
+
+    @Test
+    void stream_ShouldNotReWrapExistingShield() {
+        CloseShieldOutputStream wrappedAgain = CloseShieldOutputStream.stream(shieldStream);
+
+        assertSame(shieldStream, wrappedAgain);
+    }
 }

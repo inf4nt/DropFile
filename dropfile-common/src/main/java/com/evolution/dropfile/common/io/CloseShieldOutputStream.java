@@ -4,8 +4,11 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class CloseShieldOutputStream extends FilterOutputStream {
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private CloseShieldOutputStream(OutputStream out) {
         super(out);
@@ -18,7 +21,9 @@ public final class CloseShieldOutputStream extends FilterOutputStream {
 
     @Override
     public void close() throws IOException {
-        out.flush();
+        if (closed.compareAndSet(false, true)) {
+            out.flush();
+        }
     }
 
     public static CloseShieldOutputStream stream(OutputStream outputStream) {
