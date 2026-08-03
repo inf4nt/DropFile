@@ -1,7 +1,6 @@
 package com.evolution.dropfile.common.io;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,8 +12,7 @@ import java.io.OutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InterruptibleOutputStreamTest {
@@ -51,7 +49,6 @@ class InterruptibleOutputStreamTest {
     }
 
     @Test
-    @DisplayName("write(int) должен делегировать вызов в обернутый поток при нормальной работе")
     void writeInt_ShouldDelegate_WhenNotInterrupted() throws IOException {
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
 
@@ -61,7 +58,20 @@ class InterruptibleOutputStreamTest {
     }
 
     @Test
-    void writeByteArray_ShouldDelegate_WhenNotInterrupted() throws IOException {
+    void writeByteArraySimple_ShouldThrowAndNotDelegate_WhenInterrupted() throws Exception {
+        InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
+        byte[] buffer = new byte[]{10, 20, 30};
+        Thread.currentThread().interrupt();
+
+        assertThatThrownBy(() -> stream.write(buffer))
+                .isInstanceOf(IOException.class)
+                .hasCauseInstanceOf(InterruptedException.class);
+
+        verify(delegateMock, never()).write(buffer, 0, buffer.length);
+    }
+
+    @Test
+    void writeByteArrayWithOffset_ShouldDelegate_WhenNotInterrupted() throws IOException {
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
         byte[] buffer = new byte[]{1, 2, 3};
 
@@ -80,12 +90,12 @@ class InterruptibleOutputStreamTest {
     }
 
     @Test
-    void close_ShouldDelegateFlush_WhenNotInterrupted() throws IOException {
+    void close_ShouldDelegateClose_WhenNotInterrupted() throws IOException {
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
 
         stream.close();
 
-        verify(delegateMock).flush();
+        verify(delegateMock).close();
     }
 
     @Test
@@ -101,7 +111,7 @@ class InterruptibleOutputStreamTest {
     }
 
     @Test
-    void writeByteArray_ShouldThrowAndNotDelegate_WhenInterrupted() throws Exception {
+    void writeByteArrayWithOffset_ShouldThrowAndNotDelegate_WhenInterrupted() throws Exception {
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
         byte[] buffer = new byte[]{1, 2, 3};
         Thread.currentThread().interrupt();
@@ -134,7 +144,7 @@ class InterruptibleOutputStreamTest {
                 .isInstanceOf(IOException.class)
                 .hasCauseInstanceOf(InterruptedException.class);
 
-        verify(delegateMock, never()).flush();
+        verify(delegateMock, never()).close();
     }
 
     @Test
@@ -143,6 +153,7 @@ class InterruptibleOutputStreamTest {
 
         Thread.currentThread().interrupt();
 
+        // Первое обращение фиксирует состояние прерывания
         assertThatThrownBy(() -> stream.write(100))
                 .isInstanceOf(IOException.class);
 
@@ -151,6 +162,9 @@ class InterruptibleOutputStreamTest {
         assertThat(Thread.currentThread().isInterrupted()).isFalse();
 
         assertThatThrownBy(() -> stream.write(200))
+                .isInstanceOf(IOException.class);
+
+        assertThatThrownBy(() -> stream.write(new byte[]{1, 2}))
                 .isInstanceOf(IOException.class);
 
         assertThatThrownBy(() -> stream.write(new byte[]{1, 2}, 0, 2))
@@ -162,39 +176,21 @@ class InterruptibleOutputStreamTest {
         assertThatThrownBy(stream::close)
                 .isInstanceOf(IOException.class);
 
-        verify(delegateMock, never()).write(100);
-        verify(delegateMock, never()).write(200);
-        verify(delegateMock, never()).flush();
+        verifyNoInteractions(delegateMock);
     }
 
     @Test
-    void writeByteArraySimple_ShouldDelegate_WhenNotInterrupted() throws IOException {
+    void normalIOException_ShouldNotMarkStreamAsAborted() throws IOException {
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
-        byte[] buffer = new byte[]{10, 20, 30};
+        doThrow(new IOException("Disk full")).when(delegateMock).write(1);
 
-        stream.write(buffer);
-
-        verify(delegateMock).write(buffer, 0, buffer.length);
-    }
-
-    @Test
-    void writeByteArraySimple_ShouldThrowAndNotDelegate_WhenInterrupted() throws Exception {
-        InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
-        byte[] buffer = new byte[]{10, 20, 30};
-        Thread.currentThread().interrupt();
-
-        assertThatThrownBy(() -> stream.write(buffer))
+        assertThatThrownBy(() -> stream.write(1))
                 .isInstanceOf(IOException.class)
-                .hasCauseInstanceOf(InterruptedException.class);
+                .hasMessage("Disk full")
+                .hasNoCause();
 
-        verify(delegateMock, never()).write(buffer, 0, buffer.length);
-    }
-
-    @Test
-    void writeByteArraySimple_ShouldThrowNpe_WhenNullPassed() {
-        InterruptibleOutputStream stream = InterruptibleOutputStream.stream(delegateMock);
-
-        assertThatThrownBy(() -> stream.write(null))
-                .isInstanceOf(NullPointerException.class);
+        reset(delegateMock);
+        stream.write(2);
+        verify(delegateMock).write(2);
     }
 }

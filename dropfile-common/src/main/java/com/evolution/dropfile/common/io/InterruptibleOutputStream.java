@@ -35,7 +35,7 @@ public final class InterruptibleOutputStream extends FilterOutputStream {
     @Override
     public void close() throws IOException {
         checkInterrupted();
-        out.flush();
+        super.close();
     }
 
     private void checkInterrupted() throws IOException {

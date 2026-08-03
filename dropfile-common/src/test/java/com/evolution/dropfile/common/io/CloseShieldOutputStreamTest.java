@@ -2,23 +2,40 @@ package com.evolution.dropfile.common.io;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CloseShieldOutputStreamTest {
 
+    @Mock
     private OutputStream underlyingStream;
 
     private CloseShieldOutputStream shieldStream;
 
     @BeforeEach
     void setUp() {
-        underlyingStream = mock(OutputStream.class);
         shieldStream = CloseShieldOutputStream.stream(underlyingStream);
+    }
+
+    @Test
+    void stream_ShouldThrowNullPointerException_WhenOutputStreamIsNull() {
+        assertThrows(NullPointerException.class, () -> CloseShieldOutputStream.stream(null));
+    }
+
+    @Test
+    void stream_ShouldNotReWrapExistingCloseShieldStream() {
+        CloseShieldOutputStream secondShieldStream = CloseShieldOutputStream.stream(shieldStream);
+
+        assertSame(shieldStream, secondShieldStream);
     }
 
     @Test
@@ -49,20 +66,27 @@ class CloseShieldOutputStreamTest {
     }
 
     @Test
+    void testWrite_ExceptionPropagated() throws IOException {
+        doThrow(new IOException("Write error"))
+                .when(underlyingStream).write(any(byte[].class), anyInt(), anyInt());
+
+        byte[] data = {1, 2, 3};
+        assertThrows(IOException.class, () -> shieldStream.write(data, 0, 3));
+    }
+
+    @Test
+    void testFlush_ShouldDelegateToUnderlyingStream() throws IOException {
+        shieldStream.flush();
+
+        verify(underlyingStream, times(1)).flush();
+    }
+
+    @Test
     void testClose_ShouldFlushButNotClose() throws IOException {
         shieldStream.close();
 
         verify(underlyingStream, times(1)).flush();
-
         verify(underlyingStream, never()).close();
-    }
-
-    @Test
-    void testWrite_ExceptionPropagated() throws IOException {
-        doThrow(new IOException("Write error")).when(underlyingStream).write(any(byte[].class), anyInt(), anyInt());
-
-        byte[] data = {1, 2, 3};
-        assertThrows(IOException.class, () -> shieldStream.write(data, 0, 3));
     }
 
     @Test
