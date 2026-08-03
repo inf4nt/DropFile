@@ -19,14 +19,14 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldNotCreateWatchdogTaskWhenDurationIsNull() {
-        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
         assertThat("Watchdog task should be null when duration is null", watchdogInputStream.watchdogTask, nullValue());
     }
 
     @Test
     public void shouldReadFullContentWhenNoLimitIsPresent() throws Exception {
         ByteArrayInputStream originalInputStream = new ByteArrayInputStream("12345".getBytes());
-        InputStream inputStream = new WatchdogInputStream(originalInputStream);
+        InputStream inputStream = new WatchdogInputStream(originalInputStream, Long.MAX_VALUE);
 
         byte[] bytes = inputStream.readAllBytes();
 
@@ -189,7 +189,7 @@ public class WatchdogInputStreamTest {
     @Test
     public void shouldCloseOriginalInputStreamWhenWatchdogIsClosed() throws Exception {
         InputStream originalInputStream = new BufferedInputStream(new ByteArrayInputStream("12345".getBytes()));
-        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(originalInputStream);
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(originalInputStream, Long.MAX_VALUE);
         assertThat("Watchdog task should be null when no duration is specified", watchdogInputStream.watchdogTask, nullValue());
 
         assertArrayEquals("12".getBytes(), watchdogInputStream.readNBytes(2));
@@ -206,7 +206,7 @@ public class WatchdogInputStreamTest {
     @Test
     public void shouldAutomaticallyCloseStreamsWhenUsedInTryWithResources() throws IOException {
         InputStream originalInputStream = new BufferedInputStream(new ByteArrayInputStream("12345".getBytes()));
-        try (InputStream watchdogInputStream = new WatchdogInputStream(originalInputStream)) {
+        try (InputStream watchdogInputStream = new WatchdogInputStream(originalInputStream, Long.MAX_VALUE)) {
             assertArrayEquals("123".getBytes(), watchdogInputStream.readNBytes(3));
         }
 
@@ -253,7 +253,7 @@ public class WatchdogInputStreamTest {
             }
         };
 
-        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(originalInputStream);
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(originalInputStream, Long.MAX_VALUE);
 
         watchdogInputStream.close();
 
@@ -476,7 +476,7 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldNotSupportMarkAndReset() throws Exception {
-        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
 
         assertThat("markSupported() should return false", inputStream.markSupported(), is(false));
 
@@ -487,7 +487,7 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldReturnZeroWhenSkippingZeroOrNegativeBytes() throws Exception {
-        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
 
         assertThat("skip(0) should return 0", inputStream.skip(0), is(0L));
         assertThat("skip(-1) should return 0", inputStream.skip(-1), is(0L));
@@ -497,7 +497,7 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldReturnZeroWhenReadingZeroBytes() throws Exception {
-        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
 
         byte[] buffer = new byte[5];
 
@@ -508,7 +508,7 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldNotChangeStreamStateWhenMarkIsCalled() throws Exception {
-        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        InputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
 
         inputStream.mark(100);
 
@@ -572,7 +572,7 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldThrowNullPointerExceptionWhenBufferIsNullInRead() {
-        WatchdogInputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()));
+        WatchdogInputStream inputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE);
 
         assertThrows(NullPointerException.class, () -> inputStream.read(null, 0, 0));
     }
@@ -599,7 +599,7 @@ public class WatchdogInputStreamTest {
     @Test
     public void shouldReturnAvailableBytes() throws Exception {
         try (InputStream inputStream = new WatchdogInputStream(
-                new ByteArrayInputStream("12345".getBytes()))) {
+                new ByteArrayInputStream("12345".getBytes()), Long.MAX_VALUE)) {
 
             assertThat(
                     "available() should return number of remaining bytes",

@@ -22,10 +22,6 @@ public class WatchdogInputStream extends FilterInputStream {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    public WatchdogInputStream(InputStream in) {
-        this(in, Long.MAX_VALUE, null);
-    }
-
     public WatchdogInputStream(InputStream in, long limit) {
         this(in, limit, null);
     }
