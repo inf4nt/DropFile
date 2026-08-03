@@ -26,7 +26,7 @@ public class CommandHandlerExecutor {
         this.handlers = handlersList.stream().collect(Collectors.toUnmodifiableMap(
                 CommandHandler::getCommandName,
                 Function.identity(),
-                (existing, __) -> {
+                (existing, _) -> {
                     throw new IllegalStateException("Duplicate command handler found for: " + existing.getCommandName());
                 }
         ));

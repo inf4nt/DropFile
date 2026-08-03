@@ -39,7 +39,7 @@ public class ServerTunnelRestController {
 
         WebAsyncTask<Void> webAsyncTask = new WebAsyncTask<>(applicationProperties.daemonTunnelServerAsyncRequestTimeout, () -> {
             try (TunnelDispatcherContext tunnelDispatcherContext = contextAtomicReference.updateAndGet(
-                    __ -> tunnelDispatcher.dispatch(requestDTO)
+                    _ -> tunnelDispatcher.dispatch(requestDTO)
             )) {
                 response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
                 response.setStatus(HttpServletResponse.SC_OK);

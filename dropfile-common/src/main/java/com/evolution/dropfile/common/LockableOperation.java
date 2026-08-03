@@ -34,7 +34,7 @@ public class LockableOperation implements Purgeable {
     public <R, TH extends Throwable> R executeWithKeyLock(String key, SupplierThrowable<R, TH> action) throws TH {
         acquireLock(globalLock.readLock(), "global read lock");
         try {
-            Lock keyLock = keyLocks.computeIfAbsent(key, __ -> new ReentrantLock());
+            Lock keyLock = keyLocks.computeIfAbsent(key, _ -> new ReentrantLock());
 
             acquireLock(keyLock, "key lock [" + key + "]");
             try {

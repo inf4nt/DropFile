@@ -52,7 +52,7 @@ public class TunnelTrafficMonitor implements Purgeable {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> CommonUtils.toDisplaySize(entry.getValue().getSpeedBytesPerSec()),
-                        (existing, __) -> existing,
+                        (existing, _) -> existing,
                         TreeMap::new
                 ));
         return Collections.unmodifiableMap(map);
@@ -63,7 +63,7 @@ public class TunnelTrafficMonitor implements Purgeable {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> CommonUtils.toDisplaySize(entry.getValue().getTotalThroughput()),
-                        (existing, __) -> existing,
+                        (existing, _) -> existing,
                         TreeMap::new
                 ));
         return Collections.unmodifiableMap(map);

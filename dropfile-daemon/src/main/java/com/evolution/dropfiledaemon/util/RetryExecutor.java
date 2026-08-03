@@ -47,7 +47,7 @@ public class RetryExecutor<T> {
                     if (doOnSuccessful != null) {
                         try {
                             doOnSuccessful.accept(currentAttempt, call);
-                        } catch (Exception __) {
+                        } catch (Exception _) {
 
                         }
                     }
@@ -73,7 +73,7 @@ public class RetryExecutor<T> {
                 if (doOnError != null) {
                     try {
                         doOnError.accept(currentAttempt, e);
-                    } catch (Exception __) {
+                    } catch (Exception _) {
 
                     }
                 }
