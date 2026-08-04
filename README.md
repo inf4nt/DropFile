@@ -1,4 +1,4 @@
-![CI Build](https://github.com/inf4nt/DropFile/actions/workflows/ci.yml/badge.svg)
+![CI Build](https://github.com/inf4nt/DropFile/actions/workflows/ci-cd.yml/badge.svg)
 
 # DropFile
 - DropFile is a high-performance, secure peer-to-peer (P2P) file sharing system designed 
