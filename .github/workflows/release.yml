@@ -1,0 +1,32 @@
+name: Nightly Build & Release
+
+on:
+  push:
+    branches: [ "master", "main" ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x release/release.linux.x64.sh
+
+      - name: Run build script (Docker)
+        run: ./release/release.linux.x64.sh
+
+      - name: Update Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: 'Nightly Build (Master)'
+          body: 'Release based on master.'
+          prerelease: true
+          files: |
+            release/dropfile-linux-x64.tar.gz
