@@ -5,28 +5,60 @@ on:
     branches: [ "master", "main" ]
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        target: [linux.x64, macos.x64, windows.x64, portable]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Make script executable
-        run: chmod +x release/release.linux.x64.sh
+        run: chmod +x release/release.${{ matrix.target }}.sh
 
-      - name: Run build script (Docker)
-        run: ./release/release.linux.x64.sh
+      - name: Run build script for ${{ matrix.target }}
+        run: ./release/release.${{ matrix.target }}.sh
 
-      - name: Update Nightly Release
+      - name: Move archive to root for clean artifact structure
+        run: mv release/dropfile-*.tar.gz ./
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dropfile-${{ matrix.target }}
+          path: dropfile-*.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Update Nightly Release with all 4 archives
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           name: 'Nightly Build (Master)'
-          body: 'Release based on master.'
+          body: |
+            Build based on master:
+            - Linux x64 (includes JRE)
+            - macOS x64 (includes JRE)
+            - Windows x64 (includes JRE)
+            - Portable (NO JRE)
           prerelease: true
           files: |
-            release/dropfile-linux-x64.tar.gz
+            all-artifacts/dropfile-linux.x64/*.tar.gz
+            all-artifacts/dropfile-macos.x64/*.tar.gz
+            all-artifacts/dropfile-windows.x64/*.tar.gz
+            all-artifacts/dropfile-portable/*.tar.gz
