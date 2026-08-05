@@ -1,8 +1,9 @@
 package com.evolution.dropfile.store.framework.file;
 
-import com.evolution.dropfile.common.io.CloseShieldInputStream;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.io.CloseShieldInputStream;
+import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import lombok.RequiredArgsConstructor;
 
@@ -39,20 +40,13 @@ public class CryptoFileOperations implements FileOperations {
 
     @Override
     public InputStream read(Path destination) throws NoContentFoundException, IOException {
-        boolean success = false;
-        InputStream inputStream = null;
-        try {
-            inputStream = delegate.read(destination);
-            byte[] fingerprint = getFingerprint();
-            SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-            InputStream resultStream = cryptoTunnel.decrypt(inputStream, secretKey);
-            success = true;
-            return resultStream;
-        } finally {
-            if (!success && inputStream != null) {
-                inputStream.close();
-            }
-        }
+        return InputStreamPipeline.from(delegate.read(destination))
+                .add(in -> {
+                    byte[] fingerprint = getFingerprint();
+                    SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
+                    return cryptoTunnel.decrypt(in, secretKey);
+                })
+                .get();
     }
 
     private byte[] getFingerprint() {

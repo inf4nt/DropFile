@@ -1,5 +1,7 @@
 package com.evolution.dropfile.common.io;
 
+import com.evolution.dropfile.common.CommonUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -70,18 +72,32 @@ public class FileHelper {
     }
 
     public InputStream readStream(Path path, long skip, int take) throws IOException {
-        FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-        boolean success = false;
+        FileChannel fileChannel = null;
+        InputStream channelInputStream = null;
         try {
+            fileChannel = FileChannel.open(path, StandardOpenOption.READ);
             fileChannel.position(skip);
-            InputStream inputStream = Channels.newInputStream(fileChannel);
-            InputStream watchdog = new WatchdogInputStream(inputStream, take);
-            success = true;
-            return watchdog;
-        } finally {
-            if (!success) {
-                fileChannel.close();
+            channelInputStream = Channels.newInputStream(fileChannel);
+            return new WatchdogInputStream(channelInputStream, take);
+        } catch (Throwable throwable) {
+            if (channelInputStream != null) {
+                try {
+                    channelInputStream.close();
+                } catch (Throwable channelInputStreamThrowable) {
+                    throwable.addSuppressed(channelInputStreamThrowable);
+                }
+            } else if (fileChannel != null) {
+                try {
+                    fileChannel.close();
+                } catch (Throwable fileChannelThrowable) {
+                    throwable.addSuppressed(fileChannelThrowable);
+                }
             }
+
+            if (throwable instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw CommonUtils.toRuntimeException(throwable);
         }
     }
 
