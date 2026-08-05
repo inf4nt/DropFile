@@ -93,15 +93,16 @@ public class HttpTunnelClient implements TunnelClient {
             InputStream inputStreamResponse = getInputStreamResponse(httpResponse.body(), fingerprint, secretKey);
             validateInputStream(requestId, inputStreamResponse);
             return inputStreamResponse;
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             if (httpResponse != null) {
                 try {
                     httpResponse.body().close();
-                } catch (Exception closeException) {
-                    log.error("Failed to close HTTP response body stream during failure cleanup", closeException);
+                } catch (Throwable closeThrowable) {
+                    log.error("Failed to close HTTP response body stream during failure cleanup", closeThrowable);
+                    throwable.addSuppressed(closeThrowable);
                 }
             }
-            throw new RuntimeException("Tunnel streaming request failed: " + e.getMessage(), e);
+            throw CommonUtils.toRuntimeException("Tunnel streaming request failed", throwable);
         }
     }
 
