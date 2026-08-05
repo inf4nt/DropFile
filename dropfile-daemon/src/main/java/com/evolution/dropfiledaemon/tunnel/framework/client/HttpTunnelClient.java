@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
+import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
@@ -120,19 +121,23 @@ public class HttpTunnelClient implements TunnelClient {
 
     private InputStream getInputStreamResponse(InputStream inputStream,
                                                String fingerprint,
-                                               SecretKey secretKey) throws IOException {
-        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(
-                inputStream,
-                daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
-                Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
-        );
-        InputStream trafficMonitorInputStream = tunnelTrafficMonitor.inputStreamWrapper(fingerprint, watchdogInputStream);
-        InputStream decryptedStream = cryptoTunnel.decrypt(trafficMonitorInputStream, secretKey);
-
-        if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
-            return compressTunnelService.decompress(decryptedStream);
-        }
-        return decryptedStream;
+                                               SecretKey secretKey) {
+        return InputStreamPipeline
+                .from(inputStream)
+                .add(in -> new WatchdogInputStream(
+                        in,
+                        daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
+                        Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
+                ))
+                .add(in -> tunnelTrafficMonitor.inputStreamWrapper(fingerprint, in))
+                .add(in -> cryptoTunnel.decrypt(in, secretKey))
+                .add(in -> {
+                    if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
+                        return compressTunnelService.decompress(in);
+                    }
+                    return in;
+                })
+                .get();
     }
 
     private SecureEnvelope encrypt(String requestId, Request request, SecretKey secretKey) throws JsonProcessingException {
