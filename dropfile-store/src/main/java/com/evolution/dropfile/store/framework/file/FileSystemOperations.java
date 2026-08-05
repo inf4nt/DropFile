@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.io.FileHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -51,17 +52,22 @@ public class FileSystemOperations implements FileOperations {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
             throw new NoContentFoundException(destination);
         }
-        boolean success = false;
         FileChannel fileChannel = null;
         try {
             fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
-            InputStream inputStream = Channels.newInputStream(fileChannel);
-            success = true;
-            return inputStream;
-        } finally {
-            if (!success && fileChannel != null) {
-                fileChannel.close();
+            return Channels.newInputStream(fileChannel);
+        } catch (Throwable throwable) {
+            if (fileChannel != null) {
+                try {
+                    fileChannel.close();
+                } catch (Throwable fileChannelThrowable) {
+                    throwable.addSuppressed(fileChannelThrowable);
+                }
             }
+            if (throwable instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw CommonUtils.toRuntimeException(throwable);
         }
     }
 
