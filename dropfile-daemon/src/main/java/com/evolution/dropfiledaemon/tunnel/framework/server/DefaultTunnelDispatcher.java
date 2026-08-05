@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
-import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
+import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -54,17 +55,20 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     @Override
     public TunnelDispatcherContext dispatch(TunnelRequestDTO requestDTO) {
         InputStream inputStream = null;
+        String command = null;
+        String fingerprint = null;
         try {
-            String fingerprint = requestDTO.fingerprint();
-
             Map.Entry<String, HandshakeTrustedInStore.TrustedIn> trustedInEntry = handshakeTrustedInStore
-                    .getRequired(fingerprint);
+                    .getRequired(requestDTO.fingerprint());
+
+            fingerprint = trustedInEntry.getKey();
 
             validateSession(trustedInEntry);
 
             SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
 
             TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
+            command = tunnelRequestPayload.command();
             replyAttackGuard.tryToAddTunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
 
             Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
@@ -80,11 +84,20 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             if (inputStream != null) {
                 try {
                     inputStream.close();
-                } catch (IOException e) {
-                    throwable.addSuppressed(e);
+                } catch (Throwable closeThrowable) {
+                    log.error("Failed to close inputstream body during failure cleanup. Fingerprint {} command {}",
+                            Objects.requireNonNullElse(fingerprint, "None"),
+                            Objects.requireNonNullElse(command, "None"),
+                            closeThrowable
+                    );
+                    throwable.addSuppressed(closeThrowable);
                 }
             }
-            throw CommonUtils.toRuntimeException(throwable);
+            String message = "Failed to process tunnel request. Fingerprint %s command %s".formatted(
+                    Objects.requireNonNullElse(fingerprint, "None"),
+                    Objects.requireNonNullElse(command, "None")
+                    );
+            throw CommonUtils.toRuntimeException(message, throwable);
         }
     }
 

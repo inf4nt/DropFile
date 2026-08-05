@@ -57,8 +57,8 @@ public class ServerTunnelRestController {
                 if (tunnelDispatcherContext != null) {
                     tunnelDispatcherContext.close();
                 }
-            } catch (IOException e) {
-                log.error("Failed to close tunnel context {}", e.getMessage(), e);
+            } catch (Throwable throwable) {
+                log.error("Failed to close tunnel context {}", throwable.getMessage(), throwable);
             }
         };
 

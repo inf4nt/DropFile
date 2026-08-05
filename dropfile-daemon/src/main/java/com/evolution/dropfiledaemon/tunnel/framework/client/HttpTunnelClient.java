@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
+import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.ServerTunnelRestController;
@@ -28,6 +28,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -51,6 +52,8 @@ public class HttpTunnelClient implements TunnelClient {
 
     @Override
     public InputStream stream(Request request) {
+        Objects.requireNonNull(request, "Request must not be null");
+
         HttpResponse<InputStream> httpResponse = null;
         try {
             String fingerprint = request.getFingerprint();
@@ -98,11 +101,20 @@ public class HttpTunnelClient implements TunnelClient {
                 try {
                     httpResponse.body().close();
                 } catch (Throwable closeThrowable) {
-                    log.error("Failed to close HTTP response body stream during failure cleanup", closeThrowable);
+                    log.error(
+                            "Failed to close HTTP response body stream during failure cleanup. Fingerprint {} command {}",
+                            request.getFingerprint(),
+                            request.getCommand(),
+                            closeThrowable
+                    );
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            throw CommonUtils.toRuntimeException("Tunnel streaming request failed", throwable);
+            String message = "Tunnel streaming request failed. Fingerprint %s command %s".formatted(
+                    request.getFingerprint(),
+                    request.getCommand()
+            );
+            throw CommonUtils.toRuntimeException(message, throwable);
         }
     }
 
