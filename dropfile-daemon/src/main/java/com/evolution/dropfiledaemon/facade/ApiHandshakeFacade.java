@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.time.Instant;
@@ -75,7 +76,7 @@ public class ApiHandshakeFacade {
         byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
 
         String rawSecret = requestDTO.key();
-        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes());
+        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes(StandardCharsets.UTF_8));
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 requestPayloadByteArray,
                 secretKey

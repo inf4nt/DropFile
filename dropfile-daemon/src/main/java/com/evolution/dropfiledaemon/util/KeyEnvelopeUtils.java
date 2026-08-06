@@ -2,6 +2,8 @@ package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
 
+import java.nio.charset.StandardCharsets;
+
 public class KeyEnvelopeUtils {
     
     public static KeyEnvelope generate() {
@@ -11,7 +13,7 @@ public class KeyEnvelopeUtils {
     }
 
     public static String getId(String key) {
-        return CommonUtils.getFingerprint(key.getBytes()).substring(0, 10);
+        return CommonUtils.getFingerprint(key.getBytes(StandardCharsets.UTF_8)).substring(0, 10);
     }
 
     public record KeyEnvelope(String id, String key) {

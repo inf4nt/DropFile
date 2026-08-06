@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.time.Instant;
 import java.util.List;
@@ -54,7 +55,7 @@ public class HandshakeFacade {
         }
 
         String rawSecret = accessKey.key();
-        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes());
+        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes(StandardCharsets.UTF_8));
 
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 requestDTO.payload(),

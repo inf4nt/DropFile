@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -54,6 +55,6 @@ public class CryptoFileOperations implements FileOperations {
         String string = cryptoTunnel.getAlgorithm() +
                 CryptoFileOperations.class.getName() +
                 seed;
-        return CommonUtils.getFingerprint(string.getBytes()).getBytes();
+        return CommonUtils.getFingerprint(string.getBytes(StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
     }
 }

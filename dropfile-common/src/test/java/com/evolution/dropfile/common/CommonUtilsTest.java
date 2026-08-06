@@ -3,6 +3,7 @@ package com.evolution.dropfile.common;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -98,14 +99,14 @@ public class CommonUtilsTest {
     public void getFingerprint() {
         for (int i = 0; i < 100; i++) {
             assertThat(
-                    CommonUtils.getFingerprint("abc".getBytes()),
+                    CommonUtils.getFingerprint("abc".getBytes(StandardCharsets.UTF_8)),
                     is("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
             );
         }
 
         for (int i = 0; i < 100; i++) {
             assertThat(
-                    CommonUtils.getFingerprint("abcdefg".getBytes()),
+                    CommonUtils.getFingerprint("abcdefg".getBytes(StandardCharsets.UTF_8)),
                     is("7d1a54127b222502f5b79b5fb0803061152a44f92b37e23c6527baf665d4da9a")
             );
         }
@@ -147,11 +148,11 @@ public class CommonUtilsTest {
     @Test
     public void encodeBase64() {
         assertThat(
-                CommonUtils.encodeBase64("123abc".getBytes()),
+                CommonUtils.encodeBase64("123abc".getBytes(StandardCharsets.UTF_8)),
                 is("MTIzYWJj")
         );
         assertThat(
-                CommonUtils.encodeBase64("abcdefg".getBytes()),
+                CommonUtils.encodeBase64("abcdefg".getBytes(StandardCharsets.UTF_8)),
                 is("YWJjZGVmZw")
         );
     }
@@ -160,11 +161,11 @@ public class CommonUtilsTest {
     public void decodeBase64() {
         assertThat(
                 CommonUtils.decodeBase64("MTIzYWJj"),
-                is("123abc".getBytes())
+                is("123abc".getBytes(StandardCharsets.UTF_8))
         );
         assertThat(
                 CommonUtils.decodeBase64("YWJjZGVmZw"),
-                is("abcdefg".getBytes())
+                is("abcdefg".getBytes(StandardCharsets.UTF_8))
         );
     }
 
