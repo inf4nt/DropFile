@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,8 +19,8 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Objects;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class DaemonClient {
 
     private final HttpClient httpClient;
@@ -30,664 +31,199 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeDisconnect(String fingerprint) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/disconnect/fingerprint/")
-                .resolve(fingerprint);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    public HttpResponse<byte[]> handshake(URI address, String key, boolean force) {
+        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), key, force));
     }
 
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeDisconnectCurrent() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/disconnect/current");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeDisconnectAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/disconnect/all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeRevoke(String fingerprint) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/revoke/fingerprint/")
-                .resolve(fingerprint);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> handshakeRevokeAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/revoke/all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsTraffic() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/traffic");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsBrowseLs(List<String> ids) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/browse/ls");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(
-                                new ApiConnectionsBrowseLsRequestDTO(ids)
-                        )
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsBrowseGet(String id, String filename) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/browse/get");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiConnectionsBrowseGetRequestDTO(id, filename)
-                )))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareLs() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/ls");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareAdd(String resourcePath, String alias) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/add");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(
-                                new ApiConnectionsShareAddRequestDTO(resourcePath, alias)
-                        )
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareRm(String id) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/rm/")
-                .resolve(id);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsShareRmAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/share/rm-all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/access/generate");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(
-                                new ApiConnectionsAccessGenerateRequestDTO(permanent)
-                        )
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsAccessLs() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/access/ls");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsAccessRm(String id) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/access/rm/")
-                .resolve(id);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> connectionsAccessRmAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/connections/access/rm-all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> daemonInfo() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/daemon/info");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> getTrustIn() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/trust/in");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> getTrustOut() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/trust/out");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> getTrustLatest() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/trust/out/latest");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> daemonShutdown() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/daemon/shutdown");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> daemonCacheReset() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/daemon/cache-reset");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    public HttpResponse<byte[]> daemonGarbageCollector() throws IOException, InterruptedException {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/daemon/garbage-collector");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> handshake(URI address,
-                                          String key,
-                                          boolean force) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new ApiHandshakeRequestDTO(
-                                address.toString(),
-                                key,
-                                force
-                        ))
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
     public HttpResponse<byte[]> handshakeReconnect(URI address) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/reconnect");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new ApiHandshakeReconnectRequestDTO(
-                                address.toString()
-                        ))
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost("/api/handshake/reconnect", new ApiHandshakeReconnectRequestDTO(address.toString()));
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> handshakeCurrentReconnect() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/handshake/current/reconnect");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost("/api/handshake/current/reconnect");
     }
 
-    @SneakyThrows
+    public HttpResponse<byte[]> handshakeDisconnect(String fingerprint) {
+        return sendPost(CommonUtils.joinPaths("/api/handshake/disconnect/fingerprint", fingerprint));
+    }
+
+    public HttpResponse<byte[]> handshakeDisconnectCurrent() {
+        return sendPost("/api/handshake/disconnect/current");
+    }
+
+    public HttpResponse<byte[]> handshakeDisconnectAll() {
+        return sendPost("/api/handshake/disconnect/all");
+    }
+
+    public HttpResponse<byte[]> handshakeRevoke(String fingerprint) {
+        return sendPost(CommonUtils.joinPaths("/api/handshake/revoke/fingerprint", fingerprint));
+    }
+
+    public HttpResponse<byte[]> handshakeRevokeAll() {
+        return sendPost("/api/handshake/revoke/all");
+    }
+
+    public HttpResponse<byte[]> getTrustIn() {
+        return sendGet("/api/handshake/trust/in");
+    }
+
+    public HttpResponse<byte[]> getTrustOut() {
+        return sendGet("/api/handshake/trust/out");
+    }
+
+    public HttpResponse<byte[]> getTrustLatest() {
+        return sendGet("/api/handshake/trust/out/latest");
+    }
+
+    public HttpResponse<byte[]> connectionsTraffic() {
+        return sendGet("/api/connections/traffic");
+    }
+
+    public HttpResponse<byte[]> connectionsBrowseLs(List<String> ids) {
+        return sendPost("/api/connections/browse/ls", new ApiConnectionsBrowseLsRequestDTO(ids));
+    }
+
+    public HttpResponse<byte[]> connectionsBrowseGet(String id, String filename) {
+        return sendPost("/api/connections/browse/get", new ApiConnectionsBrowseGetRequestDTO(id, filename));
+    }
+
+    public HttpResponse<byte[]> connectionsShareLs() {
+        return sendGet("/api/connections/share/ls");
+    }
+
+    public HttpResponse<byte[]> connectionsShareAdd(String resourcePath, String alias) {
+        return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias));
+    }
+
+    public HttpResponse<byte[]> connectionsShareRm(String id) {
+        return sendDelete(CommonUtils.joinPaths("/api/connections/share/rm", id));
+    }
+
+    public HttpResponse<byte[]> connectionsShareRmAll() {
+        return sendDelete("/api/connections/share/rm-all");
+    }
+
+    public HttpResponse<byte[]> connectionsAccessGenerate(boolean permanent) {
+        return sendPost("/api/connections/access/generate", new ApiConnectionsAccessGenerateRequestDTO(permanent));
+    }
+
+    public HttpResponse<byte[]> connectionsAccessLs() {
+        return sendGet("/api/connections/access/ls");
+    }
+
+    public HttpResponse<byte[]> connectionsAccessRm(String id) {
+        return sendDelete(CommonUtils.joinPaths("/api/connections/access/rm", id));
+    }
+
+    public HttpResponse<byte[]> connectionsAccessRmAll() {
+        return sendDelete("/api/connections/access/rm-all");
+    }
+
     public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/download/ls");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(
-                        objectMapper.writeValueAsBytes(new ApiDownloadLsDTO.Request(
-                                status,
-                                limit
-                        ))
-                ))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost("/api/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> downloadStop(String operation) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/download/stop/")
-                .resolve(operation);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost(CommonUtils.joinPaths("/api/download/stop", operation));
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> downloadStopAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/download/stop-all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost("/api/download/stop-all");
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> downloadRm(String operationId) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/download/rm/")
-                .resolve(operationId);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendDelete(CommonUtils.joinPaths("/api/download/rm", operationId));
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> downloadRmAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/download/rm-all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendDelete("/api/download/rm-all");
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> quickShareAdd(String resourcePath,
                                               String alias,
                                               boolean singleUse,
                                               boolean secure,
                                               String secret) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/quick-share/add");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(
-                        new ApiQuickShareAddRequestDTO(resourcePath, alias, singleUse, secure, secret)
-                )))
-                .header("Content-Type", "application/json")
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendPost("/api/quick-share/add", new ApiQuickShareAddRequestDTO(resourcePath, alias, singleUse, secure, secret));
     }
 
-    @SneakyThrows
     public HttpResponse<byte[]> quickShareLs() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/quick-share/ls");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return sendGet("/api/quick-share/ls");
     }
 
-    @SneakyThrows
-    public HttpResponse<byte[]> quickShareRmAll() {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/quick-share/rm-all");
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
-    public HttpResponse<byte[]> quickShareRm(String id) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/quick-share/rm/")
-                .resolve(id);
-
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
-
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .DELETE()
-                .build();
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-    }
-
-    @SneakyThrows
     public HttpResponse<byte[]> quickShareShow(String id) {
-        URI daemonURI = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
-                .resolve("/api/quick-share/ls/")
-                .resolve(id);
-        String daemonAuthorizationToken = getDaemonAuthorizationToken();
+        return sendGet(CommonUtils.joinPaths("/api/quick-share/ls", id));
+    }
 
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(daemonURI)
-                .header("Authorization", daemonAuthorizationToken)
-                .GET()
-                .build();
+    public HttpResponse<byte[]> quickShareRm(String id) {
+        return sendDelete(CommonUtils.joinPaths("/api/quick-share/rm", id));
+    }
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    public HttpResponse<byte[]> quickShareRmAll() {
+        return sendDelete("/api/quick-share/rm-all");
+    }
+
+    public HttpResponse<byte[]> daemonInfo() {
+        return sendGet("/api/daemon/info");
+    }
+
+    public HttpResponse<byte[]> daemonShutdown() {
+        return sendPost("/api/daemon/shutdown");
+    }
+
+    public HttpResponse<byte[]> daemonCacheReset() {
+        return sendPost("/api/daemon/cache-reset");
+    }
+
+    public HttpResponse<byte[]> daemonGarbageCollector() {
+        return sendPost("/api/daemon/garbage-collector");
+    }
+
+    private HttpResponse<byte[]> sendGet(String path) {
+        HttpRequest.Builder httpRequestBuilder = builder("GET", path, HttpRequest.BodyPublishers.noBody());
+        return execute(httpRequestBuilder);
+    }
+
+    private HttpResponse<byte[]> sendPost(String path) {
+        HttpRequest.Builder httpRequestBuilder = builder("POST", path, HttpRequest.BodyPublishers.noBody());
+        return execute(httpRequestBuilder);
+    }
+
+    @SneakyThrows
+    private HttpResponse<byte[]> sendPost(String path, Object bodyDTO) {
+        byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
+        HttpRequest.Builder httpRequestBuilder = builder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
+        httpRequestBuilder.header("Content-Type", "application/json");
+        return execute(httpRequestBuilder);
+    }
+
+    private HttpResponse<byte[]> sendDelete(String path) {
+        HttpRequest.Builder httpRequestBuilder = builder("DELETE", path, HttpRequest.BodyPublishers.noBody());
+        return execute(httpRequestBuilder);
+    }
+
+    @SneakyThrows
+    private HttpResponse<byte[]> execute(HttpRequest.Builder requestBuilder) {
+        HttpRequest httpRequest = requestBuilder.build();
+        try {
+            return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (ConnectException e) {
+            String host = httpRequest.uri().getHost();
+            int port = httpRequest.uri().getPort();
+            throw new IOException("Daemon is not running or unreachable. Check daemon host %s and port %s"
+                    .formatted(host, port), e);
+        }
+    }
+
+    private HttpRequest.Builder builder(String method,
+                                        String path,
+                                        HttpRequest.BodyPublisher bodyPublisher) {
+        URI uri = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+                .resolve(path);
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .header("Authorization", getDaemonAuthorizationToken())
+                .method(method, bodyPublisher);
     }
 
     private String getDaemonAuthorizationToken() {
