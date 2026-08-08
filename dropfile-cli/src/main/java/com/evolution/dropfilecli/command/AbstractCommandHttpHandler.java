@@ -1,6 +1,5 @@
 package com.evolution.dropfilecli.command;
 
-import com.evolution.dropfile.common.dto.ApiErrorDTO;
 import com.evolution.dropfilecli.client.DaemonClient;
 import com.evolution.dropfilecli.util.Spinner;
 import com.evolution.dropfilecli.util.TablePrinter;
@@ -23,9 +22,6 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
 
     @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false")
     protected boolean list;
-
-    @CommandLine.Option(names = {"-verbose", "--verbose"}, description = "Show detailed error information", defaultValue = "false")
-    protected boolean verbose;
 
     protected DaemonClient daemonClient;
 
@@ -63,12 +59,7 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
         if (ObjectUtils.isEmpty(body)) {
             return;
         }
-        ApiErrorDTO apiErrorDTO = objectMapper.readValue(body, ApiErrorDTO.class);
-        System.out.println("Class: " + apiErrorDTO.clazz());
-        System.out.println("Message: " + apiErrorDTO.message());
-        if (verbose) {
-            System.out.println("Stacktrace: " + apiErrorDTO.stacktrace());
-        }
+        System.out.println("HTTP response body: " + new String(body));
     }
 
     protected boolean isSuccessful(HttpResponse<byte[]> response) {

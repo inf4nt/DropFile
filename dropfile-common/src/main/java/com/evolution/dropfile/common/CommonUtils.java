@@ -192,12 +192,6 @@ public class CommonUtils {
         return elements.getFirst();
     }
 
-    public static String getStackTraceAsString(Throwable throwable) {
-        StringWriter sw = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(sw, true));
-        return sw.toString();
-    }
-
     public static RuntimeException toRuntimeException(Throwable throwable) {
         return toRuntimeException(null, throwable);
     }

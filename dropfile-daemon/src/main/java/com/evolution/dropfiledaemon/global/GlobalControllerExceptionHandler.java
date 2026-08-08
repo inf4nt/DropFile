@@ -1,10 +1,9 @@
 package com.evolution.dropfiledaemon.global;
 
-import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.ApiErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -16,10 +15,14 @@ public class GlobalControllerExceptionHandler {
     public ResponseEntity<?> exception(Exception exception, HttpServletRequest request) {
         log.error("Web controller error: {}", exception.getMessage(), exception);
         if (isApiCall(request)) {
-            String stackTraceAsString = CommonUtils.getStackTraceAsString(exception);
-            ApiErrorDTO apiErrorDTO = new ApiErrorDTO(exception.getClass().getName(), exception.getMessage(), stackTraceAsString);
-            return ResponseEntity.badRequest()
-                    .body(apiErrorDTO);
+            if (ObjectUtils.isEmpty(exception.getMessage())) {
+                return ResponseEntity.badRequest().body(
+                        exception.getClass().getName()
+                );
+            }
+            return ResponseEntity.badRequest().body(
+                    exception.getClass().getName() + ". Message: " + exception.getMessage()
+            );
         }
         return ResponseEntity.notFound().build();
     }
