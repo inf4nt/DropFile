@@ -55,9 +55,7 @@ public class RetryExecutor<T> {
                 }
             } catch (Exception e) {
                 if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
-                    if (!Thread.currentThread().isInterrupted()) {
-                        Thread.currentThread().interrupt();
-                    }
+                    Thread.currentThread().interrupt();
                     throw e;
                 }
                 if (CommonUtils.checkThrowable(e, ClosedChannelException.class)) {
@@ -83,9 +81,7 @@ public class RetryExecutor<T> {
                 try {
                     Thread.sleep(delay.toMillis());
                 } catch (InterruptedException e) {
-                    if (!Thread.currentThread().isInterrupted()) {
-                        Thread.currentThread().interrupt();
-                    }
+                    Thread.currentThread().interrupt();
                     throw e;
                 }
             }
