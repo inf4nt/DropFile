@@ -66,7 +66,7 @@ public class ApiHandshakeFacade {
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
-        String handshakeRequestId = UUID.randomUUID().toString();
+        UUID handshakeRequestId = UUID.randomUUID();
         HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
                 handshakeRequestId,
                 rsaKeyPair.getPublic().getEncoded(),
