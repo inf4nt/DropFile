@@ -20,9 +20,7 @@ public class DropFileDaemonApplication {
         Thread.ofVirtual().start(() -> {
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
+            } catch (InterruptedException _) {
             }
             int exit = SpringApplication.exit(context, () -> 0);
             System.exit(exit);
