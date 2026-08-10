@@ -143,7 +143,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         String fingerprint = trustedInEntry.getKey();
         HandshakeTrustedInStore.TrustedIn trustedIn = trustedInEntry.getValue();
         if (Instant.now().isAfter(trustedIn.sessionUpdated().plus(SESSION_TTL))) {
-            throw new RuntimeException("Session has expired for fingerprint: " + fingerprint);
+            throw new IllegalStateException("Session has expired for fingerprint: " + fingerprint);
         }
     }
 
