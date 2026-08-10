@@ -127,10 +127,15 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             compressOutputStream.close();
             encryptStream.close();
             monitorStream.close();
-        } catch (IOException e) {
-            throw e;
         } catch (Throwable throwable) {
-            throw CommonUtils.toRuntimeException(throwable);
+            String message = "Failed to transfer data to tunnel outpustream. Fingerprint %s command %s".formatted(
+                    Objects.requireNonNullElse(context.getFingerprint(), "None"),
+                    Objects.requireNonNullElse(context.getRequestPayload().command(), "None")
+            );
+            if (throwable instanceof IOException ioException) {
+                throw new IOException(message, ioException);
+            }
+            throw CommonUtils.toRuntimeException(message, throwable);
         }
     }
 

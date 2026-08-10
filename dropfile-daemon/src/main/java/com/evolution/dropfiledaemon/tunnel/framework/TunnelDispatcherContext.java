@@ -25,7 +25,7 @@ public class TunnelDispatcherContext implements Closeable {
         this.fingerprint = Objects.requireNonNull(fingerprint);
         this.secretKey = Objects.requireNonNull(secretKey);
         this.requestPayload = Objects.requireNonNull(requestPayload);
-        this.inputStream = new OnceCloseableInputStream(inputStream);
+        this.inputStream = new OnceCloseableInputStream(Objects.requireNonNull(inputStream));
     }
 
     public InputStream getInputStream() {
