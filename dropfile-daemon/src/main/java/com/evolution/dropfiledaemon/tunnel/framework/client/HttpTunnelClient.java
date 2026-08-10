@@ -62,7 +62,7 @@ public class HttpTunnelClient implements TunnelClient {
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
             SecretKey secretKey = getSecretKey(trustedOut);
 
-            String requestId = UUID.randomUUID().toString();
+            UUID requestId = UUID.randomUUID();
 
             SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
 
@@ -140,7 +140,7 @@ public class HttpTunnelClient implements TunnelClient {
                 .get();
     }
 
-    private SecureEnvelope encrypt(String requestId, Request request, SecretKey secretKey) throws JsonProcessingException {
+    private SecureEnvelope encrypt(UUID requestId, Request request, SecretKey secretKey) throws JsonProcessingException {
         byte[] payload = switch (request.getBody()) {
             case null -> null;
             case String string -> string.getBytes(StandardCharsets.UTF_8);
@@ -174,8 +174,8 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     @SneakyThrows
-    private void validateInputStream(String requestId, InputStream inputStream) {
-        byte[] expectedRequestIdBytes = requestId.getBytes(StandardCharsets.UTF_8);
+    private void validateInputStream(UUID requestId, InputStream inputStream) {
+        byte[] expectedRequestIdBytes = requestId.toString().getBytes(StandardCharsets.UTF_8);
 
         byte[] actualRequestIdBytes = inputStream.readNBytes(expectedRequestIdBytes.length);
         if (actualRequestIdBytes.length < expectedRequestIdBytes.length

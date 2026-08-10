@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -41,7 +42,8 @@ public class ReplyAttackGuard implements Purgeable {
         checkAndRegisterKey(key, "Handshake request");
     }
 
-    public void tryToAddTunnelDispatcherRequest(String fingerprint, TunnelRequestDTO.Payload payload) {
+    public void tryToAddTunnelDispatcherRequest(String fingerprint, TunnelRequestDTO.
+            Payload payload) {
         validatePayloadTime("Tunnel dispatcher request", payload.timestamp());
 
         String key = getTunnelDispatcherRequestKey(fingerprint, payload.requestId());
@@ -71,7 +73,7 @@ public class ReplyAttackGuard implements Purgeable {
         }
     }
 
-    private String getTunnelDispatcherRequestKey(String fingerprint, String requestId) {
+    private String getTunnelDispatcherRequestKey(String fingerprint, UUID requestId) {
         return "t.req:" + fingerprint + ":" + requestId;
     }
 

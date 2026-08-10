@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -180,7 +181,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         return CloseShieldOutputStream.stream(outputStream);
     }
 
-    private void writeMarkersToOutputStream(String requestId, OutputStream outputStream) throws IOException {
-        outputStream.write(requestId.getBytes(StandardCharsets.UTF_8));
+    private void writeMarkersToOutputStream(UUID requestId, OutputStream outputStream) throws IOException {
+        outputStream.write(requestId.toString().getBytes(StandardCharsets.UTF_8));
     }
 }
