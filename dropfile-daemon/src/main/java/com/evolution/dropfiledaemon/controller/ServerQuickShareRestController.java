@@ -8,6 +8,8 @@ import com.evolution.dropfiledaemon.service.StreamingArchiveService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.util.ObjectUtils;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.WebAsyncTask;
-import org.springframework.web.util.UriUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,8 +46,9 @@ public class ServerQuickShareRestController {
         QuickShareEntry quickShareEntry = quickShareEntryStore
                 .getRequired(id)
                 .getValue();
+
         if (quickShareEntry.expired()) {
-            throw new RuntimeException("Expired " + id);
+            throw new IllegalStateException("Expired " + id);
         }
 
         if (quickShareEntry.singleUse()) {
@@ -59,18 +61,21 @@ public class ServerQuickShareRestController {
 
         File file = new File(quickShareEntry.resourcePath());
 
-        String responseFileName = UriUtils.encode(
-                ObjectUtils.isEmpty(quickShareEntry.alias())
-                        ? file.getName()
-                        : quickShareEntry.alias(),
-                StandardCharsets.UTF_8
-        );
+        String rawFileName = ObjectUtils.isEmpty(quickShareEntry.alias())
+                ? file.getName()
+                : quickShareEntry.alias();
 
         if (quickShareEntry.secure()) {
             String zipName = String.format("%s-%s.zip", "secure", id);
 
             response.setContentType("application/zip");
-            response.setHeader("Content-Disposition", "attachment; filename=" + zipName);
+            response.setHeader(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    ContentDisposition.attachment()
+                            .filename(zipName, StandardCharsets.UTF_8)
+                            .build()
+                            .toString()
+            );
             response.setStatus(200);
 
             return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
@@ -78,18 +83,25 @@ public class ServerQuickShareRestController {
                 streamingArchiveService.secureZip(
                         outputStream,
                         file.toPath(),
-                        responseFileName,
+                        rawFileName,
                         quickShareEntry.secret()
                 );
                 outputStream.flush();
                 return null;
             });
         }
+
         if (daemonApplicationProperties.daemonQuickShareInsecureCompressEnabled) {
             response.setHeader("Content-Encoding", "gzip");
-            response.setContentType("application/octet-stream");
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setHeader(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    ContentDisposition.attachment()
+                            .filename(rawFileName, StandardCharsets.UTF_8)
+                            .build()
+                            .toString()
+            );
             response.setStatus(200);
-            response.setHeader("Content-Disposition", "attachment; filename=" + responseFileName);
             return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
                 OutputStream outputStream = response.getOutputStream();
                 streamingArchiveService.gzip(file.toPath(), outputStream);
@@ -98,14 +110,20 @@ public class ServerQuickShareRestController {
             });
         }
 
-        String contentType = MediaTypeFactory.getMediaType(responseFileName)
+        String contentType = MediaTypeFactory.getMediaType(rawFileName)
                 .or(() -> MediaTypeFactory.getMediaType(file.getName()))
                 .map(MediaType::toString)
-                .orElse("application/octet-stream");
+                .orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
         response.setContentType(contentType);
         response.setContentLengthLong(file.length());
-        response.setHeader("Content-Disposition", "attachment; filename=" + responseFileName);
+        response.setHeader(
+                HttpHeaders.CONTENT_DISPOSITION,
+                ContentDisposition.attachment()
+                        .filename(rawFileName, StandardCharsets.UTF_8)
+                        .build()
+                        .toString()
+        );
         response.setStatus(200);
 
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
