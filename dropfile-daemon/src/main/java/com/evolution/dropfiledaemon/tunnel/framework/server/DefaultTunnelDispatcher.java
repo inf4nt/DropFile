@@ -96,13 +96,13 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             String message = "Failed to process tunnel request. Fingerprint %s command %s".formatted(
                     Objects.requireNonNullElse(fingerprint, "None"),
                     Objects.requireNonNullElse(command, "None")
-                    );
+            );
             throw CommonUtils.toRuntimeException(message, throwable);
         }
     }
 
     @Override
-    public void transfer(TunnelDispatcherContext context, OutputStream outputStreamArgument) {
+    public void transfer(TunnelDispatcherContext context, OutputStream outputStreamArgument) throws IOException {
         try {
             InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
                     CloseShieldOutputStream.stream(outputStreamArgument)
@@ -126,6 +126,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             compressOutputStream.close();
             encryptStream.close();
             monitorStream.close();
+        } catch (IOException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw CommonUtils.toRuntimeException(throwable);
         }
