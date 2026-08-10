@@ -180,25 +180,25 @@ public class DaemonClient {
     }
 
     private HttpResponse<byte[]> sendGet(String path) {
-        HttpRequest.Builder httpRequestBuilder = builder("GET", path, HttpRequest.BodyPublishers.noBody());
+        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("GET", path, HttpRequest.BodyPublishers.noBody());
         return execute(httpRequestBuilder);
     }
 
     private HttpResponse<byte[]> sendPost(String path) {
-        HttpRequest.Builder httpRequestBuilder = builder("POST", path, HttpRequest.BodyPublishers.noBody());
+        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.noBody());
         return execute(httpRequestBuilder);
     }
 
     @SneakyThrows
     private HttpResponse<byte[]> sendPost(String path, Object bodyDTO) {
         byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
-        HttpRequest.Builder httpRequestBuilder = builder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
+        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
         httpRequestBuilder.header("Content-Type", "application/json");
         return execute(httpRequestBuilder);
     }
 
     private HttpResponse<byte[]> sendDelete(String path) {
-        HttpRequest.Builder httpRequestBuilder = builder("DELETE", path, HttpRequest.BodyPublishers.noBody());
+        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.noBody());
         return execute(httpRequestBuilder);
     }
 
@@ -215,9 +215,9 @@ public class DaemonClient {
         }
     }
 
-    private HttpRequest.Builder builder(String method,
-                                        String path,
-                                        HttpRequest.BodyPublisher bodyPublisher) {
+    private HttpRequest.Builder HttpRequestBuilder(String method,
+                                                   String path,
+                                                   HttpRequest.BodyPublisher bodyPublisher) {
         URI uri = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve(path);
         return HttpRequest.newBuilder()
