@@ -21,9 +21,6 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
     private File file;
 
-    @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")
-    private String alias;
-
     @CommandLine.Option(names = {"-secret", "--secret"}, description = "Secret password")
     private String secret;
 
@@ -58,7 +55,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.quickShareAdd(file.toPath().toAbsolutePath().normalize().toString(), alias, singleUse, secure, secret);
+        return daemonClient.quickShareAdd(file.toPath().toAbsolutePath().normalize().toString(), singleUse, secure, secret);
     }
 
     @Override

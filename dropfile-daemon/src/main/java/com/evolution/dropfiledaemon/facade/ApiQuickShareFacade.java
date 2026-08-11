@@ -55,7 +55,6 @@ public class ApiQuickShareFacade {
 
                         return new QuickShareEntry(
                                 resourceAbsolutePath.toString(),
-                                requestDTO.fileAlias(),
                                 secret,
                                 directory,
                                 requestDTO.singleUse(),
@@ -67,7 +66,6 @@ public class ApiQuickShareFacade {
                     }
                     return new QuickShareEntry(
                             resourceAbsolutePath.toString(),
-                            requestDTO.fileAlias(),
                             null,
                             directory,
                             requestDTO.singleUse(),
@@ -116,7 +114,6 @@ public class ApiQuickShareFacade {
 
         return new ApiQuickShareLsResponseDTO(
                 linkId,
-                entry.fileAlias(),
                 entry.resourcePath(),
                 CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourcePath()))),
                 entry.secret(),

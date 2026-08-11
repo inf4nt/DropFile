@@ -9,8 +9,8 @@ public interface QuickShareEntryStore extends KeyValueStore<QuickShareEntry> {
         if (value.secure() && (value.secret() == null || value.secret().isBlank())) {
             throw new IllegalArgumentException("QuickShareEntry must have a non-empty secret: " + key);
         }
-        if (value.directory() && value.fileAlias() != null) {
-            throw new IllegalArgumentException("QuickShareEntry fileAlias must be an empty for directory");
+        if (!value.secure() && value.secret() != null) {
+            throw new IllegalArgumentException("QuickShareEntry insecure must have an empty secret: " + key);
         }
 
         get(key).ifPresentOrElse(

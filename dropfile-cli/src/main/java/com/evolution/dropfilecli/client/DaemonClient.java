@@ -140,11 +140,10 @@ public class DaemonClient {
     }
 
     public HttpResponse<byte[]> quickShareAdd(String resourcePath,
-                                              String alias,
                                               boolean singleUse,
                                               boolean secure,
                                               String secret) {
-        return sendPost("/api/quick-share/add", new ApiQuickShareAddRequestDTO(resourcePath, alias, singleUse, secure, secret));
+        return sendPost("/api/quick-share/add", new ApiQuickShareAddRequestDTO(resourcePath, singleUse, secure, secret));
     }
 
     public HttpResponse<byte[]> quickShareLs() {
