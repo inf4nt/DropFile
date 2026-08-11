@@ -6,8 +6,9 @@ import java.time.Instant;
 
 @With
 public record QuickShareEntry(String resourcePath,
-                              String alias,
+                              String fileAlias,
                               String secret,
+                              boolean directory,
                               boolean singleUse,
                               boolean secure,
                               boolean expired,

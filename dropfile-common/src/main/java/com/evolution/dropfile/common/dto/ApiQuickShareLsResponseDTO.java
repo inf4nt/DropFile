@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record ApiQuickShareLsResponseDTO(String id,
-                                         String alias,
+                                         String fileAlias,
                                          String resourcePath,
                                          String size,
                                          String secret,
@@ -12,6 +12,7 @@ public record ApiQuickShareLsResponseDTO(String id,
                                          List<String> external,
                                          List<String> wireless,
                                          List<String> ethernet,
+                                         boolean directory,
                                          boolean secure,
                                          boolean singleUse,
                                          boolean expired,

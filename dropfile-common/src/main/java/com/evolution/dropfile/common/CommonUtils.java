@@ -3,12 +3,17 @@ package com.evolution.dropfile.common;
 import com.evolution.dropfile.common.function.IORunnable;
 import lombok.SneakyThrows;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -261,6 +266,29 @@ public class CommonUtils {
         }
 
         return result.toString();
+    }
+
+    public static long getSize(Path path) throws IOException {
+        if (!Files.isDirectory(path)) {
+            return Files.size(path);
+        }
+
+        AtomicLong totalSize = new AtomicLong(0);
+
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                totalSize.addAndGet(attrs.size());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return totalSize.get();
     }
 
     private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {

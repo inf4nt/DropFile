@@ -10,6 +10,7 @@ import com.evolution.dropfiledaemon.controller.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -40,26 +41,23 @@ public class ApiQuickShareFacade {
         if (Files.notExists(resourceAbsolutePath)) {
             throw new RuntimeException(new FileNotFoundException(resourceAbsolutePath.toString()));
         }
-        if (Files.isDirectory(resourceAbsolutePath)) {
-            throw new UnsupportedOperationException("Directories are unsupported " + resourceAbsolutePath);
-        }
 
         String id = CommonUtils.random();
 
         QuickShareEntry quickShareEntry = quickShareEntryStore.save(
                 id,
                 () -> {
+                    boolean directory = Files.isDirectory(resourceAbsolutePath);
                     Instant createInstantTime = Instant.now();
 
                     if (requestDTO.secure()) {
-                        String secret = ObjectUtils.isEmpty(requestDTO.secret())
-                                ? CommonUtils.generateRawSecretNonce12()
-                                : requestDTO.secret();
+                        String secret = Objects.requireNonNullElseGet(requestDTO.secret(), () -> CommonUtils.generateRawSecretNonce12());
 
                         return new QuickShareEntry(
                                 resourceAbsolutePath.toString(),
-                                requestDTO.alias(),
+                                requestDTO.fileAlias(),
                                 secret,
+                                directory,
                                 requestDTO.singleUse(),
                                 true,
                                 false,
@@ -69,8 +67,9 @@ public class ApiQuickShareFacade {
                     }
                     return new QuickShareEntry(
                             resourceAbsolutePath.toString(),
-                            requestDTO.alias(),
+                            requestDTO.fileAlias(),
                             null,
+                            directory,
                             requestDTO.singleUse(),
                             false,
                             false,
@@ -107,6 +106,7 @@ public class ApiQuickShareFacade {
         return linkShareEntries.stream().map(it -> map(it.getKey(), it.getValue())).toList();
     }
 
+    @SneakyThrows
     private ApiQuickShareLsResponseDTO map(String linkId, QuickShareEntry entry) {
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
 
@@ -116,14 +116,15 @@ public class ApiQuickShareFacade {
 
         return new ApiQuickShareLsResponseDTO(
                 linkId,
-                entry.alias(),
+                entry.fileAlias(),
                 entry.resourcePath(),
-                CommonUtils.toDisplaySize(Paths.get(entry.resourcePath()).toFile().length()),
+                CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourcePath()))),
                 entry.secret(),
                 relativeDownloadLink,
                 externalLinks,
                 connectionAddress != null ? buildLinks(connectionAddress.wireless(), linkId) : List.of(),
                 connectionAddress != null ? buildLinks(connectionAddress.ethernet(), linkId) : List.of(),
+                entry.directory(),
                 entry.secure(),
                 entry.singleUse(),
                 entry.expired(),

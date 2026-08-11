@@ -7,7 +7,10 @@ public interface QuickShareEntryStore extends KeyValueStore<QuickShareEntry> {
     @Override
     default void validate(String key, QuickShareEntry value) {
         if (value.secure() && (value.secret() == null || value.secret().isBlank())) {
-            throw new IllegalArgumentException("Secure entry must have a non-empty secret: " + key);
+            throw new IllegalArgumentException("QuickShareEntry must have a non-empty secret: " + key);
+        }
+        if (value.directory() && value.fileAlias() != null) {
+            throw new IllegalArgumentException("QuickShareEntry fileAlias must be an empty for directory");
         }
 
         get(key).ifPresentOrElse(
