@@ -4,7 +4,10 @@ import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -14,14 +17,22 @@ public class TokenService {
     private final DaemonSecretsStore daemonSecretsStore;
 
     public boolean isValid(String token) {
+        if (!StringUtils.hasText(token)) {
+            return false;
+        }
+
         try {
-            if (ObjectUtils.isEmpty(token) || token.trim().isEmpty()) {
+            String daemonToken = daemonSecretsStore.getRequired().daemonToken();
+            if (daemonToken == null) {
                 return false;
             }
-            String daemonToken = daemonSecretsStore.getRequired().daemonToken();
-            return daemonToken.equals(token);
+
+            return MessageDigest.isEqual(
+                    daemonToken.getBytes(StandardCharsets.UTF_8),
+                    token.getBytes(StandardCharsets.UTF_8)
+            );
         } catch (Exception exception) {
-            log.info("Token validation failed message {}", exception.getMessage(), exception);
+            log.error("Token validation failed due to secrets store error: {}", exception.getMessage(), exception);
             return false;
         }
     }
