@@ -185,14 +185,14 @@ public class CommonUtils {
                     prefixErrorMessageSupplier,
                     "No items found"
             );
-            throw new RuntimeException(message);
+            throw new NoSuchElementException(message);
         }
         if (elements.size() != 1) {
             String message = concatIfNotEmpty(
                     prefixErrorMessageSupplier,
                     String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", elements.size())
             );
-            throw new RuntimeException(message);
+            throw new IllegalStateException(message);
         }
         return elements.getFirst();
     }

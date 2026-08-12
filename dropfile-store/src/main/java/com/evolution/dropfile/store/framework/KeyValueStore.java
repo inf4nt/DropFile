@@ -2,10 +2,7 @@ package com.evolution.dropfile.store.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -53,7 +50,7 @@ public interface KeyValueStore<V> {
 
     default Map.Entry<String, V> getRequired(String key) {
         return get(key)
-                .orElseThrow(() -> new RuntimeException(String.format(
+                .orElseThrow(() -> new NoSuchElementException(String.format(
                         "Store %s. No key %s found", getClass().getName(), key
                 )));
     }
