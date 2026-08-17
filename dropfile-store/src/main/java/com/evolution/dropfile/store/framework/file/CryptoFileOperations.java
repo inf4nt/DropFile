@@ -2,7 +2,8 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.io.CloseShieldInputStream;
+import com.evolution.dropfile.common.function.OutputStreamConsumer;
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -29,14 +31,17 @@ public class CryptoFileOperations implements FileOperations {
     }
 
     @Override
-    public void write(Path destination, InputStream inputStream) throws IOException {
+    public void write(Path destination, OutputStreamConsumer outputStreamConsumer) throws IOException {
         byte[] fingerprint = getFingerprint();
         SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-        CloseShieldInputStream shieldStream = CloseShieldInputStream.stream(inputStream);
 
-        try (InputStream encryptStream = cryptoTunnel.encryptSealStream(shieldStream, secretKey)) {
-            delegate.write(destination, encryptStream);
-        }
+        delegate.write(destination, delegateOutputStream -> {
+            CloseShieldOutputStream closeShieldOutputStream = CloseShieldOutputStream.stream(delegateOutputStream);
+
+            try (OutputStream cipherOutputStream = cryptoTunnel.encryptWrapper(closeShieldOutputStream, secretKey)) {
+                outputStreamConsumer.accept(cipherOutputStream);
+            }
+        });
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
@@ -58,9 +57,10 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         Map<String, V> all = new LinkedHashMap<>(getAll());
         all.putAll(toSave);
 
-        byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, new ByteArrayInputStream(serialize));
+        fileOperations.write(filePath, outputStream -> {
+            serdeOperations.serialize(all, outputStream);
+        });
 
         return Collections.unmodifiableCollection(toSave.values());
     }
@@ -76,9 +76,10 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             return null;
         }
 
-        byte[] serialize = serdeOperations.serialize(all);
         Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, new ByteArrayInputStream(serialize));
+        fileOperations.write(filePath, outputStream -> {
+            serdeOperations.serialize(all, outputStream);
+        });
 
         return remove;
     }

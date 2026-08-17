@@ -125,7 +125,12 @@ public class SingleRunDownloadProcedure {
 
                     isInterrupted();
 
-                    Files.move(request.temporaryFilePath(), request.destinationFilePath(), StandardCopyOption.ATOMIC_MOVE);
+                    Files.move(
+                            request.temporaryFilePath(),
+                            request.destinationFilePath(),
+                            StandardCopyOption.ATOMIC_MOVE,
+                            StandardCopyOption.REPLACE_EXISTING
+                    );
                 }
         );
     }

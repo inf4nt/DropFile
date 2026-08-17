@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -49,5 +50,10 @@ public class JsonSerdeOperations<V> implements SerdeOperations<V> {
     @Override
     public byte[] serialize(Map<String, V> values) throws IOException {
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(values);
+    }
+
+    @Override
+    public void serialize(Map<String, V> values, OutputStream outputStream) throws IOException {
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputStream, values);
     }
 }

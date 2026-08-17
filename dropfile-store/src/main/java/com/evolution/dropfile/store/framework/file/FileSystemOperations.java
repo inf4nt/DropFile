@@ -2,18 +2,15 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.function.OutputStreamConsumer;
 import com.evolution.dropfile.common.io.FileHelper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 
 @RequiredArgsConstructor
 public class FileSystemOperations implements FileOperations {
@@ -22,28 +19,28 @@ public class FileSystemOperations implements FileOperations {
 
     @Override
     public void removeAll(Path destination) throws IOException {
-        Path temporaryFilePath = null;
-        try {
-            temporaryFilePath = getOrCreateTemporaryFilePath(destination);
-            Files.move(temporaryFilePath, destination, StandardCopyOption.ATOMIC_MOVE);
-        } finally {
-            if (temporaryFilePath != null) {
-                Files.deleteIfExists(temporaryFilePath);
-            }
+        if (Files.isDirectory(destination)) {
+            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
         }
-    }
 
-    @Override
-    public void write(Path destination, InputStream inputStream) throws IOException {
         Path temporaryFilePath = null;
         try {
             temporaryFilePath = getOrCreateTemporaryFilePath(destination);
-            fileHelper.write(temporaryFilePath, inputStream);
-            Files.move(temporaryFilePath, destination, StandardCopyOption.ATOMIC_MOVE);
-        } finally {
+            Files.move(temporaryFilePath, destination,
+                    StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING
+            );
+        } catch (Throwable throwable) {
             if (temporaryFilePath != null) {
-                Files.deleteIfExists(temporaryFilePath);
+                try {
+                    Files.deleteIfExists(temporaryFilePath);
+                } catch (Throwable deleteThrowable) {
+                    throwable.addSuppressed(deleteThrowable);
+                }
             }
+            if (throwable instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw CommonUtils.toRuntimeException(throwable);
         }
     }
 
@@ -52,6 +49,10 @@ public class FileSystemOperations implements FileOperations {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
             throw new NoContentFoundException(destination);
         }
+        if (Files.isDirectory(destination)) {
+            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
+        }
+
         FileChannel fileChannel = null;
         try {
             fileChannel = FileChannel.open(destination, StandardOpenOption.READ);
@@ -71,18 +72,50 @@ public class FileSystemOperations implements FileOperations {
         }
     }
 
-    @SneakyThrows
-    private Path getOrCreateTemporaryFilePath(Path destination) {
-        String filename = destination.toFile().getName();
+    public void write(Path destination, OutputStreamConsumer outputStreamConsumer) throws IOException {
+        if (Files.isDirectory(destination)) {
+            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
+        }
+
+        Path temporaryFilePath = null;
+        try {
+            temporaryFilePath = getOrCreateTemporaryFilePath(destination);
+            fileHelper.outputStreamConsumer(temporaryFilePath, outputStreamConsumer);
+            Files.move(temporaryFilePath, destination,
+                    StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING
+            );
+        } catch (Throwable throwable) {
+            if (temporaryFilePath != null) {
+                try {
+                    Files.deleteIfExists(temporaryFilePath);
+                } catch (Throwable deleteThrowable) {
+                    throwable.addSuppressed(deleteThrowable);
+                }
+            }
+            if (throwable instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw CommonUtils.toRuntimeException(throwable);
+        }
+    }
+
+    private Path getOrCreateTemporaryFilePath(Path destination) throws IOException {
+        String filename = destination.getFileName().toString();
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(filename);
         Path parent = destination.getParent();
-        if (Files.notExists(parent)) {
-            Files.createDirectories(parent);
+
+        if (parent != null && Files.notExists(parent)) {
+            throw new IOException("Unable to create temporary file %s. Parent does not exist %s".formatted(
+                    temporaryFileName, parent
+            ));
         }
-        Path temporaryFilePath = parent.resolve(temporaryFileName);
-        if (Files.notExists(temporaryFilePath)) {
-            Files.createFile(temporaryFilePath);
+
+        Path temporaryFilePath = (parent != null) ? parent.resolve(temporaryFileName) : Paths.get(temporaryFileName);
+
+        try {
+            return Files.createFile(temporaryFilePath);
+        } catch (FileAlreadyExistsException e) {
+            throw new IOException("Temporary file already exists %s".formatted(temporaryFileName), e);
         }
-        return temporaryFilePath;
     }
 }

@@ -1,6 +1,7 @@
 package com.evolution.dropfile.common.io;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.function.OutputStreamConsumer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,11 @@ public class FileHelper {
                 long transferred = fileChannel.transferTo(position, size - position, writableByteChannel);
 
                 if (transferred <= 0) {
-                    throw new IOException("Failed to transfer remaining file content");
+                    throw new IOException(String.format(
+                            "Failed to transfer file content: '%s'. Expected to read %d bytes, but got 0. " +
+                                    "The file might have been concurrently truncated or modified during the transfer.",
+                            path, size - position
+                    ));
                 }
 
                 position += transferred;
@@ -62,7 +67,10 @@ public class FileHelper {
                 long transferred = fileChannel.transferFrom(readableByteChannel, offset, remaining);
 
                 if (transferred <= 0) {
-                    break;
+                    throw new IOException(String.format(
+                            "Premature EOF: Failed to transfer entire file content. Expected %d bytes, but was missing %d bytes",
+                            size, remaining
+                    ));
                 }
 
                 offset += transferred;
@@ -101,6 +109,17 @@ public class FileHelper {
         }
     }
 
+    public void outputStreamConsumer(Path path, OutputStreamConsumer outputStreamConsumer) throws IOException {
+        try (FileChannel channel = FileChannel.open(
+                path,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING);
+             OutputStream out = Channels.newOutputStream(channel)) {
+            outputStreamConsumer.accept(CloseShieldOutputStream.stream(out));
+            out.flush();
+        }
+    }
+
     public String sha256(Path path) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance(SHA256);
 
@@ -120,7 +139,16 @@ public class FileHelper {
 
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
              InputStream inputStream = Channels.newInputStream(channel)) {
-            inputStream.transferTo(digestOutputStream);
+
+            long expectedSize = channel.size();
+            long transferred = inputStream.transferTo(digestOutputStream);
+
+            if (transferred != expectedSize) {
+                throw new IOException(String.format(
+                        "Concurrent modification detected: Expected to hash %d bytes, but read %d bytes from %s",
+                        expectedSize, transferred, path
+                ));
+            }
         }
         return HexFormat.of().formatHex(digest.digest());
     }
