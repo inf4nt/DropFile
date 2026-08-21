@@ -17,10 +17,10 @@ import java.util.stream.StreamSupport;
 
 public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHandler {
 
-    @CommandLine.Option(names = {"-table", "--table"}, description = "Print table", defaultValue = "false")
+    @CommandLine.Option(names = {"-table", "--table"}, description = "Print table", defaultValue = "false", hidden = true)
     protected boolean table;
 
-    @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false")
+    @CommandLine.Option(names = {"-list", "--list"}, description = "Print list", defaultValue = "false", hidden = true)
     protected boolean list;
 
     protected DaemonClient daemonClient;
