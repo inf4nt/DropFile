@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class MonitoringOutputStreamTest {
@@ -60,8 +62,31 @@ class MonitoringOutputStreamTest {
             assertArrayEquals(data, baos.toByteArray());
 
             verify(speedMeter, times(1)).add(4);
-
             verify(speedMeter, never()).add(1);
+        }
+    }
+
+    @Test
+    void testWriteByteArray_ZeroLength_DoesNotInvokeSpeedMeter() throws IOException {
+        byte[] data = {1, 2, 3};
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             MonitoringOutputStream mos = new MonitoringOutputStream(baos, speedMeter)) {
+
+            mos.write(data, 0, 0);
+
+            assertEquals(0, baos.toByteArray().length);
+            verifyNoInteractions(speedMeter);
+        }
+    }
+
+    @Test
+    void testFlush_DelegatesToUnderlyingStream() throws IOException {
+        OutputStream brokenStream = mock(OutputStream.class);
+        try (MonitoringOutputStream mos = new MonitoringOutputStream(brokenStream, speedMeter)) {
+
+            mos.flush();
+
+            verify(brokenStream, times(1)).flush();
         }
     }
 

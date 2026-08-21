@@ -22,6 +22,8 @@ public class MonitoringOutputStream extends FilterOutputStream {
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
-        throughputMeter.add(len);
+        if (len > 0) {
+            throughputMeter.add(len);
+        }
     }
 }
