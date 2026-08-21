@@ -2,9 +2,11 @@ package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
+import com.evolution.dropfile.common.io.MonitoringInputStream;
+import com.evolution.dropfile.common.io.MonitoringOutputStream;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.util.ThroughputMeter;
+import com.evolution.dropfile.common.io.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -38,12 +40,12 @@ public class TunnelTrafficMonitor implements Purgeable {
     }
 
     public OutputStream outputStreamWrapper(String fingerprint, OutputStream outputStream) {
-        ThroughputMeter throughputMeter = outputStreams.computeIfAbsent(fingerprint, value -> new ThroughputMeter());
+        ThroughputMeter throughputMeter = outputStreams.computeIfAbsent(fingerprint, _ -> new ThroughputMeter());
         return new MonitoringOutputStream(outputStream, throughputMeter);
     }
 
     public InputStream inputStreamWrapper(String fingerprint, InputStream inputStream) {
-        ThroughputMeter throughputMeter = inputStreams.computeIfAbsent(fingerprint, value -> new ThroughputMeter());
+        ThroughputMeter throughputMeter = inputStreams.computeIfAbsent(fingerprint, _ -> new ThroughputMeter());
         return new MonitoringInputStream(inputStream, throughputMeter);
     }
 

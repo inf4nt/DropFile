@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfile.common.io;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;

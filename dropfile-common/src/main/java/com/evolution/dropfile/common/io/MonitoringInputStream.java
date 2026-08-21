@@ -1,6 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel.framework.monitor;
-
-import com.evolution.dropfiledaemon.util.ThroughputMeter;
+package com.evolution.dropfile.common.io;
 
 import java.io.FilterInputStream;
 import java.io.IOException;

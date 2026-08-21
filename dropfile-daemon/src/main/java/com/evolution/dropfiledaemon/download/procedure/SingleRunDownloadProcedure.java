@@ -10,7 +10,7 @@ import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestComm
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.ThroughputMeter;
+import com.evolution.dropfile.common.io.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

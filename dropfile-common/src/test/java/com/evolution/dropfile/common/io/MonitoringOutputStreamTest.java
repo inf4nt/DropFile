@@ -1,6 +1,5 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfile.common.io;
 
-import com.evolution.dropfiledaemon.tunnel.framework.monitor.MonitoringOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
