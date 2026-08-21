@@ -209,8 +209,8 @@ public class DaemonClient {
         } catch (ConnectException e) {
             String host = httpRequest.uri().getHost();
             int port = httpRequest.uri().getPort();
-            throw new IOException("Daemon is not running or unreachable. Check daemon host %s and port %s"
-                    .formatted(host, port), e);
+            throw new IOException("Is daemon running? Daemon is not running or unreachable. Check daemon host %s and port %s"
+                    .formatted(host, port));
         }
     }
 
@@ -226,7 +226,8 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        DaemonSecrets daemonSecrets = daemonSecretsStore.getRequired();
+        DaemonSecrets daemonSecrets = daemonSecretsStore.get()
+                .orElseThrow(() -> new IllegalStateException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
         String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());
         return "Bearer " + daemonToken;
     }
