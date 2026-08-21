@@ -210,7 +210,7 @@ public class DaemonClient {
             String host = httpRequest.uri().getHost();
             int port = httpRequest.uri().getPort();
             throw new IOException("Is daemon running? Daemon is not running or unreachable. Check daemon host %s and port %s"
-                    .formatted(host, port));
+                    .formatted(host, port), e);
         }
     }
 

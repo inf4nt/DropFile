@@ -54,12 +54,11 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
     }
 
     protected void handleUnsuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Unaccepted. HTTP response code: " + response.statusCode());
+        System.out.println("Operation failed. Daemon http response code: " + response.statusCode());
         byte[] body = response.body();
-        if (ObjectUtils.isEmpty(body)) {
-            return;
+        if (!ObjectUtils.isEmpty(body)) {
+            System.out.println("HTTP response body: " + new String(body));
         }
-        System.out.println("HTTP response body: " + new String(body));
     }
 
     protected boolean isSuccessful(HttpResponse<byte[]> response) {

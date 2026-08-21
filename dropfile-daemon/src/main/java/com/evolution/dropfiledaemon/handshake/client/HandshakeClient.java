@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -66,14 +68,23 @@ public class HandshakeClient {
 
     @SneakyThrows
     private HttpResponse<byte[]> execute(HttpRequest httpRequest) {
-        HttpResponse<byte[]> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> httpResponse;
+        try {
+            httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (ConnectException connectException) {
+            String host = httpRequest.uri().getHost();
+            int port = httpRequest.uri().getPort();
+            throw new IOException("Unable to process handshake. The address is unreachable host: %s port: %s"
+                    .formatted(host, port), connectException);
+        }
+
         if (httpResponse.statusCode() != 200) {
             throw new RuntimeException(String.format("Handshake %s %s failed: status code %s",
                     httpRequest.method(), httpRequest.uri(), httpResponse.statusCode()));
         }
         byte[] body = httpResponse.body();
         if (body == null || body.length == 0) {
-            throw new IllegalStateException("Handshake server returned 200 OK but empty body");
+            throw new IllegalArgumentException("Handshake server returned 200 OK but empty body");
         }
         return httpResponse;
     }
