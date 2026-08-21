@@ -11,7 +11,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "connections",
-        description = "Connections",
+        description = "Connections commands",
         aliases = {"-c", "--c"},
         subcommands = {
                 ConnectCommand.class,

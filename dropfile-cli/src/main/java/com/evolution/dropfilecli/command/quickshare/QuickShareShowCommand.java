@@ -32,7 +32,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
 
     @CommandLine.Option(
             names = {"-type", "--type", "-t", "--t"},
-            description = "QRCode type",
+            description = "Generate QRCode: ${COMPLETION-CANDIDATES}",
             converter = QRCodeTypeEnumConverter.class
     )
     private QRCodeType qrCodeType;

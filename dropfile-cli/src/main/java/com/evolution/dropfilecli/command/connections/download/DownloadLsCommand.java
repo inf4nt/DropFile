@@ -11,63 +11,37 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "ls"
+        name = "ls",
+        description = "List downloads"
 )
 public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 
-    @CommandLine.ArgGroup
-    private Exclusive status;
+    @CommandLine.Option(
+            names = {"-s", "--status"},
+            description = "Filter by status: ${COMPLETION-CANDIDATES}",
+            converter = StatusEnumConverter.class
+    )
+    private ApiDownloadLsDTO.Status status;
 
     @CommandLine.Option(names = {"-limit", "--limit"}, description = "Limit", defaultValue = "0")
     private Integer limit;
 
-    // TODO update the logic to Enum
-    private static class Exclusive {
-        @CommandLine.Option(names = {"-queue", "--queue", "-q", "--q"}, description = "Find by queue")
-        private boolean queue;
-
-        @CommandLine.Option(names = {"-downloading", "--downloading", "-d", "--d"}, description = "Find by downloading")
-        private boolean downloading;
-
-        @CommandLine.Option(names = {"-completed", "--completed", "-c", "--c"}, description = "Find by completed")
-        private boolean completed;
-
-        @CommandLine.Option(names = {"-stopped", "--stopped", "-s", "--s"}, description = "Find by stopped")
-        private boolean stopped;
-
-        @CommandLine.Option(names = {"-error", "--error", "-e", "--e"}, description = "Find by error")
-        private boolean error;
-    }
-
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         int limit = this.limit <= 0 ? Integer.MAX_VALUE : this.limit;
-        return daemonClient.downloadLs(getStatus(), limit);
-    }
-
-    private ApiDownloadLsDTO.Status getStatus() {
-        if (status == null) {
-            return null;
-        }
-
-        if (status.queue) {
-            return ApiDownloadLsDTO.Status.QUEUE;
-        }
-        if (status.downloading) {
-            return ApiDownloadLsDTO.Status.DOWNLOADING;
-        }
-        if (status.completed) {
-            return ApiDownloadLsDTO.Status.COMPLETED;
-        }
-        if (status.stopped) {
-            return ApiDownloadLsDTO.Status.STOPPED;
-        }
-        return ApiDownloadLsDTO.Status.ERROR;
+        return daemonClient.downloadLs(status, limit);
     }
 
     @Override
     protected TypeReference<List<ApiDownloadLsDTO.Response>> getTypeReference() {
         return new TypeReference<List<ApiDownloadLsDTO.Response>>() {
         };
+    }
+
+    private static class StatusEnumConverter implements CommandLine.ITypeConverter<ApiDownloadLsDTO.Status> {
+        @Override
+        public ApiDownloadLsDTO.Status convert(String value) {
+            return ApiDownloadLsDTO.Status.valueOf(value.toUpperCase());
+        }
     }
 }

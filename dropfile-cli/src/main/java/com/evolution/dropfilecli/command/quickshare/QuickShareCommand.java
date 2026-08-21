@@ -6,9 +6,9 @@ import picocli.CommandLine;
 
 @Component
 @CommandLine.Command(
-        name = "quick-share",
-        description = "Quick share",
-        aliases = {"quickshare","-quickshare", "--quickshare", "-q", "--q"},
+        name = "quickshare",
+        description = "Quickshare commands",
+        aliases = {"-q", "--q"},
         subcommands = {
                 QuickShareAddCommand.class,
                 QuickShareLsCommand.class,
