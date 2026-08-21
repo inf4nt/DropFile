@@ -33,7 +33,6 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
                     .builder("-live", "--live")
                     .type(boolean.class)
                     .description("Run this command in live update mode")
-                    .hidden(true)
                     .scopeType(CommandLine.ScopeType.INHERIT)
                     .build();
             commandLine.getCommandSpec().addOption(liveOption);
@@ -41,7 +40,6 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
             CommandLine.Model.OptionSpec ignoreErrorOption = CommandLine.Model.OptionSpec
                     .builder("-ignore-error", "--ignore-error")
                     .type(boolean.class)
-                    .hidden(true)
                     .description("Continue polling even if the command encounters an error")
                     .scopeType(CommandLine.ScopeType.INHERIT)
                     .build();
