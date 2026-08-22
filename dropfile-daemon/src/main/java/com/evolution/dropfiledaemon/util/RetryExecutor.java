@@ -77,7 +77,7 @@ public class RetryExecutor<T> {
                 }
             }
             currentAttempt++;
-            if (currentAttempt <= attempts) {
+            if (currentAttempt <= attempts && delay.isPositive()) {
                 try {
                     Thread.sleep(delay.toMillis());
                 } catch (InterruptedException e) {
@@ -160,8 +160,12 @@ public class RetryExecutor<T> {
             return this;
         }
 
-        public RetryExecutorBuilder<T> delay(Duration delay) {
-            this.delay = Objects.requireNonNull(delay);
+        public RetryExecutorBuilder<T> delay(Duration duration) {
+            Objects.requireNonNull(duration, "Delay duration must not be null");
+            if (duration.isNegative()) {
+                throw new IllegalArgumentException("Delay duration must not be a negative");
+            }
+            this.delay = duration;
             return this;
         }
 
@@ -181,7 +185,11 @@ public class RetryExecutor<T> {
         }
 
         public RetryExecutorBuilder<T> callTimeout(Duration duration) {
-            this.callTimeout = Objects.requireNonNull(duration);
+            Objects.requireNonNull(duration, "Call timeout duration must not be null");
+            if (duration.isNegative()) {
+                throw new IllegalArgumentException("Call timeout duration must not be a negative");
+            }
+            this.callTimeout = duration;
             return this;
         }
 
