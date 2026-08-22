@@ -72,19 +72,17 @@ public class HandshakeClient {
         try {
             httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
         } catch (ConnectException connectException) {
-            String host = httpRequest.uri().getHost();
-            int port = httpRequest.uri().getPort();
-            throw new IOException("Unable to process handshake. The address is unreachable host: %s port: %s"
-                    .formatted(host, port), connectException);
+            throw new IOException("Unable to process handshake. The address is unreachable %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), connectException);
         }
 
         if (httpResponse.statusCode() != 200) {
-            throw new RuntimeException(String.format("Handshake %s %s failed: status code %s",
+            throw new IllegalStateException(String.format("Handshake %s %s failed: status code %s",
                     httpRequest.method(), httpRequest.uri(), httpResponse.statusCode()));
         }
         byte[] body = httpResponse.body();
         if (body == null || body.length == 0) {
-            throw new IllegalArgumentException("Handshake server returned 200 OK but empty body");
+            throw new IllegalArgumentException("Handshake server returned 200 OK but empty body %s %s".formatted(httpRequest.method(), httpRequest.uri()));
         }
         return httpResponse;
     }

@@ -207,10 +207,9 @@ public class DaemonClient {
         try {
             return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
         } catch (ConnectException e) {
-            String host = httpRequest.uri().getHost();
-            int port = httpRequest.uri().getPort();
-            throw new IOException("Is daemon running? Daemon is not running or unreachable. Check daemon host %s and port %s"
-                    .formatted(host, port), e);
+            String message = "Is daemon running? Daemon request failed %s %s. Daemon is not running or unreachable"
+                    .formatted(httpRequest.method(), httpRequest.uri());
+            throw new IOException(message, e);
         }
     }
 

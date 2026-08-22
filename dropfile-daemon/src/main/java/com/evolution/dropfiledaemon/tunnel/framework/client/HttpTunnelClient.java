@@ -90,15 +90,13 @@ public class HttpTunnelClient implements TunnelClient {
             try {
                 httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
             } catch (ConnectException connectException) {
-                String host = httpRequest.uri().getHost();
-                int port = httpRequest.uri().getPort();
-                throw new IOException("Tunnel client connection issue. The address is unreachable host: %s port: %s fingerprint %s command %s"
-                        .formatted(host, port, fingerprint, request.getCommand()), connectException);
+                throw new IOException("Tunnel client connection issue. The address is unreachable %s %s fingerprint %s command %s"
+                        .formatted(httpRequest.method(), httpRequest.uri(), fingerprint, request.getCommand()), connectException);
             }
 
             if (httpResponse.statusCode() != 200) {
-                throw new IllegalStateException("Tunnel client unexpected HTTP response status code. Expected: 200, actual: %s fingerprint %s command %s"
-                        .formatted(httpResponse.statusCode(), fingerprint, request.getCommand())
+                throw new IllegalStateException("Tunnel client unexpected HTTP response status code. Expected: 200, actual: %s %s %s fingerprint %s command %s"
+                        .formatted(httpResponse.statusCode(), httpRequest.method(), httpRequest.uri(), fingerprint, request.getCommand())
                 );
             }
 
