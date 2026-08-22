@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -86,11 +87,18 @@ public class HttpTunnelClient implements TunnelClient {
                     .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
                     .build();
 
-            httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            try {
+                httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            } catch (ConnectException connectException) {
+                String host = httpRequest.uri().getHost();
+                int port = httpRequest.uri().getPort();
+                throw new IOException("Tunnel client connection issue. The address is unreachable host: %s port: %s fingerprint %s command %s"
+                        .formatted(host, port, fingerprint, request.getCommand()), connectException);
+            }
 
             if (httpResponse.statusCode() != 200) {
-                throw new RuntimeException(
-                        "Unexpected tunnel HTTP response status code. Expected: 200, actual: " + httpResponse.statusCode()
+                throw new IllegalStateException("Tunnel client unexpected HTTP response status code. Expected: 200, actual: %s fingerprint %s command %s"
+                        .formatted(httpResponse.statusCode(), fingerprint, request.getCommand())
                 );
             }
 
