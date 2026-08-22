@@ -12,7 +12,7 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "connections",
         description = "Connections commands",
-        aliases = {"-c"},
+        aliases = {"c"},
         subcommands = {
                 ConnectCommand.class,
                 CurrentConnectionCommand.class,
