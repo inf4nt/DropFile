@@ -11,7 +11,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
-import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

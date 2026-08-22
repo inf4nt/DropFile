@@ -11,7 +11,7 @@ import com.evolution.dropfiledaemon.tunnel.ServerTunnelRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
-import com.evolution.dropfiledaemon.tunnel.framework.server.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
