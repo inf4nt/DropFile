@@ -24,7 +24,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     private String id;
 
     @CommandLine.Option(
-            names = {"-qrcode", "--qrcode", "-qr", "--qr"},
+            names = {"-qrcode", "--qrcode", "-qr"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",
@@ -33,7 +33,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     private boolean qrCode;
 
     @CommandLine.Option(
-            names = {"-type", "--type", "-t", "--t"},
+            names = {"-qrcode-type", "--qrcode-type", "-qt"},
             description = "Generate QRCode: ${COMPLETION-CANDIDATES}",
             converter = QRCodeTypeEnumConverter.class
     )
@@ -42,7 +42,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     @Override
     public void run() {
         if (!qrCode && qrCodeType != null) {
-            throw new IllegalArgumentException("Error: Cannot specify --type when QR code generation is disabled (-qr false)");
+            throw new IllegalArgumentException("Error: Cannot specify --qrcode-type when QR code generation is disabled (--qrcode false)");
         }
         super.run();
     }

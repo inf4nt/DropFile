@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "get",
-        aliases = {"-g", "--g"},
+        aliases = {"-g"},
         description = "Get file"
 )
 public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {
@@ -19,7 +19,7 @@ public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsB
     @CommandLine.Option(names = {"-id", "--id"}, required = true)
     private String id;
 
-    @CommandLine.Option(names = {"-filename", "--filename", "-f", "--f"})
+    @CommandLine.Option(names = {"-filename", "--filename", "-f"})
     private String filename;
 
     @Override

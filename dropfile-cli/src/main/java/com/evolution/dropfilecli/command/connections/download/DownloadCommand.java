@@ -8,7 +8,7 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "download",
         description = "Download commands",
-        aliases = {"-d", "--d"},
+        aliases = {"-d"},
         subcommands = {
                 DownloadLsCommand.class,
                 DownloadStopCommand.class,

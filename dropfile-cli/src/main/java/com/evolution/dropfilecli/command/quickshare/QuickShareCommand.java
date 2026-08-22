@@ -8,7 +8,7 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "quickshare",
         description = "Quickshare commands",
-        aliases = {"-q", "--q"},
+        aliases = {"-q"},
         subcommands = {
                 QuickShareAddCommand.class,
                 QuickShareLsCommand.class,

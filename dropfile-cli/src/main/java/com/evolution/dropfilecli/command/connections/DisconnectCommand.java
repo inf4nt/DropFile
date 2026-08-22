@@ -18,7 +18,7 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
 
     private static class Exclusive {
         @CommandLine.Option(
-                names = {"-fingerprint", "--fingerprint", "--f", "-f"},
+                names = {"-fingerprint", "--fingerprint", "-f"},
                 description = "Disconnect by fingerprint"
         )
         private String fingerprint;

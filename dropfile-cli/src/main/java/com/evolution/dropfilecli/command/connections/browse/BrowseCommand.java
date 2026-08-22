@@ -7,7 +7,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "browse",
-        aliases = {"-b", "--b"},
+        aliases = {"-b"},
         description = "Browse operations",
         subcommands = {
                 BrowseGetCommand.class,

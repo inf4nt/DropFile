@@ -7,6 +7,7 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         name = "daemon",
+        aliases = {"-d"},
         description = "Daemon commands",
         subcommands = {
                 ShutdownCommand.class,

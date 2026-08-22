@@ -45,7 +45,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     private boolean secure;
 
     @CommandLine.Option(
-            names = {"-qrcode", "--qrcode", "-qr", "--qr"},
+            names = {"-qrcode", "--qrcode", "-qr"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",

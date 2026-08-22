@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "connect",
-        aliases = {"-c", "--c"},
+        aliases = {"-c"},
         description = "Connect"
 )
 public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
@@ -25,7 +25,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatu
     @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
-    @CommandLine.Option(names = {"-force", "--force", "-f", "--f"}, defaultValue = "false")
+    @CommandLine.Option(names = {"-force", "--force", "-f"}, defaultValue = "false")
     private boolean force;
 
     @Override
