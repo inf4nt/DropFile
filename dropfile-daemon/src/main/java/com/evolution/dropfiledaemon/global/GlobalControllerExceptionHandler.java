@@ -3,7 +3,7 @@ package com.evolution.dropfiledaemon.global;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -15,13 +15,13 @@ public class GlobalControllerExceptionHandler {
     public ResponseEntity<?> exception(Exception exception, HttpServletRequest request) {
         log.error("Web controller error: {}", exception.getMessage(), exception);
         if (isApiCall(request)) {
-            if (ObjectUtils.isEmpty(exception.getMessage())) {
+            if (StringUtils.hasText(exception.getMessage())) {
                 return ResponseEntity.badRequest().body(
-                        exception.getClass().getName()
+                        exception.getClass().getName() + ". Message: " + exception.getMessage()
                 );
             }
             return ResponseEntity.badRequest().body(
-                    exception.getClass().getName() + ". Message: " + exception.getMessage()
+                    exception.getClass().getName()
             );
         }
         return ResponseEntity.notFound().build();

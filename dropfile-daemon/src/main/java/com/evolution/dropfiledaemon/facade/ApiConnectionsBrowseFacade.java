@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class ApiConnectionsBrowseFacade {
         return new FileDownloadRequest(
                 fingerprintConnection,
                 response.id(),
-                ObjectUtils.isEmpty(requestDTO.filename()) ? response.alias() : requestDTO.filename()
+                StringUtils.hasText(requestDTO.filename()) ? requestDTO.filename() : response.alias()
         );
     }
 

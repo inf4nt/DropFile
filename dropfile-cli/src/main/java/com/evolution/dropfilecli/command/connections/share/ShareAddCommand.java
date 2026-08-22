@@ -5,6 +5,7 @@ import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -36,9 +37,9 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
     }
 
     private String getAlias() {
-        if (ObjectUtils.isEmpty(alias)) {
-            return file.getName();
+        if (StringUtils.hasText(alias)) {
+            return alias;
         }
-        return alias;
+        return file.getName();
     }
 }

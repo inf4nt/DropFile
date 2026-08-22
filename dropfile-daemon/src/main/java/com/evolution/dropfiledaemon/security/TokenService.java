@@ -23,7 +23,7 @@ public class TokenService {
 
         try {
             String daemonToken = daemonSecretsStore.getRequired().daemonToken();
-            if (daemonToken == null) {
+            if (!StringUtils.hasText(daemonToken)) {
                 return false;
             }
 

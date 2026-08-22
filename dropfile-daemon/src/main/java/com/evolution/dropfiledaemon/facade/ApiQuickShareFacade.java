@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.net.URI;
@@ -133,7 +134,7 @@ public class ApiQuickShareFacade {
 
     private List<String> buildExternalLinks(String linkId) {
         String daemonExternalHost = applicationProperties.daemonExternalHost;
-        if (ObjectUtils.isEmpty(daemonExternalHost)) {
+        if (!StringUtils.hasText(daemonExternalHost)) {
             return Collections.emptyList();
         }
 

@@ -6,6 +6,7 @@ import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -29,7 +30,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatu
 
     @Override
     public HttpResponse<byte[]> execute() {
-        if (!ObjectUtils.isEmpty(key)) {
+        if (StringUtils.hasText(key)) {
             return daemonClient.handshake(CommonUtils.toURI(address), key, force);
         }
         return daemonClient.handshakeReconnect(CommonUtils.toURI(address));

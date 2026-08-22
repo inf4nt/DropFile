@@ -7,6 +7,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -87,7 +88,7 @@ public class FileManifestBuilder {
     }
 
     public FileManifest build(Path path, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
-        if (ObjectUtils.isEmpty(fileManifestName)) {
+        if (!StringUtils.hasText(fileManifestName)) {
             throw new IllegalArgumentException("File manifest name is empty");
         }
         if (chunkSize <= 0) {

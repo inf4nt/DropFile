@@ -16,6 +16,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -316,7 +317,7 @@ public class FileDownloadOrchestrator {
     }
 
     private synchronized Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
-        if (ObjectUtils.isEmpty(request.filename())) {
+        if (!StringUtils.hasText(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
         if (Paths.get(request.filename()).isAbsolute()) {

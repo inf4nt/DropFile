@@ -6,6 +6,7 @@ import com.evolution.dropfilecli.util.ConsoleQrPrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
@@ -78,7 +79,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
         }
 
         String url = entryURL.getValue();
-        if (ObjectUtils.isEmpty(url) || entryURL.getKey() == QRCodeType.ETHERNET) {
+        if (!StringUtils.hasText(url) || entryURL.getKey() == QRCodeType.ETHERNET) {
             System.out.println(
                     """
                             Error: Cannot generate QR code.
