@@ -111,15 +111,14 @@ public class RetryExecutor<T> {
     }
 
     private T callWithTimeoutIfPresent() throws Exception {
-        if (callTimeout == null) {
+        if (callTimeout == null || !callTimeout.isPositive()) {
             return callable.call();
         }
 
         Future<T> future = EXECUTOR_SERVICE.submit(callable);
 
         try {
-            long millis = callTimeout.toMillis();
-            return future.get(millis, TimeUnit.MILLISECONDS);
+            return future.get(callTimeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof Exception exceptionCause) {
                 throw exceptionCause;
