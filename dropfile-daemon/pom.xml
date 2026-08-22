@@ -10,14 +10,14 @@
     </parent>
     <groupId>com.evolution</groupId>
     <artifactId>dropfile-daemon</artifactId>
-    <version>1.13.0</version>
+    <version>1.14.0</version>
     <name>dropfile-daemon</name>
     <description>dropfile-daemon</description>
     <properties>
         <java.version>25</java.version>
         <zip4j.version>2.11.5</zip4j.version>
-        <dropfile.common.version>1.13.0</dropfile.common.version>
-        <dropfile.store.version>1.13.0</dropfile.store.version>
+        <dropfile.common.version>1.14.0</dropfile.common.version>
+        <dropfile.store.version>1.14.0</dropfile.store.version>
     </properties>
 
     <dependencies>
