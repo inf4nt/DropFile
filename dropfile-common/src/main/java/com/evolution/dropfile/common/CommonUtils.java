@@ -203,16 +203,16 @@ public class CommonUtils {
 
     public static RuntimeException toRuntimeException(String message, Throwable throwable) {
         if (throwable instanceof RuntimeException runtimeException) {
-            return message != null && !message.isEmpty()
+            return message != null && !message.isBlank()
                     ? new RuntimeException(message, throwable)
                     : runtimeException;
         }
 
         if (throwable instanceof Error error) {
-            throw message != null && !message.isEmpty() ? new Error(message, error) : error;
+            throw message != null && !message.isBlank() ? new Error(message, error) : error;
         }
 
-        return message != null && !message.isEmpty()
+        return message != null && !message.isBlank()
                 ? new RuntimeException(message, throwable)
                 : new RuntimeException(throwable);
     }
