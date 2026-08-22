@@ -39,7 +39,7 @@ public class FileManifestBuilderTest {
         FileManifestBuilder underTest = new FileManifestBuilder(Integer.MAX_VALUE);
 
         assertThrows(
-                UnsupportedOperationException.class,
+                IllegalArgumentException.class,
                 () -> underTest.build(new File("").toPath(), "fake-file.txt", Integer.MAX_VALUE)
         );
     }
@@ -248,7 +248,7 @@ public class FileManifestBuilderTest {
         FileManifest manifest = new FileManifest("file", "hash", 0, null);
 
         FileManifestBuilder underTest = new FileManifestBuilder(5);
-        assertThrows(IllegalStateException.class, () -> underTest.validate(manifest));
+        assertThrows(IllegalArgumentException.class, () -> underTest.validate(manifest));
     }
 
     @Test
@@ -256,7 +256,7 @@ public class FileManifestBuilderTest {
         FileManifest manifest = new FileManifest("file", "hash", 0, List.of());
 
         FileManifestBuilder underTest = new FileManifestBuilder(5);
-        assertThrows(IllegalStateException.class, () -> underTest.validate(manifest));
+        assertThrows(IllegalArgumentException.class, () -> underTest.validate(manifest));
     }
 
     @Test

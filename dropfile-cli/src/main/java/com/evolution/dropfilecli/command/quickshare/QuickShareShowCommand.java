@@ -10,6 +10,7 @@ import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Component
@@ -40,7 +41,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     @Override
     public void run() {
         if (!qrCode && qrCodeType != null) {
-            throw new RuntimeException("Error: Cannot specify --type when QR code generation is disabled (-qr false)");
+            throw new IllegalArgumentException("Error: Cannot specify --type when QR code generation is disabled (-qr false)");
         }
         super.run();
     }
@@ -108,7 +109,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
         if (qrCodeType == QRCodeType.ETHERNET) {
             return object.ethernet().stream().findFirst().map(it -> Map.entry(QRCodeType.ETHERNET, it));
         }
-        throw new RuntimeException("No source found by " + qrCodeType);
+        throw new NoSuchElementException("No source found by " + qrCodeType);
     }
 
     private static class QRCodeTypeEnumConverter implements CommandLine.ITypeConverter<QRCodeType> {

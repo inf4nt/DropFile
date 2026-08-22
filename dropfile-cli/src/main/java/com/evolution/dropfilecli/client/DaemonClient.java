@@ -17,6 +17,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 @Component
@@ -179,13 +180,15 @@ public class DaemonClient {
     }
 
     private HttpResponse<byte[]> sendGet(String path) {
-        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("GET", path, HttpRequest.BodyPublishers.noBody());
-        return execute(httpRequestBuilder);
+        HttpRequest httpRequest = HttpRequestBuilder("GET", path, HttpRequest.BodyPublishers.noBody())
+                .build();
+        return execute(httpRequest);
     }
 
     private HttpResponse<byte[]> sendPost(String path) {
-        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.noBody());
-        return execute(httpRequestBuilder);
+        HttpRequest httpRequest = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.noBody())
+                .build();
+        return execute(httpRequest);
     }
 
     @SneakyThrows
@@ -193,23 +196,31 @@ public class DaemonClient {
         byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
         HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
         httpRequestBuilder.header("Content-Type", "application/json");
-        return execute(httpRequestBuilder);
+        HttpRequest httpRequest = httpRequestBuilder.build();
+        return execute(httpRequest);
     }
 
     private HttpResponse<byte[]> sendDelete(String path) {
-        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.noBody());
-        return execute(httpRequestBuilder);
+        HttpRequest httpRequest = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.noBody())
+                .build();
+        return execute(httpRequest);
     }
 
     @SneakyThrows
-    private HttpResponse<byte[]> execute(HttpRequest.Builder requestBuilder) {
-        HttpRequest httpRequest = requestBuilder.build();
+    private HttpResponse<byte[]> execute(HttpRequest httpRequest) {
         try {
             return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Daemon client call execution interrupted: %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
         } catch (ConnectException e) {
             String message = "Is daemon running? Daemon request failed %s %s. Daemon is not running or unreachable"
                     .formatted(httpRequest.method(), httpRequest.uri());
             throw new IOException(message, e);
+        } catch (IOException e) {
+            throw new IOException("I/O error during daemon client call %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
         }
     }
 
@@ -226,7 +237,7 @@ public class DaemonClient {
 
     private String getDaemonAuthorizationToken() {
         DaemonSecrets daemonSecrets = daemonSecretsStore.get()
-                .orElseThrow(() -> new IllegalStateException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
+                .orElseThrow(() -> new NoSuchElementException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
         String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());
         return "Bearer " + daemonToken;
     }

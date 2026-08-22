@@ -127,7 +127,7 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
 
     protected void printTable(Object object) {
         if (!(object instanceof Iterable<?> iterable)) {
-            throw new UnsupportedOperationException("Print table supports only Iterable.class");
+            throw new IllegalArgumentException("Print table supports only Iterable.class");
         }
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
         String print = TablePrinter.get(data);

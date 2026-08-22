@@ -31,7 +31,7 @@ public class ApiConnectionsShareFacade {
             throw new FileNotFoundException(absoluteResourcePath.toString());
         }
         if (Files.isDirectory(absoluteResourcePath)) {
-            throw new UnsupportedOperationException("Directories are unsupported: " + requestDTO.resourcePath());
+            throw new IllegalArgumentException("Directories are unsupported: " + requestDTO.resourcePath());
         }
 
         String id = CommonUtils.random();

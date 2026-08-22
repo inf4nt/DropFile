@@ -27,7 +27,7 @@ public class CommandHandlerExecutor {
                 CommandHandler::getCommandName,
                 Function.identity(),
                 (existing, _) -> {
-                    throw new IllegalStateException("Duplicate command handler found for: " + existing.getCommandName());
+                    throw new IllegalArgumentException("Duplicate command handler found for: " + existing.getCommandName());
                 }
         ));
     }

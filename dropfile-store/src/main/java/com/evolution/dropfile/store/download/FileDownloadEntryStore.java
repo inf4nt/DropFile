@@ -15,7 +15,7 @@ public interface FileDownloadEntryStore
         }
         DownloadFileEntry.DownloadFileEntryStatus currentStatus = downloadFileEntry.status();
         if (!canTransitionTo(currentStatus)) {
-            throw new IllegalStateException(String.format("Status transition failed. Key %s status from %s to %s", key, currentStatus, value.status()));
+            throw new IllegalArgumentException(String.format("Status transition failed. Key %s status from %s to %s", key, currentStatus, value.status()));
         }
     }
 

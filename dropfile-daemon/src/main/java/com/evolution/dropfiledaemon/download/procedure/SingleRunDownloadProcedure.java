@@ -261,7 +261,7 @@ public class SingleRunDownloadProcedure {
     private void totalDigestHandler() throws NoSuchAlgorithmException, IOException {
         String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
         if (!manifest.hash().equals(actualSha256)) {
-            throw new RuntimeException(String.format(
+            throw new SecurityException(String.format(
                     "Total digest mismatch. Operation: %s expected: %s actual: %s",
                     request.operation(),
                     manifest.hash(),

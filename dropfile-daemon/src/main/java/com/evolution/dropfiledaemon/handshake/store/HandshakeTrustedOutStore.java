@@ -7,6 +7,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
@@ -36,7 +37,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
         return getAll().entrySet()
                 .stream()
                 .max(Comparator.comparing(o -> o.getValue().updated()))
-                .orElseThrow(() -> new RuntimeException("No trusted in found"));
+                .orElseThrow(() -> new NoSuchElementException("No trusted out last updated found. The trusted out store im empty"));
     }
 
     default Optional<Map.Entry<String, TrustedOut>> getByAddressURI(URI addressURI) {
@@ -47,7 +48,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
 
     default Map.Entry<String, TrustedOut> getRequiredByAddressURI(URI addressURI) {
         return getByAddressURI(addressURI)
-                .orElseThrow(() -> new RuntimeException("No trusted out value found for address: " + addressURI));
+                .orElseThrow(() -> new NoSuchElementException("No trusted out value found for address: " + addressURI));
     }
 
     @Override
@@ -58,7 +59,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
                 .findAny()
                 .orElse(null);
         if (duplicateAddressURI != null) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     String.format("Duplicate addressURI %s Fingerprint: %s", value.addressURI(), duplicateAddressURI.getKey())
             );
         }

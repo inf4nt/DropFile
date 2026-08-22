@@ -50,7 +50,7 @@ public class FileManifestBuilder {
         List<ChunkManifest> chunks = fileManifest.chunkManifests();
 
         if (chunks == null || chunks.isEmpty()) {
-            throw new IllegalStateException("File manifest has no chunk manifests");
+            throw new IllegalArgumentException("File manifest has no chunk manifests");
         }
 
         long totalSizeByChunks = 0;
@@ -88,7 +88,7 @@ public class FileManifestBuilder {
 
     public FileManifest build(Path path, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
         if (ObjectUtils.isEmpty(fileManifestName)) {
-            throw new IllegalStateException("File manifest name is empty");
+            throw new IllegalArgumentException("File manifest name is empty");
         }
         if (chunkSize <= 0) {
             throw new IllegalArgumentException("Chunk size must be greater than zero");
@@ -97,7 +97,7 @@ public class FileManifestBuilder {
             throw new FileNotFoundException("No file found: " + path);
         }
         if (Files.isDirectory(path)) {
-            throw new UnsupportedOperationException("Directories are unsupported: " + path.toAbsolutePath());
+            throw new IllegalArgumentException("Directories are unsupported: " + path.toAbsolutePath());
         }
 
         final long fileSize = Files.size(path);
@@ -186,7 +186,7 @@ public class FileManifestBuilder {
 
     private void checkIfClosed() {
         if (closed.get()) {
-            throw new RuntimeException("Already closed " + FileManifestBuilder.class);
+            throw new IllegalStateException("Already closed " + FileManifestBuilder.class);
         }
     }
 }

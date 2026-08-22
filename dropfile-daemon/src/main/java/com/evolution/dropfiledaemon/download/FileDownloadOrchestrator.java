@@ -7,8 +7,8 @@ import com.evolution.dropfile.store.download.FileDownloadEntryStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
+import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +17,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -223,7 +224,7 @@ public class FileDownloadOrchestrator {
                         });
 
                 if (targetOperation.isEmpty()) {
-                    throw new RuntimeException("No operation found: " + operation);
+                    throw new NoSuchElementException("No operation found: " + operation);
                 }
             }
         }
@@ -302,46 +303,43 @@ public class FileDownloadOrchestrator {
         );
     }
 
-    private Path getManifestFilePath(Path destinationFilePath) {
+    private Path getManifestFilePath(Path destinationFilePath) throws FileAlreadyExistsException {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
 
         Path manifestPath = downloadDirectoryPath.resolve(String.format("%s%s%s", "manifest.", destinationFilePath.getFileName().toString(), ".json"));
 
         if (Files.exists(manifestPath)) {
-            throw new IllegalArgumentException(String.format("file already exists: %s", manifestPath));
+            throw new FileAlreadyExistsException("File already exists: %s".formatted(manifestPath));
         }
 
         return manifestPath;
     }
 
-    private synchronized Path getDestinationFilePath(FileDownloadRequest request) {
+    private synchronized Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
         if (ObjectUtils.isEmpty(request.filename())) {
             throw new IllegalArgumentException("filename must not be empty");
         }
         if (Paths.get(request.filename()).isAbsolute()) {
-            throw new UnsupportedOperationException("Absolute paths are not supported yet: " + request.filename());
+            throw new IllegalArgumentException("Absolute paths are not supported yet: " + request.filename());
         }
 
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
         Path downloadFilePath = downloadDirectoryPath.resolve(request.filename());
 
-        Map.Entry<String, DownloadProgress> duplicate = Stream.concat(
+        Stream.concat(
                         waitingQueue.stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress())),
                         downloadProcedures.entrySet().stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress()))
                 )
                 .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
                 .findAny()
-                .orElse(null);
-
-        if (duplicate != null) {
-            throw new RuntimeException(String.format(
-                    "Duplicate destination file %s operation %s",
-                    duplicate.getValue().filename(), duplicate.getKey()
-            ));
-        }
+                .ifPresent(duplicate -> {
+                    throw new IllegalArgumentException("Duplicate destination file %s operation %s".formatted(
+                            duplicate.getValue().filename(), duplicate.getKey()
+                    ));
+                });
 
         if (Files.exists(downloadFilePath)) {
-            throw new IllegalArgumentException(String.format("File already exists: %s", downloadFilePath));
+            throw new FileAlreadyExistsException("File already exists: %s".formatted(downloadFilePath));
         }
 
         return downloadFilePath;
@@ -383,7 +381,7 @@ public class FileDownloadOrchestrator {
 
     private void checkIfClosed() {
         if (closed.get()) {
-            throw new RuntimeException("Already closed " + FileDownloadOrchestrator.class);
+            throw new IllegalStateException("Already closed " + FileDownloadOrchestrator.class);
         }
     }
 

@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @RequiredArgsConstructor
@@ -66,24 +67,36 @@ public class HandshakeClient {
         return objectMapper.readValue(httpResponse.body(), responseClass);
     }
 
-    @SneakyThrows
-    private HttpResponse<byte[]> execute(HttpRequest httpRequest) {
+    private HttpResponse<byte[]> execute(HttpRequest httpRequest) throws IOException {
         HttpResponse<byte[]> httpResponse;
         try {
             httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-        } catch (ConnectException connectException) {
-            throw new IOException("Unable to process handshake. The address is unreachable %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), connectException);
+        } catch (ConnectException e) {
+            throw new IOException("Unable to process handshake. Target address is unreachable: %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+        } catch (IOException e) {
+            throw new IOException("I/O error during handshake %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Handshake execution interrupted: %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
         }
 
-        if (httpResponse.statusCode() != 200) {
-            throw new IllegalStateException(String.format("Handshake %s %s failed: status code %s",
-                    httpRequest.method(), httpRequest.uri(), httpResponse.statusCode()));
-        }
+        int statusCode = httpResponse.statusCode();
         byte[] body = httpResponse.body();
-        if (body == null || body.length == 0) {
-            throw new IllegalArgumentException("Handshake server returned 200 OK but empty body %s %s".formatted(httpRequest.method(), httpRequest.uri()));
+
+        if (statusCode != 200) {
+            String responseDetails = (body != null && body.length > 0) ? new String(body, StandardCharsets.UTF_8) : "empty body";
+            throw new IllegalStateException("Handshake %s %s failed with status code %s. Response body: %s"
+                    .formatted(httpRequest.method(), httpRequest.uri(), statusCode, responseDetails));
         }
+
+        if (body == null || body.length == 0) {
+            throw new IllegalStateException("Handshake server returned 200 OK but empty body %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()));
+        }
+
         return httpResponse;
     }
 }

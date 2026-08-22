@@ -10,8 +10,8 @@ import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.ServerTunnelRestController;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
-import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -89,9 +89,14 @@ public class HttpTunnelClient implements TunnelClient {
 
             try {
                 httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-            } catch (ConnectException connectException) {
-                throw new IOException("Tunnel client connection issue. The address is unreachable %s %s fingerprint %s command %s"
-                        .formatted(httpRequest.method(), httpRequest.uri(), fingerprint, request.getCommand()), connectException);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Tunnel client call execution interrupted: %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri()), e);
+            } catch (ConnectException e) {
+                String message = "Tunnel client target address is unreachable %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri());
+                throw new IOException(message, e);
             }
 
             if (httpResponse.statusCode() != 200) {

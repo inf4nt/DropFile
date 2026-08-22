@@ -11,7 +11,7 @@ public interface DaemonSecretsStore
             throw new IllegalArgumentException("DaemonSecretsEntry is null");
         }
         String daemonToken = value.daemonToken();
-        if (daemonToken == null || daemonToken.trim().isEmpty()) {
+        if (daemonToken == null || daemonToken.isBlank()) {
             throw new IllegalArgumentException("DaemonSecretsEntry daemonToken is empty");
         }
     }

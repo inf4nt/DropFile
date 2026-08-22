@@ -54,13 +54,16 @@ public class ApiHandshakeFacade {
                 .getByAddressURI(addressURI)
                 .orElse(null);
         if (existingAddressURI != null) {
+            String existingFingerprint = existingAddressURI.getKey();
+
             if (!requestDTO.force()) {
-                throw new RuntimeException(String.format(
-                        "Unable to process handshake request. Duplicate address URI %s fingerprint %s. Try to perform disconnect or --force option",
-                        addressURI, existingAddressURI.getKey()
-                ));
+                throw new IllegalStateException(("Unable to process handshake request." +
+                        " Duplicate address URI %s (fingerprint: %s)." +
+                        " Try to perform disconnect or use --force option")
+                        .formatted(addressURI, existingFingerprint));
             }
-            disconnectByFingerprint(existingAddressURI.getKey());
+
+            disconnectByFingerprint(existingFingerprint);
         }
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
@@ -296,7 +299,7 @@ public class ApiHandshakeFacade {
     private void matchFingerprint(String fingerprint, PublicKey publicKey) {
         String fingerprintExpected = CommonUtils.getFingerprint(publicKey.getEncoded());
         if (!fingerprintExpected.equals(fingerprint)) {
-            throw new IllegalStateException(String.format(
+            throw new SecurityException(String.format(
                     "Fingerprint mismatch %s vs %s", fingerprint, fingerprintExpected
             ));
         }

@@ -46,7 +46,7 @@ public class CryptoRSA {
         sig.update(data);
         boolean verify = sig.verify(signature);
         if (!verify) {
-            throw new RuntimeException("Signature verification failed");
+            throw new SecurityException("Signature verification failed");
         }
     }
 }

@@ -110,8 +110,7 @@ public class RetryExecutor<T> {
         return first;
     }
 
-    @SneakyThrows
-    private T callWithTimeoutIfPresent() {
+    private T callWithTimeoutIfPresent() throws Exception {
         if (callTimeout == null) {
             return callable.call();
         }

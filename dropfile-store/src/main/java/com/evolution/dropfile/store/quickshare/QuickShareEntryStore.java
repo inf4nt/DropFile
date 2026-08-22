@@ -16,7 +16,7 @@ public interface QuickShareEntryStore extends KeyValueStore<QuickShareEntry> {
         get(key).ifPresentOrElse(
                 entryState -> {
                     if (entryState.getValue().expired()) {
-                        throw new IllegalStateException("Unable to UPDATE already expired entry: " + key);
+                        throw new IllegalArgumentException("Unable to UPDATE already expired entry: " + key);
                     }
                 },
                 () -> {
