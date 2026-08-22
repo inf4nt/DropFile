@@ -509,8 +509,8 @@ public class RetryExecutorTest {
         assertThrows(ClosedChannelException.class, () ->
                 RetryExecutor
                         .call(() -> {
+                            callCounter.incrementAndGet();
                             if (callCounter.get() <= 5) {
-                                callCounter.incrementAndGet();
                                 return 1;
                             }
                             throw new ClosedChannelException();
