@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -79,7 +80,7 @@ class InputStreamPipelineTest {
     void shouldCloseStreamWhenWrapperReturnsNull() {
         SpyInputStream spyStream = new SpyInputStream();
 
-        assertThrows(RuntimeException.class, () ->
+        assertThrows(NullPointerException.class, () ->
                 InputStreamPipeline.from(spyStream)
                         .add(in -> null)
                         .get()
@@ -89,18 +90,17 @@ class InputStreamPipelineTest {
     }
 
     @Test
-    void shouldIgnoreAddAfterGet() throws Exception {
+    void shouldThrowExceptionWhenAddAfterGet() throws Exception {
         byte[] data = "data".getBytes(StandardCharsets.UTF_8);
         try (ByteArrayInputStream initial = new ByteArrayInputStream(data);
              InputStreamPipeline pipeline = InputStreamPipeline.from(initial)) {
 
             InputStream result = pipeline.get();
 
-            InputStreamPipeline samePipeline = pipeline.add(in -> {
-                throw new RuntimeException("Should not be executed");
-            });
+            assertThrows(RuntimeException.class, () ->
+                    pipeline.add(in -> in)
+            );
 
-            assertThat(samePipeline, sameInstance(pipeline));
             assertThat(result.readAllBytes(), is(data));
         }
     }

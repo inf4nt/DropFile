@@ -2,6 +2,7 @@ package com.evolution.dropfile.common.io;
 
 import com.evolution.dropfile.common.CommonUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,9 +11,9 @@ public class InputStreamPipeline implements AutoCloseable {
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private InputStream current;
+    private final AtomicBoolean released = new AtomicBoolean();
 
-    private boolean released = false;
+    private InputStream current;
 
     private InputStreamPipeline(InputStream initial) {
         this.current = Objects.requireNonNull(initial);
@@ -23,9 +24,10 @@ public class InputStreamPipeline implements AutoCloseable {
     }
 
     public InputStreamPipeline add(StreamWrapper wrapper) {
-        if (released || current == null) {
-            return this;
+        if (released.get()) {
+            throw new IllegalStateException("Already released");
         }
+
         try {
             InputStream next = wrapper.wrap(current);
             current = Objects.requireNonNull(next);
@@ -41,20 +43,19 @@ public class InputStreamPipeline implements AutoCloseable {
     }
 
     public InputStream get() {
-        this.released = true;
-        return current;
+        if (released.compareAndSet(false, true)) {
+            return current;
+        }
+        throw new IllegalStateException("Already released");
     }
 
     @Override
-    public void close() throws Exception {
-        if (!released && current != null) {
-            if (closed.compareAndSet(false, true)) {
-                try {
-                    current.close();
-                } catch (Throwable throwable) {
-                    throw CommonUtils.toRuntimeException(throwable);
-                }
-            }
+    public void close() throws IOException {
+        if (released.get()) {
+            return;
+        }
+        if (closed.compareAndSet(false, true)) {
+            current.close();
         }
     }
 
