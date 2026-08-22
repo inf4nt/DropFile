@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.nio.file.Paths;
 
 @RequiredArgsConstructor
 @Component
@@ -43,7 +43,7 @@ public class ShareDownloadManifestCommandHandler
         int chunkSize = fileManifestBuilder.getChunkSize(request.chunkSize());
 
         FileManifest fileManifest = fileManifestBuilder.build(
-                new File(fileEntry.resourcePath()).toPath(),
+                Paths.get(fileEntry.resourcePath()),
                 fileEntry.alias(),
                 chunkSize
         );

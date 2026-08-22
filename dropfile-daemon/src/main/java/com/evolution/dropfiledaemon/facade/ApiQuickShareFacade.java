@@ -35,11 +35,12 @@ public class ApiQuickShareFacade {
 
     private final DaemonApplicationProperties applicationProperties;
 
+    @SneakyThrows
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
         Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
         if (Files.notExists(resourceAbsolutePath)) {
-            throw new RuntimeException(new FileNotFoundException(resourceAbsolutePath.toString()));
+            throw new FileNotFoundException(resourceAbsolutePath.toString());
         }
 
         String id = CommonUtils.random();

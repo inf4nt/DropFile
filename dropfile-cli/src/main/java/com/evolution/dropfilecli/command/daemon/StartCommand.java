@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,12 +20,12 @@ import java.time.Duration;
 public class StartCommand implements SimpleCommandHandler {
 
     @Override
-    public void handle() {
+    public void handle() throws IOException {
         Path binPath = getBinPath();
         Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
                 : binPath.resolve("dropfile-daemon");
         if (Files.notExists(executable)) {
-            throw new RuntimeException(new FileNotFoundException(executable.toAbsolutePath().toString()));
+            throw new FileNotFoundException(executable.toAbsolutePath().toString());
         }
         execute(executable);
     }
