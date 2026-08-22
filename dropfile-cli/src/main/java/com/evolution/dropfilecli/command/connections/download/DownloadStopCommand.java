@@ -8,7 +8,8 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "stop"
+        name = "stop",
+        description = "Stop download process"
 )
 public class DownloadStopCommand extends AbstractCommandHttpHandler<Void> {
 

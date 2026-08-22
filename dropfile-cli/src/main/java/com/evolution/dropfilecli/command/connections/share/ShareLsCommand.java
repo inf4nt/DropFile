@@ -11,7 +11,8 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "ls"
+        name = "ls",
+        description = "Retrieve shared files"
 )
 public class ShareLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsShareLsResponseDTO>> {
 

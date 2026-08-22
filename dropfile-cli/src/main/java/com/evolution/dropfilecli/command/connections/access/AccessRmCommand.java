@@ -9,7 +9,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "rm",
-        description = "rm access key"
+        description = "Remove access key"
 )
 public class AccessRmCommand extends AbstractCommandHttpHandler<Void> {
 

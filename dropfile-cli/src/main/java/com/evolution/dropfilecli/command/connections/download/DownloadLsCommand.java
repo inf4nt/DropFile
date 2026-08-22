@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "List downloads"
+        description = "Retrieve download processes"
 )
 public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 

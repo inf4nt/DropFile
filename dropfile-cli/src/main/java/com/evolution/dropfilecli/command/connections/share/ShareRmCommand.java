@@ -8,7 +8,8 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "rm"
+        name = "rm",
+        description = "Remove shared file"
 )
 public class ShareRmCommand extends AbstractCommandHttpHandler<Void> {
 

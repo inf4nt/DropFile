@@ -16,7 +16,8 @@ import java.util.Optional;
 
 @Component
 @CommandLine.Command(
-        name = "show"
+        name = "show",
+        description = "Retrieve quickshare file information"
 )
 public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 

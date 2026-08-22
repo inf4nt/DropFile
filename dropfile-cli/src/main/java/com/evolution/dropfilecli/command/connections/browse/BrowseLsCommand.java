@@ -12,7 +12,8 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "ls"
+        name = "ls",
+        description = "Retrieve remote files"
 )
 public class BrowseLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsBrowseLsResponseDTO>> {
 

@@ -11,7 +11,8 @@ import java.util.List;
 
 @Component
 @CommandLine.Command(
-        name = "ls"
+        name = "ls",
+        description = "Retrieve quickshare files"
 )
 public class QuickShareLsCommand extends AbstractCommandHttpHandler<List<ApiQuickShareLsResponseDTO>> {
 

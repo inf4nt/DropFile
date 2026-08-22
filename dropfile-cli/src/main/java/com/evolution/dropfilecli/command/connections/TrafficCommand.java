@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "traffic",
-        description = "Retrieve traffic"
+        description = "Retrieve connection traffic"
 )
 
 public class TrafficCommand extends AbstractCommandHttpHandler<List<TunnelTrafficResponseDTO>> {

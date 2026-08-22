@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "add",
-        description = "Add file command"
+        description = "Add file as a shared file"
 )
 public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsShareLsResponseDTO> {
 
