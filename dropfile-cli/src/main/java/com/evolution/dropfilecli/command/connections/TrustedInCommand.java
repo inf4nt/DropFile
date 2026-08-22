@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "trusted-in",
-        aliases = {"-in", "--in", "-i"},
+        aliases = {"in", "i"},
         description = "Retrieve trusted-in connections"
 )
 public class TrustedInCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustInResponseDTO>> {

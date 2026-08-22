@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "generate",
-        aliases = {"-g"},
+        aliases = {"g"},
         description = "Generate connection access key command"
 )
 public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnectionsAccessInfoResponseDTO> {

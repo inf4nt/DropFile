@@ -14,7 +14,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "connect",
-        aliases = {"-c"},
+        aliases = {"c"},
         description = "Perform connection to the given address"
 )
 public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {

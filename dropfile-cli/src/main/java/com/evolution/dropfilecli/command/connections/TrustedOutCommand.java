@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "trusted-out",
-        aliases = {"-out", "--out", "-o"},
+        aliases = {"out", "o"},
         description = "Retrieve trusted-out connections"
 )
 public class TrustedOutCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustOutResponseDTO>> {

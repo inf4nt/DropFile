@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "get",
-        aliases = {"-g"},
+        aliases = {"g"},
         description = "Get file"
 )
 public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {

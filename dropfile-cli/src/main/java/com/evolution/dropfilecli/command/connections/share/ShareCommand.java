@@ -8,7 +8,7 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "share",
         description = "Share commands",
-        aliases = {"-s"},
+        aliases = {"s"},
         subcommands = {
                 ShareLsCommand.class,
                 ShareAddCommand.class,
