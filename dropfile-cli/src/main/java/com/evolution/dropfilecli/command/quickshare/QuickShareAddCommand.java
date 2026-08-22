@@ -18,7 +18,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
+    @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
 
     @CommandLine.Option(names = {"-secret", "--secret"}, description = "Secret password")

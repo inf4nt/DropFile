@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RequiredArgsConstructor
 @Component
@@ -40,10 +42,10 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getRequired(request.id())
                 .getValue();
 
-        File file = new File(shareFileEntry.resourcePath());
+        Path path = Paths.get(shareFileEntry.resourcePath());
         long skip = request.position();
         int take = request.size();
 
-        return fileHelper.readStream(file.toPath(), skip, take);
+        return fileHelper.readStream(path, skip, take);
     }
 }

@@ -17,7 +17,7 @@ import java.net.http.HttpResponse;
 )
 public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsShareLsResponseDTO> {
 
-    @CommandLine.Option(names = {"-file", "--file", "-f", "--f"}, description = "File path", required = true)
+    @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
 
     @CommandLine.Option(names = {"-alias", "--alias"}, description = "Alias")
