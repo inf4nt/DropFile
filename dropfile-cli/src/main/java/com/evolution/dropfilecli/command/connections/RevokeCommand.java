@@ -17,10 +17,7 @@ public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(
-                names = {"-fingerprint", "--fingerprint", "-f"},
-                description = "Revoke by fingerprint"
-        )
+        @CommandLine.Parameters(index = "0", description = "Revoke by fingerprint")
         private String fingerprint;
 
         @CommandLine.Option(names = {"-all", "--all"}, description = "Revoke all")
