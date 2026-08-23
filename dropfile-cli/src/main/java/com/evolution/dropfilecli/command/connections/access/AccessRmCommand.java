@@ -17,7 +17,7 @@ public class AccessRmCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "id")
+        @CommandLine.Parameters(index = "0", description = "Access key id")
         private String id;
 
         @CommandLine.Option(names = {"-all", "--all"}, description = "rm all access keys")

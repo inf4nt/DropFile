@@ -17,10 +17,10 @@ public class DownloadStopCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "operation id")
+        @CommandLine.Parameters(index = "0", description = "Operation id")
         private String id;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "rm all")
+        @CommandLine.Option(names = {"-all", "--all"}, description = "Stop all")
         private boolean all;
     }
 

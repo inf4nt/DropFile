@@ -17,7 +17,7 @@ public class QuickShareRmCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"})
+        @CommandLine.Parameters(index = "0", description = "Quickshare file id")
         private String id;
 
         @CommandLine.Option(names = {"-all", "--all"})

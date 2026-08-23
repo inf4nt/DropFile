@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
 )
 public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {
 
-    @CommandLine.Option(names = {"-id", "--id"}, required = true)
+    @CommandLine.Parameters(index = "0", description = "File id")
     private String id;
 
     @CommandLine.Option(names = {"-filename", "--filename", "-f"})

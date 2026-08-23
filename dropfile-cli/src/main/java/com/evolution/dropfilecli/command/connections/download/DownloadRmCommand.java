@@ -17,7 +17,7 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "Operation id")
+        @CommandLine.Parameters(index = "0", description = "Operation id")
         private String id;
 
         @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")

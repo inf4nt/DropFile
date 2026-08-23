@@ -24,11 +24,14 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
     private ApiDownloadLsDTO.Status status;
 
     @CommandLine.Option(names = {"-limit", "--limit"}, description = "Limit", defaultValue = "0")
-    private Integer limit;
+    private int limit;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        int limit = this.limit <= 0 ? Integer.MAX_VALUE : this.limit;
+        if (limit < 0) {
+            throw new IllegalArgumentException("Limit cannot be negative");
+        }
+        int limit = this.limit == 0 ? Integer.MAX_VALUE : this.limit;
         return daemonClient.downloadLs(status, limit);
     }
 

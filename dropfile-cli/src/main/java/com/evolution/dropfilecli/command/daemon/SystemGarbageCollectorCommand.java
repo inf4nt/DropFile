@@ -9,7 +9,6 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "gc",
-        aliases = {"purge", "clean"},
         description = "Triggers internal garbage collection and cleanup of stale state",
         mixinStandardHelpOptions = true
 )

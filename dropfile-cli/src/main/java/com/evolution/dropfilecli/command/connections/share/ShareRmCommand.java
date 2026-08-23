@@ -17,7 +17,7 @@ public class ShareRmCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Option(names = {"-id", "--id"}, description = "Remove by id")
+        @CommandLine.Parameters(index = "0", description = "Shared file id")
         private String id;
 
         @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")

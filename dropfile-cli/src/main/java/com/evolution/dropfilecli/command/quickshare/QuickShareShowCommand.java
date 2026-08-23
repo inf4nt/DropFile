@@ -21,7 +21,7 @@ import java.util.Optional;
 )
 public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 
-    @CommandLine.Option(names = {"-id", "--id"}, description = "Id", required = true)
+    @CommandLine.Parameters(index = "0", description = "Shared file id")
     private String id;
 
     @CommandLine.Option(
