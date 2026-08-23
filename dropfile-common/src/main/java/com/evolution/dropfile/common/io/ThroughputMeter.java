@@ -15,6 +15,10 @@ public class ThroughputMeter {
     private final LongAdder downloaded = new LongAdder();
 
     public void add(long size) {
+        if (size <= 0) {
+            throw new IllegalArgumentException("Size must be positive");
+        }
+
         samples.add(new ChunkSample(System.currentTimeMillis(), size));
         downloaded.add(size);
         cleanup();

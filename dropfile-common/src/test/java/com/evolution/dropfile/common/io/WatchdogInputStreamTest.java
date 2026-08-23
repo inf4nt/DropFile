@@ -19,9 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class WatchdogInputStreamTest {
 
     @Test
-    public void shouldNotCreateWatchdogTaskWhenDurationIsNull() {
-        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(new ByteArrayInputStream("12345".getBytes(StandardCharsets.UTF_8)), Long.MAX_VALUE);
+    public void shouldNotCreateWatchdogTaskWhenDurationIsNullOrZero() {
+        WatchdogInputStream watchdogInputStream = new WatchdogInputStream(InputStream.nullInputStream(), Long.MAX_VALUE);
         assertThat("Watchdog task should be null when duration is null", watchdogInputStream.watchdogTask, nullValue());
+
+        watchdogInputStream = new WatchdogInputStream(InputStream.nullInputStream(), Long.MAX_VALUE, null);
+        assertThat("Watchdog task should be null when duration is null", watchdogInputStream.watchdogTask, nullValue());
+
+        watchdogInputStream = new WatchdogInputStream(InputStream.nullInputStream(), Long.MAX_VALUE, Duration.ofMillis(0));
+        assertThat("Watchdog task should be null when duration is zero", watchdogInputStream.watchdogTask, nullValue());
     }
 
     @Test
@@ -232,14 +238,9 @@ public class WatchdogInputStreamTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWhenDurationIsZeroOrNegative() {
-        InputStream in = new ByteArrayInputStream("data".getBytes(StandardCharsets.UTF_8));
-
+    public void shouldThrowIllegalArgumentExceptionWhenDurationIsNegative() {
         assertThrows(IllegalArgumentException.class, () ->
-                new WatchdogInputStream(in, 100, Duration.ZERO));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                new WatchdogInputStream(in, 100, Duration.ofMillis(-500)));
+                new WatchdogInputStream(InputStream.nullInputStream(), 100, Duration.ofMillis(-500)));
     }
 
     @Test
@@ -312,12 +313,10 @@ public class WatchdogInputStreamTest {
 
     @Test
     public void shouldThrowExceptionWhenLimitIsZeroOrNegative() {
-        InputStream in = new ByteArrayInputStream("data".getBytes(StandardCharsets.UTF_8));
-
-        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(in, 0, Duration.ofSeconds(1)));
-        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(in, -1, Duration.ofSeconds(1)));
-        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(in, -100, Duration.ofSeconds(1)));
-        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(in, Long.MIN_VALUE, Duration.ofSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(InputStream.nullInputStream(), 0, Duration.ofSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(InputStream.nullInputStream(), -1, Duration.ofSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(InputStream.nullInputStream(), -100, Duration.ofSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> new WatchdogInputStream(InputStream.nullInputStream(), Long.MIN_VALUE, Duration.ofSeconds(1)));
     }
 
     @Test

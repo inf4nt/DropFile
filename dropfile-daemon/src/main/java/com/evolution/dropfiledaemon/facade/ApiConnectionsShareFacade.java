@@ -30,8 +30,9 @@ public class ApiConnectionsShareFacade {
         if (Files.notExists(absoluteResourcePath)) {
             throw new FileNotFoundException(absoluteResourcePath.toString());
         }
-        if (Files.isDirectory(absoluteResourcePath)) {
-            throw new IllegalArgumentException("Directories are unsupported: " + requestDTO.resourcePath());
+
+        if (!Files.isRegularFile(absoluteResourcePath)) {
+            throw new IllegalArgumentException("Resource is not a regular file: " + requestDTO.resourcePath());
         }
 
         String id = CommonUtils.random();

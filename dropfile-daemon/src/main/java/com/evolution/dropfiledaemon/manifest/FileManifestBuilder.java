@@ -87,21 +87,21 @@ public class FileManifestBuilder {
         }
     }
 
-    public FileManifest build(Path path, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
+    public FileManifest build(Path source, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
         if (!StringUtils.hasText(fileManifestName)) {
             throw new IllegalArgumentException("File manifest name is empty");
         }
         if (chunkSize <= 0) {
             throw new IllegalArgumentException("Chunk size must be greater than zero");
         }
-        if (!Files.exists(path)) {
-            throw new FileNotFoundException("No file found: " + path);
+        if (!Files.exists(source)) {
+            throw new FileNotFoundException("No file found: " + source);
         }
-        if (Files.isDirectory(path)) {
-            throw new IllegalArgumentException("Directories are unsupported: " + path.toAbsolutePath());
+        if (!Files.isRegularFile(source)) {
+            throw new IllegalArgumentException("Source is not a regular file: " + source.toAbsolutePath());
         }
 
-        final long fileSize = Files.size(path);
+        long fileSize = Files.size(source);
 
         List<ChunkManifest> chunkManifests = new ArrayList<>();
         long totalSizeAccumulated = 0;
@@ -123,7 +123,7 @@ public class FileManifestBuilder {
             }
         };
 
-        try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+        try (FileChannel fileChannel = FileChannel.open(source, StandardOpenOption.READ);
              WritableByteChannel targetChannel = Channels.newChannel(digestOutputStream)) {
 
             long position = 0;

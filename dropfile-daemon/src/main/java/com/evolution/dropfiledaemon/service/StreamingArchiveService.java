@@ -46,8 +46,8 @@ public class StreamingArchiveService {
                               String innerZipName,
                               String password,
                               OutputStream outputStreamArgument) throws IOException {
-        if (Files.isDirectory(source)) {
-            throw new IllegalArgumentException("Expected a file, but got a directory: " + source);
+        if (!Files.isRegularFile(source)) {
+            throw new IllegalArgumentException("Source is not a regular file: " + source);
         }
 
         InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
@@ -93,8 +93,8 @@ public class StreamingArchiveService {
     }
 
     public void insecureCompressedZipFile(Path source, OutputStream outputStreamArgument) throws IOException {
-        if (Files.isDirectory(source)) {
-            throw new IllegalArgumentException("Expected a file, but got a directory: " + source);
+        if (!Files.isRegularFile(source)) {
+            throw new IllegalArgumentException("Source is not a regular file: " + source);
         }
 
         InterruptibleOutputStream stream = InterruptibleOutputStream.stream(
@@ -129,8 +129,8 @@ public class StreamingArchiveService {
     }
 
     public void insecureZipFile(Path source, OutputStream outputStreamArgument) throws IOException {
-        if (Files.isDirectory(source)) {
-            throw new IllegalArgumentException("Expected a file, but got a directory: " + source);
+        if (!Files.isRegularFile(source)) {
+            throw new IllegalArgumentException("Source is not a regular file: " + source);
         }
 
         InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(

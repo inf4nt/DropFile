@@ -269,7 +269,7 @@ public class CommonUtils {
     }
 
     public static long getSize(Path path) throws IOException {
-        if (!Files.isDirectory(path)) {
+        if (Files.isRegularFile(path)) {
             return Files.size(path);
         }
 

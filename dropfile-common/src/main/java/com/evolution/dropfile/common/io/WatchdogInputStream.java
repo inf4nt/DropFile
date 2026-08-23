@@ -35,12 +35,12 @@ public class WatchdogInputStream extends FilterInputStream {
 
         this.limit = limit;
 
-        if (duration == null) {
+        if (duration == null || duration.isZero()) {
             this.watchdogTask = null;
             return;
         }
 
-        if (duration.isZero() || duration.isNegative()) {
+        if (duration.isNegative()) {
             throw new IllegalArgumentException("Duration must be positive");
         }
 

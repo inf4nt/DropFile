@@ -6,6 +6,7 @@ import com.evolution.dropfile.common.function.OutputStreamConsumer;
 import com.evolution.dropfile.common.io.FileHelper;
 import lombok.RequiredArgsConstructor;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
@@ -19,13 +20,13 @@ public class FileSystemOperations implements FileOperations {
 
     @Override
     public void removeAll(Path destination) throws IOException {
-        if (Files.isDirectory(destination)) {
-            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
+        if (!Files.isRegularFile(destination)) {
+            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
         }
 
         Path temporaryFilePath = null;
         try {
-            temporaryFilePath = getOrCreateTemporaryFilePath(destination);
+            temporaryFilePath = createTemporaryFilePath(destination);
             Files.move(temporaryFilePath, destination,
                     StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING
             );
@@ -49,8 +50,8 @@ public class FileSystemOperations implements FileOperations {
         if (Files.notExists(destination) || Files.size(destination) == 0) {
             throw new NoContentFoundException(destination);
         }
-        if (Files.isDirectory(destination)) {
-            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
+        if (!Files.isRegularFile(destination)) {
+            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
         }
 
         FileChannel fileChannel = null;
@@ -73,13 +74,13 @@ public class FileSystemOperations implements FileOperations {
     }
 
     public void write(Path destination, OutputStreamConsumer outputStreamConsumer) throws IOException {
-        if (Files.isDirectory(destination)) {
-            throw new IOException("Destination cannot be a directory: %s".formatted(destination));
+        if (!Files.isRegularFile(destination)) {
+            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
         }
 
         Path temporaryFilePath = null;
         try {
-            temporaryFilePath = getOrCreateTemporaryFilePath(destination);
+            temporaryFilePath = createTemporaryFilePath(destination);
             fileHelper.outputStreamConsumer(temporaryFilePath, outputStreamConsumer);
             Files.move(temporaryFilePath, destination,
                     StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING
@@ -99,23 +100,23 @@ public class FileSystemOperations implements FileOperations {
         }
     }
 
-    private Path getOrCreateTemporaryFilePath(Path destination) throws IOException {
+    private Path createTemporaryFilePath(Path destination) throws IOException {
         String filename = destination.getFileName().toString();
         String temporaryFileName = CommonFileUtils.getTemporaryFileName(filename);
         Path parent = destination.getParent();
 
         if (parent != null && Files.notExists(parent)) {
-            throw new IOException("Unable to create temporary file %s. Parent does not exist %s".formatted(
+            throw new FileNotFoundException("Unable to create temporary file %s. Parent does not exist %s".formatted(
                     temporaryFileName, parent
             ));
         }
 
         Path temporaryFilePath = (parent != null) ? parent.resolve(temporaryFileName) : Paths.get(temporaryFileName);
 
-        try {
-            return Files.createFile(temporaryFilePath);
-        } catch (FileAlreadyExistsException e) {
-            throw new IOException("Temporary file already exists %s".formatted(temporaryFileName), e);
+        if (Files.exists(temporaryFilePath)) {
+            throw new FileAlreadyExistsException("Temporary file already exists %s".formatted(temporaryFileName));
         }
+
+        return Files.createFile(temporaryFilePath);
     }
 }
