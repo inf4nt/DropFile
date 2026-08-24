@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.picocli;
 
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;

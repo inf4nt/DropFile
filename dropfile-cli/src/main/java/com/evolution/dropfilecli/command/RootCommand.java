@@ -1,7 +1,7 @@
-package com.evolution.dropfilecli;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfile.common.SystemInfoProvider;
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.picocli.ManifestVersionProvider;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.quickshare.QuickShareCommand;
