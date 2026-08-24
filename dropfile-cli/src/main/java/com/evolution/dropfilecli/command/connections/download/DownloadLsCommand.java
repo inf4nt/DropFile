@@ -17,13 +17,13 @@ import java.util.List;
 public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 
     @CommandLine.Option(
-            names = {"-s", "-status", "--status"},
+            names = {"--status", "-s"},
             description = "Filter by status: ${COMPLETION-CANDIDATES}",
             converter = StatusEnumConverter.class
     )
     private ApiDownloadLsDTO.Status status;
 
-    @CommandLine.Option(names = {"-limit", "--limit"}, description = "Limit", defaultValue = "0")
+    @CommandLine.Option(names = {"--limit"}, description = "Limit", defaultValue = "0")
     private int limit;
 
     @Override

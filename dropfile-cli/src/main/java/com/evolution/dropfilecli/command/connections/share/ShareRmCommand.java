@@ -20,7 +20,7 @@ public class ShareRmCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Shared file id")
         private String id;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "Remove all")
+        @CommandLine.Option(names = {"--all"}, description = "Remove all")
         private boolean all;
     }
 
