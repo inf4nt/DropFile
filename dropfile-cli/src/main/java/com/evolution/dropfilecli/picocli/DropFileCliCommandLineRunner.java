@@ -2,6 +2,7 @@ package com.evolution.dropfilecli.picocli;
 
 import com.evolution.dropfilecli.DropFileCliApplication;
 import com.evolution.dropfilecli.command.RootCommand;
+import com.evolution.dropfilecli.util.Spinner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
@@ -29,7 +30,15 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
     public void run(String... args) {
         CompletableFuture.runAsync(() -> {
             CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
+            commandLine.setCommandName("dropfile");
             commandLine.setUnmatchedArgumentsAllowed(true);
+
+            CommandLine.IParameterExceptionHandler defaultHandler = commandLine.getParameterExceptionHandler();
+
+            commandLine.setParameterExceptionHandler((ex, arr) -> {
+                Spinner.stop();
+                return defaultHandler.handleParseException(ex, arr);
+            });
 
             CommandLine.Model.OptionSpec liveOption = CommandLine.Model.OptionSpec
                     .builder("--live")
