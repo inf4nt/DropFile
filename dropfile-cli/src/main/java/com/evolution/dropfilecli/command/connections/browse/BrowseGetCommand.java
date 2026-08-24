@@ -19,7 +19,7 @@ public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsB
     @CommandLine.Parameters(index = "0", description = "File id")
     private String id;
 
-    @CommandLine.Option(names = {"--filename", "-f"})
+    @CommandLine.Option(names = {"-filename", "--filename", "-f"})
     private String filename;
 
     @Override
