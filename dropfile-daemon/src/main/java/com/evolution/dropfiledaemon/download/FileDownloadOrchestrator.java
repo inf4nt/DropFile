@@ -318,10 +318,10 @@ public class FileDownloadOrchestrator {
 
     private synchronized Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
         if (!StringUtils.hasText(request.filename())) {
-            throw new IllegalArgumentException("filename must not be empty");
+            throw new IllegalArgumentException("File download request failed. The request has am empty filename argument");
         }
         if (Paths.get(request.filename()).isAbsolute()) {
-            throw new IllegalArgumentException("Absolute paths are not supported yet: " + request.filename());
+            throw new IllegalArgumentException("File download request failed. Absolute paths are not supported yet: " + request.filename());
         }
 
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
@@ -334,13 +334,13 @@ public class FileDownloadOrchestrator {
                 .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
                 .findAny()
                 .ifPresent(duplicate -> {
-                    throw new IllegalArgumentException("Duplicate destination file %s operation %s".formatted(
+                    throw new IllegalArgumentException("File download request failed. Duplicate destination file %s operation %s".formatted(
                             duplicate.getValue().filename(), duplicate.getKey()
                     ));
                 });
 
         if (Files.exists(downloadFilePath)) {
-            throw new FileAlreadyExistsException("File already exists: %s".formatted(downloadFilePath));
+            throw new FileAlreadyExistsException("File download request failed. File already exists: %s".formatted(downloadFilePath));
         }
 
         return downloadFilePath;

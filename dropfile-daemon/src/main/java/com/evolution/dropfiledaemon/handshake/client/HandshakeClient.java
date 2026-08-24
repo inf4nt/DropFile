@@ -72,14 +72,14 @@ public class HandshakeClient {
         try {
             httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
         } catch (ConnectException e) {
-            throw new IOException("Unable to process handshake. Target address is unreachable: %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+            throw new ConnectException("Handshake client failed. Target address is unreachable %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()));
         } catch (IOException e) {
             throw new IOException("I/O error during handshake %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Handshake execution interrupted: %s %s"
+            throw new IllegalStateException("Handshake client interrupted: %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
         }
 

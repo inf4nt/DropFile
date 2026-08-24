@@ -47,13 +47,14 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
             commandLine.setExecutionStrategy(liveExecutionStrategy);
 
-//        commandLine.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
-//            @Override
-//            public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult fullParseResult) throws Exception {
-//                System.out.println("HANDLER " + ex.getMessage());
-//                return 0;
-//            }
-//        });
+//            commandLine.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
+//                @Override
+//                public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult fullParseResult) throws Exception {
+//                    PrintWriter err = commandLine.getErr();
+//                    err.println(ex.getMessage());
+//                    return 1;
+//                }
+//            });
             int execute = commandLine.execute(args);
             DropFileCliApplication.exit(execute);
         }, executorService).join();

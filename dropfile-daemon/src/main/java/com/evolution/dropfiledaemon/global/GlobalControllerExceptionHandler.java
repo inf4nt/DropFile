@@ -17,7 +17,7 @@ public class GlobalControllerExceptionHandler {
         if (isApiCall(request)) {
             if (StringUtils.hasText(exception.getMessage())) {
                 return ResponseEntity.badRequest().body(
-                        exception.getClass().getName() + ". Message: " + exception.getMessage()
+                        exception.getClass().getName() + ". " + exception.getMessage()
                 );
             }
             return ResponseEntity.badRequest().body(

@@ -21,7 +21,7 @@ public class FileSystemOperations implements FileOperations {
     @Override
     public void removeAll(Path destination) throws IOException {
         if (!Files.isRegularFile(destination)) {
-            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
+            throw new IllegalArgumentException("FileSystemOperations remove all failed. The given destination is not a regular file: %s".formatted(destination));
         }
 
         Path temporaryFilePath = null;
@@ -51,7 +51,7 @@ public class FileSystemOperations implements FileOperations {
             throw new NoContentFoundException(destination);
         }
         if (!Files.isRegularFile(destination)) {
-            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
+            throw new IllegalArgumentException("FileSystemOperations read failed. Destination is not a regular file: %s".formatted(destination));
         }
 
         FileChannel fileChannel = null;
@@ -75,7 +75,7 @@ public class FileSystemOperations implements FileOperations {
 
     public void write(Path destination, OutputStreamConsumer outputStreamConsumer) throws IOException {
         if (!Files.isRegularFile(destination)) {
-            throw new IllegalArgumentException("Destination is not a regular file: %s".formatted(destination));
+            throw new IllegalArgumentException("FileSystemOperations write failed. Destination is not a regular file: %s".formatted(destination));
         }
 
         Path temporaryFilePath = null;
@@ -106,7 +106,7 @@ public class FileSystemOperations implements FileOperations {
         Path parent = destination.getParent();
 
         if (parent != null && Files.notExists(parent)) {
-            throw new FileNotFoundException("Unable to create temporary file %s. Parent does not exist %s".formatted(
+            throw new FileNotFoundException("FileSystemOperations action failed. Unable to create temporary file %s. Parent does not exist %s".formatted(
                     temporaryFileName, parent
             ));
         }
@@ -114,7 +114,7 @@ public class FileSystemOperations implements FileOperations {
         Path temporaryFilePath = (parent != null) ? parent.resolve(temporaryFileName) : Paths.get(temporaryFileName);
 
         if (Files.exists(temporaryFilePath)) {
-            throw new FileAlreadyExistsException("Temporary file already exists %s".formatted(temporaryFileName));
+            throw new FileAlreadyExistsException("FileSystemOperations action failed. Temporary file already exists %s".formatted(temporaryFileName));
         }
 
         return Files.createFile(temporaryFilePath);

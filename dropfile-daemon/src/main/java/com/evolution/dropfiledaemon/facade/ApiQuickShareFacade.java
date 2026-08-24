@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
@@ -41,7 +40,7 @@ public class ApiQuickShareFacade {
         Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
         if (Files.notExists(resourceAbsolutePath)) {
-            throw new FileNotFoundException(resourceAbsolutePath.toString());
+            throw new FileNotFoundException("No file found %s".formatted(resourceAbsolutePath.toString()));
         }
 
         String id = CommonUtils.random();

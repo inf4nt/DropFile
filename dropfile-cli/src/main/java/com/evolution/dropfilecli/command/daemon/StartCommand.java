@@ -25,7 +25,14 @@ public class StartCommand implements SimpleCommandHandler {
         Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
                 : binPath.resolve("dropfile-daemon");
         if (Files.notExists(executable)) {
-            throw new FileNotFoundException(executable.toAbsolutePath().toString());
+            throw new FileNotFoundException("Daemon start failed. No daemon executable file found %s"
+                    .formatted(executable.toAbsolutePath().toString())
+            );
+        }
+        if (Files.isExecutable(executable)) {
+            throw new IllegalStateException("Daemon start failed. File is not executable %s"
+                    .formatted(executable.toAbsolutePath().toString())
+            );
         }
         execute(executable);
     }
@@ -40,7 +47,7 @@ public class StartCommand implements SimpleCommandHandler {
         String jar = cmd.split(" ")[0];
         Path jarPath = Paths.get(jar);
         Path parent = jarPath.getParent().getParent();
-        return parent.resolve("bin");
+        return parent.resolve("bin").normalize();
     }
 
     @SneakyThrows

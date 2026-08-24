@@ -98,7 +98,7 @@ public class FileManifestBuilder {
             throw new FileNotFoundException("No file found: " + source);
         }
         if (!Files.isRegularFile(source)) {
-            throw new IllegalArgumentException("Source is not a regular file: " + source.toAbsolutePath());
+            throw new IllegalArgumentException("File is not a regular file: " + source.toAbsolutePath());
         }
 
         long fileSize = Files.size(source);

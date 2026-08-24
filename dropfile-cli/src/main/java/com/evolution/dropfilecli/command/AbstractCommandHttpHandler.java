@@ -11,6 +11,7 @@ import org.springframework.util.ObjectUtils;
 import picocli.CommandLine;
 
 import java.lang.reflect.ParameterizedType;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.stream.StreamSupport;
@@ -54,11 +55,13 @@ public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHan
     }
 
     protected void handleUnsuccessful(HttpResponse<byte[]> response) throws Exception {
-        System.out.println("Operation failed. Daemon http response code: " + response.statusCode());
-        byte[] body = response.body();
-        if (!ObjectUtils.isEmpty(body)) {
-            System.out.println("HTTP response body: " + new String(body));
+        StringBuilder stringBuilder = new StringBuilder();
+        HttpRequest request = response.request();
+        stringBuilder.append("Daemon request failed %s %s".formatted(request.method(), request.uri()));
+        if (!ObjectUtils.isEmpty(response.body())) {
+            stringBuilder.append("\n").append(new String(response.body()));
         }
+        throw new IllegalStateException(stringBuilder.toString());
     }
 
     protected boolean isSuccessful(HttpResponse<byte[]> response) {

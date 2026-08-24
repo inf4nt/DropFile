@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
@@ -91,12 +90,12 @@ public class HttpTunnelClient implements TunnelClient {
                 httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new IllegalStateException("Tunnel client call execution interrupted: %s %s"
+                throw new IllegalStateException("Tunnel client call interrupted: %s %s"
                         .formatted(httpRequest.method(), httpRequest.uri()), e);
             } catch (ConnectException e) {
                 String message = "Tunnel client target address is unreachable %s %s"
                         .formatted(httpRequest.method(), httpRequest.uri());
-                throw new IOException(message, e);
+                throw new ConnectException(message);
             }
 
             if (httpResponse.statusCode() != 200) {

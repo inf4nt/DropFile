@@ -28,11 +28,11 @@ public class ApiConnectionsShareFacade {
         String alias = Paths.get(requestDTO.alias()).toString();
 
         if (Files.notExists(absoluteResourcePath)) {
-            throw new FileNotFoundException(absoluteResourcePath.toString());
+            throw new FileNotFoundException("No file found %s".formatted(absoluteResourcePath.toString()));
         }
 
         if (!Files.isRegularFile(absoluteResourcePath)) {
-            throw new IllegalArgumentException("Resource is not a regular file: " + requestDTO.resourcePath());
+            throw new IllegalArgumentException("File is not a regular file: " + requestDTO.resourcePath());
         }
 
         String id = CommonUtils.random();

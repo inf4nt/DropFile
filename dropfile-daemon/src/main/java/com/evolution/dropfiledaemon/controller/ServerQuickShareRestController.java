@@ -44,7 +44,7 @@ public class ServerQuickShareRestController {
         QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
 
         if (quickShareEntry.expired()) {
-            throw new IllegalStateException("Expired " + id);
+            throw new IllegalStateException("Quickshare file already expired %s".formatted(id));
         }
 
         if (quickShareEntry.singleUse()) {

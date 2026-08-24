@@ -215,9 +215,9 @@ public class DaemonClient {
             throw new IllegalStateException("Daemon client call execution interrupted: %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
         } catch (ConnectException e) {
-            String message = "Is daemon running? Daemon request failed %s %s. Daemon is not running or unreachable"
+            String message = "Is daemon running? Daemon is not running or unreachable %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri());
-            throw new IOException(message, e);
+            throw new ConnectException(message);
         } catch (IOException e) {
             throw new IOException("I/O error during daemon client call %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
