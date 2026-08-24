@@ -11,7 +11,11 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "status",
-        description = "Daemon status"
+        description = "Daemon status",
+        customSynopsis = "dropfile daemon status",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class RetrieveInfoCommand extends AbstractCommandHttpHandler<DaemonInfoResponseDTO> {
 

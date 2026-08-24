@@ -9,7 +9,13 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "stop",
-        description = "Stop download process"
+        description = "Stop download process",
+        customSynopsis = {
+                "dropfile connections download stop <id>",
+                "dropfile connections download stop --all"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class DownloadStopCommand extends AbstractCommandHttpHandler<Void> {
 

@@ -9,7 +9,14 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "rm",
-        description = "Remove quickshare file"
+        description = "Remove quickshare file",
+        customSynopsis = {
+                "dropfile quickshare rm <id>",
+                "dropfile quickshare rm --all"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        sortOptions = false
 )
 public class QuickShareRmCommand extends AbstractCommandHttpHandler<Void> {
 

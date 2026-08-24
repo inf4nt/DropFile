@@ -9,7 +9,13 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "rm",
-        description = "Remove download process"
+        description = "Remove download process",
+        customSynopsis = {
+                "dropfile connections download rm <id>",
+                "dropfile connections download rm --all"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class DownloadRmCommand extends AbstractCommandHttpHandler<Void> {
 

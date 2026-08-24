@@ -13,7 +13,11 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "Retrieve remote files"
+        description = "Retrieve remote files",
+        customSynopsis = "dropfile connections browse ls [options]",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class BrowseLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsBrowseLsResponseDTO>> {
 

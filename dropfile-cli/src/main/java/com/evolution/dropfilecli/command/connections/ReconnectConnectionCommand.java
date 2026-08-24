@@ -11,7 +11,11 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "reconnect",
-        description = "Reconnect to the current connection and rotate session keys"
+        description = "Reconnect to the current connection and rotate session keys",
+        customSynopsis = "dropfile connections reconnect",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 

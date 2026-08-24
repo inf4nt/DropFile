@@ -12,7 +12,9 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "Retrieve access keys"
+        description = "Retrieve access keys",
+        customSynopsis = "dropfile connections access ls [options]",
+        mixinStandardHelpOptions = true
 )
 public class AccessLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsAccessInfoResponseDTO>> {
 

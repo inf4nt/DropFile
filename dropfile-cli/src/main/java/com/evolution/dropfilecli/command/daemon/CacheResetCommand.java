@@ -9,7 +9,11 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "cache-reset",
-        description = "Daemon cache reset"
+        description = "Daemon cache reset",
+        customSynopsis = "dropfile daemon cache-reset",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class CacheResetCommand extends AbstractCommandHttpHandler<Void> {
 

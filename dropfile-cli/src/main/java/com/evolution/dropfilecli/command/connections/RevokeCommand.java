@@ -9,7 +9,10 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "revoke",
-        description = "Drop trusted-in connection"
+        description = "Drop trusted-in connection",
+        customSynopsis = "dropfile connections revoke <fingerprint>",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
 

@@ -12,7 +12,10 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "get",
         aliases = {"g"},
-        description = "Get file"
+        description = "Get file",
+        customSynopsis = "dropfile connections browse get <id> [options]",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {
 

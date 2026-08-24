@@ -9,7 +9,10 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "disconnect",
-        description = "Disconnect trusted-out connection"
+        description = "Disconnect trusted-out connection",
+        customSynopsis = "dropfile connections disconnect <fingerprint>",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
 

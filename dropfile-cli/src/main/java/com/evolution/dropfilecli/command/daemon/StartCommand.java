@@ -15,7 +15,11 @@ import java.time.Duration;
 @Component
 @CommandLine.Command(
         name = "start",
-        description = "Daemon start"
+        description = "Daemon start",
+        customSynopsis = "dropfile daemon start",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class StartCommand implements SimpleCommandHandler {
 

@@ -9,7 +9,11 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "shutdown",
-        description = "Daemon shutdown"
+        description = "Daemon shutdown",
+        customSynopsis = "dropfile daemon shutdown",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class ShutdownCommand extends AbstractCommandHttpHandler<Void> {
 

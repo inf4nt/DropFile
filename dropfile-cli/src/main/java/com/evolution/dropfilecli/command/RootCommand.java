@@ -1,7 +1,6 @@
 package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfile.common.SystemInfoProvider;
-import com.evolution.dropfilecli.picocli.ManifestVersionProvider;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.quickshare.QuickShareCommand;
@@ -16,11 +15,11 @@ import picocli.CommandLine;
 @Component
 @CommandLine.Command(
         mixinStandardHelpOptions = true,
-        versionProvider = ManifestVersionProvider.class,
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                QuickShareCommand.class
+                QuickShareCommand.class,
+                VersionCommand.class
         }
 )
 public class RootCommand implements SimpleCommandHandler {

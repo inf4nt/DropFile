@@ -13,7 +13,11 @@ import java.util.List;
 @CommandLine.Command(
         name = "trusted-in",
         aliases = {"in", "i"},
-        description = "Retrieve trusted-in connections"
+        description = "Retrieve trusted-in connections",
+        customSynopsis = "dropfile connections trusted-in",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class TrustedInCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustInResponseDTO>> {
 

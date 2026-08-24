@@ -13,7 +13,11 @@ import java.util.List;
 @CommandLine.Command(
         name = "trusted-out",
         aliases = {"out", "o"},
-        description = "Retrieve trusted-out connections"
+        description = "Retrieve trusted-out connections",
+        customSynopsis = "dropfile connections trusted-out",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class TrustedOutCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustOutResponseDTO>> {
 

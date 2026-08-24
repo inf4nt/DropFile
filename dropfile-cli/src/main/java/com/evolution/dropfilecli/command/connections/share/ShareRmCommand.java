@@ -9,7 +9,13 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "rm",
-        description = "Remove shared file"
+        description = "Remove shared file",
+        customSynopsis = {
+                "dropfile connections share rm <id>",
+                "dropfile connections share rm --all"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class ShareRmCommand extends AbstractCommandHttpHandler<Void> {
 

@@ -9,7 +9,11 @@ import java.net.http.HttpResponse;
 @Component
 @CommandLine.Command(
         name = "rm",
-        description = "Remove access key"
+        description = "Remove access key",
+        customSynopsis = {
+                "dropfile connections access rm <id>",
+                "dropfile connections access rm --all"
+        }
 )
 public class AccessRmCommand extends AbstractCommandHttpHandler<Void> {
 

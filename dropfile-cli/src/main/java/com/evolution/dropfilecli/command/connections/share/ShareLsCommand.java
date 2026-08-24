@@ -12,7 +12,11 @@ import java.util.List;
 @Component
 @CommandLine.Command(
         name = "ls",
-        description = "Retrieve shared files"
+        description = "Retrieve shared files",
+        customSynopsis = "dropfile connections share ls [options]",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        mixinStandardHelpOptions = true
 )
 public class ShareLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsShareLsResponseDTO>> {
 

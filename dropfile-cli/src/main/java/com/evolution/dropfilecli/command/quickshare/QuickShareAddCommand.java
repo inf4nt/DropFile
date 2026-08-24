@@ -11,7 +11,11 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "add"
+        name = "add",
+        description = "Add a new file to quickshare",
+        customSynopsis = "dropfile quickshare add <file> [options]",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 

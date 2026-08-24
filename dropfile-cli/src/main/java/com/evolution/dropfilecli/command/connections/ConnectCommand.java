@@ -15,7 +15,13 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "connect",
         aliases = {"c"},
-        description = "Perform connection to the given address"
+        description = "Perform connection to the given address",
+        customSynopsis = {
+                "dropfile connections connect <address> <access-key> [options]",
+                "dropfile connections connect 192.168.1.3:28282 top_secret"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 

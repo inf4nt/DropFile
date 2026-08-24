@@ -5,7 +5,6 @@ import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.evolution.dropfilecli.util.ConsoleQrPrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
@@ -17,7 +16,11 @@ import java.util.Optional;
 @Component
 @CommandLine.Command(
         name = "show",
-        description = "Retrieve quickshare file information"
+        description = "Retrieve quickshare file information",
+        customSynopsis = "dropfile quickshare show <id> [options]",
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n",
+        sortOptions = false
 )
 public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 
