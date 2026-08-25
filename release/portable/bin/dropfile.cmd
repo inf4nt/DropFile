@@ -31,8 +31,8 @@ java ^
         "-XX:ActiveProcessorCount=%DROPFILE_CLI_CPU_COUNT%" ^
         "-Xmx%DROPFILE_CLI_RAM_MB_XMX%m" ^
         "-Xms%DROPFILE_CLI_RAM_MB_XMS%m" ^
+        "-Dspring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
+        "-Ddropfile.daemon.daemon-secrets.directory=%DROPFILE_DAEMON_DAEMON_SECRETS_DIRECTORY%" ^
+        "-Ddropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
         -jar "%JAR_PATH%" ^
-        "--spring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
-        "--dropfile.daemon.daemon-secrets.directory=%DROPFILE_DAEMON_DAEMON_SECRETS_DIRECTORY%" ^
-        "--dropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
         %*

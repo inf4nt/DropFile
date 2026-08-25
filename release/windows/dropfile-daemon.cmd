@@ -26,11 +26,11 @@ IF NOT DEFINED DROPFILE_DAEMON_RAM_MB_XMS (
 )
 
 "%JAVA_PATH%" ^
-         -Dlogging.path="%LOG_PATH%" ^
+        "-Dlogging.path=%LOG_PATH%" ^
+        "-Dspring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
+        "-Ddropfile.daemon.application-home.directory=%DROPFILE_DAEMON_APPLICATION_HOME_DIRECTORY%" ^
         "-XX:ActiveProcessorCount=%DROPFILE_DAEMON_CPU_COUNT%" ^
         "-Xmx%DROPFILE_DAEMON_RAM_MB_XMX%m" ^
         "-Xms%DROPFILE_DAEMON_RAM_MB_XMS%m" ^
-         -jar "%JAR_PATH%" ^
-         "--spring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
-         "--dropfile.daemon.application-home.directory=%DROPFILE_DAEMON_APPLICATION_HOME_DIRECTORY%" ^
-         %*
+        -jar "%JAR_PATH%" ^
+        %*
