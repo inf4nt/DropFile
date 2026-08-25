@@ -26,7 +26,7 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Option(names = {"--current"}, description = "Disconnect current")
         private boolean current;
 
-        @CommandLine.Option(names = {"--all"}, description = "Disconnect all")
+        @CommandLine.Option(names = {"--all"}, description = "Disconnect all connections")
         private boolean all;
     }
 

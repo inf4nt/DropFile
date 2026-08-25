@@ -27,7 +27,7 @@ public class QuickShareRmCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Quickshare file id")
         private String id;
 
-        @CommandLine.Option(names = {"--all"})
+        @CommandLine.Option(names = {"--all"}, description = "Remove all quickshare files")
         private boolean all;
     }
 

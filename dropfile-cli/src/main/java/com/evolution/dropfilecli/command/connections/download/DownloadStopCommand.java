@@ -26,7 +26,7 @@ public class DownloadStopCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Operation id")
         private String id;
 
-        @CommandLine.Option(names = {"--all"}, description = "Stop all")
+        @CommandLine.Option(names = {"--all"}, description = "Stop all downloads")
         private boolean all;
     }
 
