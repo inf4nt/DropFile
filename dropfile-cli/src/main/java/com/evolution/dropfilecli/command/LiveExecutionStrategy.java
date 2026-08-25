@@ -1,4 +1,4 @@
-package com.evolution.dropfilecli.picocli;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.util.ProgressIndicator;
 import com.evolution.dropfilecli.util.Spinner;

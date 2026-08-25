@@ -1,7 +1,6 @@
-package com.evolution.dropfilecli.picocli;
+package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.DropFileCliApplication;
-import com.evolution.dropfilecli.command.RootCommand;
 import com.evolution.dropfilecli.util.Spinner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
