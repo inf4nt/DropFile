@@ -1,7 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
 import com.evolution.dropfilecli.command.AbstractCommandHandler;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -23,17 +22,12 @@ import java.time.Duration;
 public class StartCommand extends AbstractCommandHandler {
 
     @Override
-    public void handle() throws IOException {
+    public void handle() throws Exception {
         Path binPath = getBinPath();
         Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
                 : binPath.resolve("dropfile-daemon");
         if (Files.notExists(executable)) {
             throw new FileNotFoundException("Daemon start failed. No daemon executable file found %s"
-                    .formatted(executable.toAbsolutePath().toString())
-            );
-        }
-        if (Files.isExecutable(executable)) {
-            throw new IllegalStateException("Daemon start failed. File is not executable %s"
                     .formatted(executable.toAbsolutePath().toString())
             );
         }
@@ -53,8 +47,7 @@ public class StartCommand extends AbstractCommandHandler {
         return parent.resolve("bin").normalize();
     }
 
-    @SneakyThrows
-    private void execute(Path executablePath) {
+    private void execute(Path executablePath) throws IOException, InterruptedException {
         System.out.println("Executing " + executablePath.toString());
         ProcessBuilder pb = new ProcessBuilder(executablePath.toString());
 
