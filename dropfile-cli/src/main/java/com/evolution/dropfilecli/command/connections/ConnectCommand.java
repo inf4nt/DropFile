@@ -31,7 +31,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatu
     @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
-    @CommandLine.Option(names = {"-force", "--force", "-f"}, defaultValue = "false")
+    @CommandLine.Option(names = {"--force", "-f"}, defaultValue = "false")
     private boolean force;
 
     @Override

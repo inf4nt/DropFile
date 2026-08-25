@@ -28,7 +28,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     private String id;
 
     @CommandLine.Option(
-            names = {"-qrcode", "--qrcode", "-qr"},
+            names = {"--qrcode"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",
@@ -37,7 +37,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     private boolean qrCode;
 
     @CommandLine.Option(
-            names = {"-qrcode-type", "--qrcode-type", "-qt"},
+            names = {"--qrcode-type"},
             description = "Generate QRCode: ${COMPLETION-CANDIDATES}",
             converter = QRCodeTypeEnumConverter.class
     )

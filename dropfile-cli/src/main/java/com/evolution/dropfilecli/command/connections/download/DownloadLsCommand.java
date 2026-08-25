@@ -20,7 +20,7 @@ import java.util.List;
 public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 
     @CommandLine.Option(
-            names = {"-s", "-status", "--status"},
+            names = {"--status", "-s"},
             description = "Filter by status: ${COMPLETION-CANDIDATES}",
             converter = StatusEnumConverter.class
     )

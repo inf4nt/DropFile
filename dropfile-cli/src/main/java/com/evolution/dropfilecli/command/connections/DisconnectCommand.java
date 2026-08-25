@@ -23,10 +23,10 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Disconnect by fingerprint")
         private String fingerprint;
 
-        @CommandLine.Option(names = {"-current", "--current"}, description = "Disconnect current")
+        @CommandLine.Option(names = {"--current"}, description = "Disconnect current")
         private boolean current;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "Disconnect all")
+        @CommandLine.Option(names = {"--all"}, description = "Disconnect all")
         private boolean all;
     }
 

@@ -25,11 +25,11 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     @CommandLine.Parameters(index = "0", description = "File path")
     private File file;
 
-    @CommandLine.Option(names = {"-secret", "--secret"}, description = "Secret password")
+    @CommandLine.Option(names = {"--secret"}, description = "Secret password")
     private String secret;
 
     @CommandLine.Option(
-            names = {"-single-use", "--single-use"},
+            names = {"--single-use"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",
@@ -38,7 +38,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     private boolean singleUse;
 
     @CommandLine.Option(
-            names = {"-secure", "--secure"},
+            names = {"--secure"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",
@@ -49,7 +49,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     private boolean secure;
 
     @CommandLine.Option(
-            names = {"-qrcode", "--qrcode", "-qr"},
+            names = {"--qrcode"},
             arity = "0..1",
             defaultValue = "true",
             fallbackValue = "true",
@@ -76,8 +76,8 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
                     .getSubcommands()
                     .get("show")
                     .execute(
-                            "-id", object.id(),
-                            "-qrcode"
+                            object.id(),
+                            "--qrcode"
                     );
         } else {
             super.print(object);

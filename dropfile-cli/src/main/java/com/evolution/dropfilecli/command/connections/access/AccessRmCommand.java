@@ -24,7 +24,7 @@ public class AccessRmCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Access key id")
         private String id;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "rm all access keys")
+        @CommandLine.Option(names = {"--all"}, description = "rm all access keys")
         private boolean all;
     }
 

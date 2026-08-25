@@ -23,7 +23,7 @@ public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
         @CommandLine.Parameters(index = "0", description = "Revoke by fingerprint")
         private String fingerprint;
 
-        @CommandLine.Option(names = {"-all", "--all"}, description = "Revoke all")
+        @CommandLine.Option(names = {"--all"}, description = "Revoke all")
         private boolean all;
     }
 
