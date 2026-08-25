@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
 import com.evolution.dropfilecli.command.connections.browse.BrowseCommand;
 import com.evolution.dropfilecli.command.connections.download.DownloadCommand;
@@ -28,13 +28,6 @@ import picocli.CommandLine;
                 TrafficCommand.class
         }
 )
-public class ConnectionsCommand implements SimpleCommandHandler {
+public class ConnectionsCommand extends AbstractCommandHandler {
 
-    @CommandLine.Spec
-    private CommandLine.Model.CommandSpec spec;
-
-    @Override
-    public void handle() {
-        spec.commandLine().usage(System.out);
-    }
 }

@@ -15,8 +15,7 @@ import java.util.List;
         description = "Retrieve download processes",
         customSynopsis = "dropfile connections download ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownloadLsDTO.Response>> {
 

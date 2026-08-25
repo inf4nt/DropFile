@@ -14,8 +14,7 @@ import java.net.http.HttpResponse;
         description = "Daemon status",
         customSynopsis = "dropfile daemon status",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class RetrieveInfoCommand extends AbstractCommandHttpHandler<DaemonInfoResponseDTO> {
 

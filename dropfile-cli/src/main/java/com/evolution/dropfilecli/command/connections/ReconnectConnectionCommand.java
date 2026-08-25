@@ -14,8 +14,7 @@ import java.net.http.HttpResponse;
         description = "Reconnect to the current connection and rotate session keys",
         customSynopsis = "dropfile connections reconnect",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
 

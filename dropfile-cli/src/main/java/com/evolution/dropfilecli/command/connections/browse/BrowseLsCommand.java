@@ -16,8 +16,7 @@ import java.util.List;
         description = "Retrieve remote files",
         customSynopsis = "dropfile connections browse ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class BrowseLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsBrowseLsResponseDTO>> {
 

@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,13 +17,6 @@ import picocli.CommandLine;
                 SystemGarbageCollectorCommand.class
         }
 )
-public class DaemonCommand implements SimpleCommandHandler {
+public class DaemonCommand extends AbstractCommandHandler {
 
-    @CommandLine.Spec
-    private CommandLine.Model.CommandSpec spec;
-
-    @Override
-    public void handle() {
-        spec.commandLine().usage(System.out);
-    }
 }

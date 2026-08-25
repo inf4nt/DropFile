@@ -5,6 +5,7 @@ import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
 import com.evolution.dropfilecli.command.quickshare.QuickShareCommand;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
+import com.evolution.dropfilecli.util.Spinner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -14,15 +15,15 @@ import picocli.CommandLine;
 @RequiredArgsConstructor
 @Component
 @CommandLine.Command(
+        versionProvider = ManifestVersionProvider.class,
         mixinStandardHelpOptions = true,
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                QuickShareCommand.class,
-                VersionCommand.class
+                QuickShareCommand.class
         }
 )
-public class RootCommand implements SimpleCommandHandler {
+public class RootCommand implements Runnable {
 
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
@@ -35,7 +36,9 @@ public class RootCommand implements SimpleCommandHandler {
 
     @SneakyThrows
     @Override
-    public void handle() {
+    public void run() {
+        Spinner.stop();
+
         System.out.println("""
                 ░███████                                      ░████ ░██░██           \s
                 ░██   ░██                                    ░██       ░██           \s

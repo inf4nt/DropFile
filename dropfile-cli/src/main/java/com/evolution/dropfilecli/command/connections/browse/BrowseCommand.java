@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.connections.browse;
 
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -14,13 +14,6 @@ import picocli.CommandLine;
                 BrowseLsCommand.class
         }
 )
-public class BrowseCommand implements SimpleCommandHandler {
+public class BrowseCommand extends AbstractCommandHandler {
 
-    @CommandLine.Spec
-    private CommandLine.Model.CommandSpec spec;
-
-    @Override
-    public void handle() {
-        spec.commandLine().usage(System.out);
-    }
 }

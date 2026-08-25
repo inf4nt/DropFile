@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-public abstract class AbstractCommandHttpHandler<TR> implements SimpleCommandHandler {
+public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHandler {
 
     @CommandLine.Option(names = {"--table"}, description = "Print table", defaultValue = "false")
     protected boolean table;

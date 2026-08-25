@@ -12,8 +12,7 @@ import java.net.http.HttpResponse;
         description = "Triggers internal garbage collection and cleanup of stale state",
         customSynopsis = "dropfile daemon gc",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class SystemGarbageCollectorCommand extends AbstractCommandHttpHandler<Void> {
 

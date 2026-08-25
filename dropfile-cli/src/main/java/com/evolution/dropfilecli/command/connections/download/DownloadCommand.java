@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.connections.download;
 
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -15,13 +15,6 @@ import picocli.CommandLine;
                 DownloadRmCommand.class
         }
 )
-public class DownloadCommand implements SimpleCommandHandler {
+public class DownloadCommand extends AbstractCommandHandler {
 
-    @CommandLine.Spec
-    private CommandLine.Model.CommandSpec spec;
-
-    @Override
-    public void handle() {
-        spec.commandLine().usage(System.out);
-    }
 }

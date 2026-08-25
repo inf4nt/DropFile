@@ -12,8 +12,7 @@ import java.net.http.HttpResponse;
         description = "Daemon shutdown",
         customSynopsis = "dropfile daemon shutdown",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class ShutdownCommand extends AbstractCommandHttpHandler<Void> {
 

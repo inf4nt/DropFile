@@ -31,7 +31,7 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
         CompletableFuture.runAsync(() -> {
             CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
             commandLine.setCommandName("dropfile");
-            commandLine.setUnmatchedArgumentsAllowed(true);
+//            commandLine.setUnmatchedArgumentsAllowed(true);
 
             CommandLine.IParameterExceptionHandler defaultHandler = commandLine.getParameterExceptionHandler();
 

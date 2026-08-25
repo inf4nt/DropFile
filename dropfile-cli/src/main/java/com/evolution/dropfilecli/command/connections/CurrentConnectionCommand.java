@@ -14,8 +14,7 @@ import java.net.http.HttpResponse;
         description = "Retrieve current connection",
         customSynopsis = "dropfile connections current",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class CurrentConnectionCommand extends AbstractCommandHttpHandler<HandshakeApiTrustOutResponseDTO> {
 

@@ -16,8 +16,7 @@ import java.util.List;
         description = "Retrieve trusted-in connections",
         customSynopsis = "dropfile connections trusted-in",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class TrustedInCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustInResponseDTO>> {
 

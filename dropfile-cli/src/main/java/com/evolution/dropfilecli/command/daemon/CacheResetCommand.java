@@ -12,8 +12,7 @@ import java.net.http.HttpResponse;
         description = "Daemon cache reset",
         customSynopsis = "dropfile daemon cache-reset",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class CacheResetCommand extends AbstractCommandHttpHandler<Void> {
 

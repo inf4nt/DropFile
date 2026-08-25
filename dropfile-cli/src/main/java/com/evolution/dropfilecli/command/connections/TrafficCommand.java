@@ -15,8 +15,7 @@ import java.util.List;
         description = "Retrieve connection traffic",
         customSynopsis = "dropfile connections traffic",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 
 public class TrafficCommand extends AbstractCommandHttpHandler<List<TunnelTrafficResponseDTO>> {

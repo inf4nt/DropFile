@@ -16,8 +16,7 @@ import java.util.List;
         description = "Retrieve trusted-out connections",
         customSynopsis = "dropfile connections trusted-out",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class TrustedOutCommand extends AbstractCommandHttpHandler<List<HandshakeApiTrustOutResponseDTO>> {
 

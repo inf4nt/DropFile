@@ -15,8 +15,7 @@ import java.util.List;
         description = "Retrieve shared files",
         customSynopsis = "dropfile connections share ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
 public class ShareLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsShareLsResponseDTO>> {
 

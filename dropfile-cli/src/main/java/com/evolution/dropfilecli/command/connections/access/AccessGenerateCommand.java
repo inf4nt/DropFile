@@ -13,8 +13,7 @@ import java.net.http.HttpResponse;
         name = "generate",
         aliases = {"g"},
         description = "Generate connection access key command",
-        customSynopsis = "dropfile connections access generate",
-        mixinStandardHelpOptions = true
+        customSynopsis = "dropfile connections access generate"
 )
 public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnectionsAccessInfoResponseDTO> {
 

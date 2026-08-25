@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.daemon;
 
-import com.evolution.dropfilecli.command.SimpleCommandHandler;
+import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -18,10 +18,9 @@ import java.time.Duration;
         description = "Daemon start",
         customSynopsis = "dropfile daemon start",
         parameterListHeading = "%nRequired parameters:%n",
-        optionListHeading = "%nOptional parameters:%n",
-        mixinStandardHelpOptions = true
+        optionListHeading = "%nOptional parameters:%n"
 )
-public class StartCommand implements SimpleCommandHandler {
+public class StartCommand extends AbstractCommandHandler {
 
     @Override
     public void handle() throws IOException {

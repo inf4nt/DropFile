@@ -13,8 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls",
         description = "Retrieve quickshare files",
-        customSynopsis = "dropfile quickshare ls [options]",
-        mixinStandardHelpOptions = true
+        customSynopsis = "dropfile quickshare ls [options]"
 )
 public class QuickShareLsCommand extends AbstractCommandHttpHandler<List<ApiQuickShareLsResponseDTO>> {
 
