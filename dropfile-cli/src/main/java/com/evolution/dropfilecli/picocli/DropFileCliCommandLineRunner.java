@@ -93,7 +93,7 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
         rootSpec.addOption(CommandLine.Model.OptionSpec.builder("--ignore-error")
                 .type(boolean.class)
-                .description("Continue polling even if the command encounters an error")
+                .description("Continue --live polling even if the command encounters an error")
                 .scopeType(CommandLine.ScopeType.INHERIT)
                 .build());
 
