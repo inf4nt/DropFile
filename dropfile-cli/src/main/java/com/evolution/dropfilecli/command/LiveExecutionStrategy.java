@@ -51,13 +51,12 @@ public class LiveExecutionStrategy implements CommandLine.IExecutionStrategy {
                 try {
                     latestStatusCode = delegateCall(parseResult);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     if (!isIgnoreError(parseResult)) {
-                        renderScreen(originalOut, outStream.toString(), originalErr, errStream.toString());
                         throw e;
                     }
+                    e.printStackTrace();
+                    renderScreen(originalOut, outStream.toString(), originalErr, errStream.toString());
                 }
-                renderScreen(originalOut, outStream.toString(), originalErr, errStream.toString());
             } finally {
                 System.setOut(originalOut);
                 System.setErr(originalErr);
@@ -66,6 +65,7 @@ public class LiveExecutionStrategy implements CommandLine.IExecutionStrategy {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 break;
             }
         }

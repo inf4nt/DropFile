@@ -41,7 +41,6 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
             commandLine.setExecutionStrategy(liveExecutionStrategy);
 
-
             int execute = commandLine.execute(args);
             DropFileCliApplication.exit(execute);
         }, executorService).join();
