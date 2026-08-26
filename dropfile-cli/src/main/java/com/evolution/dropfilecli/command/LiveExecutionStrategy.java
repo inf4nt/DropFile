@@ -150,19 +150,12 @@ public class LiveExecutionStrategy implements CommandLine.IExecutionStrategy {
     }
 
     private boolean isLive(CommandLine.ParseResult parseResult) {
-        if (parseResult == null) {
-            return false;
-        }
-
-        return parseResult.asCommandLineList().stream()
+        return parseResult != null && parseResult.asCommandLineList().stream()
                 .anyMatch(cmd -> cmd.getParseResult().hasMatchedOption("live"));
     }
 
     private boolean isIgnoreError(CommandLine.ParseResult parseResult) {
-        if (parseResult == null) {
-            return false;
-        }
-        return parseResult.asCommandLineList().stream()
+        return parseResult != null && parseResult.asCommandLineList().stream()
                 .anyMatch(cmd -> cmd.getParseResult().hasMatchedOption("ignore-error"));
     }
 }

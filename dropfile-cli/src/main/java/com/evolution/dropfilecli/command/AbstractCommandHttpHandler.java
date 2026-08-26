@@ -18,11 +18,8 @@ import java.util.stream.StreamSupport;
 
 public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHandler {
 
-    @CommandLine.Option(names = {"--table"}, description = "Print table", defaultValue = "false")
-    protected boolean table;
-
-    @CommandLine.Option(names = {"--list"}, description = "Print list", defaultValue = "false")
-    protected boolean list;
+    @CommandLine.Spec
+    private CommandLine.Model.CommandSpec spec;
 
     protected DaemonClient daemonClient;
 
@@ -104,9 +101,9 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
     }
 
     protected void print(TR object) {
-        if (table) {
+        if (isTable()) {
             printTable(object);
-        } else if (list) {
+        } else if (isList()) {
             printList(object);
         } else {
             PrintModeEnum printMode = getPrintMode();
@@ -140,5 +137,17 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
     protected enum PrintModeEnum {
         TABLE,
         LIST
+    }
+
+    private boolean isTable() {
+        CommandLine.ParseResult parseResult = spec.commandLine().getParseResult();
+        return parseResult != null && parseResult.asCommandLineList().stream()
+                .anyMatch(cmd -> cmd.getParseResult().hasMatchedOption("table"));
+    }
+
+    private boolean isList() {
+        CommandLine.ParseResult parseResult = spec.commandLine().getParseResult();
+        return parseResult != null && parseResult.asCommandLineList().stream()
+                .anyMatch(cmd -> cmd.getParseResult().hasMatchedOption("list"));
     }
 }

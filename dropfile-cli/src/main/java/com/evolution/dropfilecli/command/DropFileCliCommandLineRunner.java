@@ -37,8 +37,6 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
 
             addGlobalOptions(commandLine);
 
-            hideInheritedOptionsFromHelp(commandLine);
-
             commandLine.setExecutionStrategy(liveExecutionStrategy);
 
             int execute = commandLine.execute(args);
@@ -52,7 +50,6 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
             Spinner.stop();
             return defaultHandler.handleParseException(ex, arr);
         });
-
     }
 
     private void addExecutionExceptionHandler(CommandLine commandLine) {
@@ -71,55 +68,63 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
             }
 
             private boolean isStacktraceEnabled(CommandLine.ParseResult parseResult) {
-                if (parseResult == null) {
-                    return false;
-                }
-                return parseResult.asCommandLineList().stream()
+                return parseResult != null && parseResult.asCommandLineList().stream()
                         .anyMatch(cmd -> cmd.getParseResult().hasMatchedOption("stacktrace"));
             }
         });
     }
 
     private void addGlobalOptions(CommandLine commandLine) {
-        CommandLine.Model.CommandSpec rootSpec = commandLine.getCommandSpec();
-
-        rootSpec.addOption(CommandLine.Model.OptionSpec.builder("--live")
-                .type(boolean.class)
-                .description("Run this command in live update mode")
-                .scopeType(CommandLine.ScopeType.INHERIT)
-                .build());
-
-        rootSpec.addOption(CommandLine.Model.OptionSpec.builder("--ignore-error")
-                .type(boolean.class)
-                .description("Continue --live polling even if the command encounters an error")
-                .scopeType(CommandLine.ScopeType.INHERIT)
-                .build());
-
-        rootSpec.addOption(CommandLine.Model.OptionSpec.builder("--stacktrace")
-                .type(boolean.class)
-                .description("Show detailed information about error")
-                .scopeType(CommandLine.ScopeType.INHERIT)
-                .build());
+        addOptionsToCommand(commandLine.getCommandSpec(), false);
+        addOptionsToSubcommandsRecursively(commandLine, true);
     }
 
-    public static void hideInheritedOptionsFromHelp(CommandLine commandLine) {
-//        commandLine.getHelpSectionMap().put(
-//                CommandLine.Model.UsageMessageSpec.SECTION_KEY_OPTION_LIST,
-//                help -> {
-//                    CommandLine.Help.Layout layout = help.createDefaultLayout();
-//
-//                    for (CommandLine.Model.OptionSpec opt : help.commandSpec().options()) {
-//                        if (!opt.inherited() && !opt.hidden()) {
-//                            layout.addOption(opt, help.parameterLabelRenderer());
-//                        }
-//                    }
-//
-//                    return layout.toString();
-//                }
-//        );
-//
-//        for (CommandLine sub : commandLine.getSubcommands().values()) {
-//            hideInheritedOptionsFromHelp(sub);
-//        }
+    private void addOptionsToSubcommandsRecursively(CommandLine commandLine, boolean hidden) {
+        for (CommandLine subCmd : commandLine.getSubcommands().values()) {
+            addOptionsToCommand(subCmd.getCommandSpec(), hidden);
+            addOptionsToSubcommandsRecursively(subCmd, hidden);
+        }
+    }
+
+    private void addOptionsToCommand(CommandLine.Model.CommandSpec spec, boolean hidden) {
+        if (spec.findOption("--live") == null) {
+            spec.addOption(CommandLine.Model.OptionSpec.builder("--live")
+                    .type(boolean.class)
+                    .description("Run this command in live update mode")
+                    .hidden(hidden)
+                    .build());
+        }
+
+        if (spec.findOption("--ignore-error") == null) {
+            spec.addOption(CommandLine.Model.OptionSpec.builder("--ignore-error")
+                    .type(boolean.class)
+                    .description("Continue --live polling even if the command encounters an error")
+                    .hidden(hidden)
+                    .build());
+        }
+
+        if (spec.findOption("--stacktrace") == null) {
+            spec.addOption(CommandLine.Model.OptionSpec.builder("--stacktrace")
+                    .type(boolean.class)
+                    .description("Show detailed information about error")
+                    .hidden(hidden)
+                    .build());
+        }
+
+        if (spec.findOption("--list") == null) {
+            spec.addOption(CommandLine.Model.OptionSpec.builder("--list")
+                    .type(boolean.class)
+                    .description("Print result as a list")
+                    .hidden(hidden)
+                    .build());
+        }
+
+        if (spec.findOption("--table") == null) {
+            spec.addOption(CommandLine.Model.OptionSpec.builder("--table")
+                    .type(boolean.class)
+                    .description("Print result as a table")
+                    .hidden(hidden)
+                    .build());
+        }
     }
 }
