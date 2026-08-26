@@ -50,6 +50,7 @@ public class LiveExecutionStrategy implements CommandLine.IExecutionStrategy {
 
                 try {
                     latestStatusCode = delegateCall(parseResult);
+                    renderScreen(originalOut, outStream.toString(), originalErr, errStream.toString());
                 } catch (Exception e) {
                     if (!isIgnoreError(parseResult)) {
                         throw e;

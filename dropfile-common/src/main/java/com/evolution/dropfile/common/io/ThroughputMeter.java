@@ -16,7 +16,7 @@ public class ThroughputMeter {
 
     public void add(long size) {
         if (size <= 0) {
-            throw new IllegalArgumentException("Size must be positive");
+            return;
         }
 
         samples.add(new ChunkSample(System.currentTimeMillis(), size));

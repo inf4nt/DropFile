@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record ApiQuickShareLsResponseDTO(String id,
-                                         String resourcePath,
+                                         String resource,
                                          String size,
                                          String secret,
                                          String relative,

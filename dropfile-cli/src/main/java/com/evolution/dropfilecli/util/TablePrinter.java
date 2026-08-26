@@ -14,7 +14,9 @@ import java.util.stream.IntStream;
 
 public class TablePrinter {
 
-    private static final int MAX_TABLE_WIDTH = 190;
+    private static final int INSTANT_WIDTH = 10;
+
+    private static final int MAX_TABLE_WIDTH = 140;
 
     private static final int MAX_LINES = 5;
 
@@ -45,13 +47,18 @@ public class TablePrinter {
         for (T item : list) {
             String[] row = new String[colCount];
             for (int i = 0; i < colCount; i++) {
-                Object val = fields[i].get(item);
+                Object valOriginal = fields[i].get(item);
+                Object val = valOriginal;
                 if (val instanceof Instant instant) {
                     val = DateUtils.FORMATTER.format(instant);
                 }
                 String strVal = (val == null) ? "" : val.toString();
                 row[i] = strVal;
-                intrinsicWidths[i] = Math.max(intrinsicWidths[i], strVal.length() + PADDING);
+                if (valOriginal instanceof Instant) {
+                    intrinsicWidths[i] = Math.max(intrinsicWidths[i], INSTANT_WIDTH + PADDING);
+                } else {
+                    intrinsicWidths[i] = Math.max(intrinsicWidths[i], strVal.length() + PADDING);
+                }
             }
             rows.add(row);
         }
