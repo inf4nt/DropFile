@@ -16,7 +16,7 @@ public class TablePrinter {
 
     private static final int INSTANT_WIDTH = 10;
 
-    private static final int MAX_TABLE_WIDTH = 140;
+    private static final int MAX_TABLE_WIDTH = 190;
 
     private static final int MAX_LINES = 5;
 
@@ -25,7 +25,7 @@ public class TablePrinter {
     @SneakyThrows
     public static <T> String get(List<T> list) {
         if (list == null || list.isEmpty()) {
-            return "No values present";
+            return null;
         }
 
         Class<?> clazz = list.getFirst().getClass();

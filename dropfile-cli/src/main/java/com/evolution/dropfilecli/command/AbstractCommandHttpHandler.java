@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.lang.reflect.ParameterizedType;
@@ -131,7 +132,7 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
         }
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
         String print = TablePrinter.get(data);
-        System.out.println(print);
+        System.out.println(StringUtils.hasText(print) ? print : "No values present");
     }
 
     protected enum PrintModeEnum {
