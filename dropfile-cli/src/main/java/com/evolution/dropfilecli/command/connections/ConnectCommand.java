@@ -1,11 +1,8 @@
 package com.evolution.dropfilecli.command.connections;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
@@ -23,7 +20,7 @@ import java.net.http.HttpResponse;
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
+public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
@@ -40,11 +37,5 @@ public class ConnectCommand extends AbstractCommandHttpHandler<ApiHandshakeStatu
             return daemonClient.handshake(CommonUtils.toURI(address), key, force);
         }
         return daemonClient.handshakeReconnect(CommonUtils.toURI(address));
-    }
-
-    @Override
-    protected TypeReference<ApiHandshakeStatusResponseDTO> getTypeReference() {
-        return new TypeReference<ApiHandshakeStatusResponseDTO>() {
-        };
     }
 }

@@ -1,8 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfile.common.dto.ApiHandshakeStatusResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -16,16 +14,10 @@ import java.net.http.HttpResponse;
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<ApiHandshakeStatusResponseDTO> {
+public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.handshakeCurrentReconnect();
-    }
-
-    @Override
-    protected TypeReference<ApiHandshakeStatusResponseDTO> getTypeReference() {
-        return new TypeReference<ApiHandshakeStatusResponseDTO>() {
-        };
     }
 }

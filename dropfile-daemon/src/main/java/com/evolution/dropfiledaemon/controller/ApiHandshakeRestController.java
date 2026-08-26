@@ -18,18 +18,18 @@ public class ApiHandshakeRestController {
     private final HandshakeFacade handshakeFacade;
 
     @PostMapping
-    public ApiHandshakeStatusResponseDTO handshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
-        return apiHandshakeFacade.handshake(requestDTO);
+    public void handshake(@RequestBody ApiHandshakeRequestDTO requestDTO) {
+        apiHandshakeFacade.handshake(requestDTO);
     }
 
     @PostMapping("/reconnect")
-    public ApiHandshakeStatusResponseDTO handshakeReconnect(@RequestBody ApiHandshakeReconnectRequestDTO requestDTO) {
-        return apiHandshakeFacade.handshakeReconnect(requestDTO);
+    public void handshakeReconnect(@RequestBody ApiHandshakeReconnectRequestDTO requestDTO) {
+        apiHandshakeFacade.handshakeReconnect(requestDTO);
     }
 
     @PostMapping("/current/reconnect")
-    public ApiHandshakeStatusResponseDTO handshakeCurrentReconnect() {
-        return apiHandshakeFacade.handshakeCurrentReconnect();
+    public void handshakeCurrentReconnect() {
+        apiHandshakeFacade.handshakeCurrentReconnect();
     }
 
     @GetMapping("/trust/in")
@@ -71,5 +71,4 @@ public class ApiHandshakeRestController {
     public void disconnectAll() {
         apiHandshakeFacade.disconnectAll();
     }
-
 }
