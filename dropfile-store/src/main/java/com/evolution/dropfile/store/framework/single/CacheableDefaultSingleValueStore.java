@@ -6,8 +6,8 @@ public class CacheableDefaultSingleValueStore<V>
         extends DefaultSingleValueStore<V>
         implements CacheableSingleValueStore<V> {
 
-    public CacheableDefaultSingleValueStore(String storeName, CacheableKeyValueStore<V> store) {
-        super(storeName, store);
+    public CacheableDefaultSingleValueStore(CacheableKeyValueStore<V> store) {
+        super(store);
     }
 
     @Override

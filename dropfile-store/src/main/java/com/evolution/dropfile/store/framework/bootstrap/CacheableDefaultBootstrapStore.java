@@ -6,9 +6,8 @@ public class CacheableDefaultBootstrapStore<V>
         extends DefaultBootstrapStore<V>
         implements CacheableBootstrapStore<V> {
 
-    public CacheableDefaultBootstrapStore(String storeName,
-                                          CacheableKeyValueStore<V> store) {
-        super(storeName, store);
+    public CacheableDefaultBootstrapStore(CacheableKeyValueStore<V> store) {
+        super(store);
     }
 
     @Override

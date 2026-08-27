@@ -8,9 +8,6 @@ public class DaemonSecretStoreCacheable
         implements DaemonSecretStore {
 
     public DaemonSecretStoreCacheable(CacheableKeyValueStore<DaemonSecret> store) {
-        super(
-                DaemonSecretStore.class.getSimpleName(),
-                store
-        );
+        super(store);
     }
 }

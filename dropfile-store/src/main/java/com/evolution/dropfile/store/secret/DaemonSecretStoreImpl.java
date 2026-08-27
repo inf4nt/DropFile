@@ -8,9 +8,6 @@ public class DaemonSecretStoreImpl
         implements DaemonSecretStore {
 
     public DaemonSecretStoreImpl(KeyValueStore<DaemonSecret> store) {
-        super(
-                DaemonSecretStore.class.getSimpleName(),
-                store
-        );
+        super(store);
     }
 }
