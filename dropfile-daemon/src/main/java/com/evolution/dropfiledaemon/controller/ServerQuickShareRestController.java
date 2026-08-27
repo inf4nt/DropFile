@@ -151,7 +151,7 @@ public class ServerQuickShareRestController {
             response.setStatus(200);
 
             OutputStream outputStream = response.getOutputStream();
-            streamingArchiveService.insecureCompressedZipFile(resourcePath, outputStream);
+            streamingArchiveService.insecureCompressedFile(resourcePath, outputStream);
             outputStream.flush();
             return null;
         });
@@ -200,7 +200,7 @@ public class ServerQuickShareRestController {
             response.setStatus(200);
 
             OutputStream outputStream = response.getOutputStream();
-            streamingArchiveService.insecureZipFile(resourcePath, outputStream);
+            streamingArchiveService.insecureFile(resourcePath, outputStream);
             outputStream.flush();
             return null;
         });

@@ -92,7 +92,7 @@ public class StreamingArchiveService {
         outerZos.close();
     }
 
-    public void insecureCompressedZipFile(Path source, OutputStream outputStreamArgument) throws IOException {
+    public void insecureCompressedFile(Path source, OutputStream outputStreamArgument) throws IOException {
         if (!Files.isRegularFile(source)) {
             throw new IllegalArgumentException("Source is not a regular file: " + source);
         }
@@ -128,7 +128,7 @@ public class StreamingArchiveService {
         gzipOut.close();
     }
 
-    public void insecureZipFile(Path source, OutputStream outputStreamArgument) throws IOException {
+    public void insecureFile(Path source, OutputStream outputStreamArgument) throws IOException {
         if (!Files.isRegularFile(source)) {
             throw new IllegalArgumentException("Source is not a regular file: " + source);
         }
