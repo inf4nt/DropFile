@@ -2,18 +2,18 @@ package com.evolution.dropfile.store.download;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
 
-public interface FileDownloadEntryStore
-        extends KeyValueStore<DownloadFileEntry> {
+public interface FileDownloadStore
+        extends KeyValueStore<DownloadFile> {
 
     @Override
-    default void validate(String key, DownloadFileEntry value) {
-        DownloadFileEntry downloadFileEntry = get(key)
+    default void validate(String key, DownloadFile value) {
+        DownloadFile downloadFile = get(key)
                 .map(it -> it.getValue())
                 .orElse(null);
-        if (downloadFileEntry == null) {
+        if (downloadFile == null) {
             return;
         }
-        DownloadFileEntry.DownloadFileEntryStatus currentStatus = downloadFileEntry.status();
+        DownloadFile.DownloadFileEntryStatus currentStatus = downloadFile.status();
         if (!canTransitionTo(currentStatus)) {
             throw new IllegalArgumentException("FileDownloadEntryStore action failed. Status transition failed. Key %s status from %s to %s"
                     .formatted(key, currentStatus, value.status())
@@ -21,7 +21,7 @@ public interface FileDownloadEntryStore
         }
     }
 
-    private boolean canTransitionTo(DownloadFileEntry.DownloadFileEntryStatus current) {
+    private boolean canTransitionTo(DownloadFile.DownloadFileEntryStatus current) {
         return switch (current) {
             case DOWNLOADING -> true;
             case COMPLETED, ERROR, INTERRUPTED, STOPPED -> false;

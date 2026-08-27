@@ -3,8 +3,8 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
-import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.share.ShareFile;
+import com.evolution.dropfile.store.share.ShareFileStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 public class ApiConnectionsShareFacade {
 
-    private final ShareFileEntryStore shareFileEntryStore;
+    private final ShareFileStore shareFileStore;
 
     @SneakyThrows
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) {
@@ -36,9 +36,9 @@ public class ApiConnectionsShareFacade {
         }
 
         String id = CommonUtils.random();
-        ShareFileEntry entry = shareFileEntryStore.save(
+        ShareFile entry = shareFileStore.save(
                 id,
-                new ShareFileEntry(
+                new ShareFile(
                         alias,
                         absoluteResourcePath.toFile().getCanonicalPath(),
                         absoluteResourcePath.toFile().length(),
@@ -49,7 +49,7 @@ public class ApiConnectionsShareFacade {
     }
 
     public List<ApiConnectionsShareLsResponseDTO> ls() {
-        return shareFileEntryStore.getAll()
+        return shareFileStore.getAll()
                 .entrySet()
                 .stream()
                 .map(it -> map(it.getKey(), it.getValue()))
@@ -57,21 +57,21 @@ public class ApiConnectionsShareFacade {
     }
 
     public void rm(String id) {
-        String key = shareFileEntryStore.getRequiredByKeyStartWith(id).getKey();
-        shareFileEntryStore.remove(key);
+        String key = shareFileStore.getRequiredByKeyStartWith(id).getKey();
+        shareFileStore.remove(key);
     }
 
     public void rmAll() {
-        shareFileEntryStore.removeAll();
+        shareFileStore.removeAll();
     }
 
-    private ApiConnectionsShareLsResponseDTO map(String id, ShareFileEntry shareFileEntry) {
+    private ApiConnectionsShareLsResponseDTO map(String id, ShareFile shareFile) {
         return new ApiConnectionsShareLsResponseDTO(
                 id,
-                shareFileEntry.alias(),
-                shareFileEntry.resourcePath(),
-                CommonUtils.toDisplaySize(shareFileEntry.size()),
-                shareFileEntry.created()
+                shareFile.alias(),
+                shareFile.resourcePath(),
+                CommonUtils.toDisplaySize(shareFile.size()),
+                shareFile.created()
         );
     }
 }

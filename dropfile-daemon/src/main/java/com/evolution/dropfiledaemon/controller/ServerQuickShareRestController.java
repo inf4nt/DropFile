@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.controller;
 
-import com.evolution.dropfile.store.quickshare.QuickShareEntry;
-import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
+import com.evolution.dropfile.store.quickshare.QuickShare;
+import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.service.StreamingArchiveService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,52 +34,52 @@ public class ServerQuickShareRestController {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final QuickShareEntryStore quickShareEntryStore;
+    private final QuickShareStore quickShareStore;
 
     private final StreamingArchiveService streamingArchiveService;
 
     @GetMapping("/{id}")
     public WebAsyncTask<Void> download(@PathVariable String id, HttpServletResponse response) throws IOException {
-        Map.Entry<String, QuickShareEntry> quickShareEntryEntry = quickShareEntryStore.getRequired(id);
-        QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
+        Map.Entry<String, QuickShare> quickShareEntryEntry = quickShareStore.getRequired(id);
+        QuickShare quickShare = quickShareEntryEntry.getValue();
 
-        if (quickShareEntry.expired()) {
+        if (quickShare.expired()) {
             throw new IllegalStateException("Quickshare file already expired %s".formatted(id));
         }
 
-        if (quickShareEntry.singleUse()) {
-            quickShareEntryStore.update(id, value -> value
+        if (quickShare.singleUse()) {
+            quickShareStore.update(id, value -> value
                     .withExpired(true)
                     .withUpdated(Instant.now())
             );
         }
 
-        if (quickShareEntry.secure()) {
-            if (quickShareEntry.directory()) {
+        if (quickShare.secure()) {
+            if (quickShare.directory()) {
                 return getSecureDirectory(quickShareEntryEntry, response);
             }
             return getSecureFile(quickShareEntryEntry, response);
         }
 
         if (daemonApplicationProperties.daemonQuickShareInsecureCompressEnabled) {
-            if (quickShareEntry.directory()) {
+            if (quickShare.directory()) {
                 return getCompressedInsecureDirectory(quickShareEntryEntry, response);
             }
             return getCompressedInsecureFile(quickShareEntryEntry, response);
         }
 
-        if (quickShareEntry.directory()) {
+        if (quickShare.directory()) {
             return getInsecureDirectory(quickShareEntryEntry, response);
         }
         return getInsecureFile(quickShareEntryEntry, response);
     }
 
-    private WebAsyncTask<Void> getSecureDirectory(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getSecureDirectory(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                                   HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
             String quickShareEntryId = quickShareEntryEntry.getKey();
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = String.format("%s-%s.zip", "secure", quickShareEntryId);
 
             response.setContentType("application/zip");
@@ -95,7 +95,7 @@ public class ServerQuickShareRestController {
             OutputStream outputStream = response.getOutputStream();
             streamingArchiveService.secureZipDirectory(
                     resourcePath,
-                    quickShareEntry.secret(),
+                    quickShare.secret(),
                     outputStream
             );
             outputStream.flush();
@@ -103,11 +103,11 @@ public class ServerQuickShareRestController {
         });
     }
 
-    private WebAsyncTask<Void> getSecureFile(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getSecureFile(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                              HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = String.format("%s-%s.zip", "secure", quickShareEntryEntry.getKey());
 
             response.setContentType("application/zip");
@@ -124,7 +124,7 @@ public class ServerQuickShareRestController {
             streamingArchiveService.secureZipFile(
                     resourcePath,
                     resourcePath.getFileName().toString(),
-                    quickShareEntry.secret(),
+                    quickShare.secret(),
                     outputStream
             );
             outputStream.flush();
@@ -132,11 +132,11 @@ public class ServerQuickShareRestController {
         });
     }
 
-    private WebAsyncTask<Void> getCompressedInsecureFile(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getCompressedInsecureFile(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                                          HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = resourcePath.getFileName().toString();
 
             response.setHeader("Content-Encoding", "gzip");
@@ -157,11 +157,11 @@ public class ServerQuickShareRestController {
         });
     }
 
-    private WebAsyncTask<Void> getCompressedInsecureDirectory(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getCompressedInsecureDirectory(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                                               HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = resourcePath.getFileName().toString() + ".zip";
 
             response.setHeader("Content-Encoding", "gzip");
@@ -182,11 +182,11 @@ public class ServerQuickShareRestController {
         });
     }
 
-    private WebAsyncTask<Void> getInsecureFile(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getInsecureFile(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                                HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = resourcePath.getFileName().toString();
 
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
@@ -206,11 +206,11 @@ public class ServerQuickShareRestController {
         });
     }
 
-    private WebAsyncTask<Void> getInsecureDirectory(Map.Entry<String, QuickShareEntry> quickShareEntryEntry,
+    private WebAsyncTask<Void> getInsecureDirectory(Map.Entry<String, QuickShare> quickShareEntryEntry,
                                                     HttpServletResponse response) {
         return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
-            QuickShareEntry quickShareEntry = quickShareEntryEntry.getValue();
-            Path resourcePath = Paths.get(quickShareEntry.resourcePath());
+            QuickShare quickShare = quickShareEntryEntry.getValue();
+            Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = resourcePath.getFileName().toString() + ".zip";
 
             response.setContentType("application/zip");

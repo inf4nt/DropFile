@@ -3,8 +3,8 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfile.store.quickshare.QuickShareEntry;
-import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
+import com.evolution.dropfile.store.quickshare.QuickShare;
+import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
@@ -29,7 +29,7 @@ public class ApiQuickShareFacade {
 
     private final Environment environment;
 
-    private final QuickShareEntryStore quickShareEntryStore;
+    private final QuickShareStore quickShareStore;
 
     private final InetLocalAddressService inetLocalAddressService;
 
@@ -45,7 +45,7 @@ public class ApiQuickShareFacade {
 
         String id = CommonUtils.random();
 
-        QuickShareEntry quickShareEntry = quickShareEntryStore.save(
+        QuickShare quickShare = quickShareStore.save(
                 id,
                 () -> {
                     boolean directory = Files.isDirectory(resourceAbsolutePath);
@@ -54,7 +54,7 @@ public class ApiQuickShareFacade {
                     if (requestDTO.secure()) {
                         String secret = Objects.requireNonNullElseGet(requestDTO.secret(), () -> CommonUtils.generateRawSecretNonce12());
 
-                        return new QuickShareEntry(
+                        return new QuickShare(
                                 resourceAbsolutePath.toString(),
                                 secret,
                                 directory,
@@ -65,7 +65,7 @@ public class ApiQuickShareFacade {
                                 createInstantTime
                         );
                     }
-                    return new QuickShareEntry(
+                    return new QuickShare(
                             resourceAbsolutePath.toString(),
                             null,
                             directory,
@@ -78,35 +78,35 @@ public class ApiQuickShareFacade {
                 }
         );
 
-        return map(id, quickShareEntry);
+        return map(id, quickShare);
     }
 
     public List<ApiQuickShareLsResponseDTO> ls() {
-        Set<Map.Entry<String, QuickShareEntry>> entries = quickShareEntryStore.getAll().entrySet();
+        Set<Map.Entry<String, QuickShare>> entries = quickShareStore.getAll().entrySet();
         return map(entries);
     }
 
     public void removeByKeyStartWith(String id) {
-        String key = quickShareEntryStore.getRequiredByKeyStartWith(id).getKey();
-        quickShareEntryStore.remove(key);
+        String key = quickShareStore.getRequiredByKeyStartWith(id).getKey();
+        quickShareStore.remove(key);
     }
 
     public void removeAll() {
-        quickShareEntryStore.removeAll();
+        quickShareStore.removeAll();
     }
 
     public ApiQuickShareLsResponseDTO ls(String id) {
-        String key = quickShareEntryStore.getRequiredByKeyStartWith(id).getKey();
-        Map.Entry<String, QuickShareEntry> entry = quickShareEntryStore.getRequired(key);
+        String key = quickShareStore.getRequiredByKeyStartWith(id).getKey();
+        Map.Entry<String, QuickShare> entry = quickShareStore.getRequired(key);
         return map(entry.getKey(), entry.getValue());
     }
 
-    private List<ApiQuickShareLsResponseDTO> map(Collection<? extends Map.Entry<String, QuickShareEntry>> linkShareEntries) {
+    private List<ApiQuickShareLsResponseDTO> map(Collection<? extends Map.Entry<String, QuickShare>> linkShareEntries) {
         return linkShareEntries.stream().map(it -> map(it.getKey(), it.getValue())).toList();
     }
 
     @SneakyThrows
-    private ApiQuickShareLsResponseDTO map(String linkId, QuickShareEntry entry) {
+    private ApiQuickShareLsResponseDTO map(String linkId, QuickShare entry) {
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
 
         @Nullable InetLocalAddressService.ConnectionAddress connectionAddress = inetLocalAddressService.getConnectionAddress();

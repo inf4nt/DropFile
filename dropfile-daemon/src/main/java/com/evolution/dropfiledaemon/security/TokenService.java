@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.security;
 
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.security.MessageDigest;
 @Service
 public class TokenService {
 
-    private final DaemonSecretsStore daemonSecretsStore;
+    private final DaemonSecretStore daemonSecretStore;
 
     public boolean isValid(String token) {
         if (!StringUtils.hasText(token)) {
@@ -22,7 +22,7 @@ public class TokenService {
         }
 
         try {
-            String daemonToken = daemonSecretsStore.getRequired().daemonToken();
+            String daemonToken = daemonSecretStore.getRequired().daemonToken();
             if (!StringUtils.hasText(daemonToken)) {
                 return false;
             }

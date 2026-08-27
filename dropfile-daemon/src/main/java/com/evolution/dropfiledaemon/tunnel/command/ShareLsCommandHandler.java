@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.command;
 
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
@@ -17,7 +17,7 @@ public class ShareLsCommandHandler
 
     public static final String COMMAND_NAME = "share-ls";
 
-    private final ShareFileEntryStore shareFileEntryStore;
+    private final ShareFileStore shareFileStore;
 
     @Override
     public String getCommandName() {
@@ -33,7 +33,7 @@ public class ShareLsCommandHandler
     public List<ShareLsTunnelResponse> handle(ShareLsTunnelRequest request) {
         List<String> ids = request.ids();
 
-        return shareFileEntryStore
+        return shareFileStore
                 .getAll()
                 .entrySet()
                 .stream()

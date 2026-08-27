@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.download.DownloadFile;
+import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,38 +17,38 @@ public class ApiDownloadFacade {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
 
-    private final FileDownloadEntryStore fileDownloadEntryStore;
+    private final FileDownloadStore fileDownloadStore;
 
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
         Map<String, ApiDownloadLsDTO.Response> responseMap = new LinkedHashMap<>();
 
         Map<String, FileDownloadOrchestrator.DownloadProgress> downloadProcedures = fileDownloadOrchestrator.getDownloadProcedures();
         Map<String, FileDownloadOrchestrator.DownloadProgress> waitingQueue = fileDownloadOrchestrator.getWaitingQueue();
-        Map<String, DownloadFileEntry> getFileDownloadEntryStoreMap = fileDownloadEntryStore.getAll();
+        Map<String, DownloadFile> getFileDownloadEntryStoreMap = fileDownloadStore.getAll();
 
-        for (Map.Entry<String, DownloadFileEntry> entry : getFileDownloadEntryStoreMap.entrySet()) {
+        for (Map.Entry<String, DownloadFile> entry : getFileDownloadEntryStoreMap.entrySet()) {
             String operationId = entry.getKey();
-            DownloadFileEntry downloadFileEntry = entry.getValue();
+            DownloadFile downloadFile = entry.getValue();
 
-            ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFileEntry.status().name());
+            ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFile.status().name());
 
             String progress = Optional.ofNullable(downloadProcedures.get(operationId))
                     .map(it -> getProgress(it.total(), it.downloaded()))
-                    .orElse(getProgress(downloadFileEntry.total(), downloadFileEntry.downloaded()));
+                    .orElse(getProgress(downloadFile.total(), downloadFile.downloaded()));
             String speedPerSecond = Optional.ofNullable(downloadProcedures.get(operationId))
                     .map(it -> CommonUtils.toDisplaySize(it.speedBytesPerSec()))
                     .orElse(null);
 
             responseMap.put(operationId, new ApiDownloadLsDTO.Response(
                     operationId,
-                    downloadFileEntry.fingerprint(),
-                    downloadFileEntry.fileId(),
-                    downloadFileEntry.destinationFile(),
+                    downloadFile.fingerprint(),
+                    downloadFile.fileId(),
+                    downloadFile.destinationFile(),
                     progress,
                     speedPerSecond,
                     status,
-                    downloadFileEntry.created(),
-                    downloadFileEntry.updated()
+                    downloadFile.created(),
+                    downloadFile.updated()
             ));
         }
 
@@ -97,13 +97,13 @@ public class ApiDownloadFacade {
 
     public void rm(String operationId) {
         CommonUtils.executeSafety(() -> stop(operationId));
-        String key = fileDownloadEntryStore.getRequiredByKeyStartWith(operationId).getKey();
-        fileDownloadEntryStore.remove(key);
+        String key = fileDownloadStore.getRequiredByKeyStartWith(operationId).getKey();
+        fileDownloadStore.remove(key);
     }
 
     public void rmAll() {
         stopAll();
-        fileDownloadEntryStore.removeAll();
+        fileDownloadStore.removeAll();
     }
 
     private String getProgress(long total, long downloaded) {

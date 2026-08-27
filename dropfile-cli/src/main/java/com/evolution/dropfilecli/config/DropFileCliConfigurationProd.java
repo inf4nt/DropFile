@@ -3,9 +3,9 @@ package com.evolution.dropfilecli.config;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.framework.file.*;
-import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
+import com.evolution.dropfile.store.secret.DaemonSecretStoreImpl;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,14 +60,14 @@ public class DropFileCliConfigurationProd {
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretsFileProvider,
-                                                 CryptoFileOperations fileOperations,
-                                                 ObjectMapper objectMapper) {
-        SerdeOperations<DaemonSecrets> serdeOperations = new JsonSerdeOperations<>(
+    public DaemonSecretStore daemonSecretStore(FileProvider daemonSecretsFileProvider,
+                                                CryptoFileOperations fileOperations,
+                                                ObjectMapper objectMapper) {
+        SerdeOperations<DaemonSecret> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
-                DaemonSecrets.class
+                DaemonSecret.class
         );
-        return new DaemonSecretsStoreImpl(
+        return new DaemonSecretStoreImpl(
                 new FileKeyValueStore<>(
                         daemonSecretsFileProvider, fileOperations, serdeOperations
                 )

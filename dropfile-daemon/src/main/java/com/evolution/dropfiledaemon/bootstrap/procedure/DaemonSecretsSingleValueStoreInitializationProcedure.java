@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
-import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -15,11 +15,11 @@ import java.util.UUID;
 public class DaemonSecretsSingleValueStoreInitializationProcedure
         implements SingleValueStoreInitializationProcedure {
 
-    private final DaemonSecretsStore store;
+    private final DaemonSecretStore store;
 
     @Override
     public void init() {
-        DaemonSecrets value = new DaemonSecrets(UUID.randomUUID().toString());
+        DaemonSecret value = new DaemonSecret(UUID.randomUUID().toString());
         store.save(value);
     }
 }

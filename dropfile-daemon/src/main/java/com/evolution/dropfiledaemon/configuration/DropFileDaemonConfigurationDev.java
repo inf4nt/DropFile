@@ -2,15 +2,15 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.download.RuntimeFileDownloadEntryStore;
-import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
-import com.evolution.dropfile.store.quickshare.RuntimeQuickShareEntryStore;
-import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.secret.ImmutableDaemonSecretsStore;
-import com.evolution.dropfile.store.share.RuntimeShareFileEntryStore;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.download.FileDownloadStore;
+import com.evolution.dropfile.store.download.RuntimeFileDownloadStore;
+import com.evolution.dropfile.store.quickshare.QuickShareStore;
+import com.evolution.dropfile.store.quickshare.RuntimeQuickShareStore;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
+import com.evolution.dropfile.store.secret.ImmutableDaemonSecretStore;
+import com.evolution.dropfile.store.share.RuntimeShareFileStore;
+import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.runtime.RuntimeHandshakeTrustedInStore;
@@ -27,8 +27,8 @@ import org.springframework.context.annotation.Profile;
 public class DropFileDaemonConfigurationDev {
 
     @Bean
-    public FileDownloadEntryStore fileDownloadEntryStore() {
-        return new RuntimeFileDownloadEntryStore();
+    public FileDownloadStore fileDownloadEntryStore() {
+        return new RuntimeFileDownloadStore();
     }
 
     @Bean
@@ -37,8 +37,8 @@ public class DropFileDaemonConfigurationDev {
     }
 
     @Bean
-    public ShareFileEntryStore shareFileEntryStore() {
-        return new RuntimeShareFileEntryStore();
+    public ShareFileStore shareFileEntryStore() {
+        return new RuntimeShareFileStore();
     }
 
     @Bean
@@ -52,14 +52,14 @@ public class DropFileDaemonConfigurationDev {
     }
 
     @Bean
-    public QuickShareEntryStore linkShareEntryStore() {
-        return new RuntimeQuickShareEntryStore();
+    public QuickShareStore linkShareEntryStore() {
+        return new RuntimeQuickShareStore();
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(@Value("${dropfile.daemon.token}") String daemonToken) {
+    public DaemonSecretStore daemonSecretStore(@Value("${dropfile.daemon.token}") String daemonToken) {
         log.info("Provided daemon token: {}", daemonToken);
-        DaemonSecrets secrets = new DaemonSecrets(daemonToken);
-        return new ImmutableDaemonSecretsStore(secrets);
+        DaemonSecret secrets = new DaemonSecret(daemonToken);
+        return new ImmutableDaemonSecretStore(secrets);
     }
 }

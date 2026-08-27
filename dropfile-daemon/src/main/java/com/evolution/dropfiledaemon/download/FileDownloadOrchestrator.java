@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
+import com.evolution.dropfile.store.download.DownloadFile;
+import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.nio.file.FileAlreadyExistsException;
@@ -48,7 +47,7 @@ public class FileDownloadOrchestrator {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final FileDownloadEntryStore fileDownloadEntryStore;
+    private final FileDownloadStore fileDownloadStore;
 
     private final DirectoryProvider daemonDownloadsDirectoryProvider;
 
@@ -115,26 +114,26 @@ public class FileDownloadOrchestrator {
                 downloadProcedure.run(
                         () -> {
                             Instant createInstantTime = Instant.now();
-                            fileDownloadEntryStore.save(
+                            fileDownloadStore.save(
                                     operationId,
-                                    new DownloadFileEntry(
+                                    new DownloadFile(
                                             fingerprint,
                                             fileId,
                                             destinationFilePath.toAbsolutePath().toString(),
                                             temporaryFilePath.toAbsolutePath().toString(),
                                             manifestFilePath.toAbsolutePath().toString(),
-                                            DownloadFileEntry.DownloadFileEntryStatus.DOWNLOADING,
+                                            DownloadFile.DownloadFileEntryStatus.DOWNLOADING,
                                             createInstantTime,
                                             createInstantTime
                                     ));
                         },
-                        () -> fileDownloadEntryStore.update(
+                        () -> fileDownloadStore.update(
                                 operationId,
                                 downloadFileEntry -> downloadFileEntry
                                         .withHash(downloadProcedure.getProgress().hash())
                                         .withTotal(downloadProcedure.getProgress().total())
                                         .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                        .withStatus(DownloadFileEntry.DownloadFileEntryStatus.COMPLETED)
+                                        .withStatus(DownloadFile.DownloadFileEntryStatus.COMPLETED)
                                         .withUpdated(Instant.now())
                         )
                 );
@@ -148,13 +147,13 @@ public class FileDownloadOrchestrator {
                 log.error("Exception occurred during download process operation {} fingerprint {} {}",
                         operationId, fingerprint, exception.getMessage(), exception
                 );
-                fileDownloadEntryStore.update(
+                fileDownloadStore.update(
                         operationId,
                         downloadFileEntry -> downloadFileEntry
                                 .withHash(downloadProcedure.getProgress().hash())
                                 .withTotal(downloadProcedure.getProgress().total())
                                 .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                .withStatus(DownloadFileEntry.DownloadFileEntryStatus.ERROR)
+                                .withStatus(DownloadFile.DownloadFileEntryStatus.ERROR)
                                 .withUpdated(Instant.now())
                 );
                 throw exception;
@@ -257,7 +256,7 @@ public class FileDownloadOrchestrator {
                       Map<String, SingleRunDownloadProcedure> waiting) {
         operations.values().forEach(SingleRunDownloadProcedure::stop);
 
-        fileDownloadEntryStore.save(
+        fileDownloadStore.save(
                 () -> {
                     Instant now = Instant.now();
 
@@ -267,13 +266,13 @@ public class FileDownloadOrchestrator {
                                 String operationId = downloadProcedureEntry.getKey();
                                 SingleRunDownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
 
-                                DownloadFileEntry downloadFileEntry = fileDownloadEntryStore.get(operationId)
+                                DownloadFile downloadFile = fileDownloadStore.get(operationId)
                                         .map(Map.Entry::getValue)
                                         .orElse(null);
 
-                                if (downloadFileEntry != null) {
-                                    DownloadFileEntry updated = downloadFileEntry
-                                            .withStatus(DownloadFileEntry.DownloadFileEntryStatus.STOPPED)
+                                if (downloadFile != null) {
+                                    DownloadFile updated = downloadFile
+                                            .withStatus(DownloadFile.DownloadFileEntryStatus.STOPPED)
                                             .withUpdated(now)
                                             .withHash(downloadProcedure.getProgress().hash())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
@@ -281,13 +280,13 @@ public class FileDownloadOrchestrator {
                                     return Map.entry(operationId, updated);
                                 }
 
-                                DownloadFileEntry newOne = new DownloadFileEntry(
+                                DownloadFile newOne = new DownloadFile(
                                         downloadProcedure.getRequest().fingerprint(),
                                         downloadProcedure.getRequest().fileId(),
                                         downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
                                         downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
                                         downloadProcedure.getRequest().manifestFilePath().toAbsolutePath().toString(),
-                                        DownloadFileEntry.DownloadFileEntryStatus.STOPPED,
+                                        DownloadFile.DownloadFileEntryStatus.STOPPED,
                                         now,
                                         now
                                 );

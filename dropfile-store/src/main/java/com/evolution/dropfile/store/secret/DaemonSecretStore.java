@@ -2,17 +2,17 @@ package com.evolution.dropfile.store.secret;
 
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 
-public interface DaemonSecretsStore
-        extends SingleValueStore<DaemonSecrets> {
+public interface DaemonSecretStore
+        extends SingleValueStore<DaemonSecret> {
 
     @Override
-    default void validate(DaemonSecrets value) {
+    default void validate(DaemonSecret value) {
         if (value == null) {
-            throw new IllegalArgumentException("DaemonSecrets is null");
+            throw new IllegalArgumentException("DaemonSecret is null");
         }
         String daemonToken = value.daemonToken();
         if (daemonToken == null || daemonToken.isBlank()) {
-            throw new IllegalArgumentException("DaemonSecrets daemonToken is empty");
+            throw new IllegalArgumentException("DaemonSecret daemonToken is empty");
         }
     }
 }

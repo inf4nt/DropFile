@@ -5,13 +5,13 @@ import com.evolution.dropfile.store.framework.file.FileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.SerdeOperations;
 
-public class FileDownloadEntryStoreCacheable
-        extends CacheableFileKeyValueStore<DownloadFileEntry>
-        implements FileDownloadEntryStore {
+public class FileDownloadStoreCacheable
+        extends CacheableFileKeyValueStore<DownloadFile>
+        implements FileDownloadStore {
 
-    public FileDownloadEntryStoreCacheable(FileProvider fileProvider,
-                                           FileOperations fileOperations,
-                                           SerdeOperations<DownloadFileEntry> serdeOperations) {
+    public FileDownloadStoreCacheable(FileProvider fileProvider,
+                                      FileOperations fileOperations,
+                                      SerdeOperations<DownloadFile> serdeOperations) {
         super(fileProvider, fileOperations, serdeOperations);
     }
 }

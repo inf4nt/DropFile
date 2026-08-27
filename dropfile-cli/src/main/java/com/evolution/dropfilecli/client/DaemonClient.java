@@ -2,8 +2,8 @@ package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class DaemonClient {
 
     private final CliApplicationProperties cliApplicationProperties;
 
-    private final DaemonSecretsStore daemonSecretsStore;
+    private final DaemonSecretStore daemonSecretStore;
 
     private final ObjectMapper objectMapper;
 
@@ -236,9 +236,9 @@ public class DaemonClient {
     }
 
     private String getDaemonAuthorizationToken() {
-        DaemonSecrets daemonSecrets = daemonSecretsStore.get()
+        DaemonSecret daemonSecret = daemonSecretStore.get()
                 .orElseThrow(() -> new NoSuchElementException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
-        String daemonToken = Objects.requireNonNull(daemonSecrets.daemonToken());
+        String daemonToken = Objects.requireNonNull(daemonSecret.daemonToken());
         return "Bearer " + daemonToken;
     }
 }

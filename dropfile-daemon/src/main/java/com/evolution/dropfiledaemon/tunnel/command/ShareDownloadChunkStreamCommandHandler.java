@@ -1,15 +1,14 @@
 package com.evolution.dropfiledaemon.tunnel.command;
 
 import com.evolution.dropfile.common.io.FileHelper;
-import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
+import com.evolution.dropfile.store.share.ShareFile;
+import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +22,7 @@ public class ShareDownloadChunkStreamCommandHandler
 
     private final FileHelper fileHelper;
 
-    private final ShareFileEntryStore shareFileEntryStore;
+    private final ShareFileStore shareFileStore;
 
     @Override
     public String getCommandName() {
@@ -38,11 +37,11 @@ public class ShareDownloadChunkStreamCommandHandler
     @SneakyThrows
     @Override
     public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
-        ShareFileEntry shareFileEntry = shareFileEntryStore
+        ShareFile shareFile = shareFileStore
                 .getRequired(request.id())
                 .getValue();
 
-        Path path = Paths.get(shareFileEntry.resourcePath());
+        Path path = Paths.get(shareFile.resourcePath());
         long skip = request.position();
         int take = request.size();
 

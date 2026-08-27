@@ -5,11 +5,11 @@ import com.evolution.dropfile.store.framework.file.FileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.SerdeOperations;
 
-public class ShareFileEntryStoreCacheable
-        extends CacheableFileKeyValueStore<ShareFileEntry>
-        implements ShareFileEntryStore {
+public class ShareFileStoreCacheable
+        extends CacheableFileKeyValueStore<ShareFile>
+        implements ShareFileStore {
 
-    public ShareFileEntryStoreCacheable(FileProvider fileProvider, FileOperations fileOperations, SerdeOperations<ShareFileEntry> serdeOperations) {
+    public ShareFileStoreCacheable(FileProvider fileProvider, FileOperations fileOperations, SerdeOperations<ShareFile> serdeOperations) {
         super(fileProvider, fileOperations, serdeOperations);
     }
 }

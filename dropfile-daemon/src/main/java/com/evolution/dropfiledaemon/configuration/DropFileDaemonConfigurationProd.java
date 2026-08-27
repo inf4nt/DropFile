@@ -4,20 +4,20 @@ import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
-import com.evolution.dropfile.store.download.DownloadFileEntry;
-import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.download.FileDownloadEntryStoreCacheable;
+import com.evolution.dropfile.store.download.DownloadFile;
+import com.evolution.dropfile.store.download.FileDownloadStore;
+import com.evolution.dropfile.store.download.FileDownloadStoreCacheable;
 import com.evolution.dropfile.store.framework.file.*;
-import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
-import com.evolution.dropfile.store.quickshare.RuntimeQuickShareEntryStore;
-import com.evolution.dropfile.store.secret.DaemonSecrets;
-import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.secret.DaemonSecretsStoreCacheable;
+import com.evolution.dropfile.store.quickshare.QuickShareStore;
+import com.evolution.dropfile.store.quickshare.RuntimeQuickShareStore;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
+import com.evolution.dropfile.store.secret.DaemonSecretStoreCacheable;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
-import com.evolution.dropfile.store.share.ShareFileEntry;
-import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.share.ShareFileEntryStoreCacheable;
+import com.evolution.dropfile.store.share.ShareFile;
+import com.evolution.dropfile.store.share.ShareFileStore;
+import com.evolution.dropfile.store.share.ShareFileStoreCacheable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.cache.HandshakeTrustedInStoreCacheable;
@@ -105,14 +105,14 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public FileDownloadEntryStore fileDownloadEntryStore(FileProvider downloadEntriesFileProvider,
-                                                         FileOperations fileOperations,
-                                                         ObjectMapper objectMapper) {
-        SerdeOperations<DownloadFileEntry> serdeOperations = new JsonSerdeOperations<>(
+    public FileDownloadStore fileDownloadEntryStore(FileProvider downloadEntriesFileProvider,
+                                                    FileOperations fileOperations,
+                                                    ObjectMapper objectMapper) {
+        SerdeOperations<DownloadFile> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
-                DownloadFileEntry.class
+                DownloadFile.class
         );
-        return new FileDownloadEntryStoreCacheable(
+        return new FileDownloadStoreCacheable(
                 downloadEntriesFileProvider,
                 fileOperations,
                 serdeOperations
@@ -125,14 +125,14 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public ShareFileEntryStore shareFileEntryStore(FileProvider shareEntriesFileProvider,
-                                                   FileOperations fileOperations,
-                                                   ObjectMapper objectMapper) {
-        SerdeOperations<ShareFileEntry> serdeOperations = new JsonSerdeOperations<>(
+    public ShareFileStore shareFileEntryStore(FileProvider shareEntriesFileProvider,
+                                              FileOperations fileOperations,
+                                              ObjectMapper objectMapper) {
+        SerdeOperations<ShareFile> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
-                ShareFileEntry.class
+                ShareFile.class
         );
-        return new ShareFileEntryStoreCacheable(
+        return new ShareFileStoreCacheable(
                 shareEntriesFileProvider,
                 fileOperations,
                 serdeOperations
@@ -170,19 +170,19 @@ public class DropFileDaemonConfigurationProd {
     }
 
     @Bean
-    public QuickShareEntryStore linkShareEntryStore() {
-        return new RuntimeQuickShareEntryStore();
+    public QuickShareStore linkShareEntryStore() {
+        return new RuntimeQuickShareStore();
     }
 
     @Bean
-    public DaemonSecretsStore daemonSecretsStore(FileProvider daemonSecretFileProvider,
-                                                 CryptoFileOperations fileOperations,
-                                                 ObjectMapper objectMapper) {
-        SerdeOperations<DaemonSecrets> serdeOperations = new JsonSerdeOperations<>(
+    public DaemonSecretStore daemonSecretStore(FileProvider daemonSecretFileProvider,
+                                                CryptoFileOperations fileOperations,
+                                                ObjectMapper objectMapper) {
+        SerdeOperations<DaemonSecret> serdeOperations = new JsonSerdeOperations<>(
                 objectMapper,
-                DaemonSecrets.class
+                DaemonSecret.class
         );
-        return new DaemonSecretsStoreCacheable(
+        return new DaemonSecretStoreCacheable(
                 new CacheableFileKeyValueStore<>(
                         daemonSecretFileProvider,
                         fileOperations,
