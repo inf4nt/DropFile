@@ -59,11 +59,11 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
                 Spinner.stop();
                 if (isStacktraceEnabled(fullParseResult)) {
                     ex.printStackTrace(commandLine.getErr());
-                    return 1;
+                } else {
+                    PrintWriter err = commandLine.getErr();
+                    err.println(ex.getMessage());
                 }
 
-                PrintWriter err = commandLine.getErr();
-                err.println(ex.getMessage());
                 return 1;
             }
 
