@@ -10,6 +10,6 @@ public class InstallationSeedBootstrapStoreCacheable
         implements InstallationSeedBootstrapStore {
 
     public InstallationSeedBootstrapStoreCacheable(CacheableKeyValueStore<UUID> store) {
-        super("seed", store);
+        super(InstallationSeedBootstrapStore.class.getSimpleName(), store);
     }
 }

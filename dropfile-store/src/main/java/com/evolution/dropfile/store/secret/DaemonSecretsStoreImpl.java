@@ -9,7 +9,7 @@ public class DaemonSecretsStoreImpl
 
     public DaemonSecretsStoreImpl(KeyValueStore<DaemonSecrets> store) {
         super(
-                "daemonSecrets",
+                DaemonSecretsStore.class.getSimpleName(),
                 store
         );
     }

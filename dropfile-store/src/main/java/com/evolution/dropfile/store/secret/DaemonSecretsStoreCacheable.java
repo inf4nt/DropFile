@@ -9,7 +9,7 @@ public class DaemonSecretsStoreCacheable
 
     public DaemonSecretsStoreCacheable(CacheableKeyValueStore<DaemonSecrets> store) {
         super(
-                "daemonSecrets",
+                DaemonSecretsStore.class.getSimpleName(),
                 store
         );
     }
