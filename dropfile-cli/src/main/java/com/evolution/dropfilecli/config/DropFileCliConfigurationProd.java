@@ -7,7 +7,7 @@ import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
 import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
-import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +68,7 @@ public class DropFileCliConfigurationProd {
                 DaemonSecrets.class
         );
         return new DaemonSecretsStoreImpl(
-                new CacheFileKeyValueStore<>(
+                new FileKeyValueStore<>(
                         daemonSecretsFileProvider, fileOperations, serdeOperations
                 )
         );
@@ -82,8 +82,8 @@ public class DropFileCliConfigurationProd {
                 objectMapper,
                 UUID.class
         );
-        return new InstallationSeedBootstrapStoreImpl(
-                new CacheFileKeyValueStore<>(
+        return new InstallationSeedBootstrapStoreCacheable(
+                new CacheableFileKeyValueStore<>(
                         installationSeedFileProvider,
                         fileOperations,
                         serdeOperations

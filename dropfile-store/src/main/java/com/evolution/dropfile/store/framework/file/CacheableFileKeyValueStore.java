@@ -7,15 +7,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class CacheFileKeyValueStore<V>
+public class CacheableFileKeyValueStore<V>
         extends FileKeyValueStore<V>
         implements CacheableKeyValueStore<V> {
 
     volatile private Map<String, V> cache;
 
-    public CacheFileKeyValueStore(FileProvider fileProvider,
-                                  FileOperations fileOperations,
-                                  SerdeOperations<V> serdeOperations) {
+    public CacheableFileKeyValueStore(FileProvider fileProvider,
+                                      FileOperations fileOperations,
+                                      SerdeOperations<V> serdeOperations) {
         super(fileProvider, fileOperations, serdeOperations);
     }
 

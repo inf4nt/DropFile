@@ -5,11 +5,11 @@ import com.evolution.dropfile.store.framework.bootstrap.CacheableDefaultBootstra
 
 import java.util.UUID;
 
-public class InstallationSeedBootstrapStoreImpl
+public class InstallationSeedBootstrapStoreCacheable
         extends CacheableDefaultBootstrapStore<UUID>
         implements InstallationSeedBootstrapStore {
 
-    public InstallationSeedBootstrapStoreImpl(CacheableKeyValueStore<UUID> store) {
+    public InstallationSeedBootstrapStoreCacheable(CacheableKeyValueStore<UUID> store) {
         super("seed", store);
     }
 }

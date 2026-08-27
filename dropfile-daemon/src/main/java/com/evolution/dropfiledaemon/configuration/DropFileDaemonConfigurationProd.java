@@ -6,22 +6,22 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
 import com.evolution.dropfile.store.download.DownloadFileEntry;
 import com.evolution.dropfile.store.download.FileDownloadEntryStore;
-import com.evolution.dropfile.store.download.FileDownloadEntryStoreImpl;
+import com.evolution.dropfile.store.download.FileDownloadEntryStoreCacheable;
 import com.evolution.dropfile.store.framework.file.*;
 import com.evolution.dropfile.store.quickshare.QuickShareEntryStore;
 import com.evolution.dropfile.store.quickshare.RuntimeQuickShareEntryStore;
 import com.evolution.dropfile.store.secret.DaemonSecrets;
 import com.evolution.dropfile.store.secret.DaemonSecretsStore;
-import com.evolution.dropfile.store.secret.DaemonSecretsStoreImpl;
+import com.evolution.dropfile.store.secret.DaemonSecretsStoreCacheable;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
-import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreImpl;
+import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
 import com.evolution.dropfile.store.share.ShareFileEntry;
 import com.evolution.dropfile.store.share.ShareFileEntryStore;
-import com.evolution.dropfile.store.share.ShareFileEntryStoreImpl;
+import com.evolution.dropfile.store.share.ShareFileEntryStoreCacheable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.handshake.store.crypto.HandshakeTrustedInStoreImpl;
-import com.evolution.dropfiledaemon.handshake.store.crypto.HandshakeTrustedOutStoreImpl;
+import com.evolution.dropfiledaemon.handshake.store.cache.HandshakeTrustedInStoreCacheable;
+import com.evolution.dropfiledaemon.handshake.store.cache.HandshakeTrustedOutStoreCacheable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -112,7 +112,7 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 DownloadFileEntry.class
         );
-        return new FileDownloadEntryStoreImpl(
+        return new FileDownloadEntryStoreCacheable(
                 downloadEntriesFileProvider,
                 fileOperations,
                 serdeOperations
@@ -132,7 +132,7 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 ShareFileEntry.class
         );
-        return new ShareFileEntryStoreImpl(
+        return new ShareFileEntryStoreCacheable(
                 shareEntriesFileProvider,
                 fileOperations,
                 serdeOperations
@@ -147,7 +147,7 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 HandshakeTrustedOutStore.TrustedOut.class
         );
-        return new HandshakeTrustedOutStoreImpl(
+        return new HandshakeTrustedOutStoreCacheable(
                 trustOutFileProvider,
                 fileOperations,
                 serdeOperations
@@ -162,7 +162,7 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 HandshakeTrustedInStore.TrustedIn.class
         );
-        return new HandshakeTrustedInStoreImpl(
+        return new HandshakeTrustedInStoreCacheable(
                 trustInFileProvider,
                 fileOperations,
                 serdeOperations
@@ -182,8 +182,8 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 DaemonSecrets.class
         );
-        return new DaemonSecretsStoreImpl(
-                new CacheFileKeyValueStore<>(
+        return new DaemonSecretsStoreCacheable(
+                new CacheableFileKeyValueStore<>(
                         daemonSecretFileProvider,
                         fileOperations,
                         serdeOperations
@@ -199,8 +199,8 @@ public class DropFileDaemonConfigurationProd {
                 objectMapper,
                 UUID.class
         );
-        return new InstallationSeedBootstrapStoreImpl(
-                new CacheFileKeyValueStore<>(
+        return new InstallationSeedBootstrapStoreCacheable(
+                new CacheableFileKeyValueStore<>(
                         installationSeedFileProvider,
                         fileOperations,
                         serdeOperations
