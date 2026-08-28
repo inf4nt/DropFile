@@ -4,12 +4,10 @@ import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializat
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Profile("prod")
 @Component
 @RequiredArgsConstructor
 public class DaemonSecretsSingleValueStoreInitializationProcedure

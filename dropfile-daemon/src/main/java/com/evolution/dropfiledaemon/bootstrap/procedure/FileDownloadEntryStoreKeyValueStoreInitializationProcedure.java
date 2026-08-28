@@ -5,14 +5,13 @@ import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Profile("prod")
+// TODO Can be dropped. Think over it
 @Component
 @RequiredArgsConstructor
 @Slf4j

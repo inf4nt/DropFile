@@ -4,14 +4,13 @@ import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.FileProviderInitializationProcedure;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-@Profile("prod")
+// TODO can be dropped FileProviderInitializationProcedure. Think over it
 @Component
 @RequiredArgsConstructor
 public class FileProviderInitializationProcedureImpl

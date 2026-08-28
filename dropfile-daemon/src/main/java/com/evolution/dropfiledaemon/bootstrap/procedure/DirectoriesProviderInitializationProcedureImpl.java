@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+// TODO can be dropped DirectoriesProviderInitializationProcedure. Think over it
 @RequiredArgsConstructor
 @Component
 public class DirectoriesProviderInitializationProcedureImpl

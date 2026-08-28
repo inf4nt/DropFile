@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGeneric
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
+import com.evolution.dropfiledaemon.bootstrap.phase.api.ApplicationInitializationPhase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

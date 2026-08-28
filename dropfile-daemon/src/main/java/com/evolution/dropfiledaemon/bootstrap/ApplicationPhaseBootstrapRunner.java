@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.bootstrap;
 
 import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonBeforeApplicationReadyEvent;
-import com.evolution.dropfiledaemon.bootstrap.phase.ApplicationInitializationPhase;
+import com.evolution.dropfiledaemon.bootstrap.phase.api.ApplicationInitializationPhase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;

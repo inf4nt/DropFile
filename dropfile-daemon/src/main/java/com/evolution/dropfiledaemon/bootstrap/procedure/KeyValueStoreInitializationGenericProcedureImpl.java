@@ -5,12 +5,10 @@ import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGeneric
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Profile("prod")
 @Component
 @RequiredArgsConstructor
 @Slf4j

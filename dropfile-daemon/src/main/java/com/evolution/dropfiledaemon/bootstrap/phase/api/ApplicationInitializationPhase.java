@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase;
+package com.evolution.dropfiledaemon.bootstrap.phase.api;
 
 public interface ApplicationInitializationPhase {
 
