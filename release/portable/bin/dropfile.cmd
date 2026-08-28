@@ -32,36 +32,48 @@ IF NOT DEFINED DROPFILE_CLI_RAM_MB_XMS (
     SET "DROPFILE_CLI_RAM_MB_XMS=64"
 )
 
-if not exist "%JSA_PATH%" (
-    echo [dropfile] First run detected. Optimizing application startup time...
+IF NOT DEFINED DROPFILE_CLI_CDS_ENABLED (
+    SET "DROPFILE_CLI_CDS_ENABLED=false"
+)
 
-    if exist "%CDS_DIR%" rmdir /s /q "%CDS_DIR%"
+set "TARGET_JAR=%ORIGINAL_JAR%"
+set "CDS_JVM_OPTS="
 
-    java -Djarmode=tools -jar "%ORIGINAL_JAR%" extract --destination "%CDS_DIR%" >nul 2>&1
+if /I "%DROPFILE_CLI_CDS_ENABLED%"=="true" (
+    if not exist "%JSA_PATH%" (
+        echo [dropfile] First run detected. Optimizing application startup time...
 
-    java ^
-            "-XX:ActiveProcessorCount=%DROPFILE_CLI_CPU_COUNT%" ^
-            "-Xmx%DROPFILE_CLI_RAM_MB_XMX%m" ^
-            "-Xms%DROPFILE_CLI_RAM_MB_XMS%m" ^
-            "-XX:ArchiveClassesAtExit=%JSA_PATH%" ^
-            "-Dspring.context.exit=on" ^
-            "-Ddropfile.home=%APPLICATION_HOME%" ^
-            "-Dspring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
-            "-Ddropfile.daemon.daemon-secrets.directory=%DROPFILE_DAEMON_DAEMON_SECRETS_DIRECTORY%" ^
-            "-Ddropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
-            -jar "%CDS_JAR%" >nul 2>&1
+        if exist "%CDS_DIR%" rmdir /s /q "%CDS_DIR%"
 
-    echo [dropfile] Optimization completed successfully!
+        java -Djarmode=tools -jar "%ORIGINAL_JAR%" extract --destination "%CDS_DIR%" >nul 2>&1
+
+        java ^
+                "-XX:ActiveProcessorCount=%DROPFILE_CLI_CPU_COUNT%" ^
+                "-Xmx%DROPFILE_CLI_RAM_MB_XMX%m" ^
+                "-Xms%DROPFILE_CLI_RAM_MB_XMS%m" ^
+                "-XX:ArchiveClassesAtExit=%JSA_PATH%" ^
+                "-Dspring.context.exit=on" ^
+                "-Ddropfile.home=%APPLICATION_HOME%" ^
+                "-Dspring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
+                "-Ddropfile.daemon.daemon-secrets.directory=%DROPFILE_DAEMON_DAEMON_SECRETS_DIRECTORY%" ^
+                "-Ddropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
+                -jar "%CDS_JAR%" >nul 2>&1
+
+        echo [dropfile] Optimization completed successfully!
+    )
+
+    set "TARGET_JAR=%CDS_JAR%"
+    set "CDS_JVM_OPTS="-XX:SharedArchiveFile=%JSA_PATH%""
 )
 
 java ^
         "-XX:ActiveProcessorCount=%DROPFILE_CLI_CPU_COUNT%" ^
         "-Xmx%DROPFILE_CLI_RAM_MB_XMX%m" ^
         "-Xms%DROPFILE_CLI_RAM_MB_XMS%m" ^
-        "-XX:SharedArchiveFile=%JSA_PATH%" ^
+        %CDS_JVM_OPTS% ^
         "-Ddropfile.home=%APPLICATION_HOME%" ^
         "-Dspring.config.location=file:%SPRING_APPLICATION_PROPERTIES_PATH%" ^
         "-Ddropfile.daemon.daemon-secrets.directory=%DROPFILE_DAEMON_DAEMON_SECRETS_DIRECTORY%" ^
         "-Ddropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
-        -jar "%CDS_JAR%" ^
+        -jar "%TARGET_JAR%" ^
         %*
