@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO Can be dropped. Think over it
 @Component
 @RequiredArgsConstructor
 @Slf4j

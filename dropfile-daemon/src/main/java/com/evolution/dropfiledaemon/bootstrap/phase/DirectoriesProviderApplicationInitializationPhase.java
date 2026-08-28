@@ -1,11 +1,13 @@
 package com.evolution.dropfiledaemon.bootstrap.phase;
 
-import com.evolution.dropfile.store.framework.file.DirectoriesProviderInitializationProcedure;
+import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.bootstrap.phase.api.ApplicationInitializationPhase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @Order(1)
@@ -14,10 +16,15 @@ import java.util.List;
 public class DirectoriesProviderApplicationInitializationPhase
         implements ApplicationInitializationPhase {
 
-    private final List<DirectoriesProviderInitializationProcedure> procedures;
+    private final List<DirectoryProvider> directoryProviders;
 
     @Override
     public void execute() throws Exception {
-        procedures.forEach(it -> it.init());
+        for (DirectoryProvider directoryProvider : directoryProviders) {
+            Path directoryPath = directoryProvider.getDirectoryPath();
+            if (Files.notExists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+            }
+        }
     }
 }
