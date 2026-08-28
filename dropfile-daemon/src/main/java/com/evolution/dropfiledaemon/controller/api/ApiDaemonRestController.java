@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.controller;
+package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiDaemonFacade;

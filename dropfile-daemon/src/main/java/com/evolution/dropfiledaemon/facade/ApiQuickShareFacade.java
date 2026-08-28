@@ -6,7 +6,7 @@ import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.controller.ServerQuickShareRestController;
+import com.evolution.dropfiledaemon.controller.server.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;

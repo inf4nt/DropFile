@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.controller;
+package com.evolution.dropfiledaemon.controller.server;
 
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;

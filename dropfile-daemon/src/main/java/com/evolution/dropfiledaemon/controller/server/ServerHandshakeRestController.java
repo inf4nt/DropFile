@@ -1,5 +1,6 @@
-package com.evolution.dropfiledaemon.handshake;
+package com.evolution.dropfiledaemon.controller.server;
 
+import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;

@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.handshake.client;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.handshake.ServerHandshakeRestController;
+import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;

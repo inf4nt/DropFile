@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.tunnel;
+package com.evolution.dropfiledaemon.controller.server;
 
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicReference;
 

@@ -1,10 +1,9 @@
-package com.evolution.dropfiledaemon.controller;
+package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsAccessFacade;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
