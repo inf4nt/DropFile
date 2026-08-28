@@ -3,14 +3,18 @@ package com.evolution.dropfiledaemon.security;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.activity.ActivityTracker;
 import com.evolution.dropfiledaemon.activity.TrafficAwareResponseWrapper;
-import com.evolution.dropfiledaemon.controller.server.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
+import com.evolution.dropfiledaemon.controller.server.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.controller.server.ServerTunnelRestController;
-import jakarta.servlet.*;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,9 +22,12 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
+
+    private static final String API_PREFIX = "/api";
 
     private final TokenService tokenService;
 
@@ -30,10 +37,9 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-
         String path = request.getServletPath();
 
-        if (path != null && path.startsWith("/api")) {
+        if (path != null && path.startsWith(API_PREFIX)) {
             UUID token = tokenService.extractToken(request);
             if (tokenService.isValid(token)) {
                 activityTracker.markApiRequest(request);
@@ -46,7 +52,6 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
         if (isTrackedEndpoint(path)) {
             activityTracker.requestStarted();
             boolean asyncListenerAdded = false;
-
             AtomicBoolean handled = new AtomicBoolean(false);
 
             Runnable runOnceCompletion = () -> {
@@ -61,29 +66,31 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, wrappedResponse);
 
                 if (request.isAsyncStarted()) {
-                    AsyncContext asyncContext = request.getAsyncContext();
-                    asyncContext.addListener(new AsyncListener() {
-                        @Override
-                        public void onComplete(AsyncEvent event) {
-                            runOnceCompletion.run();
-                        }
+                    try {
+                        request.getAsyncContext().addListener(new AsyncListener() {
+                            @Override
+                            public void onComplete(AsyncEvent event) {
+                                runOnceCompletion.run();
+                            }
 
-                        @Override
-                        public void onTimeout(AsyncEvent event) {
-                            runOnceCompletion.run();
-                        }
+                            @Override
+                            public void onTimeout(AsyncEvent event) {
+                                runOnceCompletion.run();
+                            }
 
-                        @Override
-                        public void onError(AsyncEvent event) {
-                            runOnceCompletion.run();
-                        }
+                            @Override
+                            public void onError(AsyncEvent event) {
+                                runOnceCompletion.run();
+                            }
 
-                        @Override
-                        public void onStartAsync(AsyncEvent event) {
-                            System.out.println();
-                        }
-                    });
-                    asyncListenerAdded = true;
+                            @Override
+                            public void onStartAsync(AsyncEvent event) {
+                            }
+                        });
+                        asyncListenerAdded = true;
+                    } catch (Exception e) {
+                        log.error("Add async listener error: {}", e.getMessage(), e);
+                    }
                 }
             } finally {
                 if (!asyncListenerAdded) {
@@ -100,7 +107,7 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
         if (path == null) {
             return false;
         }
-        return path.startsWith("/api") ||
+        return path.startsWith(API_PREFIX) ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_ENDPOINT)) ||
                 path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)) ||
