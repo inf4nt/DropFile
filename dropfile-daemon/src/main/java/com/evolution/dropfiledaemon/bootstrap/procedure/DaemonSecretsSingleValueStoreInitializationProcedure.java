@@ -17,7 +17,7 @@ public class DaemonSecretsSingleValueStoreInitializationProcedure
 
     @Override
     public void init() {
-        DaemonSecret value = new DaemonSecret(UUID.randomUUID().toString());
+        DaemonSecret value = new DaemonSecret(UUID.randomUUID());
         store.save(value);
     }
 }

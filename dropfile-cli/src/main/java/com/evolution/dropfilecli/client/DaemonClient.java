@@ -238,7 +238,6 @@ public class DaemonClient {
     private String getDaemonAuthorizationToken() {
         DaemonSecret daemonSecret = daemonSecretStore.get()
                 .orElseThrow(() -> new NoSuchElementException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
-        String daemonToken = Objects.requireNonNull(daemonSecret.daemonToken());
-        return "Bearer " + daemonToken;
+        return "Bearer " + daemonSecret.daemonToken();
     }
 }

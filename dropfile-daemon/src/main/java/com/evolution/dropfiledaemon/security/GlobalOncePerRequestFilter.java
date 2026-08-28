@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         if (path != null && path.startsWith("/api")) {
-            String token = extractToken(request);
+            UUID token = tokenService.extractToken(request);
             if (tokenService.isValid(token)) {
                 activityTracker.markApiRequest(request);
             } else {
@@ -111,16 +112,5 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
             activityTracker.recordActivity();
         }
         activityTracker.requestEnded();
-    }
-
-    private String extractToken(HttpServletRequest request) {
-        if (request == null) {
-            return null;
-        }
-        String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
-            return null;
-        }
-        return header.substring(7);
     }
 }

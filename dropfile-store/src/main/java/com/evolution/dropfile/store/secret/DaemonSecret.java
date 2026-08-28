@@ -1,5 +1,7 @@
 package com.evolution.dropfile.store.secret;
 
-public record DaemonSecret(String daemonToken) {
+import java.util.UUID;
+
+public record DaemonSecret(UUID daemonToken) {
 
 }

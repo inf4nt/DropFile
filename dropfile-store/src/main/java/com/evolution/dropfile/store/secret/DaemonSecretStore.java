@@ -2,6 +2,8 @@ package com.evolution.dropfile.store.secret;
 
 import com.evolution.dropfile.store.framework.single.SingleValueStore;
 
+import java.util.UUID;
+
 public interface DaemonSecretStore
         extends SingleValueStore<DaemonSecret> {
 
@@ -10,8 +12,8 @@ public interface DaemonSecretStore
         if (value == null) {
             throw new IllegalArgumentException("DaemonSecret is null");
         }
-        String daemonToken = value.daemonToken();
-        if (daemonToken == null || daemonToken.isBlank()) {
+        UUID daemonToken = value.daemonToken();
+        if (daemonToken == null) {
             throw new IllegalArgumentException("DaemonSecret daemonToken is empty");
         }
     }
