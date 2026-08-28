@@ -1,9 +1,7 @@
 package com.evolution.dropfiledaemon.bootstrap;
 
-import com.evolution.dropfile.store.framework.KeyValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.bootstrap.BootstrapStoreInitializationProcedure;
-import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationGenericProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
 import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonBeforeApplicationReadyEvent;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +22,6 @@ public class StoresReadinessGuardAspect {
     private static final Set<Class<?>> WHITE_LIST = Set.of(
             KeyValueStoreInitializationProcedure.class,
             SingleValueStoreInitializationProcedure.class,
-            KeyValueStoreInitializationGenericProcedure.class,
-            SingleValueStoreInitializationGenericProcedure.class,
             BootstrapStoreInitializationProcedure.class
     );
 
