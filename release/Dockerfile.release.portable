@@ -34,8 +34,8 @@ COPY /release/portable/installer /dropfile/installer
 COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
 COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/dropfile-cli.application.properties
 
-COPY --from=build_dropfile_cli /dropfile-cli/target/*.jar /dropfile/jars/dropfile-cli.jar
-COPY --from=build_dropfile_daemon /dropfile-daemon/target/*.jar /dropfile/jars/dropfile-daemon.jar
+COPY --from=build_dropfile_cli /dropfile-cli/target/*.jar /dropfile/jars/cli/dropfile-cli.jar
+COPY --from=build_dropfile_daemon /dropfile-daemon/target/*.jar /dropfile/jars/daemon/dropfile-daemon.jar
 
 RUN find /dropfile/bin/ -type f -exec sed -i 's/\r$//' {} +
 RUN find /dropfile/installer -type f -name "*.sh" -exec sed -i 's/\r$//' {} +

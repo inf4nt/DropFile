@@ -4,7 +4,7 @@ setlocal
 set "BIN_DIR=%~dp0"
 for %%I in ("%BIN_DIR%..") do set "APPLICATION_HOME=%%~fI"
 
-set "JAR_PATH=%APPLICATION_HOME%\jars\dropfile-daemon.jar"
+set "JAR_PATH=%APPLICATION_HOME%\jars\daemon\dropfile-daemon.jar"
 set "LOG_PATH=%APPLICATION_HOME%\logs"
 set "SPRING_APPLICATION_PROPERTIES_PATH=%APPLICATION_HOME%\conf\dropfile-daemon.application.properties"
 

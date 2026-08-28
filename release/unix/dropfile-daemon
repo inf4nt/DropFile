@@ -6,7 +6,7 @@ SCRIPT_DIR=$(dirname -- "$REAL_SCRIPT_PATH")
 APPLICATION_HOME=$(dirname -- "$SCRIPT_DIR")
 
 JAVA_PATH="$APPLICATION_HOME/runtime/bin/java"
-JAR_PATH="$APPLICATION_HOME/jars/dropfile-daemon.jar"
+JAR_PATH="$APPLICATION_HOME/jars/daemon/dropfile-daemon.jar"
 LOG_PATH="$APPLICATION_HOME/logs"
 SPRING_APPLICATION_PROPERTIES_PATH="$APPLICATION_HOME/conf/dropfile-daemon.application.properties"
 

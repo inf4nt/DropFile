@@ -23,39 +23,39 @@ public class StartCommand extends AbstractCommandHandler {
 
     @Override
     public void handle() throws Exception {
-        Path binPath = getBinPath();
-        Path executable = isWindows() ? binPath.resolve("dropfile-daemon.cmd")
-                : binPath.resolve("dropfile-daemon");
+        Path executable = getDaemonExecutablePath();
+
         if (Files.notExists(executable)) {
-            throw new FileNotFoundException("Daemon start failed. No daemon executable file found %s"
-                    .formatted(executable.toAbsolutePath().toString())
+            throw new FileNotFoundException(
+                    "Daemon start failed. Executable file not found: %s".formatted(executable.toAbsolutePath())
             );
         }
+
         execute(executable);
     }
 
-    private boolean isWindows() {
-        String os = System.getProperty("os.name");
-        return os.toLowerCase().contains("windows");
+    private Path getDaemonExecutablePath() {
+        String appHome = System.getProperty("dropfile.home");
+        if (appHome == null || appHome.isBlank()) {
+            throw new IllegalStateException("System property 'dropfile.home' is not set");
+        }
+
+        String executableName = isWindows() ? "dropfile-daemon.cmd" : "dropfile-daemon";
+        return Paths.get(appHome, "bin", executableName).toAbsolutePath().normalize();
     }
 
-    private Path getBinPath() {
-        String cmd = System.getProperty("sun.java.command");
-        String jar = cmd.split(" ")[0];
-        Path jarPath = Paths.get(jar);
-        Path parent = jarPath.getParent().getParent();
-        return parent.resolve("bin").normalize();
+    private boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
     private void execute(Path executablePath) throws IOException, InterruptedException {
-        System.out.println("Executing " + executablePath.toString());
+        System.out.println("Executing " + executablePath);
         ProcessBuilder pb = new ProcessBuilder(executablePath.toString());
 
         pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
 
         Process process = pb.start();
-
         boolean exited = process.waitFor(Duration.ofSeconds(5));
 
         if (!exited) {
