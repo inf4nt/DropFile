@@ -79,18 +79,23 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
 
         Map.Entry<QRCodeType, String> entryURL = extractURL(qrCodeType, object).orElse(null);
         if (entryURL == null) {
-            throw new IllegalStateException("Unable to build QRCode by given type " + qrCodeType);
+            System.out.println("Unable to build QRCode by given type. No found " + qrCodeType + " links");
+            return;
         }
 
         String url = entryURL.getValue();
-        if (!StringUtils.hasText(url) || entryURL.getKey() == QRCodeType.ETHERNET) {
-            System.out.println(
-                    """
-                            Error: Cannot generate QR code.
-                            Either was specified or only the Ethernet address is available.
-                            QR code generation is not supported for wired connections."""
-            );
+        if (!StringUtils.hasText(url)) {
+            System.out.println("Error: Cannot generate QR code. No URL provided");
             return;
+        }
+
+        if (entryURL.getKey() == QRCodeType.ETHERNET) {
+            System.out.println();
+            System.err.println(
+                    """
+                    Warning: Generating QR code for an Ethernet connection.
+                    Wireless devices may not be able to connect using this network configuration."""
+            );
         }
 
         System.out.println();
