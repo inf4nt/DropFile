@@ -70,7 +70,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
             TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
             command = tunnelRequestPayload.command();
-            replyAttackGuard.tryToAddTunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
+            replyAttackGuard.tunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
 
             Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
 

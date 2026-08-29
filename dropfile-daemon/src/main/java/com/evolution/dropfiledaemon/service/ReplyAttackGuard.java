@@ -28,36 +28,26 @@ public class ReplyAttackGuard implements Purgeable {
 
     private final Map<String, Instant> requests = new ConcurrentHashMap<>();
 
-    public void tryToAddSessionRequest(HandshakeSessionDTO.SessionRequestPayload payload) {
+    public void sessionRequest(HandshakeSessionDTO.SessionRequestPayload payload) {
         validatePayloadTime("Session request", payload.timestamp());
 
         String key = getSessionRequestKey(payload);
         checkAndRegisterKey(key, "Session request");
     }
 
-    public void tryToAddHandshakeRequest(HandshakeRequestDTO.Payload payload) {
+    public void handshakeRequest(HandshakeRequestDTO.Payload payload) {
         validatePayloadTime("Handshake request", payload.timestamp());
 
         String key = getHandshakeRequestKey(payload);
         checkAndRegisterKey(key, "Handshake request");
     }
 
-    public void tryToAddTunnelDispatcherRequest(String fingerprint, TunnelRequestDTO.
-            Payload payload) {
+    public void tunnelDispatcherRequest(String fingerprint,
+                                        TunnelRequestDTO.Payload payload) {
         validatePayloadTime("Tunnel dispatcher request", payload.timestamp());
 
         String key = getTunnelDispatcherRequestKey(fingerprint, payload.requestId());
         checkAndRegisterKey(key, "Tunnel dispatcher request");
-    }
-
-    private void validatePayloadTime(String operation, long timestamp) {
-        if (timestamp <= 0) {
-            throw new IllegalArgumentException("%s payload timestamp must be greater than zero".formatted(operation));
-        }
-        long drift = Math.abs(System.currentTimeMillis() - timestamp);
-        if (drift > TTL.toMillis()) {
-            throw new SecurityException("%s payload expired or clock drift too large".formatted(operation));
-        }
     }
 
     @Override
@@ -86,5 +76,15 @@ public class ReplyAttackGuard implements Purgeable {
 
     private String getSessionRequestKey(HandshakeSessionDTO.SessionRequestPayload payload) {
         return "s.req:" + CommonUtils.getFingerprint(payload.publicKeyDH());
+    }
+
+    private void validatePayloadTime(String operation, long timestamp) {
+        if (timestamp <= 0) {
+            throw new IllegalArgumentException("%s payload timestamp must be greater than zero".formatted(operation));
+        }
+        long drift = Math.abs(System.currentTimeMillis() - timestamp);
+        if (drift > TTL.toMillis()) {
+            throw new SecurityException("%s payload expired or clock drift too large".formatted(operation));
+        }
     }
 }

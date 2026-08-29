@@ -70,7 +70,7 @@ public class HandshakeFacade {
                 requestDTO.signature(),
                 CryptoRSA.getPublicKey(requestPayload.publicKeyRSA())
         );
-        replyAttackGuard.tryToAddHandshakeRequest(requestPayload);
+        replyAttackGuard.handshakeRequest(requestPayload);
 
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -150,7 +150,7 @@ public class HandshakeFacade {
                     CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
             );
 
-            replyAttackGuard.tryToAddSessionRequest(sessionPayloadRequest);
+            replyAttackGuard.sessionRequest(sessionPayloadRequest);
 
             KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
