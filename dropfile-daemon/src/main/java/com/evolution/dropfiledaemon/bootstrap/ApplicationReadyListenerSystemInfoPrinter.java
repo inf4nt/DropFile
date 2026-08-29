@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.bootstrap;
 
 import com.evolution.dropfile.common.SystemInfoProvider;
-import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

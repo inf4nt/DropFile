@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.event;
+package com.evolution.dropfiledaemon.bootstrap;
 
 public class DropFileDaemonBeforeApplicationReadyEvent {
 }

@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.bootstrap.phase;
 
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.bootstrap.phase.api.ApplicationInitializationPhase;
+import com.evolution.dropfiledaemon.bootstrap.ApplicationInitializationPhase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

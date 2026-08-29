@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.bootstrap.phase.api;
+package com.evolution.dropfiledaemon.bootstrap;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;

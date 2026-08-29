@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.activity;
 
 import com.evolution.dropfiledaemon.DropFileDaemonApplication;
-import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
+import com.evolution.dropfiledaemon.bootstrap.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.Purgeable;
-import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonApplicationReadyEvent;
+import com.evolution.dropfiledaemon.bootstrap.DropFileDaemonApplicationReadyEvent;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

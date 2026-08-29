@@ -1,9 +1,9 @@
-package com.evolution.dropfiledaemon.bootstrap;
+package com.evolution.dropfiledaemon.bootstrap.procedure;
 
 import com.evolution.dropfile.store.framework.KeyValueStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.bootstrap.BootstrapStoreInitializationProcedure;
 import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializationProcedure;
-import com.evolution.dropfiledaemon.bootstrap.event.DropFileDaemonBeforeApplicationReadyEvent;
+import com.evolution.dropfiledaemon.bootstrap.DropFileDaemonBeforeApplicationReadyEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
