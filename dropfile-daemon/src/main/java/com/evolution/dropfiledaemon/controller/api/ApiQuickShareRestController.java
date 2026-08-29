@@ -10,7 +10,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/quick-share")
+@RequestMapping("/api/quickshare")
 public class ApiQuickShareRestController {
 
     private final ApiQuickShareFacade facade;

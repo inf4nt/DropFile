@@ -61,40 +61,39 @@ intermediate routers see only binary cryptographic noise.
 - Why ChaCha20-Poly1305? It is a modern Authenticated Encryption with Associated Data (AEAD) algorithm.
 It provides both confidentiality (ChaCha20) and tamper-proof integrity verification (Poly1305) in a single pass.
 It is exceptionally fast in software implementations, making it ideal for high-throughput file-sharing.
-- The Public Tunnel: All encrypted payloads are sent via a single, public endpoint: `POST /public/tunnel`.
+- The Public Tunnel: All encrypted payloads are sent via a single, public endpoint: `POST /s/t`.
 
 # Handshake Protocol & Trust Establishment
 
-Before any file transfer can begin, both Daemons must establish trust and derive shared cryptographic secrets. This process is fully containerized inside the `HandshakeRequestDTO` and occurs across the `/public/handshake` and `/public/session/` endpoints.
+Before any file transfer can begin, both Daemons must establish trust and derive shared cryptographic secrets. This process is fully containerized inside the `HandshakeRequestDTO` and occurs across the `/s/h` and `/s/h/s` endpoints.
 
 #### Scenario A: Initial Bootstrapping (Using Out-of-Band Secret)
 This flow occurs during the very first connection. It establishes a secure channel using a manually shared temporary password (OOB Secret).
 
 ```java
-public record HandshakeRequestDTO(
-    String id,          // OOB Secret Hash OR Client RSA Fingerprint
-    byte[] payload,     // Encrypted Payload (ChaCha20-Poly1305)
-    byte[] nonce,       // Unique IV for encryption
-    byte[] signature    // Payload signed with Client's Private RSA Key
-) {}
+public record HandshakeRequestDTO(String accessKeyId,
+                                  byte[] payload,
+                                  byte[] nonce,
+                                  byte[] signature) {
 
-// Decrypted structure of the payload
-public record Payload(
-    byte[] publicKeyRSA,
-    byte[] publicKeyDH,
-    long timestamp
-) {}
+    public record Payload(UUID requestId,
+                          byte[] publicKeyRSA,
+                          byte[] publicKeyDH,
+                          long timestamp) {
+
+    }
+}
 ```
 <img src="./assets/handshake.png" alt="Schema">
 
 #### Scenario B: Initial Bootstrapping (Using Out-of-Band Secret)
 Once trust is established and RSA keys are saved, the manual OOB secret is no longer required.
-When either daemon restarts or a session expires, they perform a password-less handshake via /public/session/.
+When either daemon restarts or a session expires, they perform a password-less handshake via /s/h/s.
 <img src="./assets/session.png" alt="Schema">
 
 # Cryptographic Lifecycle
 - The Pre-Shared Secret (Bootstrap): To initiate the first-ever connection, you must manually share a temporary,
-out-of-band secret (e.g., via a secure chat or QR code). This secret is used to encrypt the initial `/public/handshake` payload.
+out-of-band secret (e.g., via a secure chat or QR code). This secret is used to encrypt the initial `/s/h` payload.
 - Diffie-Hellman (Session Keys): During the handshake, a Diffie-Hellman (DH) exchange occurs.
 - The resulting symmetric keys are used to encrypt the current session's traffic. These keys are ephemeral, reside strictly in volatile RAM,
 and are destroyed when either daemon restarts.
@@ -156,7 +155,7 @@ The executable files ``/bin/dropfile and /bin/dropfile-daemon`` may ask the perm
 4. Environment variable. Add env var and update the path. The process is similar to maven
 ```
 #1 Environment variable
-export DROPFILE_HOME=~/dropfile-linux
+export DROPFILE_HOME=$HOME/dropfile-linux
 export PATH=$PATH:$DROPFILE_HOME/bin
 ```
 ```
@@ -183,17 +182,16 @@ $ ./dropfile/bin/dropfile
 
 Daemon host: 127.0.0.1
 Daemon port: 18181
-Usage: <main class> [-hV] [-ignore-error] [-live] [COMMAND]
+Usage: dropfile [-hV] [-ignore-error] [-live] [COMMAND]
   -h, --help          Show this help message and exit.
       -ignore-error, --ignore-error
                       Continue polling even if the command encounters an error
       -live, --live   Run this command in live update mode
   -V, --version       Print version information and exit.
 Commands:
-  connections, -c, --c                      Connections
-  daemon                                    Daemon commands
-  quick-share, quickshare, -quickshare, --quickshare, -q, --q
-                                            Quick share
+  connections, c                            Connections commands
+  daemon, d                                 Daemon commands
+  quickshare, q                             Quickshare commands
 ```
 # Termux(Android)
 The Termux installation requires java-25 or higher on the host(termux) machine.
@@ -210,32 +208,36 @@ $ dropfile daemon status
 ```
 #### Daemon commands
 ```
-dropfile daemon
-Usage: <main class> daemon [COMMAND]
+Usage: dropfile daemon [-h] [COMMAND]
 Daemon commands
+  -h, --help   Show this help message and exit.
 Commands:
   shutdown     Daemon shutdown
   status       Daemon status
   start        Daemon start
   cache-reset  Daemon cache reset
+  gc           Triggers internal garbage collection and cleanup of stale state
 ```
 
 #### Connections
 ```
-dropfile connections
-Usage: <main class> connections [COMMAND]
-Connections
+Usage: dropfile connections [-h] [COMMAND]
+Connections commands
+  -h, --help   Show this help message and exit.
 Commands:
-  connect, -c, --c                   Connect
-  current                            Retrieve current connection
-  trusted-in, --in, -in, --i, -i     Retrieve trusted-in connections
-  trusted-out, --out, -out, --o, -o  Retrieve trusted-out connections
-  disconnect                         Disconnect trusted-out connection
-  revoke                             Drop trusted-in connection
-  access, -a, --a                    Access keys command
-  status                             Retrieve status of current connection
-  share, -s, --s                     Share operations
-  traffic                            Retrieve traffic
+  connect, c           Perform connection to the given address
+  current              Retrieve current connection
+  trusted-in, in, i    Retrieve trusted-in connections
+  trusted-out, out, o  Retrieve trusted-out connections
+  disconnect           Disconnect trusted-out connection
+  revoke               Drop trusted-in connection
+  access, a            Access keys command
+  reconnect            Reconnect to the current connection and rotate session
+                         keys
+  browse, b            Browse operations
+  share, s             Share commands
+  download, d          Download commands
+  traffic              Retrieve connection traffic
 ```
 Generate access token, and use the access key via connect command
 
@@ -315,7 +317,7 @@ By default, Quickshare operates under strict security assumptions to protect you
 #### Default Secure Share (Single-use, Encrypted, Auto-password)
    Ideal for sharing sensitive files securely over untrusted local networks
 ```
-$ dropfile quickshare add -f C:\\cat_photo.img
+$ dropfile quickshare add C:\\cat_photo.img
 ```
 ```
 {
@@ -344,14 +346,14 @@ Scan this QR code to download: URL http://192.168.1.10:18181/p/qs/fc35c9ba35
 Use this when sharing non-sensitive files,
 or when downloading to a device that cannot easily extract ZIP files (like some smart TVs or embedded devices).
 ```
-$ dropfile quickshare add -f C:\\cat_photo.img -secure false
+$ dropfile quickshare add C:\\cat_photo.img --secure false
 ```
 - What happens: The file is exposed directly over HTTP "as is" (raw). No ZIP creation, no compression, and no password required.
 
 #### Persistent Multi-Use Sharing
 Perfect when you need to share a file with multiple people at once (e.g., during a team meeting) or download it onto several devices.
 ```
-$ dropfile quickshare add -f C:\\cat_photo.img -single-use false
+$ dropfile quickshare add C:\\cat_photo.img --single-use false
 ```
 - What happens: The link remains active indefinitely.
 The Daemon will keep serving the file until you manually delete the share or stop the Daemon.
@@ -359,7 +361,7 @@ The Daemon will keep serving the file until you manually delete the share or sto
 #### Custom Passphrase
 If you want to use a memorable password instead of a randomly generated string.
 ```
-$ dropfile quickshare add -f C:\\cat_photo.img -secret 1234
+$ dropfile quickshare add C:\\cat_photo.img --secret 1234
 ```
 - What happens: The file is packed into a standard secure archive (secure.zip) encrypted with the custom password you provided (e.g., 1234).
 
@@ -382,7 +384,7 @@ To prevent unauthorized local reading, all these files are encrypted using a mas
 
 ```json
 {
-  "seed" : "acg40f4f-2bd6-5672-9a44-fe5a0f15fc7d"
+  "_" : "acg40f4f-2bd6-5672-9a44-fe5a0f15fc7d"
 }
 ```
 

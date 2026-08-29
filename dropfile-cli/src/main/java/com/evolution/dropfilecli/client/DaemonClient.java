@@ -144,23 +144,23 @@ public class DaemonClient {
                                               boolean singleUse,
                                               boolean secure,
                                               String secret) {
-        return sendPost("/api/quick-share/add", new ApiQuickShareAddRequestDTO(resourcePath, singleUse, secure, secret));
+        return sendPost("/api/quickshare/add", new ApiQuickShareAddRequestDTO(resourcePath, singleUse, secure, secret));
     }
 
     public HttpResponse<byte[]> quickShareLs() {
-        return sendGet("/api/quick-share/ls");
+        return sendGet("/api/quickshare/ls");
     }
 
     public HttpResponse<byte[]> quickShareShow(String id) {
-        return sendGet(CommonUtils.joinPaths("/api/quick-share/ls", id));
+        return sendGet(CommonUtils.joinPaths("/api/quickshare/ls", id));
     }
 
     public HttpResponse<byte[]> quickShareRm(String id) {
-        return sendDelete(CommonUtils.joinPaths("/api/quick-share/rm", id));
+        return sendDelete(CommonUtils.joinPaths("/api/quickshare/rm", id));
     }
 
     public HttpResponse<byte[]> quickShareRmAll() {
-        return sendDelete("/api/quick-share/rm-all");
+        return sendDelete("/api/quickshare/rm-all");
     }
 
     public HttpResponse<byte[]> daemonInfo() {
