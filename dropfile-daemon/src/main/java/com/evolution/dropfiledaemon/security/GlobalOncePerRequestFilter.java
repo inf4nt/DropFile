@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.security;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfiledaemon.activity.ActivityTracker;
 import com.evolution.dropfiledaemon.activity.TrafficAwareResponseWrapper;
 import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
@@ -27,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
 
-    private static final String API_PREFIX = "/api";
+    private static final String API_ENDPOINT = "/api";
 
     private final TokenService tokenService;
 
@@ -39,7 +38,7 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
 
-        if (path != null && path.startsWith(API_PREFIX)) {
+        if (path != null && path.startsWith(API_ENDPOINT)) {
             UUID token = tokenService.extractToken(request);
             if (tokenService.isValid(token)) {
                 activityTracker.markApiRequest(request);
@@ -107,11 +106,11 @@ public class GlobalOncePerRequestFilter extends OncePerRequestFilter {
         if (path == null) {
             return false;
         }
-        return path.startsWith(API_PREFIX) ||
-                path.startsWith(CommonUtils.joinPaths("/" + ServerTunnelRestController.TUNNEL_ENDPOINT)) ||
-                path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_ENDPOINT)) ||
-                path.startsWith(CommonUtils.joinPaths("/" + ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)) ||
-                path.startsWith(CommonUtils.joinPaths("/" + ServerQuickShareRestController.QUICKSHARE_ENDPOINT));
+        return path.startsWith(API_ENDPOINT) ||
+                path.startsWith(ServerTunnelRestController.TUNNEL_ENDPOINT) ||
+                path.startsWith(ServerHandshakeRestController.HANDSHAKE_ENDPOINT) ||
+                path.startsWith(ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT) ||
+                path.startsWith(ServerQuickShareRestController.QUICKSHARE_ENDPOINT);
     }
 
     private void handleCompletion(HttpServletRequest request, HttpServletResponse response) {

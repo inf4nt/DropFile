@@ -45,6 +45,7 @@ public class ActivityTracker {
             return false;
         }
 
+        // To track any valid(token is ok) API request
         if (Boolean.TRUE.equals(request.getAttribute(API_REQUEST_ATTRIBUTE))) {
             return true;
         }
