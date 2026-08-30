@@ -60,37 +60,6 @@ public interface KeyValueStore<V> {
                 )));
     }
 
-    default Map<String, V> getByKeyStartWith(Set<String> stringKeys) {
-        if (stringKeys == null || stringKeys.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        Map<String, V> all = getAll();
-        Map<String, V> found = new LinkedHashMap<>();
-
-        for (String stringKey : stringKeys) {
-            Objects.requireNonNull(stringKey, "search key prefix cannot be null");
-
-            Map.Entry<String, V> one = CommonUtils.one(
-                    all.entrySet(),
-                    entry -> entry.getKey().startsWith(stringKey),
-                    () -> String.format("Store %s (prefix: '%s')", getClass().getName(), stringKey)
-            ).orElse(null);
-
-            if (one != null) {
-                if (found.containsKey(one.getKey())) {
-                    throw new IllegalStateException(
-                            "Store %s. Unable to complete 'getByKeyStartWith'. Duplicate key '%s' matched for prefix '%s'"
-                                    .formatted(getClass().getName(), one.getKey(), stringKey)
-                    );
-                }
-                found.put(one.getKey(), one.getValue());
-            }
-        }
-
-        return found;
-    }
-
     default Map.Entry<String, V> getRequiredByKeyStartWith(String stringKey) {
         return CommonUtils.requireOne(
                 getAll().entrySet(),

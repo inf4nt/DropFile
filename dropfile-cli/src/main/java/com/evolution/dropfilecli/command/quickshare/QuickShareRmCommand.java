@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
-import java.util.Set;
 
 @Component
 @CommandLine.Command(
@@ -25,13 +24,8 @@ public class QuickShareRmCommand extends AbstractCommandHttpHandler<Void> {
     private Exclusive exclusive;
 
     private static class Exclusive {
-        @CommandLine.Parameters(
-                index = "0..*",
-                arity = "1..*",
-                split = ",",
-                description = "Quickshare file ids"
-        )
-        private Set<String> ids;
+        @CommandLine.Parameters(index = "0", description = "Quickshare file id")
+        private String id;
 
         @CommandLine.Option(names = {"--all"}, description = "Remove all quickshare files")
         private boolean all;
@@ -42,6 +36,6 @@ public class QuickShareRmCommand extends AbstractCommandHttpHandler<Void> {
         if (exclusive.all) {
             return daemonClient.quickShareRmAll();
         }
-        return daemonClient.quickShareRm(exclusive.ids);
+        return daemonClient.quickShareRm(exclusive.id);
     }
 }

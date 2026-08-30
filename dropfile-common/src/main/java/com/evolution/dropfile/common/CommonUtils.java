@@ -171,9 +171,9 @@ public class CommonUtils {
         return requireOne(source, test, null);
     }
 
-    public static <T> Optional<T> one(Collection<T> source,
-                                      Predicate<T> test,
-                                      Supplier<String> prefixErrorMessageSupplier) {
+    public static <T> T requireOne(Collection<T> source,
+                                   Predicate<T> test,
+                                   Supplier<String> prefixErrorMessageSupplier) {
         Stream<T> stream = source.stream();
         if (test != null) {
             stream = stream.filter(test);
@@ -181,7 +181,11 @@ public class CommonUtils {
         List<T> elements = stream
                 .toList();
         if (elements.isEmpty()) {
-            return Optional.empty();
+            String message = concatIfNotEmpty(
+                    prefixErrorMessageSupplier,
+                    "No items found"
+            );
+            throw new NoSuchElementException(message);
         }
         if (elements.size() != 1) {
             String message = concatIfNotEmpty(
@@ -190,20 +194,7 @@ public class CommonUtils {
             );
             throw new IllegalStateException(message);
         }
-        return Optional.of(elements.getFirst());
-    }
-
-    public static <T> T requireOne(Collection<T> source,
-                                   Predicate<T> test,
-                                   Supplier<String> prefixErrorMessageSupplier) {
-        return one(source, test, prefixErrorMessageSupplier)
-                .orElseThrow(() -> {
-                    String message = concatIfNotEmpty(
-                            prefixErrorMessageSupplier,
-                            "No items found"
-                    );
-                    return new NoSuchElementException(message);
-                });
+        return elements.getFirst();
     }
 
     public static RuntimeException toRuntimeException(Throwable throwable) {

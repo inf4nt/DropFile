@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -31,9 +30,9 @@ public class ApiQuickShareRestController {
         return facade.ls(id);
     }
 
-    @DeleteMapping("/rm")
-    public void removeById(@RequestBody Set<String> ids) {
-        facade.removeByKeyStartWith(ids);
+    @DeleteMapping("/rm/{id}")
+    public void removeById(@PathVariable String id) {
+        facade.removeByKeyStartWith(id);
     }
 
     @DeleteMapping("/rm-all")

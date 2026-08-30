@@ -18,7 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -155,8 +155,8 @@ public class DaemonClient {
         return sendGet(CommonUtils.joinPaths("/api/quickshare/ls", id));
     }
 
-    public HttpResponse<byte[]> quickShareRm(Set<String> ids) {
-        return sendDelete("/api/quickshare/rm", ids);
+    public HttpResponse<byte[]> quickShareRm(String id) {
+        return sendDelete(CommonUtils.joinPaths("/api/quickshare/rm", id));
     }
 
     public HttpResponse<byte[]> quickShareRmAll() {
@@ -203,15 +203,6 @@ public class DaemonClient {
     private HttpResponse<byte[]> sendDelete(String path) {
         HttpRequest httpRequest = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.noBody())
                 .build();
-        return execute(httpRequest);
-    }
-
-    @SneakyThrows
-    private HttpResponse<byte[]> sendDelete(String path, Object body) {
-        byte[] jsonBytes = objectMapper.writeValueAsBytes(body);
-        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
-        httpRequestBuilder.header("Content-Type", "application/json");
-        HttpRequest httpRequest = httpRequestBuilder.build();
         return execute(httpRequest);
     }
 
