@@ -33,8 +33,6 @@ public interface KeyValueStore<V> {
         ).iterator().next();
     }
 
-    Collection<V> remove(Set<String> keys);
-
     V remove(String key);
 
     void removeAll();
