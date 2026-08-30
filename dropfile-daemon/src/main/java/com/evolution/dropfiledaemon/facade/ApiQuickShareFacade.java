@@ -86,6 +86,12 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
+    public void removeByKeyStartWith(Set<String> ids) {
+        Map<String, QuickShare> byKeyStartWith = quickShareStore.getByKeyStartWith(ids);
+        Set<String> keys = byKeyStartWith.keySet();
+        quickShareStore.remove(keys);
+    }
+
     public void removeByKeyStartWith(String id) {
         String key = quickShareStore.getRequiredByKeyStartWith(id).getKey();
         quickShareStore.remove(key);
