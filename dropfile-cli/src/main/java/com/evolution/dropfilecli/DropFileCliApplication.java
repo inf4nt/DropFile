@@ -13,14 +13,14 @@ public class DropFileCliApplication {
     private static int EXIT_CODE = 0;
 
     public static void main(String[] args) {
-        ModernQrDropApp.main(args);
-//        Spinner.start();
-//        try {
-//            context = SpringApplication.run(DropFileCliApplication.class, args);
-//        } finally {
-//            Spinner.stop();
-//        }
-//        System.exit(EXIT_CODE);
+//        ModernQrDropApp.main(args);
+        Spinner.start();
+        try {
+            context = SpringApplication.run(DropFileCliApplication.class, args);
+        } finally {
+            Spinner.stop();
+        }
+        System.exit(EXIT_CODE);
     }
 
     public static void exit(int code) {

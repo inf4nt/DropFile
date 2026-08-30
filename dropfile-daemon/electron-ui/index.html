@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dropfile - Share via QR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-50 h-screen w-screen flex flex-col items-center justify-center relative font-sans">
+
+<div id="loadingOverlay" class="absolute inset-0 bg-slate-50/90 z-50 flex flex-col items-center justify-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
+    <h2 class="text-slate-800 font-bold text-lg">Starting Application Service...</h2>
+</div>
+
+<div class="w-full max-w-4xl p-6 grid grid-cols-2 gap-6 h-full">
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+        <div id="dropZone"
+             class="border-2 border-dashed border-slate-300 rounded-xl p-10 flex-grow flex flex-col items-center justify-center transition-colors">
+            <span class="text-4xl mb-2">File</span>
+            <p class="text-slate-700 font-bold">Drag & Drop files here</p>
+        </div>
+        <input type="file" id="fileInput" multiple class="hidden">
+
+        <div class="mt-6 flex flex-col gap-3">
+            <label class="flex items-center gap-2 font-bold text-slate-800">
+                <input type="checkbox" id="secureCheck" checked class="w-4 h-4 text-indigo-600">
+                Secure (Password protected)
+            </label>
+            <div class="flex gap-2">
+                <input type="text" id="secretField"
+                       class="border border-slate-300 rounded px-3 py-1 flex-grow font-mono text-sm" value="abcd-1234">
+                <button class="bg-slate-200 px-4 py-1 rounded font-semibold text-slate-700 hover:bg-slate-300">Copy
+                </button>
+            </div>
+            <button id="generateBtn"
+                    class="bg-indigo-600 text-white font-bold py-2 rounded-lg mt-2 opacity-50 cursor-not-allowed"
+                    disabled>
+                OK (Generate QR)
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-center">
+        <div id="qrcode" class="mb-4"></div>
+        <p id="qrText" class="text-slate-500 font-medium text-center">Waiting for files & confirmation...</p>
+    </div>
+</div>
+
+<script>
+    const checkJavaReady = setInterval(() => {
+        fetch('http://localhost:18181/daemon/status')
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'READY') {
+                    clearInterval(checkJavaReady);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }).catch(() => console.log('Waiting for Spring Boot...'));
+    }, 100);
+
+    const dropZone = document.getElementById('dropZone');
+    const generateBtn = document.getElementById('generateBtn');
+    let droppedFiles = [];
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+
+        droppedFiles = Array.from(e.dataTransfer.files);
+        if(droppedFiles.length > 0) {
+            dropZone.innerHTML = `<span class="text-4xl mb-2">Done</span><p class="text-slate-700 font-bold">${droppedFiles.length} file(s) selected</p>`;
+            generateBtn.disabled = false;
+            generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+        generateBtn.innerText = "Processing...";
+
+        const formData = new FormData();
+        droppedFiles.forEach(file => formData.append('files', file));
+        formData.append('secure', document.getElementById('secureCheck').checked);
+        formData.append('secret', document.getElementById('secretField').value);
+        formData.append('singleUse', true);
+
+        try {
+            const response = await fetch('http://localhost:18181/daemon/share', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: data.url,
+                width: 180,
+                height: 180
+            });
+            document.getElementById('qrText').innerText = "Listening: " + data.url;
+            generateBtn.innerText = "Done";
+
+        } catch(e) {
+            alert("Error connecting to Java backend");
+            generateBtn.innerText = "Error";
+        }
+    });
+</script>
+</body>
+</html>
