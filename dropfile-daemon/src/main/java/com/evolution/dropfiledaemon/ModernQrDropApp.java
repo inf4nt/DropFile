@@ -23,52 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 public class ModernQrDropApp extends JFrame {
 
     private static final Color BG_COLOR = new Color(248, 250, 252);
@@ -204,6 +158,7 @@ public class ModernQrDropApp extends JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 resetButton.setBackground(RESET_HOVER);
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 resetButton.setBackground(RESET_COLOR);
             }
@@ -327,8 +282,10 @@ public class ModernQrDropApp extends JFrame {
             }
         };
         glassOverlayPanel.setOpaque(false);
-        glassOverlayPanel.addMouseListener(new java.awt.event.MouseAdapter() {});
-        glassOverlayPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {});
+        glassOverlayPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+        });
+        glassOverlayPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+        });
 
         JPanel spinnerCard = new JPanel(new BorderLayout(0, 15));
         spinnerCard.setOpaque(false);
@@ -645,6 +602,7 @@ public class ModernQrDropApp extends JFrame {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
                     if (acceptsDrop) removeBtn.setForeground(RESET_COLOR);
                 }
+
                 public void mouseExited(java.awt.event.MouseEvent evt) {
                     removeBtn.setForeground(TEXT_MUTED);
                 }
@@ -763,14 +721,5 @@ public class ModernQrDropApp extends JFrame {
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         char pre = "KMGTPE".charAt(exp - 1);
         return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
-    }
-
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-        }
-
-        SwingUtilities.invokeLater(() -> new ModernQrDropApp().setVisible(true));
     }
 }
