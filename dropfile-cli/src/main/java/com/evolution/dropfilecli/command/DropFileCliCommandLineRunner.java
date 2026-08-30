@@ -5,6 +5,8 @@ import com.evolution.dropfilecli.util.Spinner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.spring.PicocliSpringFactory;
@@ -42,6 +44,12 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
             int execute = commandLine.execute(args);
             DropFileCliApplication.exit(execute);
         }, executorService).join();
+    }
+
+    @EventListener(ContextClosedEvent.class)
+    public void listener() {
+        Spinner.stop();
+        executorService.shutdownNow();
     }
 
     private void addParameterExceptionHandler(CommandLine commandLine) {
