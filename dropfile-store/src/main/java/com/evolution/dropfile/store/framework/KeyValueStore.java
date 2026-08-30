@@ -35,7 +35,10 @@ public interface KeyValueStore<V> {
 
     Collection<V> remove(Set<String> keys);
 
-    V remove(String key);
+    default V remove(String key) {
+        Collection<V> remove = remove(Set.of(key));
+        return remove.isEmpty() ? null : remove.iterator().next();
+    }
 
     void removeAll();
 
