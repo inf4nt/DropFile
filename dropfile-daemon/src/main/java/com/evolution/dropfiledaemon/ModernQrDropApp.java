@@ -1,25 +1,4 @@
-package com.evolution.dropfilecli;
-
-import com.evolution.dropfile.common.CommonUtils;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+package com.evolution.dropfiledaemon;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
@@ -39,27 +18,7 @@ import java.awt.dnd.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -82,6 +41,7 @@ import java.awt.dnd.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -104,50 +64,7 @@ import java.awt.dnd.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -162,6 +79,8 @@ public class ModernQrDropApp extends JFrame {
 
     private static final Color ACCENT_COLOR = new Color(79, 70, 229);
     private static final Color ACCENT_HOVER = new Color(67, 56, 202);
+    private static final Color RESET_COLOR = new Color(239, 68, 68);
+    private static final Color RESET_HOVER = new Color(220, 38, 38);
     private static final Color TERMINAL_BG = new Color(30, 41, 59);
     private static final Color TERMINAL_FG = new Color(56, 189, 248);
 
@@ -172,12 +91,16 @@ public class ModernQrDropApp extends JFrame {
     private final JCheckBox singleUseCheckBox;
     private final JLabel expiredStatusLabel;
     private final JButton confirmButton;
+    private final JButton resetButton;
 
     private final JLabel qrCodeLabel;
     private final JButton copyLinkButton;
     private final JTextArea terminalArea;
 
-    private File currentFile = null;
+    private final JPanel glassOverlayPanel;
+    private final SpinnerPanel spinnerPanel;
+
+    private final List<File> selectedFiles = new ArrayList<>();
     private boolean isExpired = false;
     private String generatedUrl = null;
 
@@ -194,10 +117,25 @@ public class ModernQrDropApp extends JFrame {
         setSize(870, 620);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        getContentPane().setBackground(BG_COLOR);
-        setLayout(new BorderLayout(20, 15));
 
-        ((JPanel) getContentPane()).setBorder(new EmptyBorder(15, 20, 20, 20));
+        JLayeredPane layeredPane = new JLayeredPane();
+        setContentPane(layeredPane);
+
+        JPanel mainContentPanel = new JPanel(new BorderLayout(20, 15));
+        mainContentPanel.setBackground(BG_COLOR);
+        mainContentPanel.setBorder(new EmptyBorder(15, 20, 20, 20));
+        mainContentPanel.setBounds(0, 0, 855, 580);
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                int w = getContentPane().getWidth();
+                int h = getContentPane().getHeight();
+                mainContentPanel.setBounds(0, 0, w, h);
+                glassOverlayPanel.setBounds(0, 0, w, h);
+                layeredPane.revalidate();
+            }
+        });
 
         secretField = new JTextField(UUID.randomUUID().toString());
         secretField.setFont(new Font("Consolas", Font.PLAIN, 12));
@@ -226,18 +164,15 @@ public class ModernQrDropApp extends JFrame {
         secureCheckBox.setSelected(true);
         secureCheckBox.addActionListener(e -> {
             boolean selected = secureCheckBox.isSelected();
-            if (secretField != null) {
-                secretField.setEnabled(selected);
-            }
-            if (copySecretButton != null) {
-                copySecretButton.setEnabled(selected);
-            }
+            if (secretField != null) secretField.setEnabled(selected);
+            if (copySecretButton != null) copySecretButton.setEnabled(selected);
         });
 
         singleUseCheckBox = new JCheckBox("SingleUse (One-time download)");
         singleUseCheckBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         singleUseCheckBox.setForeground(TEXT_PRIMARY);
         singleUseCheckBox.setOpaque(false);
+        singleUseCheckBox.setSelected(true);
 
         expiredStatusLabel = new JLabel("Expired: false");
         expiredStatusLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -253,6 +188,26 @@ public class ModernQrDropApp extends JFrame {
         confirmButton.setEnabled(false);
         confirmButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         confirmButton.addActionListener(e -> onConfirmClicked());
+
+        resetButton = new JButton("Reset All");
+        resetButton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        resetButton.setForeground(Color.WHITE);
+        resetButton.setBackground(RESET_COLOR);
+        resetButton.setFocusPainted(false);
+        resetButton.setBorderPainted(false);
+        resetButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        resetButton.setVisible(false);
+        resetButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        resetButton.addActionListener(e -> resetAll());
+
+        resetButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                resetButton.setBackground(RESET_HOVER);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                resetButton.setBackground(RESET_COLOR);
+            }
+        });
 
         dropZonePanel = new DropZonePanel();
 
@@ -276,6 +231,7 @@ public class ModernQrDropApp extends JFrame {
         singleUseCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         expiredStatusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         confirmButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        resetButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         configPanel.add(secureCheckBox);
         configPanel.add(Box.createVerticalStrut(4));
@@ -288,6 +244,7 @@ public class ModernQrDropApp extends JFrame {
         configPanel.add(expiredStatusLabel);
         configPanel.add(Box.createVerticalStrut(12));
         configPanel.add(confirmButton);
+        configPanel.add(resetButton);
 
         RoundedCardPanel leftCard = new RoundedCardPanel();
         leftCard.setLayout(new BorderLayout(0, 15));
@@ -299,7 +256,7 @@ public class ModernQrDropApp extends JFrame {
         qrCard.setLayout(new BorderLayout(0, 10));
         qrCard.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        qrCodeLabel = new JLabel("Waiting for file & confirmation...", SwingConstants.CENTER);
+        qrCodeLabel = new JLabel("Waiting for files & confirmation...", SwingConstants.CENTER);
         qrCodeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         qrCodeLabel.setForeground(TEXT_MUTED);
 
@@ -342,7 +299,7 @@ public class ModernQrDropApp extends JFrame {
         splitPanel.add(leftCard);
         splitPanel.add(qrCard);
 
-        terminalArea = new JTextArea("System ready...\n");
+        terminalArea = new JTextArea("Starting Spring Boot application...\n");
         terminalArea.setEditable(false);
         terminalArea.setFont(new Font("Consolas", Font.PLAIN, 13));
         terminalArea.setBackground(TERMINAL_BG);
@@ -359,37 +316,172 @@ public class ModernQrDropApp extends JFrame {
         terminalCard.setBackground(TERMINAL_BG);
         terminalCard.add(scrollPane, BorderLayout.CENTER);
 
-        add(splitPanel, BorderLayout.CENTER);
-        add(terminalCard, BorderLayout.SOUTH);
+        mainContentPanel.add(splitPanel, BorderLayout.CENTER);
+        mainContentPanel.add(terminalCard, BorderLayout.SOUTH);
+
+        glassOverlayPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                g.setColor(new Color(248, 250, 252, 200));
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        glassOverlayPanel.setOpaque(false);
+        glassOverlayPanel.addMouseListener(new java.awt.event.MouseAdapter() {});
+        glassOverlayPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {});
+
+        JPanel spinnerCard = new JPanel(new BorderLayout(0, 15));
+        spinnerCard.setOpaque(false);
+
+        spinnerPanel = new SpinnerPanel();
+        JLabel loadingText = new JLabel("Starting Application Service...", SwingConstants.CENTER);
+        loadingText.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        loadingText.setForeground(TEXT_PRIMARY);
+
+        spinnerCard.add(spinnerPanel, BorderLayout.CENTER);
+        spinnerCard.add(loadingText, BorderLayout.SOUTH);
+
+        glassOverlayPanel.add(spinnerCard);
+
+        layeredPane.add(mainContentPanel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(glassOverlayPanel, JLayeredPane.MODAL_LAYER);
+
+        setLoading(true);
     }
 
-    private void onFileSelected(File file) {
-        this.currentFile = file;
-
-        terminalArea.setText("System ready...\n");
-        String size = formatFileSize(file.length());
-        terminalArea.append(String.format("[%s] %s\n", size, file.getAbsolutePath()));
-
-        confirmButton.setEnabled(true);
-        setFieldsReadOnly(false);
+    private void resetAll() {
+        selectedFiles.clear();
         generatedUrl = null;
-        copyLinkButton.setVisible(false);
+
+        secretField.setText(UUID.randomUUID().toString());
+
+        secureCheckBox.setSelected(true);
+        singleUseCheckBox.setSelected(true);
+        setExpired(false);
+
+        confirmButton.setVisible(true);
+        confirmButton.setEnabled(false);
+        resetButton.setVisible(false);
+
+        setFieldsReadOnly(false);
 
         qrCodeLabel.setIcon(null);
         qrCodeLabel.removeAll();
-        qrCodeLabel.setText("Click 'OK' to freeze options & generate QR");
-        qrCodeLabel.revalidate();
-        qrCodeLabel.repaint();
+        qrCodeLabel.setText("Waiting for files & confirmation...");
+        copyLinkButton.setVisible(false);
+
+        dropZonePanel.updateFileListUI();
+
+        terminalArea.setText("System reset. Ready for new files...\n");
+
+        revalidate();
+        repaint();
+    }
+
+    public void setLoading(boolean loading) {
+        SwingUtilities.invokeLater(() -> {
+            glassOverlayPanel.setVisible(loading);
+            if (loading) {
+                spinnerPanel.startAnimation();
+            } else {
+                spinnerPanel.stopAnimation();
+                terminalArea.append("[SYSTEM] Spring Boot context initialized successfully.\n");
+                terminalArea.append("System ready...\n");
+            }
+            revalidate();
+            repaint();
+        });
+    }
+
+    private static class SpinnerPanel extends JPanel {
+        private int angle = 0;
+        private final Timer timer;
+
+        public SpinnerPanel() {
+            setOpaque(false);
+            setPreferredSize(new Dimension(50, 50));
+            timer = new Timer(30, e -> {
+                angle = (angle + 8) % 360;
+                repaint();
+            });
+        }
+
+        public void startAnimation() {
+            if (!timer.isRunning()) timer.start();
+        }
+
+        public void stopAnimation() {
+            if (timer.isRunning()) timer.stop();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int width = getWidth();
+            int height = getHeight();
+            int size = Math.min(width, height) - 8;
+            int x = (width - size) / 2;
+            int y = (height - size) / 2;
+
+            g2.setStroke(new BasicStroke(4.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.setColor(new Color(203, 213, 225));
+            g2.drawOval(x, y, size, size);
+
+            g2.setColor(ACCENT_COLOR);
+            g2.drawArc(x, y, size, size, angle, 100);
+
+            g2.dispose();
+        }
+    }
+
+    private void addFiles(List<File> newFiles) {
+        for (File f : newFiles) {
+            if (!selectedFiles.contains(f)) {
+                selectedFiles.add(f);
+                String size = formatFileSize(f.length());
+                terminalArea.append(String.format("Added: [%s] %s\n", size, f.getAbsolutePath()));
+            }
+        }
+
+        boolean hasFiles = !selectedFiles.isEmpty();
+        confirmButton.setEnabled(hasFiles);
+        dropZonePanel.updateFileListUI();
+
+        if (hasFiles && generatedUrl == null) {
+            qrCodeLabel.setText("Click 'OK' to freeze options & generate QR");
+        } else if (!hasFiles) {
+            qrCodeLabel.setText("Waiting for files & confirmation...");
+        }
+    }
+
+    private void removeFile(File file) {
+        selectedFiles.remove(file);
+        terminalArea.append("Removed: " + file.getName() + "\n");
+
+        boolean hasFiles = !selectedFiles.isEmpty();
+        confirmButton.setEnabled(hasFiles);
+        dropZonePanel.updateFileListUI();
+
+        if (!hasFiles) {
+            qrCodeLabel.setText("Waiting for files & confirmation...");
+        }
     }
 
     private void onConfirmClicked() {
-        if (currentFile == null) return;
+        if (selectedFiles.isEmpty()) return;
 
         setFieldsReadOnly(true);
 
+        confirmButton.setVisible(false);
+        resetButton.setVisible(true);
+
+        generatedUrl = "http://localhost:18181/s/qs/" + (int) (Math.random() * 89999 + 10000);
         displayQrCode(generatedUrl);
 
-        terminalArea.append("[CONFIRMED] File locked. QR Code generated.\n");
+        terminalArea.append(String.format("[CONFIRMED] Locked %d file(s). QR Code generated.\n", selectedFiles.size()));
         if (secureCheckBox.isSelected()) {
             terminalArea.append("[SECURITY] Secure Mode: Protected with secret key.\n");
         } else {
@@ -412,7 +504,7 @@ public class ModernQrDropApp extends JFrame {
             copySecretButton.setEnabled(secureCheckBox.isSelected());
         }
         singleUseCheckBox.setEnabled(editable);
-        confirmButton.setEnabled(editable);
+        confirmButton.setEnabled(editable && !selectedFiles.isEmpty());
     }
 
     public void setExpired(boolean expired) {
@@ -424,41 +516,51 @@ public class ModernQrDropApp extends JFrame {
     private class DropZonePanel extends RoundedCardPanel {
         private boolean isHovered = false;
         private boolean acceptsDrop = true;
-        private final JLabel iconLabel;
-        private final JLabel textLabel;
+
+        private final JPanel filesListPanel;
+        private final JScrollPane listScrollPane;
+        private final JLabel placeholderLabel;
 
         public DropZonePanel() {
-            setLayout(new GridBagLayout());
+            setLayout(new BorderLayout());
+            setBorder(new EmptyBorder(10, 10, 10, 10));
 
-            JPanel content = new JPanel(new GridLayout(2, 1, 0, 5));
-            content.setOpaque(false);
+            placeholderLabel = new JLabel("Drag & Drop files here", SwingConstants.CENTER);
+            placeholderLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            placeholderLabel.setForeground(TEXT_PRIMARY);
 
-            iconLabel = new JLabel("📁", SwingConstants.CENTER);
-            iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 40));
+            filesListPanel = new JPanel();
+            filesListPanel.setLayout(new BoxLayout(filesListPanel, BoxLayout.Y_AXIS));
+            filesListPanel.setOpaque(false);
 
-            textLabel = new JLabel("Drag & Drop single file", SwingConstants.CENTER);
-            textLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            textLabel.setForeground(TEXT_PRIMARY);
+            listScrollPane = new JScrollPane(filesListPanel);
+            listScrollPane.setOpaque(false);
+            listScrollPane.getViewport().setOpaque(false);
+            listScrollPane.setBorder(null);
 
-            content.add(iconLabel);
-            content.add(textLabel);
-            add(content);
+            add(placeholderLabel, BorderLayout.CENTER);
 
             new DropTarget(this, new DropTargetAdapter() {
                 @Override
                 public void dragEnter(DropTargetDragEvent dtde) {
                     if (!acceptsDrop) return;
                     isHovered = true;
-                    iconLabel.setText("🚀");
-                    textLabel.setText("Release to choose file");
-                    textLabel.setForeground(ACCENT_COLOR);
+                    if (selectedFiles.isEmpty()) {
+                        placeholderLabel.setText("Release to choose files");
+                        placeholderLabel.setForeground(ACCENT_COLOR);
+                    }
                     repaint();
                 }
 
                 @Override
                 public void dragExit(DropTargetEvent dte) {
                     if (!acceptsDrop) return;
-                    resetStyle();
+                    isHovered = false;
+                    if (selectedFiles.isEmpty()) {
+                        placeholderLabel.setText("Drag & Drop files here");
+                        placeholderLabel.setForeground(TEXT_PRIMARY);
+                    }
+                    repaint();
                 }
 
                 @Override
@@ -468,7 +570,8 @@ public class ModernQrDropApp extends JFrame {
                         dtde.rejectDrop();
                         return;
                     }
-                    resetStyle();
+                    isHovered = false;
+                    repaint();
                     try {
                         dtde.acceptDrop(DnDConstants.ACTION_COPY);
                         Transferable t = dtde.getTransferable();
@@ -476,10 +579,7 @@ public class ModernQrDropApp extends JFrame {
                         if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
                             List<File> files = (List<File>) t.getTransferData(DataFlavor.javaFileListFlavor);
                             if (!files.isEmpty()) {
-                                File file = files.get(0);
-                                onFileSelected(file);
-                                iconLabel.setText("✅");
-                                textLabel.setText(file.getName());
+                                addFiles(files);
                             }
                         }
                         dtde.dropComplete(true);
@@ -490,21 +590,78 @@ public class ModernQrDropApp extends JFrame {
             });
         }
 
-        public void setAcceptsDrop(boolean acceptsDrop) {
-            this.acceptsDrop = acceptsDrop;
-            if (!acceptsDrop) {
-                textLabel.setForeground(TEXT_MUTED);
-            } else if (currentFile != null) {
-                textLabel.setForeground(TEXT_PRIMARY);
+        public void updateFileListUI() {
+            filesListPanel.removeAll();
+
+            if (selectedFiles.isEmpty()) {
+                remove(listScrollPane);
+                placeholderLabel.setText("Drag & Drop files here");
+                placeholderLabel.setForeground(TEXT_PRIMARY);
+                add(placeholderLabel, BorderLayout.CENTER);
+            } else {
+                remove(placeholderLabel);
+
+                for (File file : selectedFiles) {
+                    filesListPanel.add(createFileRowPanel(file));
+                    filesListPanel.add(Box.createVerticalStrut(6));
+                }
+
+                add(listScrollPane, BorderLayout.CENTER);
             }
+
+            revalidate();
+            repaint();
         }
 
-        private void resetStyle() {
-            isHovered = false;
-            iconLabel.setText(currentFile == null ? "📁" : "✅");
-            textLabel.setText(currentFile == null ? "Drag & Drop single file" : currentFile.getName());
-            textLabel.setForeground(TEXT_PRIMARY);
-            repaint();
+        private JPanel createFileRowPanel(File file) {
+            JPanel row = new JPanel(new BorderLayout(8, 0));
+            row.setOpaque(true);
+            row.setBackground(new Color(241, 245, 249));
+            row.setBorder(new EmptyBorder(6, 10, 6, 8));
+
+            JLabel nameLabel = new JLabel(file.getName());
+            nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            nameLabel.setForeground(TEXT_PRIMARY);
+
+            JLabel sizeLabel = new JLabel(formatFileSize(file.length()));
+            sizeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            sizeLabel.setForeground(TEXT_MUTED);
+
+            JPanel textContainer = new JPanel(new BorderLayout(5, 0));
+            textContainer.setOpaque(false);
+            textContainer.add(nameLabel, BorderLayout.WEST);
+            textContainer.add(sizeLabel, BorderLayout.EAST);
+
+            JButton removeBtn = new JButton("x");
+            removeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            removeBtn.setForeground(TEXT_MUTED);
+            removeBtn.setBorderPainted(false);
+            removeBtn.setContentAreaFilled(false);
+            removeBtn.setFocusPainted(false);
+            removeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            removeBtn.setEnabled(acceptsDrop);
+
+            removeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    if (acceptsDrop) removeBtn.setForeground(RESET_COLOR);
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    removeBtn.setForeground(TEXT_MUTED);
+                }
+            });
+
+            removeBtn.addActionListener(e -> removeFile(file));
+
+            row.add(textContainer, BorderLayout.CENTER);
+            row.add(removeBtn, BorderLayout.EAST);
+
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+            return row;
+        }
+
+        public void setAcceptsDrop(boolean acceptsDrop) {
+            this.acceptsDrop = acceptsDrop;
+            updateFileListUI();
         }
 
         @Override
@@ -518,11 +675,11 @@ public class ModernQrDropApp extends JFrame {
             g2.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f, dash, 0.0f));
             g2.setColor(isHovered ? ACCENT_COLOR : BORDER_COLOR);
 
-            g2.drawRoundRect(8, 8, getWidth() - 16, getHeight() - 16, arc, arc);
+            g2.drawRoundRect(4, 4, getWidth() - 8, getHeight() - 8, arc, arc);
 
             if (isHovered) {
                 g2.setColor(new Color(79, 70, 229, 20));
-                g2.fillRoundRect(8, 8, getWidth() - 16, getHeight() - 16, arc, arc);
+                g2.fillRoundRect(4, 4, getWidth() - 8, getHeight() - 8, arc, arc);
             }
             g2.dispose();
         }
@@ -602,10 +759,10 @@ public class ModernQrDropApp extends JFrame {
     }
 
     private String formatFileSize(long bytes) {
-        if (bytes < 1024) return bytes + " B ";
+        if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         char pre = "KMGTPE".charAt(exp - 1);
-        return String.format("%6.1f %sB", bytes / Math.pow(1024, exp), pre);
+        return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
     }
 
     public static void main(String[] args) {
