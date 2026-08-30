@@ -105,6 +105,25 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     @SneakyThrows
     @Override
+    public synchronized V remove(String key) {
+        Objects.requireNonNull(key, "key cannot be null");
+
+        Map<String, V> all = new LinkedHashMap<>(getAll());
+        V remove = all.remove(key);
+        if (remove == null) {
+            return null;
+        }
+
+        Path filePath = fileProvider.getFilePath();
+        fileOperations.write(filePath, outputStream -> {
+            serdeOperations.serialize(all, outputStream);
+        });
+
+        return remove;
+    }
+
+    @SneakyThrows
+    @Override
     public synchronized void removeAll() {
         Path filePath = fileProvider.getFilePath();
         fileOperations.removeAll(filePath);

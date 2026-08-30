@@ -68,6 +68,11 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
+    public synchronized V remove(String key) {
+        return store.remove(key);
+    }
+
+    @Override
     public synchronized void removeAll() {
         store.clear();
     }
