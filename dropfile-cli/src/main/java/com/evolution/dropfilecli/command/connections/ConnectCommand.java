@@ -28,7 +28,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
     @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
     private String key;
 
-    @CommandLine.Option(names = {"--force"}, defaultValue = "false")
+    @CommandLine.Option(names = {"--force", "-f"}, defaultValue = "false")
     private boolean force;
 
     @Override

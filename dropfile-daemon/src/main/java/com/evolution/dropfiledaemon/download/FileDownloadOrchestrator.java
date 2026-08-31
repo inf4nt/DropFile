@@ -112,11 +112,11 @@ public class FileDownloadOrchestrator {
             try {
                 checkIfClosed();
                 downloadProcedure.run(
-                        () -> fileDownloadStore.save(
-                                operationId,
-                                () -> {
-                                    Instant createInstantTime = Instant.now();
-                                    return new DownloadFile(
+                        () -> {
+                            Instant createInstantTime = Instant.now();
+                            fileDownloadStore.save(
+                                    operationId,
+                                    new DownloadFile(
                                             fingerprint,
                                             fileId,
                                             destinationFilePath.toAbsolutePath().toString(),
@@ -125,8 +125,8 @@ public class FileDownloadOrchestrator {
                                             DownloadFile.DownloadFileEntryStatus.DOWNLOADING,
                                             createInstantTime,
                                             createInstantTime
-                                    );
-                                }),
+                                    ));
+                        },
                         () -> fileDownloadStore.update(
                                 operationId,
                                 downloadFileEntry -> downloadFileEntry
@@ -197,62 +197,7 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public FileDownloadOrchestratorRemoveResponse rm(Set<String> startWithOperationIds, boolean force) {
-        Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
-
-        Map<String, String> removed = new LinkedHashMap<>();
-        Map<String, String> active = new LinkedHashMap<>();
-
-        CommonUtils.MatchResult<String, String> matchResult;
-
-        synchronized (this) {
-            Set<String> currentOperations = Stream.concat(
-                    waitingQueue.stream().map(Map.Entry::getKey),
-                    downloadProcedures.keySet().stream()
-            ).collect(Collectors.toSet());
-
-            matchResult = CommonUtils.matchBy(
-                    currentOperations,
-                    startWithOperationIds,
-                    (prefix, operationId) -> operationId.startsWith(prefix)
-            );
-
-            for (Map.Entry<String, String> entry : matchResult.found().entrySet()) {
-                String prefix = entry.getKey();
-                String operationId = entry.getValue();
-
-                if (force) {
-                    SingleRunDownloadProcedure procedure = downloadProcedures.get(operationId);
-                    if (procedure != null) {
-                        targetOperations.put(operationId, procedure);
-                    } else {
-                        waitingQueue.removeIf(e -> e.getKey().equals(operationId));
-                    }
-                    removed.put(prefix, operationId);
-                } else {
-                    active.put(prefix, operationId);
-                }
-            }
-        }
-
-        if (force) {
-            stopAndRemove(targetOperations);
-        }
-
-        return new FileDownloadOrchestratorRemoveResponse(
-                removed,
-                active,
-                matchResult.notFound(),
-                matchResult.ambiguous()
-        );
-    }
-
-    public void stopAndRemove(Map<String, SingleRunDownloadProcedure> operations) {
-        operations.values().forEach(it -> it.stop());
-        fileDownloadStore.remove(operations.keySet());
-    }
-
-    public FileDownloadOrchestratorStopResponse stop(Set<String> startWithOperationIds) {
+    public CommonUtils.MatchResult<String, String> stop(Set<String> startWithOperationIds) {
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
         CommonUtils.MatchResult<String, String> matchResult;
 
@@ -287,11 +232,42 @@ public class FileDownloadOrchestrator {
 
         stop(targetOperations, Collections.emptyMap());
 
-        return new FileDownloadOrchestratorStopResponse(
-                matchResult.found(),
-                matchResult.notFound(),
-                matchResult.ambiguous()
-        );
+        return matchResult;
+    }
+
+    public void stop(String startWithOperationId) {
+        Map<String, SingleRunDownloadProcedure> targetOperation = new LinkedHashMap<>();
+
+        synchronized (this) {
+            String operation = CommonUtils.requireOne(
+                    Stream.concat(
+                                    waitingQueue.stream().map(Map.Entry::getKey),
+                                    downloadProcedures.keySet().stream()
+                            )
+                            .collect(Collectors.toSet()),
+                    it -> it.startsWith(startWithOperationId)
+            );
+
+            SingleRunDownloadProcedure downloadProcedure = downloadProcedures.get(operation);
+            if (downloadProcedure != null) {
+                downloadProcedures.remove(operation);
+                targetOperation.put(operation, downloadProcedure);
+            } else {
+                waitingQueue.stream()
+                        .filter(it -> it.getKey().equals(operation))
+                        .findFirst()
+                        .ifPresent(entry -> {
+                            targetOperation.put(entry.getKey(), entry.getValue());
+                            waitingQueue.remove(entry);
+                        });
+
+                if (targetOperation.isEmpty()) {
+                    throw new NoSuchElementException("No operation found: " + operation);
+                }
+            }
+        }
+
+        stop(targetOperation, Collections.emptyMap());
     }
 
     public void stopAll() {
@@ -377,7 +353,7 @@ public class FileDownloadOrchestrator {
         return manifestPath;
     }
 
-    private Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
+    private synchronized Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
         if (!StringUtils.hasText(request.filename())) {
             throw new IllegalArgumentException("File download request failed. The request has am empty filename argument");
         }
@@ -458,20 +434,5 @@ public class FileDownloadOrchestrator {
                                    long speedBytesPerSec,
                                    String percentage) {
 
-    }
-
-    public record FileDownloadOrchestratorRemoveResponse(
-            Map<String, String> removed,
-            Map<String, String> active,
-            Set<String> notFound,
-            Map<String, List<String>> ambiguous
-    ) {
-    }
-
-    public record FileDownloadOrchestratorStopResponse(
-            Map<String, String> found,
-            Set<String> notFound,
-            Map<String, List<String>> ambiguous
-    ) {
     }
 }

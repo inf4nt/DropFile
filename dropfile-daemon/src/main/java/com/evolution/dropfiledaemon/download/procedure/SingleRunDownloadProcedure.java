@@ -2,7 +2,6 @@ package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.io.FileHelper;
-import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifest;
@@ -11,6 +10,7 @@ import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestComm
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfile.common.io.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -69,14 +69,22 @@ public class SingleRunDownloadProcedure {
         }
     }
 
-    public void run(Runnable beforeProcedureCallback,
-                    Runnable successCallback) {
+    private void checkIfStopped() {
         if (stopped.get()) {
             throw new IllegalStateException("Download procedure was forcibly stopped: " + request.operation());
         }
+    }
+
+    private void tryToRun() {
         if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException("Download procedure is running: " + request.operation());
         }
+    }
+
+    public void run(Runnable beforeProcedureCallback,
+                    Runnable successCallback) {
+        checkIfStopped();
+        tryToRun();
 
         try (ExecutorService service = executorService) {
             CompletableFuture.runAsync(

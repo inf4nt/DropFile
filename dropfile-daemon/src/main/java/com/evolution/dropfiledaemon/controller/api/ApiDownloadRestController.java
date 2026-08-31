@@ -1,8 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
-import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
 import com.evolution.dropfile.common.dto.ApiDownloadStopResponse;
 import com.evolution.dropfiledaemon.facade.ApiDownloadFacade;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +26,14 @@ public class ApiDownloadRestController {
         return downloadFacade.stop(startWithOperationIds);
     }
 
-    @DeleteMapping("/rm")
-    public ApiDownloadRmResponse rm(@RequestBody ApiDownloadRmRequest request) {
-        return downloadFacade.rm(request);
-    }
-
     @PostMapping("/stop-all")
     public void stopAll() {
         downloadFacade.stopAll();
+    }
+
+    @DeleteMapping("/rm/{operationId}")
+    public void rm(@PathVariable String operationId) {
+        downloadFacade.rm(operationId);
     }
 
     @DeleteMapping("/rm-all")
