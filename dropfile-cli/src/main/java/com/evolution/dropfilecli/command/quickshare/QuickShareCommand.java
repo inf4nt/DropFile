@@ -13,7 +13,8 @@ import picocli.CommandLine;
                 QuickShareAddCommand.class,
                 QuickShareLsCommand.class,
                 QuickShareRmCommand.class,
-                QuickShareShowCommand.class
+                QuickShareShowCommand.class,
+                QuickShareRmAllCommand.class
         }
 )
 public class QuickShareCommand extends AbstractCommandHandler {
