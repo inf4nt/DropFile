@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
+import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
@@ -86,9 +87,19 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
-    public void removeByKeyStartWith(String id) {
-        String key = quickShareStore.getRequiredByKeyStartWith(id).getKey();
-        quickShareStore.remove(key);
+    public ApiQuickShareRmResponseDTO removeByKeyStartWith(Set<String> idCriteria) {
+        CommonUtils.MatchResult<String, String> matchResult = CommonUtils.matchBy(
+                quickShareStore.getAll().keySet(),
+                idCriteria,
+                (criteria, key) -> key.startsWith(criteria)
+        );
+        Collection<String> keys = matchResult.found().values();
+        quickShareStore.remove(keys);
+        return new ApiQuickShareRmResponseDTO(
+                matchResult.found(),
+                matchResult.notFound(),
+                matchResult.ambiguous()
+        );
     }
 
     public void removeAll() {

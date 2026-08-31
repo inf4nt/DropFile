@@ -46,8 +46,8 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized Collection<V> remove(Set<String> keys) {
-        if (keys == null || keys.isEmpty()) {
+    public synchronized Collection<V> remove(Iterable<String> keys) {
+        if (keys == null || !keys.iterator().hasNext()) {
             return Collections.emptyList();
         }
 
