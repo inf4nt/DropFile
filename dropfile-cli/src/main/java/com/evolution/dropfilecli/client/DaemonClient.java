@@ -132,8 +132,8 @@ public class DaemonClient {
         return sendPost("/api/download/stop-all");
     }
 
-    public HttpResponse<byte[]> downloadRm(String operationId) {
-        return sendDelete(CommonUtils.joinPaths("/api/download/rm", operationId));
+    public HttpResponse<byte[]> downloadRm(Set<String> startWithOperationIds, boolean force) {
+        return sendDelete("/api/download/rm", new ApiDownloadRmRequest(startWithOperationIds, force));
     }
 
     public HttpResponse<byte[]> downloadRmAll() {
@@ -203,6 +203,15 @@ public class DaemonClient {
     private HttpResponse<byte[]> sendDelete(String path) {
         HttpRequest httpRequest = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.noBody())
                 .build();
+        return execute(httpRequest);
+    }
+
+    @SneakyThrows
+    private HttpResponse<byte[]> sendDelete(String path, Object body) {
+        byte[] jsonBytes = objectMapper.writeValueAsBytes(body);
+        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("DELETE", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
+        httpRequestBuilder.header("Content-Type", "application/json");
+        HttpRequest httpRequest = httpRequestBuilder.build();
         return execute(httpRequest);
     }
 
