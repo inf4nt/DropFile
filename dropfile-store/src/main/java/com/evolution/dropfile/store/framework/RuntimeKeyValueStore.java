@@ -46,8 +46,25 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized V remove(String key) {
-        return store.remove(key);
+    public synchronized Collection<V> remove(Set<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        for (String key : keys) {
+            Objects.requireNonNull(key, "key cannot be null");
+        }
+
+        List<V> removed = new ArrayList<>();
+
+        for (String key : keys) {
+            V value = store.remove(key);
+            if (value != null) {
+                removed.add(value);
+            }
+        }
+
+        return removed.isEmpty() ? Collections.emptyList() : removed;
     }
 
     @Override
