@@ -197,44 +197,6 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public CommonUtils.MatchResult<String, String> stop(Set<String> startWithOperationIds) {
-        Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
-        CommonUtils.MatchResult<String, String> matchResult;
-
-        synchronized (this) {
-            Set<String> currentOperations = Stream.concat(
-                    waitingQueue.stream().map(Map.Entry::getKey),
-                    downloadProcedures.keySet().stream()
-            ).collect(Collectors.toSet());
-
-            matchResult = CommonUtils.matchBy(
-                    currentOperations,
-                    startWithOperationIds,
-                    (prefix, operationId) -> operationId.startsWith(prefix)
-            );
-
-            Set<String> operationsToStop = new HashSet<>(matchResult.found().values());
-
-            for (String operation : operationsToStop) {
-                SingleRunDownloadProcedure procedure = downloadProcedures.get(operation);
-                if (procedure != null) {
-                    targetOperations.put(operation, procedure);
-                }
-            }
-
-            Set<String> waitingToStop = new HashSet<>(operationsToStop);
-            waitingToStop.removeAll(targetOperations.keySet());
-
-            if (!waitingToStop.isEmpty()) {
-                waitingQueue.removeIf(entry -> waitingToStop.contains(entry.getKey()));
-            }
-        }
-
-        stop(targetOperations, Collections.emptyMap());
-
-        return matchResult;
-    }
-
     public void stop(String startWithOperationId) {
         Map<String, SingleRunDownloadProcedure> targetOperation = new LinkedHashMap<>();
 

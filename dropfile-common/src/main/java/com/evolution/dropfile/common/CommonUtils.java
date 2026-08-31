@@ -14,10 +14,8 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CommonUtils {
@@ -199,57 +197,6 @@ public class CommonUtils {
         return elements.getFirst();
     }
 
-    public static <K, T> MatchResult<K, T> matchBy(Collection<T> source,
-                                                   Collection<K> criteria,
-                                                   BiPredicate<K, T> matcher) {
-        if (criteria == null || criteria.isEmpty()) {
-            return new MatchResult<>(Map.of(), Set.of(), Map.of());
-        }
-
-        Collection<T> safeSource = source == null ? List.of() : source;
-
-        Map<K, T> found = new LinkedHashMap<>();
-        Set<K> notFound = new LinkedHashSet<>();
-        Map<K, List<T>> ambiguous = new LinkedHashMap<>();
-
-        Map<K, T> rawMatches = new LinkedHashMap<>();
-
-        for (K criterion : criteria) {
-            if (criterion == null) {
-                continue;
-            }
-
-            List<T> matches = safeSource.stream()
-                    .filter(item -> matcher.test(criterion, item))
-                    .toList();
-
-            if (matches.isEmpty()) {
-                notFound.add(criterion);
-            } else if (matches.size() > 1) {
-                ambiguous.put(criterion, matches);
-            } else {
-                rawMatches.put(criterion, matches.getFirst());
-            }
-        }
-
-        Set<T> ambiguousItems = ambiguous.values().stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
-
-        for (Map.Entry<K, T> entry : rawMatches.entrySet()) {
-            T matchedItem = entry.getValue();
-            if (!ambiguousItems.contains(matchedItem)) {
-                found.put(entry.getKey(), matchedItem);
-            }
-        }
-
-        return new MatchResult<>(
-                Collections.unmodifiableMap(found),
-                Collections.unmodifiableSet(notFound),
-                Collections.unmodifiableMap(ambiguous)
-        );
-    }
-
     public static RuntimeException toRuntimeException(Throwable throwable) {
         return toRuntimeException(null, throwable);
     }
@@ -357,12 +304,5 @@ public class CommonUtils {
             return message;
         }
         return prefix + ". " + message;
-    }
-
-    public record MatchResult<K, T>(
-            Map<K, T> found,
-            Set<K> notFound,
-            Map<K, List<T>> ambiguous
-    ) {
     }
 }
