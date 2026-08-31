@@ -18,7 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -124,8 +124,8 @@ public class DaemonClient {
         return sendPost("/api/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    public HttpResponse<byte[]> downloadStop(String operation) {
-        return sendPost(CommonUtils.joinPaths("/api/download/stop", operation));
+    public HttpResponse<byte[]> downloadStop(Set<String> startWithOperationIds) {
+        return sendPost("/api/download/stop", startWithOperationIds);
     }
 
     public HttpResponse<byte[]> downloadStopAll() {
