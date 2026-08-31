@@ -15,8 +15,10 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommonUtils {
 
@@ -163,11 +165,38 @@ public class CommonUtils {
     }
 
     public static <T> T requireOne(Collection<T> source) {
-        if (source == null || source.size() != 1) {
-            int size = source == null ? 0 : source.size();
-            throw new IllegalStateException("Source is not a single value collection. Actual size: " + size);
+        return requireOne(source, null, null);
+    }
+
+    public static <T> T requireOne(Collection<T> source,
+                                   Predicate<T> test) {
+        return requireOne(source, test, null);
+    }
+
+    public static <T> T requireOne(Collection<T> source,
+                                   Predicate<T> test,
+                                   Supplier<String> prefixErrorMessageSupplier) {
+        Stream<T> stream = source.stream();
+        if (test != null) {
+            stream = stream.filter(test);
         }
-        return source.iterator().next();
+        List<T> elements = stream
+                .toList();
+        if (elements.isEmpty()) {
+            String message = concatIfNotEmpty(
+                    prefixErrorMessageSupplier,
+                    "No items found"
+            );
+            throw new NoSuchElementException(message);
+        }
+        if (elements.size() != 1) {
+            String message = concatIfNotEmpty(
+                    prefixErrorMessageSupplier,
+                    String.format("More than one item was found. Please provide more detailed criteria. Found: %s items", elements.size())
+            );
+            throw new IllegalStateException(message);
+        }
+        return elements.getFirst();
     }
 
     public static <K, T> MatchResult<K, T> matchBy(Collection<T> source,
