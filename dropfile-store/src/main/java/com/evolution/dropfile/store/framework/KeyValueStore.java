@@ -55,34 +55,15 @@ public interface KeyValueStore<V> {
     default Map.Entry<String, V> getRequired(String key) {
         return get(key)
                 .orElseThrow(() -> new NoSuchElementException(String.format(
-                        "Store %s. No key %s found", getClass().getSimpleName(), key
+                        "Store %s. No key %s found", getClass().getName(), key
                 )));
     }
 
     default Map.Entry<String, V> getRequiredByKeyStartWith(String stringKey) {
-        CommonUtils.MatchResult<String, Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
+        return CommonUtils.requireOne(
                 getAll().entrySet(),
-                List.of(stringKey),
-                (criteria, entry) -> entry.getKey().startsWith(criteria)
-        );
-
-        if (!matchResult.notFound().isEmpty()) {
-            throw new NoSuchElementException(
-                    "Store %s. No items found for criteria: %s".formatted(getClass().getSimpleName(), stringKey)
-            );
-        }
-
-        if (matchResult.found().containsKey(stringKey) && matchResult.ambiguous().isEmpty()) {
-            return matchResult.found().get(stringKey);
-        }
-
-        List<Map.Entry<String, V>> matches = matchResult.ambiguous().get(stringKey);
-        int matchesCount = (matches != null) ? matches.size() : 0;
-
-        throw new IllegalStateException(
-                "Store %s. Ambiguous key criteria '%s'. Found %d matches".formatted(
-                        getClass().getSimpleName(), stringKey, matchesCount
-                )
+                entry -> entry.getKey().startsWith(stringKey),
+                () -> String.format("Store %s", getClass().getName())
         );
     }
 
