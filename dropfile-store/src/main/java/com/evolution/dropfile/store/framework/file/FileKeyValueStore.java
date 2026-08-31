@@ -67,40 +67,21 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     @SneakyThrows
     @Override
-    public synchronized Collection<V> remove(Set<String> keys) {
-        if (keys == null || keys.isEmpty()) {
-            return Collections.emptyList();
-        }
+    public synchronized V remove(String key) {
+        Objects.requireNonNull(key, "key cannot be null");
 
-        Map<String, V> all = getAll();
-
-        boolean hasMatches = false;
-        for (String key : keys) {
-            Objects.requireNonNull(key, "key cannot be null");
-            if (!hasMatches && all.containsKey(key)) {
-                hasMatches = true;
-            }
-        }
-
-        if (!hasMatches) {
-            return Collections.emptyList();
-        }
-
-        Map<String, V> toUpdate = new LinkedHashMap<>(all);
-        List<V> removed = new ArrayList<>();
-        for (String key : keys) {
-            V value = toUpdate.remove(key);
-            if (value != null) {
-                removed.add(value);
-            }
+        Map<String, V> all = new LinkedHashMap<>(getAll());
+        V remove = all.remove(key);
+        if (remove == null) {
+            return null;
         }
 
         Path filePath = fileProvider.getFilePath();
         fileOperations.write(filePath, outputStream -> {
-            serdeOperations.serialize(toUpdate, outputStream);
+            serdeOperations.serialize(all, outputStream);
         });
 
-        return removed;
+        return remove;
     }
 
     @SneakyThrows
