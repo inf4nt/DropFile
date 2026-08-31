@@ -2,13 +2,11 @@ package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiQuickShareFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,9 +30,9 @@ public class ApiQuickShareRestController {
         return facade.ls(id);
     }
 
-    @DeleteMapping("/rm")
-    public ApiQuickShareRmResponseDTO remove(@RequestBody Set<String> idCriteria) {
-        return facade.removeByKeyStartWith(idCriteria);
+    @DeleteMapping("/rm/{id}")
+    public void removeById(@PathVariable String id) {
+        facade.removeByKeyStartWith(id);
     }
 
     @DeleteMapping("/rm-all")
