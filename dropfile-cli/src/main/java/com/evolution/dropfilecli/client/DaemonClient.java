@@ -155,8 +155,8 @@ public class DaemonClient {
         return sendGet(CommonUtils.joinPaths("/api/quickshare/ls", id));
     }
 
-    public HttpResponse<byte[]> quickShareRm(String id) {
-        return sendDelete(CommonUtils.joinPaths("/api/quickshare/rm", id));
+    public HttpResponse<byte[]> quickShareRm(Set<String> idCriteria) {
+        return sendDelete("/api/quickshare/rm", idCriteria);
     }
 
     public HttpResponse<byte[]> quickShareRmAll() {
