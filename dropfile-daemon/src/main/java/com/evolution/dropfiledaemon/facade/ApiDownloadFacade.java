@@ -2,6 +2,8 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
+import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
+import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
 import com.evolution.dropfile.common.dto.ApiDownloadStopResponse;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
@@ -33,10 +35,11 @@ public class ApiDownloadFacade {
 
             ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFile.status().name());
 
-            String progress = Optional.ofNullable(downloadProcedures.get(operationId))
+            FileDownloadOrchestrator.DownloadProgress downloadProgress = downloadProcedures.get(operationId);
+            String progress = Optional.ofNullable(downloadProgress)
                     .map(it -> getProgress(it.total(), it.downloaded()))
                     .orElse(getProgress(downloadFile.total(), downloadFile.downloaded()));
-            String speedPerSecond = Optional.ofNullable(downloadProcedures.get(operationId))
+            String speedPerSecond = Optional.ofNullable(downloadProgress)
                     .map(it -> CommonUtils.toDisplaySize(it.speedBytesPerSec()))
                     .orElse(null);
 
@@ -89,28 +92,31 @@ public class ApiDownloadFacade {
     }
 
     public ApiDownloadStopResponse stop(Set<String> startWithOperationIds) {
-        CommonUtils.MatchResult<String, String> matchResult = fileDownloadOrchestrator.stop(
+        FileDownloadOrchestrator.FileDownloadOrchestratorStopResponse fileDownloadOrchestratorStopResponse = fileDownloadOrchestrator.stop(
                 startWithOperationIds
         );
         return new ApiDownloadStopResponse(
-                matchResult.found(),
-                matchResult.notFound(),
-                matchResult.ambiguous()
+                fileDownloadOrchestratorStopResponse.found(),
+                fileDownloadOrchestratorStopResponse.notFound(),
+                fileDownloadOrchestratorStopResponse.ambiguous()
         );
-    }
-
-    public void stop(String operationId) {
-        fileDownloadOrchestrator.stop(operationId);
     }
 
     public void stopAll() {
         fileDownloadOrchestrator.stopAll();
     }
 
-    public void rm(String operationId) {
-        CommonUtils.executeSafety(() -> stop(operationId));
-        String key = fileDownloadStore.getRequiredByKeyStartWith(operationId).getKey();
-        fileDownloadStore.remove(key);
+    public ApiDownloadRmResponse rm(ApiDownloadRmRequest request) {
+        FileDownloadOrchestrator.FileDownloadOrchestratorRemoveResponse fileDownloadOrchestratorRemoveResponse = fileDownloadOrchestrator.rm(
+                request.operations(),
+                request.force()
+        );
+        return new ApiDownloadRmResponse(
+                fileDownloadOrchestratorRemoveResponse.removed(),
+                fileDownloadOrchestratorRemoveResponse.active(),
+                fileDownloadOrchestratorRemoveResponse.notFound(),
+                fileDownloadOrchestratorRemoveResponse.ambiguous()
+        );
     }
 
     public void rmAll() {
