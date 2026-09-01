@@ -21,8 +21,8 @@ public class Spinner {
                     String progressIndicator = PROGRESS_INDICATOR.getProgressIndicator();
 
                     if (EXECUTING.get() && !Thread.currentThread().isInterrupted()) {
-                        System.out.print("\r" + progressIndicator);
-                        System.out.flush();
+                        System.err.print("\r" + progressIndicator);
+                        System.err.flush();
                     }
 
                     Thread.sleep(500);
@@ -40,7 +40,7 @@ public class Spinner {
         if (SPINNER_THREAD != null) {
             SPINNER_THREAD.interrupt();
         }
-        System.out.print("\r\u001b[K");
-        System.out.flush();
+        System.err.print("\r\u001b[K");
+        System.err.flush();
     }
 }
