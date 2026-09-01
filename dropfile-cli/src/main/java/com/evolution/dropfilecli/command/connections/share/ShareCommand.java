@@ -12,7 +12,8 @@ import picocli.CommandLine;
         subcommands = {
                 ShareLsCommand.class,
                 ShareAddCommand.class,
-                ShareRmCommand.class
+                ShareRmCommand.class,
+                ShareRmAllCommand.class
         }
 )
 public class ShareCommand extends AbstractCommandHandler {

@@ -3,6 +3,8 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareRmResponseDTO;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
@@ -56,9 +59,13 @@ public class ApiConnectionsShareFacade {
                 .toList();
     }
 
-    public void rm(String id) {
-        String key = shareFileStore.getRequiredByKeyStartWith(id).getKey();
-        shareFileStore.remove(key);
+    public ApiConnectionsShareRmResponseDTO rm(Set<String> idCriteria) {
+        KeyValueStore.RemoveResult<ShareFile> removeResult = shareFileStore.removeByCriteria(idCriteria);
+        return new ApiConnectionsShareRmResponseDTO(
+                removeResult.found(),
+                removeResult.notFound(),
+                removeResult.ambiguous()
+        );
     }
 
     public void rmAll() {

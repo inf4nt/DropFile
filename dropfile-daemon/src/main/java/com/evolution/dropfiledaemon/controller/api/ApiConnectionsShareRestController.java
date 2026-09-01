@@ -2,11 +2,13 @@ package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsShareRmResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsShareFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,9 +27,9 @@ public class ApiConnectionsShareRestController {
         return apiFacade.ls();
     }
 
-    @DeleteMapping("/rm/{id}")
-    public void rm(@PathVariable String id) {
-        apiFacade.rm(id);
+    @DeleteMapping("/rm")
+    public ApiConnectionsShareRmResponseDTO rm(@RequestBody Set<String> idCriteria) {
+        return apiFacade.rm(idCriteria);
     }
 
     @DeleteMapping("/rm-all")

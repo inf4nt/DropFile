@@ -96,8 +96,8 @@ public class DaemonClient {
         return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias));
     }
 
-    public HttpResponse<byte[]> connectionsShareRm(String id) {
-        return sendDelete(CommonUtils.joinPaths("/api/connections/share/rm", id));
+    public HttpResponse<byte[]> connectionsShareRm(Set<String> ids) {
+        return sendDelete("/api/connections/share/rm", ids);
     }
 
     public HttpResponse<byte[]> connectionsShareRmAll() {
