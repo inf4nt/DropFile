@@ -2,7 +2,9 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class CacheableFileKeyValueStore<V>
@@ -27,9 +29,18 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized Collection<V> remove(Iterable<String> keys) {
+    public synchronized Map<String, V> remove(Collection<String> keys) {
         try {
             return super.remove(keys);
+        } finally {
+            reset();
+        }
+    }
+
+    @Override
+    public synchronized RemoveResult<V> removeByCriteria(Collection<String> idCriteria) {
+        try {
+            return super.removeByCriteria(idCriteria);
         } finally {
             reset();
         }

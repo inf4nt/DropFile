@@ -315,21 +315,6 @@ public class CommonUtils {
         return totalSize.get();
     }
 
-    private static String concatIfNotEmpty(Supplier<String> prefixSupplier, String message) {
-        if (prefixSupplier == null) {
-            return message;
-        }
-        String prefix = prefixSupplier.get();
-        if (prefix == null) {
-            return message;
-        }
-        prefix = prefix.trim();
-        if (prefix.isEmpty()) {
-            return message;
-        }
-        return prefix + ". " + message;
-    }
-
     public record MatchResult<K, T>(
             Map<K, T> found,
             Set<K> notFound,

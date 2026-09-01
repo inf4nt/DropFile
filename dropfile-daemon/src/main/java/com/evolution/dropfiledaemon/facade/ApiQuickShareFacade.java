@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
@@ -87,18 +88,12 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
-    public ApiQuickShareRmResponseDTO removeByKeyStartWith(Set<String> idCriteria) {
-        CommonUtils.MatchResult<String, String> matchResult = CommonUtils.matchBy(
-                quickShareStore.getAll().keySet(),
-                idCriteria,
-                (criteria, key) -> key.startsWith(criteria)
-        );
-        Collection<String> keys = matchResult.found().values();
-        quickShareStore.remove(keys);
+    public ApiQuickShareRmResponseDTO removeByCriteria(Set<String> idCriteria) {
+        KeyValueStore.RemoveResult<QuickShare> removeResult = quickShareStore.removeByCriteria(idCriteria);
         return new ApiQuickShareRmResponseDTO(
-                matchResult.found(),
-                matchResult.notFound(),
-                matchResult.ambiguous()
+                removeResult.found(),
+                removeResult.notFound(),
+                removeResult.ambiguous()
         );
     }
 

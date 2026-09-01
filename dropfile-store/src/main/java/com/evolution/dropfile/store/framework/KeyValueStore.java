@@ -33,10 +33,16 @@ public interface KeyValueStore<V> {
         ).iterator().next();
     }
 
-    Collection<V> remove(Iterable<String> keys);
+    RemoveResult<V> removeByCriteria(Collection<String> idCriteria);
+
+    Map<String, V> remove(Collection<String> keys);
 
     default V remove(String key) {
-        return remove(Set.of(key)).stream().findAny().orElse(null);
+        return remove(Set.of(key)).entrySet()
+                .stream()
+                .findAny()
+                .map(it -> it.getValue())
+                .orElse(null);
     }
 
     void removeAll();
@@ -89,5 +95,12 @@ public interface KeyValueStore<V> {
     enum ValidatePolicy {
         STRICT,
         GENTLE
+    }
+
+    record RemoveResult<V>(
+            Map<String, String> found,
+            Set<String> notFound,
+            Map<String, List<String>> ambiguous
+    ) {
     }
 }

@@ -1,5 +1,6 @@
 package com.evolution.dropfile.store.framework.file;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -8,6 +9,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class FileKeyValueStore<V> implements KeyValueStore<V> {
@@ -65,40 +67,92 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         return Collections.unmodifiableCollection(toSave.values());
     }
 
+    @Override
+    public synchronized RemoveResult<V> removeByCriteria(Collection<String> idCriteria) {
+        if (idCriteria == null || idCriteria.isEmpty()) {
+            return new RemoveResult<>(Map.of(), Set.of(), Map.of());
+        }
+
+        for (String criterion : idCriteria) {
+            if (criterion == null || criterion.isBlank()) {
+                throw new IllegalArgumentException("Id criterion must not be empty string");
+            }
+        }
+
+        CommonUtils.MatchResult<String, Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
+                getAll().entrySet(),
+                idCriteria,
+                (criteria, entry) -> entry.getKey().startsWith(criteria)
+        );
+
+        Map<String, List<String>> ambiguous = matchResult.ambiguous().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().map(Map.Entry::getKey).toList(),
+                        (_, newVal) -> newVal,
+                        LinkedHashMap::new
+                ));
+
+        if (matchResult.found().isEmpty()) {
+            return new RemoveResult<>(
+                    Collections.emptyMap(),
+                    matchResult.notFound(),
+                    ambiguous
+            );
+        }
+
+        Set<String> keys = matchResult.found().values().stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+
+        Map<String, V> removedByFullKey = remove(keys);
+
+        Map<String, String> confirmedFound = new LinkedHashMap<>();
+        matchResult.found().forEach((criteria, entry) -> {
+            V removedValue = removedByFullKey.get(entry.getKey());
+            if (removedValue != null) {
+                confirmedFound.put(criteria, entry.getKey());
+            }
+        });
+
+        return new RemoveResult<>(
+                confirmedFound,
+                matchResult.notFound(),
+                ambiguous
+        );
+    }
+
     @SneakyThrows
     @Override
-    public synchronized Collection<V> remove(Iterable<String> keys) {
-        if (keys == null || !keys.iterator().hasNext()) {
-            return Collections.emptyList();
+    public synchronized Map<String, V> remove(Collection<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyMap();
         }
 
         Map<String, V> all = getAll();
-
-        boolean hasMatches = false;
-        for (String key : keys) {
-            Objects.requireNonNull(key, "key cannot be null");
-            if (!hasMatches && all.containsKey(key)) {
-                hasMatches = true;
-            }
-        }
-
-        if (!hasMatches) {
-            return Collections.emptyList();
+        if (all.isEmpty()) {
+            return Collections.emptyMap();
         }
 
         Map<String, V> toUpdate = new LinkedHashMap<>(all);
-        List<V> removed = new ArrayList<>();
+        Map<String, V> removed = new LinkedHashMap<>();
+
         for (String key : keys) {
+            if (key == null || key.isBlank()) {
+                throw new IllegalArgumentException("Key must not be empty string");
+            }
             V value = toUpdate.remove(key);
             if (value != null) {
-                removed.add(value);
+                removed.put(key, value);
             }
         }
 
-        Path filePath = fileProvider.getFilePath();
-        fileOperations.write(filePath, outputStream -> {
-            serdeOperations.serialize(toUpdate, outputStream);
-        });
+        if (!removed.isEmpty()) {
+            Path filePath = fileProvider.getFilePath();
+            fileOperations.write(filePath, outputStream -> {
+                serdeOperations.serialize(toUpdate, outputStream);
+            });
+        }
 
         return removed;
     }

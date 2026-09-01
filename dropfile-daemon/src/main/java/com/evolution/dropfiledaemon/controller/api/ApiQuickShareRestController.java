@@ -33,8 +33,8 @@ public class ApiQuickShareRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiQuickShareRmResponseDTO remove(@RequestBody Set<String> idCriteria) {
-        return facade.removeByKeyStartWith(idCriteria);
+    public ApiQuickShareRmResponseDTO removeByCriteria(@RequestBody Set<String> idCriteria) {
+        return facade.removeByCriteria(idCriteria);
     }
 
     @DeleteMapping("/rm-all")
