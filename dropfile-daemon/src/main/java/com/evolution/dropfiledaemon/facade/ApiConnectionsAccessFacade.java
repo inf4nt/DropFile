@@ -2,14 +2,17 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
+import com.evolution.dropfile.common.dto.ApiConnectionsAccessRmResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
@@ -36,9 +39,13 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public void rm(String id) {
-        String key = accessKeyStore.getRequiredByKeyStartWith(id).getKey();
-        accessKeyStore.remove(key);
+    public ApiConnectionsAccessRmResponseDTO rm(Set<String> idCriteria) {
+        KeyValueStore.RemoveResult<AccessKey> removeResult = accessKeyStore.removeByCriteria(idCriteria);
+        return new ApiConnectionsAccessRmResponseDTO(
+                removeResult.found(),
+                removeResult.notFound(),
+                removeResult.ambiguous()
+        );
     }
 
     public void rmAll() {

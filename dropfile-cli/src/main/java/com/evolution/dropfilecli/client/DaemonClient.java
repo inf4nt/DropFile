@@ -5,10 +5,8 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -113,8 +111,8 @@ public class DaemonClient {
         return sendGet("/api/connections/access/ls");
     }
 
-    public HttpResponse<byte[]> connectionsAccessRm(String id) throws IOException {
-        return sendDelete(CommonUtils.joinPaths("/api/connections/access/rm", id));
+    public HttpResponse<byte[]> connectionsAccessRm(Set<String> idCriteria) throws IOException {
+        return sendDelete("/api/connections/access/rm", idCriteria);
     }
 
     public HttpResponse<byte[]> connectionsAccessRmAll() throws IOException {
