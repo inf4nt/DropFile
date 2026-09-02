@@ -3,23 +3,23 @@ package com.evolution.dropfile.store.framework;
 import com.evolution.dropfile.common.CommonUtils;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface KeyValueStore<V> {
 
-    Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy);
+    Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy);
 
-    default Collection<V> save(Supplier<? extends Map<String, V>> supplier) {
-        return save(supplier, ValidatePolicy.STRICT);
+    default Map<String, V> save(Callable<? extends Map<String, V>> callable) {
+        return save(callable, ValidatePolicy.STRICT);
     }
 
-    default V save(String key, Supplier<V> valueSupplier) {
-        return save(() -> Map.of(key, valueSupplier.get())).iterator().next();
+    default V save(String key, Callable<V> callable) {
+        return save(() -> Map.of(key, callable.call()), ValidatePolicy.STRICT).values().stream().findAny().orElseThrow();
     }
 
     default V save(String key, V value) {
-        return save(() -> Map.of(key, value)).iterator().next();
+        return save(() -> Map.of(key, value), ValidatePolicy.STRICT).values().stream().findAny().orElseThrow();
     }
 
     default V update(String key, Function<V, V> updateFunction) {
@@ -30,7 +30,7 @@ public interface KeyValueStore<V> {
                     return Map.of(key, newValue);
                 },
                 ValidatePolicy.STRICT
-        ).iterator().next();
+        ).values().stream().findAny().orElseThrow();
     }
 
     RemoveResult removeByCriteria(Collection<String> idCriteria);
@@ -98,7 +98,7 @@ public interface KeyValueStore<V> {
     }
 
     record RemoveResult(
-            Map<String, String> found,
+            Map<String, String> removed,
             Collection<String> notFound,
             Map<String, List<String>> ambiguous
     ) {

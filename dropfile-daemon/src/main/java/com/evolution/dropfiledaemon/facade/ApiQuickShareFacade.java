@@ -91,7 +91,7 @@ public class ApiQuickShareFacade {
     public ApiBatchOperationResult removeByCriteria(Collection<String> idCriteria) {
         KeyValueStore.RemoveResult removeResult = quickShareStore.removeByCriteria(idCriteria);
         return new ApiBatchOperationResult(
-                removeResult.found(),
+                removeResult.removed(),
                 removeResult.notFound(),
                 removeResult.ambiguous()
         );

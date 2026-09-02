@@ -8,7 +8,7 @@ import lombok.SneakyThrows;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -22,14 +22,14 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     @SneakyThrows
     @Override
-    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
-        Objects.requireNonNull(supplier);
+    public synchronized Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy) {
+        Objects.requireNonNull(callable);
         Objects.requireNonNull(validatePolicy);
 
-        Map<String, V> newValues = supplier.get();
+        Map<String, V> newValues = callable.call();
 
         if (newValues == null || newValues.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
         for (Map.Entry<String, V> entry : newValues.entrySet()) {
@@ -53,7 +53,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         }
 
         if (toSave.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
         Map<String, V> all = new LinkedHashMap<>(getAll());
@@ -64,7 +64,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             serdeOperations.serialize(all, outputStream);
         });
 
-        return Collections.unmodifiableCollection(toSave.values());
+        return Collections.unmodifiableMap(toSave);
     }
 
     @Override

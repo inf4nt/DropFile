@@ -5,7 +5,7 @@ import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 public class CacheableFileKeyValueStore<V>
         extends FileKeyValueStore<V>
@@ -20,9 +20,9 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized Collection<V> save(Supplier<? extends Map<String, V>> supplier, ValidatePolicy validatePolicy) {
+    public synchronized Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy) {
         try {
-            return super.save(supplier, validatePolicy);
+            return super.save(callable, validatePolicy);
         } finally {
             reset();
         }

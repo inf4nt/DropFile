@@ -62,7 +62,7 @@ public class ApiConnectionsShareFacade {
     public ApiBatchOperationResult rm(Collection<String> idCriteria) {
         KeyValueStore.RemoveResult removeResult = shareFileStore.removeByCriteria(idCriteria);
         return new ApiBatchOperationResult(
-                removeResult.found(),
+                removeResult.removed(),
                 removeResult.notFound(),
                 removeResult.ambiguous()
         );
