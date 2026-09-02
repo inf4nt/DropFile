@@ -463,14 +463,14 @@ public class FileDownloadOrchestrator {
     public record FileDownloadOrchestratorRemoveResponse(
             Map<String, String> removed,
             Map<String, String> active,
-            Set<String> notFound,
+            Collection<String> notFound,
             Map<String, List<String>> ambiguous
     ) {
     }
 
     public record FileDownloadOrchestratorStopResponse(
             Map<String, String> found,
-            Set<String> notFound,
+            Collection<String> notFound,
             Map<String, List<String>> ambiguous
     ) {
     }

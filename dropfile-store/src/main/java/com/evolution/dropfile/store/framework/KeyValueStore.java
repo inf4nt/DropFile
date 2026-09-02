@@ -99,7 +99,7 @@ public interface KeyValueStore<V> {
 
     record RemoveResult<V>(
             Map<String, String> found,
-            Set<String> notFound,
+            Collection<String> notFound,
             Map<String, List<String>> ambiguous
     ) {
     }
