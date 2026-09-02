@@ -30,7 +30,7 @@ public class StartCommand extends AbstractCommandHandler {
     @Override
     public void handle() throws Exception {
         if (isDaemonReachable()) {
-            System.out.println("Daemon already running");
+            System.out.println("Daemon is already running");
             return;
         }
 
@@ -72,7 +72,7 @@ public class StartCommand extends AbstractCommandHandler {
         if (!exited) {
             System.out.println("Command completed successfully. To get daemon execution status execute $dropfile daemon status");
         } else {
-            System.out.println("Process exited with code " + process.exitValue());
+            System.out.println("Process failed. Exit code " + process.exitValue());
         }
     }
 
