@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 
 @Component
@@ -32,7 +33,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
     private boolean force;
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         if (StringUtils.hasText(key)) {
             return daemonClient.handshake(CommonUtils.toURI(address), key, force);
         }

@@ -31,7 +31,7 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
     }
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         if (exclusive.all) {
             return daemonClient.handshakeDisconnectAll();
         } else if (exclusive.current) {

@@ -1,16 +1,20 @@
 package com.evolution.dropfilecli.command.daemon;
 
+import com.evolution.dropfilecli.client.DaemonClient;
 import com.evolution.dropfilecli.command.AbstractCommandHandler;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 
+@RequiredArgsConstructor
 @Component
 @CommandLine.Command(
         name = "start",
@@ -21,8 +25,15 @@ import java.time.Duration;
 )
 public class StartCommand extends AbstractCommandHandler {
 
+    private final DaemonClient daemonClient;
+
     @Override
     public void handle() throws Exception {
+        if (isDaemonReachable()) {
+            System.out.println("Daemon already running");
+            return;
+        }
+
         Path executable = getDaemonExecutablePath();
 
         if (Files.notExists(executable)) {
@@ -62,6 +73,15 @@ public class StartCommand extends AbstractCommandHandler {
             System.out.println("Command completed successfully. To get daemon execution status execute $dropfile daemon status");
         } else {
             System.out.println("Process exited with code " + process.exitValue());
+        }
+    }
+
+    private boolean isDaemonReachable() {
+        try {
+            HttpResponse<byte[]> httpResponse = daemonClient.daemonPing();
+            return httpResponse.statusCode() == 200;
+        } catch (Exception _) {
+            return false;
         }
     }
 }

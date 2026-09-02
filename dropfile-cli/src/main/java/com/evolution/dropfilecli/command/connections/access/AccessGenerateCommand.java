@@ -18,7 +18,7 @@ import java.net.http.HttpResponse;
 public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnectionsAccessInfoResponseDTO> {
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.connectionsAccessGenerate(false);
     }
 

@@ -26,7 +26,7 @@ public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsB
     private String filename;
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.connectionsBrowseGet(id, filename);
     }
 

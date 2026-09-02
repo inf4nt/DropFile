@@ -25,7 +25,7 @@ public class BrowseLsCommand extends AbstractCommandHttpHandler<List<ApiConnecti
     private List<String> ids;
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         List<String> requestIds = ids == null ? Collections.emptyList() : ids;
         return daemonClient.connectionsBrowseLs(requestIds);
     }

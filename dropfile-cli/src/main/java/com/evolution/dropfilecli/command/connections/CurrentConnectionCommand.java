@@ -19,7 +19,7 @@ import java.net.http.HttpResponse;
 public class CurrentConnectionCommand extends AbstractCommandHttpHandler<HandshakeApiTrustOutResponseDTO> {
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.getTrustLatest();
     }
 

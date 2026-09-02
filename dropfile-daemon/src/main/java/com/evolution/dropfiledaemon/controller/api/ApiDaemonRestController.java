@@ -15,6 +15,11 @@ public class ApiDaemonRestController {
 
     private final ApiDaemonFacade apiDaemonFacade;
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "pong";
+    }
+
     @PostMapping("/shutdown")
     public void shutdown() {
         apiDaemonFacade.shutdown();

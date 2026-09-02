@@ -18,7 +18,7 @@ import java.util.List;
 public class AccessLsCommand extends AbstractCommandHttpHandler<List<ApiConnectionsAccessInfoResponseDTO>> {
 
     @Override
-    public HttpResponse<byte[]> execute() {
+    public HttpResponse<byte[]> execute() throws Exception {
         return daemonClient.connectionsAccessLs();
     }
 
