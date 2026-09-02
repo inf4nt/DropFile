@@ -16,8 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
@@ -59,7 +59,7 @@ public class ApiConnectionsShareFacade {
                 .toList();
     }
 
-    public ApiBatchOperationResult rm(Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(Collection<String> idCriteria) {
         KeyValueStore.RemoveResult<ShareFile> removeResult = shareFileStore.removeByCriteria(idCriteria);
         return new ApiBatchOperationResult(
                 removeResult.found(),

@@ -197,7 +197,7 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public FileDownloadOrchestratorRemoveResponse rm(Set<String> startWithOperationIds, boolean force) {
+    public FileDownloadOrchestratorRemoveResponse rm(Collection<String> startWithOperationIds, boolean force) {
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
 
         Map<String, String> removed = new LinkedHashMap<>();
@@ -252,7 +252,7 @@ public class FileDownloadOrchestrator {
         fileDownloadStore.remove(operations.keySet());
     }
 
-    public FileDownloadOrchestratorStopResponse stop(Set<String> startWithOperationIds) {
+    public FileDownloadOrchestratorStopResponse stop(Collection<String> startWithOperationIds) {
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
         CommonUtils.MatchResult<String, String> matchResult;
 

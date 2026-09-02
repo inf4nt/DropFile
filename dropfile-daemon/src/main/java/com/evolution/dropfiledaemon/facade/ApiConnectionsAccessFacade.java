@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
@@ -39,7 +39,7 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public ApiBatchOperationResult rm(Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(Collection<String> idCriteria) {
         KeyValueStore.RemoveResult<AccessKey> removeResult = accessKeyStore.removeByCriteria(idCriteria);
         return new ApiBatchOperationResult(
                 removeResult.found(),

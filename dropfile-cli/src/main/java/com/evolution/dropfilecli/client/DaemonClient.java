@@ -15,9 +15,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -95,7 +95,7 @@ public class DaemonClient {
         return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias));
     }
 
-    public HttpResponse<byte[]> connectionsShareRm(Set<String> ids) throws IOException {
+    public HttpResponse<byte[]> connectionsShareRm(Collection<String> ids) throws IOException {
         return sendDelete("/api/connections/share/rm", ids);
     }
 
@@ -111,7 +111,7 @@ public class DaemonClient {
         return sendGet("/api/connections/access/ls");
     }
 
-    public HttpResponse<byte[]> connectionsAccessRm(Set<String> idCriteria) throws IOException {
+    public HttpResponse<byte[]> connectionsAccessRm(Collection<String> idCriteria) throws IOException {
         return sendDelete("/api/connections/access/rm", idCriteria);
     }
 
@@ -123,7 +123,7 @@ public class DaemonClient {
         return sendPost("/api/connections/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    public HttpResponse<byte[]> connectionsDownloadStop(Set<String> startWithOperationIds) throws IOException {
+    public HttpResponse<byte[]> connectionsDownloadStop(Collection<String> startWithOperationIds) throws IOException {
         return sendPost("/api/connections/download/stop", startWithOperationIds);
     }
 
@@ -131,7 +131,7 @@ public class DaemonClient {
         return sendPost("/api/connections/download/stop-all");
     }
 
-    public HttpResponse<byte[]> connectionsDownloadRm(Set<String> startWithOperationIds, boolean force) throws IOException {
+    public HttpResponse<byte[]> connectionsDownloadRm(Collection<String> startWithOperationIds, boolean force) throws IOException {
         return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(startWithOperationIds, force));
     }
 
@@ -154,7 +154,7 @@ public class DaemonClient {
         return sendGet(CommonUtils.joinPaths("/api/quickshare/ls", id));
     }
 
-    public HttpResponse<byte[]> quickShareRm(Set<String> idCriteria) throws IOException {
+    public HttpResponse<byte[]> quickShareRm(Collection<String> idCriteria) throws IOException {
         return sendDelete("/api/quickshare/rm", idCriteria);
     }
 

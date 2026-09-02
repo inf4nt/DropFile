@@ -7,8 +7,8 @@ import com.evolution.dropfiledaemon.facade.ApiConnectionsAccessFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,7 +28,7 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult rm(@RequestBody Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(@RequestBody Collection<String> idCriteria) {
         return apiFacade.rm(idCriteria);
     }
 

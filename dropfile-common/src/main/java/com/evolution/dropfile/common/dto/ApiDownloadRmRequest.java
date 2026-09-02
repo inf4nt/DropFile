@@ -1,6 +1,6 @@
 package com.evolution.dropfile.common.dto;
 
-import java.util.Set;
+import java.util.Collection;
 
-public record ApiDownloadRmRequest(Set<String> operations, boolean force) {
+public record ApiDownloadRmRequest(Collection<String> operations, boolean force) {
 }

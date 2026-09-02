@@ -7,8 +7,8 @@ import com.evolution.dropfiledaemon.facade.ApiQuickShareFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,7 +33,7 @@ public class ApiQuickShareRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult removeByCriteria(@RequestBody Set<String> idCriteria) {
+    public ApiBatchOperationResult removeByCriteria(@RequestBody Collection<String> idCriteria) {
         return facade.removeByCriteria(idCriteria);
     }
 
