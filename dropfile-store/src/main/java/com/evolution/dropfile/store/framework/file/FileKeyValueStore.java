@@ -68,9 +68,9 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized RemoveResult<V> removeByCriteria(Collection<String> idCriteria) {
+    public synchronized RemoveResult removeByCriteria(Collection<String> idCriteria) {
         if (idCriteria == null || idCriteria.isEmpty()) {
-            return new RemoveResult<>(Map.of(), Set.of(), Map.of());
+            return RemoveResult.EMPTY;
         }
 
         for (String criterion : idCriteria) {
@@ -94,7 +94,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
                 ));
 
         if (matchResult.found().isEmpty()) {
-            return new RemoveResult<>(
+            return new RemoveResult(
                     Collections.emptyMap(),
                     matchResult.notFound(),
                     ambiguous
@@ -115,7 +115,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             }
         });
 
-        return new RemoveResult<>(
+        return new RemoveResult(
                 confirmedFound,
                 matchResult.notFound(),
                 ambiguous

@@ -33,7 +33,7 @@ public interface KeyValueStore<V> {
         ).iterator().next();
     }
 
-    RemoveResult<V> removeByCriteria(Collection<String> idCriteria);
+    RemoveResult removeByCriteria(Collection<String> idCriteria);
 
     Map<String, V> remove(Collection<String> keys);
 
@@ -97,10 +97,11 @@ public interface KeyValueStore<V> {
         GENTLE
     }
 
-    record RemoveResult<V>(
+    record RemoveResult(
             Map<String, String> found,
             Collection<String> notFound,
             Map<String, List<String>> ambiguous
     ) {
+        public static final RemoveResult EMPTY = new RemoveResult(Map.of(), Set.of(), Map.of());
     }
 }

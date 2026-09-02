@@ -38,7 +38,7 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized RemoveResult<V> removeByCriteria(Collection<String> idCriteria) {
+    public synchronized RemoveResult removeByCriteria(Collection<String> idCriteria) {
         try {
             return super.removeByCriteria(idCriteria);
         } finally {

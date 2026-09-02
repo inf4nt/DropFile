@@ -40,7 +40,7 @@ public class ApiConnectionsAccessFacade {
     }
 
     public ApiBatchOperationResult rm(Collection<String> idCriteria) {
-        KeyValueStore.RemoveResult<AccessKey> removeResult = accessKeyStore.removeByCriteria(idCriteria);
+        KeyValueStore.RemoveResult removeResult = accessKeyStore.removeByCriteria(idCriteria);
         return new ApiBatchOperationResult(
                 removeResult.found(),
                 removeResult.notFound(),
