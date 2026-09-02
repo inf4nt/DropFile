@@ -18,6 +18,6 @@ public class DownloadStopAllCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.downloadStopAll();
+        return daemonClient.connectionsDownloadStopAll();
     }
 }

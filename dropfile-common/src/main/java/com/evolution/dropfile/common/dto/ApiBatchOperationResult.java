@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record ApiDownloadStopResponse(Map<String, String> found,
+public record ApiBatchOperationResult(Map<String, String> found,
                                       Set<String> notFound,
                                       Map<String, List<String>> ambiguous) {
 }

@@ -119,24 +119,24 @@ public class DaemonClient {
         return sendDelete("/api/connections/access/rm-all");
     }
 
-    public HttpResponse<byte[]> downloadLs(ApiDownloadLsDTO.Status status, Integer limit) throws IOException {
-        return sendPost("/api/download/ls", new ApiDownloadLsDTO.Request(status, limit));
+    public HttpResponse<byte[]> connectionsDownloadLs(ApiDownloadLsDTO.Status status, Integer limit) throws IOException {
+        return sendPost("/api/connections/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    public HttpResponse<byte[]> downloadStop(Set<String> startWithOperationIds) throws IOException {
-        return sendPost("/api/download/stop", startWithOperationIds);
+    public HttpResponse<byte[]> connectionsDownloadStop(Set<String> startWithOperationIds) throws IOException {
+        return sendPost("/api/connections/download/stop", startWithOperationIds);
     }
 
-    public HttpResponse<byte[]> downloadStopAll() throws IOException {
-        return sendPost("/api/download/stop-all");
+    public HttpResponse<byte[]> connectionsDownloadStopAll() throws IOException {
+        return sendPost("/api/connections/download/stop-all");
     }
 
-    public HttpResponse<byte[]> downloadRm(Set<String> startWithOperationIds, boolean force) throws IOException {
-        return sendDelete("/api/download/rm", new ApiDownloadRmRequest(startWithOperationIds, force));
+    public HttpResponse<byte[]> connectionsDownloadRm(Set<String> startWithOperationIds, boolean force) throws IOException {
+        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(startWithOperationIds, force));
     }
 
-    public HttpResponse<byte[]> downloadRmAll() throws IOException {
-        return sendDelete("/api/download/rm-all");
+    public HttpResponse<byte[]> connectionsDownloadRmAll() throws IOException {
+        return sendDelete("/api/connections/download/rm-all");
     }
 
     public HttpResponse<byte[]> quickShareAdd(String resourcePath,

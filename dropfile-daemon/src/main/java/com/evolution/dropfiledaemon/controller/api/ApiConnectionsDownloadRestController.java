@@ -1,9 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
-import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
-import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
-import com.evolution.dropfile.common.dto.ApiDownloadStopResponse;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfiledaemon.facade.ApiDownloadFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +10,8 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/download")
-public class ApiDownloadRestController {
+@RequestMapping("/api/connections/download")
+public class ApiConnectionsDownloadRestController {
 
     private final ApiDownloadFacade downloadFacade;
 
@@ -24,7 +21,7 @@ public class ApiDownloadRestController {
     }
 
     @PostMapping("/stop")
-    public ApiDownloadStopResponse stop(@RequestBody Set<String> startWithOperationIds) {
+    public ApiBatchOperationResult stop(@RequestBody Set<String> startWithOperationIds) {
         return downloadFacade.stop(startWithOperationIds);
     }
 

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiQuickShareFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +33,7 @@ public class ApiQuickShareRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiQuickShareRmResponseDTO removeByCriteria(@RequestBody Set<String> idCriteria) {
+    public ApiBatchOperationResult removeByCriteria(@RequestBody Set<String> idCriteria) {
         return facade.removeByCriteria(idCriteria);
     }
 

@@ -18,6 +18,6 @@ public class DownloadRmAllCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.downloadRmAll();
+        return daemonClient.connectionsDownloadRmAll();
     }
 }

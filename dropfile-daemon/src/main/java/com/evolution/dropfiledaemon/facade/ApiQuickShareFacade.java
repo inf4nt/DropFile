@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
-import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
@@ -88,9 +88,9 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
-    public ApiQuickShareRmResponseDTO removeByCriteria(Set<String> idCriteria) {
+    public ApiBatchOperationResult removeByCriteria(Set<String> idCriteria) {
         KeyValueStore.RemoveResult<QuickShare> removeResult = quickShareStore.removeByCriteria(idCriteria);
-        return new ApiQuickShareRmResponseDTO(
+        return new ApiBatchOperationResult(
                 removeResult.found(),
                 removeResult.notFound(),
                 removeResult.ambiguous()

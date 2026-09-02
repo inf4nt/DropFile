@@ -1,8 +1,6 @@
 package com.evolution.dropfilecli.command.quickshare;
 
-import com.evolution.dropfile.common.dto.ApiQuickShareRmResponseDTO;
-import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.evolution.dropfilecli.command.AbstractApiBatchOperationResultCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -20,39 +18,10 @@ import java.util.Set;
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class QuickShareRmCommand extends AbstractCommandHttpHandler<ApiQuickShareRmResponseDTO> {
+public class QuickShareRmCommand extends AbstractApiBatchOperationResultCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0..*", arity = "1..*", split = ",", description = "Quickshare id")
     private Set<String> ids;
-
-    @Override
-    protected TypeReference<ApiQuickShareRmResponseDTO> getTypeReference() {
-        return new TypeReference<ApiQuickShareRmResponseDTO>() {
-        };
-    }
-
-    @Override
-    protected void print(ApiQuickShareRmResponseDTO response) {
-        response.found().forEach((prefix, operationId) -> {
-            if (prefix.equals(operationId)) {
-                System.out.printf("Removed quickshare: %s%n", operationId);
-            } else {
-                System.out.printf("Removed quickshare: %s (prefix: '%s')%n", operationId, prefix);
-            }
-        });
-
-        response.notFound().forEach(prefix ->
-                System.err.printf("Error response from daemon: No such quickshare: %s%n", prefix)
-        );
-
-        response.ambiguous().forEach((prefix, matches) ->
-                System.err.printf(
-                        "Error response from daemon: Prefix '%s' is ambiguous. Matches: %s%n",
-                        prefix,
-                        String.join(", ", matches)
-                )
-        );
-    }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

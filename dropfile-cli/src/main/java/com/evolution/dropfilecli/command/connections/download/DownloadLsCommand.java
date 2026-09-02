@@ -35,7 +35,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
             throw new IllegalArgumentException("Limit cannot be negative");
         }
         int limit = this.limit == 0 ? Integer.MAX_VALUE : this.limit;
-        return daemonClient.downloadLs(status, limit);
+        return daemonClient.connectionsDownloadLs(status, limit);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsAccessRmResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -39,9 +39,9 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public ApiConnectionsAccessRmResponseDTO rm(Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(Set<String> idCriteria) {
         KeyValueStore.RemoveResult<AccessKey> removeResult = accessKeyStore.removeByCriteria(idCriteria);
-        return new ApiConnectionsAccessRmResponseDTO(
+        return new ApiBatchOperationResult(
                 removeResult.found(),
                 removeResult.notFound(),
                 removeResult.ambiguous()

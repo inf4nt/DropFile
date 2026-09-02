@@ -67,6 +67,6 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.downloadRm(ids, force);
+        return daemonClient.connectionsDownloadRm(ids, force);
     }
 }

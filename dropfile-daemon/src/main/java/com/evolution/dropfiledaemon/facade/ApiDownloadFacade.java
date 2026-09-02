@@ -1,10 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
-import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
-import com.evolution.dropfile.common.dto.ApiDownloadStopResponse;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
@@ -91,11 +88,11 @@ public class ApiDownloadFacade {
         return getByStatus(responses, status, limit);
     }
 
-    public ApiDownloadStopResponse stop(Set<String> startWithOperationIds) {
+    public ApiBatchOperationResult stop(Set<String> startWithOperationIds) {
         FileDownloadOrchestrator.FileDownloadOrchestratorStopResponse fileDownloadOrchestratorStopResponse = fileDownloadOrchestrator.stop(
                 startWithOperationIds
         );
-        return new ApiDownloadStopResponse(
+        return new ApiBatchOperationResult(
                 fileDownloadOrchestratorStopResponse.found(),
                 fileDownloadOrchestratorStopResponse.notFound(),
                 fileDownloadOrchestratorStopResponse.ambiguous()

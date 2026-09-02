@@ -1,9 +1,9 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsShareRmResponseDTO;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
@@ -59,9 +59,9 @@ public class ApiConnectionsShareFacade {
                 .toList();
     }
 
-    public ApiConnectionsShareRmResponseDTO rm(Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(Set<String> idCriteria) {
         KeyValueStore.RemoveResult<ShareFile> removeResult = shareFileStore.removeByCriteria(idCriteria);
-        return new ApiConnectionsShareRmResponseDTO(
+        return new ApiBatchOperationResult(
                 removeResult.found(),
                 removeResult.notFound(),
                 removeResult.ambiguous()

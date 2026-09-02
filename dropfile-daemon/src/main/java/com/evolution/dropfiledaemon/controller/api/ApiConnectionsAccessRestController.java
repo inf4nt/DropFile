@@ -1,8 +1,8 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
-import com.evolution.dropfile.common.dto.ApiConnectionsAccessRmResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsAccessFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,7 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiConnectionsAccessRmResponseDTO rm(@RequestBody Set<String> idCriteria) {
+    public ApiBatchOperationResult rm(@RequestBody Set<String> idCriteria) {
         return apiFacade.rm(idCriteria);
     }
 
