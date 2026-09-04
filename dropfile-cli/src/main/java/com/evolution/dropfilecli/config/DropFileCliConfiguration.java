@@ -8,7 +8,7 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.*;
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
-import com.evolution.dropfile.store.secret.DaemonSecretStoreImpl;
+import com.evolution.dropfile.store.secret.DefaultDaemonSecretStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
 import com.evolution.dropfilecli.util.DateUtils;
@@ -114,7 +114,7 @@ public class DropFileCliConfiguration {
         KeyValueStore<DaemonSecret> store = new FileKeyValueStore<>(
                 daemonSecretsFileProvider, fileOperations, serdeOperations
         );
-        return new DaemonSecretStoreImpl(store);
+        return new DefaultDaemonSecretStore(store);
     }
 
     @Bean
