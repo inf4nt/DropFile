@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
@@ -115,9 +116,9 @@ public class ApiQuickShareFacade {
     private ApiQuickShareLsResponseDTO map(String linkId, QuickShare entry) {
         String relativeDownloadLink = buildRelativeDownloadLink(linkId);
 
-        @Nullable InetLocalAddressService.ConnectionAddress connectionAddress = inetLocalAddressService.getConnectionAddress();
+        InetLocalAddressService.ConnectionAddress connectionAddress = inetLocalAddressService.getConnectionAddress();
 
-        List<String> externalLinks = buildExternalLinks(linkId);
+        String externalLink = buildExternalLinks(linkId);
 
         return new ApiQuickShareLsResponseDTO(
                 linkId,
@@ -125,9 +126,9 @@ public class ApiQuickShareFacade {
                 CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourcePath()))),
                 entry.secret(),
                 relativeDownloadLink,
-                externalLinks,
-                connectionAddress != null ? buildLinks(connectionAddress.wireless(), linkId) : List.of(),
-                connectionAddress != null ? buildLinks(connectionAddress.ethernet(), linkId) : List.of(),
+                externalLink,
+                buildLinks(connectionAddress.wireless(), linkId),
+                buildLinks(connectionAddress.ethernet(), linkId),
                 entry.directory(),
                 entry.secure(),
                 entry.singleUse(),
@@ -137,27 +138,32 @@ public class ApiQuickShareFacade {
         );
     }
 
-    private List<String> buildExternalLinks(String linkId) {
+    @Nullable
+    private String buildExternalLinks(String linkId) {
         String daemonExternalHost = applicationProperties.daemonExternalHost;
         if (!StringUtils.hasText(daemonExternalHost)) {
-            return Collections.emptyList();
+            return null;
         }
 
         URI daemonExternalHostURI = CommonUtils.toURI(daemonExternalHost);
         String link = buildLink(daemonExternalHostURI, linkId);
-        return List.of(link);
+        return StringUtils.hasText(link) ? link : null;
     }
 
-    private List<String> buildLinks(@Nullable InetLocalAddressService.BestLocalAddress address, String linkId) {
-        if (address == null) {
+    private List<String> buildLinks(Collection<InetLocalAddressService.BestLocalAddress> addresses, String linkId) {
+        if (ObjectUtils.isEmpty(addresses)) {
             return Collections.emptyList();
         }
 
-        String hostAddress = address.inetAddress().getHostAddress();
-        Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
-        URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
-        String link = buildLink(daemonRootURI, linkId);
-        return List.of(link);
+        return addresses.stream()
+                .map(address -> {
+                    String hostAddress = address.inetAddress().getHostAddress();
+                    Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
+                    URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
+                    return buildLink(daemonRootURI, linkId);
+                })
+                .filter(it -> StringUtils.hasText(it))
+                .toList();
     }
 
     private String buildLink(URI daemonRootURI, String linkId) {

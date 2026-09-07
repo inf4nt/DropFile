@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.service;
 
-import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
@@ -8,13 +7,13 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 
 @Component
 public class InetLocalAddressService {
 
-    @Nullable
     @SneakyThrows
     public ConnectionAddress getConnectionAddress() {
         Enumeration<NetworkInterface> interfaces =
@@ -62,11 +61,7 @@ public class InetLocalAddressService {
             }
         }
 
-        if (!wifi.isEmpty() || !ethernet.isEmpty()) {
-            return new ConnectionAddress(wifi.stream().findFirst().orElse(null), ethernet.stream().findFirst().orElse(null));
-        }
-
-        return null;
+        return new ConnectionAddress(wifi, ethernet);
     }
 
     private String getWifi(String name, String display) {
@@ -110,7 +105,7 @@ public class InetLocalAddressService {
     public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {
     }
 
-    public record ConnectionAddress(@Nullable BestLocalAddress wireless, @Nullable BestLocalAddress ethernet) {
+    public record ConnectionAddress(Collection<BestLocalAddress> wireless, Collection<BestLocalAddress> ethernet) {
     }
 
 }

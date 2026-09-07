@@ -5,12 +5,11 @@ import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.evolution.dropfilecli.util.ConsoleQrPrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Component
@@ -71,55 +70,64 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
         }
     }
 
-    private void printQRCode(ApiQuickShareLsResponseDTO object) {
-        if (object.expired()) {
+    private void printQRCode(ApiQuickShareLsResponseDTO responseDTO) {
+        if (responseDTO.expired()) {
             System.out.println("Unable to generate QRCode for expired object");
             return;
         }
 
-        Map.Entry<QRCodeType, String> entryURL = extractURL(qrCodeType, object).orElse(null);
-        if (entryURL == null) {
-            System.out.println("Unable to build QRCode by given type. No found " + qrCodeType + " links");
+        List<Map.Entry<QRCodeType, String>> links = extractLinks(qrCodeType, responseDTO);
+        if (links.isEmpty()) {
+            System.out.println("Unable to build QRCode. No links found");
             return;
         }
 
-        String url = entryURL.getValue();
-        if (!StringUtils.hasText(url)) {
-            System.out.println("Error: Cannot generate QR code. No URL provided");
-            return;
-        }
+        for (Map.Entry<QRCodeType, String> linkEntry : links) {
+            QRCodeType qrCodeType = linkEntry.getKey();
+            String link = linkEntry.getValue();
 
-        if (entryURL.getKey() == QRCodeType.ETHERNET) {
+            if (qrCodeType == QRCodeType.ETHERNET) {
+                System.out.println();
+                System.err.println(
+                        """
+                                Warning: Generating QR code for an Ethernet connection.
+                                Wireless devices may not be able to connect using this network configuration."""
+                );
+            }
+
             System.out.println();
-            System.err.println(
-                    """
-                    Warning: Generating QR code for an Ethernet connection.
-                    Wireless devices may not be able to connect using this network configuration."""
-            );
+            System.out.println("Connection type " + qrCodeType);
+            ConsoleQrPrinter.printUrlAsQr(link);
         }
-
-        System.out.println();
-        System.out.println("Connection type " + entryURL.getKey());
-        ConsoleQrPrinter.printUrlAsQr(entryURL.getValue());
     }
 
-    private Optional<Map.Entry<QRCodeType, String>> extractURL(QRCodeType qrCodeType, ApiQuickShareLsResponseDTO object) {
-        if (qrCodeType == null) {
-            return object.external().stream().findFirst().map(it -> Map.entry(QRCodeType.EXTERNAL, it))
-                    .or(() -> object.wireless().stream().findFirst().map(it -> Map.entry(QRCodeType.WIRELESS, it)))
-                    .or(() -> object.ethernet().stream().findFirst().map(it -> Map.entry(QRCodeType.ETHERNET, it)));
+    private List<Map.Entry<QRCodeType, String>> extractLinks(QRCodeType qrCodeType, ApiQuickShareLsResponseDTO object) {
+        if (qrCodeType != null) {
+            return getUrlsByType(qrCodeType, object);
         }
 
-        if (qrCodeType == QRCodeType.EXTERNAL) {
-            return object.external().stream().findFirst().map(it -> Map.entry(QRCodeType.EXTERNAL, it));
+        if (object.external() != null && !object.external().isBlank()) {
+            return List.of(Map.entry(QRCodeType.EXTERNAL, object.external()));
         }
-        if (qrCodeType == QRCodeType.WIRELESS) {
-            return object.wireless().stream().findFirst().map(it -> Map.entry(QRCodeType.WIRELESS, it));
+        if (object.wireless() != null && !object.wireless().isEmpty()) {
+            return object.wireless().stream().map(it -> Map.entry(QRCodeType.WIRELESS, it)).toList();
         }
-        if (qrCodeType == QRCodeType.ETHERNET) {
-            return object.ethernet().stream().findFirst().map(it -> Map.entry(QRCodeType.ETHERNET, it));
+        if (object.ethernet() != null && !object.ethernet().isEmpty()) {
+            return object.ethernet().stream().map(it -> Map.entry(QRCodeType.ETHERNET, it)).toList();
         }
-        throw new NoSuchElementException("No source found by " + qrCodeType);
+
+        return List.of();
+    }
+
+    private List<Map.Entry<QRCodeType, String>> getUrlsByType(QRCodeType qrCodeType, ApiQuickShareLsResponseDTO object) {
+        return switch (qrCodeType) {
+            case EXTERNAL -> Optional.ofNullable(object.external())
+                    .stream()
+                    .map(it -> Map.entry(QRCodeType.EXTERNAL, it))
+                    .toList();
+            case WIRELESS -> object.wireless().stream().map(it -> Map.entry(QRCodeType.WIRELESS, it)).toList();
+            case ETHERNET -> object.ethernet().stream().map(it -> Map.entry(QRCodeType.ETHERNET, it)).toList();
+        };
     }
 
     private static class QRCodeTypeEnumConverter implements CommandLine.ITypeConverter<QRCodeType> {
