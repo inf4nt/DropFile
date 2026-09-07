@@ -169,28 +169,59 @@ $ ./dropfile/bin/dropf
 ```
 5. Go to the command line ``$ dropf``
 ```
-░███████                                      ░████ ░██░██
-░██   ░██                                    ░██       ░██
-░██    ░██ ░██░████  ░███████  ░████████  ░████████ ░██░██  ░███████
-░██    ░██ ░███     ░██    ░██ ░██    ░██    ░██    ░██░██ ░██    ░██
-░██    ░██ ░██      ░██    ░██ ░██    ░██    ░██    ░██░██ ░█████████
-░██   ░██  ░██      ░██    ░██ ░███   ░██    ░██    ░██░██ ░██
-░███████   ░██       ░███████  ░██░█████     ░██    ░██░██  ░███████
+░███████
+░██   ░██
+░██    ░██ ░██░████  ░███████  ░████████
+░██    ░██ ░███     ░██    ░██ ░██    ░██
+░██    ░██ ░██      ░██    ░██ ░██    ░██
+░██   ░██  ░██      ░██    ░██ ░███   ░██
+░███████   ░██       ░███████  ░██░█████
                                ░██
                                ░██
 
-Daemon host: 127.0.0.1
-Daemon port: 18181
-Usage: dropfile [-hV] [-ignore-error] [-live] [COMMAND]
-  -h, --help          Show this help message and exit.
-      -ignore-error, --ignore-error
-                      Continue polling even if the command encounters an error
-      -live, --live   Run this command in live update mode
-  -V, --version       Print version information and exit.
+░██████████░██░██
+░██           ░██
+░██        ░██░██  ░███████
+░█████████ ░██░██ ░██    ░██
+░██        ░██░██ ░█████████
+░██        ░██░██ ░██
+░██        ░██░██  ░███████
+
+{
+  "java.version" : "25.0.3",
+  "java.vendor" : "Eclipse Adoptium",
+  "java.home" : "C:\\dropfile\\runtime",
+  "os.name" : "Windows 11",
+  "os.arch" : "amd64",
+  "SystemInfoProvider.PROCESS_ID" : "774be1c1-2af2-4ab6-8202-7448f26303b3",
+  "Runtime.getRuntime().availableProcessors()" : "1",
+  "ManagementFactory.getMemoryMXBean().getHeapMemoryUsage()" : "init = 67108864(65536K) used = 20675488(20190K) committed = 64880640(63360K) max = 129761280(126720K)",
+  "ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage()" : "init = 7667712(7488K) used = 13721928(13400K) committed = 16842752(16448K) max = -1(-1K)",
+  "Runtime.getRuntime().maxMemory()" : "129761280 bytes (123.75MB)",
+  "Runtime.getRuntime().totalMemory()" : "64880640 bytes (61.88MB)",
+  "Runtime.getRuntime().freeMemory()" : "44073000 bytes (42.03MB)"
+}
+{
+  "userDir" : "file:///C:/Users/home/",
+  "daemonSecretsDirectory" : "file:///C:/dropfile/conf/",
+  "daemonInstallationSeedDirectory" : "file:///C:/dropfile/conf/",
+  "daemonHost" : "127.0.0.1",
+  "daemonPort" : 18181
+}
+Usage: dropf [-hV] [--ignore-error] [--list] [--live] [--stacktrace] [--table]
+             [COMMAND]
+  -h, --help           Show this help message and exit.
+      --ignore-error   Continue --live polling even if the command encounters
+                         an error
+      --list           Print result as a list
+      --live           Run this command in live update mode
+      --stacktrace     Show detailed information about error
+      --table          Print result as a table
+  -V, --version        Print version information and exit.
 Commands:
-  connections, c                            Connections commands
-  daemon, d                                 Daemon commands
-  quickshare, q                             Quickshare commands
+  connections, c  Connections commands
+  daemon, d       Daemon commands
+  quickshare, q   Quickshare commands
 ```
 # Termux(Android)
 The Termux installation requires java-25 or higher on the host(termux) machine.
@@ -207,7 +238,7 @@ $ dropf daemon status
 ```
 #### Daemon commands
 ```
-Usage: dropfile daemon [-h] [COMMAND]
+Usage: dropf daemon [-h] [COMMAND]
 Daemon commands
   -h, --help   Show this help message and exit.
 Commands:
@@ -220,7 +251,7 @@ Commands:
 
 #### Connections
 ```
-Usage: dropfile connections [-h] [COMMAND]
+Usage: dropf connections [-h] [COMMAND]
 Connections commands
   -h, --help   Show this help message and exit.
 Commands:
