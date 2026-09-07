@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,8 +26,7 @@ public class ApiConnectionsShareFacade {
 
     private final ShareFileStore shareFileStore;
 
-    @SneakyThrows
-    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) {
+    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) throws IOException {
         Path absoluteResourcePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
         String alias = Paths.get(requestDTO.alias()).toString();
 
@@ -44,7 +44,7 @@ public class ApiConnectionsShareFacade {
                 new ShareFile(
                         alias,
                         absoluteResourcePath.toFile().getCanonicalPath(),
-                        absoluteResourcePath.toFile().length(),
+                        Files.size(absoluteResourcePath),
                         Instant.now()
                 )
         );
@@ -73,11 +73,15 @@ public class ApiConnectionsShareFacade {
     }
 
     private ApiConnectionsShareLsResponseDTO map(String id, ShareFile shareFile) {
+        Path path = Paths.get(shareFile.resourcePath());
+        boolean exists = Files.exists(path);
+
         return new ApiConnectionsShareLsResponseDTO(
                 id,
                 shareFile.alias(),
                 shareFile.resourcePath(),
                 CommonUtils.toDisplaySize(shareFile.size()),
+                exists,
                 shareFile.created()
         );
     }

@@ -18,7 +18,7 @@ public class ApiConnectionsShareRestController {
     private final ApiConnectionsShareFacade apiFacade;
 
     @PostMapping("/add")
-    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO) {
+    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO) throws Exception {
         return apiFacade.add(requestDTO);
     }
 

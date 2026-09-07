@@ -6,5 +6,6 @@ public record ApiConnectionsShareLsResponseDTO(String id,
                                                String alias,
                                                String resourcePath,
                                                String size,
+                                               boolean exists,
                                                Instant created) {
 }

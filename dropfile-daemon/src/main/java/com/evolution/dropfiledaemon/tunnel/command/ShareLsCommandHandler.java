@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -37,6 +39,7 @@ public class ShareLsCommandHandler
                 .getAll()
                 .entrySet()
                 .stream()
+                .filter(it -> Files.exists(Paths.get(it.getValue().resourcePath())))
                 .filter(entry -> {
                     if (ObjectUtils.isEmpty(request.ids())) {
                         return true;
