@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "disconnect",
         description = "Disconnect trusted-out connection",
-        customSynopsis = "dropfile connections disconnect <fingerprint>",
+        customSynopsis = "dropf connections disconnect <fingerprint>",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

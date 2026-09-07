@@ -14,7 +14,7 @@ import java.util.List;
         name = "trusted-out",
         aliases = {"out", "o"},
         description = "Retrieve trusted-out connections",
-        customSynopsis = "dropfile connections trusted-out",
+        customSynopsis = "dropf connections trusted-out",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

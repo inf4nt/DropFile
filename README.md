@@ -148,7 +148,7 @@ Tested on: Windows 11-10 x64, WSL2, DebianX64, MacosX64, Termux(Android)
 Add DROPFILE_HOME env var and update the PATH. See Linux/MacOS
 
 ##### Linux/MacOS
-The executable files ``/bin/dropfile and /bin/dropfile-daemon`` may ask the permissions to execute
+The executable files ``/bin/dropf and /bin/dropfd`` may ask the permissions to execute
 1. Unzip project ``/home/user/dropfile-linux``
 2. ``tar -xzvf dropfile-linux.tar``
 3. There are three ways how to work with the application: Add environment variable, symlink, execute executable script from the bin directory
@@ -161,14 +161,13 @@ export PATH=$PATH:$DROPFILE_HOME/bin
 ```
 #2 Symlink
 Create symlink to ~/.local/bin
-$ ln -sf "$HOME/dropfile-linux/bin/dropfile" "$HOME/.local/bin/dropfile"
+$ ln -sf "$HOME/dropfile-linux/bin/dropf" "$HOME/.local/bin/dropf"
 ```
 ```
 #3 Direct execution
-$ ./dropfile/bin/dropfile
+$ ./dropfile/bin/dropf
 ```
-5. Go to the command line ``$ dropfile``
-6. Result 
+5. Go to the command line ``$ dropf``
 ```
 ░███████                                      ░████ ░██░██
 ░██   ░██                                    ░██       ░██
@@ -198,13 +197,13 @@ The Termux installation requires java-25 or higher on the host(termux) machine.
 Build the portable version
 1. use ``$ ./full-install.sh`` which installs java-25
 2. use ``$ ./nano-install.sh`` in case you already have java-25
-3. Finally, you will get symlink ``$ dropfile``
+3. Finally, you will get symlink ``$ dropf``
 
 # Examples
 First of all it's necessary to start its daemon
 ```
-$ dropfile daemon start
-$ dropfile daemon status
+$ dropf daemon start
+$ dropf daemon status
 ```
 #### Daemon commands
 ```
@@ -242,7 +241,7 @@ Commands:
 Generate access token, and use the access key via connect command
 
 ```
-$ dropfile connections access generate
+$ dropf connections access generate
 
 {
   "id" : "b451ef733318a553",
@@ -250,7 +249,7 @@ $ dropfile connections access generate
   "created" : "2026-03-29 10:39:29"
 }
 
-$ dropfile connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
+$ dropf connections connect 192.168.1.5:18181 OVVac3h0eHU5Rzl1MUh5cQ
 ```
 
 # 🌐 Public Internet Routing (NAT Traversal via Cloudflare Tunnel)
@@ -317,7 +316,7 @@ By default, Quickshare operates under strict security assumptions to protect you
 #### Default Secure Share (Single-use, Encrypted, Auto-password)
    Ideal for sharing sensitive files securely over untrusted local networks
 ```
-$ dropfile quickshare add C:\\cat_photo.img
+$ dropf quickshare add C:\\cat_photo.img
 ```
 ```
 {
@@ -346,14 +345,14 @@ Scan this QR code to download: URL http://192.168.1.10:18181/p/qs/fc35c9ba35
 Use this when sharing non-sensitive files,
 or when downloading to a device that cannot easily extract ZIP files (like some smart TVs or embedded devices).
 ```
-$ dropfile quickshare add C:\\cat_photo.img --secure false
+$ dropf quickshare add C:\\cat_photo.img --secure false
 ```
 - What happens: The file is exposed directly over HTTP "as is" (raw). No ZIP creation, no compression, and no password required.
 
 #### Persistent Multi-Use Sharing
 Perfect when you need to share a file with multiple people at once (e.g., during a team meeting) or download it onto several devices.
 ```
-$ dropfile quickshare add C:\\cat_photo.img --single-use false
+$ dropf quickshare add C:\\cat_photo.img --single-use false
 ```
 - What happens: The link remains active indefinitely.
 The Daemon will keep serving the file until you manually delete the share or stop the Daemon.
@@ -361,7 +360,7 @@ The Daemon will keep serving the file until you manually delete the share or sto
 #### Custom Passphrase
 If you want to use a memorable password instead of a randomly generated string.
 ```
-$ dropfile quickshare add C:\\cat_photo.img --secret 1234
+$ dropf quickshare add C:\\cat_photo.img --secret 1234
 ```
 - What happens: The file is packed into a standard secure archive (secure.zip) encrypted with the custom password you provided (e.g., 1234).
 

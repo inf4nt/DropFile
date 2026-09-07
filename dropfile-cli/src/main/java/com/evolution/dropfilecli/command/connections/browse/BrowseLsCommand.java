@@ -14,7 +14,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls",
         description = "Retrieve remote files",
-        customSynopsis = "dropfile connections browse ls [options]",
+        customSynopsis = "dropf connections browse ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

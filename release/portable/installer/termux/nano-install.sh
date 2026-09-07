@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-APPLICATION_NAME=dropfile
+APPLICATION_NAME=dropf
 REQUIRED_JAVA_VERSION=25
 
 REAL_SCRIPT_PATH=$(realpath "$0" 2>/dev/null || readlink -f "$0")

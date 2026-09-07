@@ -12,8 +12,8 @@ import java.util.Set;
         name = "rm",
         description = "Remove shared file",
         customSynopsis = {
-                "dropfile connections share rm <ids>",
-                "dropfile connections share rm one two three"
+                "dropf connections share rm <ids>",
+                "dropf connections share rm one two three"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"

@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "rm-all",
         description = "Remove All quickshare files",
         customSynopsis = {
-                "dropfile quickshare rm-all"
+                "dropf quickshare rm-all"
         }
 )
 public class QuickShareRmAllCommand extends AbstractCommandHttpHandler<Void> {

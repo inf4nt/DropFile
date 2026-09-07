@@ -15,7 +15,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "add",
         description = "Add file as a shared file",
-        customSynopsis = "dropfile connections share add <file> [options]",
+        customSynopsis = "dropf connections share add <file> [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

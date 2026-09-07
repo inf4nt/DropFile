@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls",
         description = "Retrieve shared files",
-        customSynopsis = "dropfile connections share ls [options]",
+        customSynopsis = "dropf connections share ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

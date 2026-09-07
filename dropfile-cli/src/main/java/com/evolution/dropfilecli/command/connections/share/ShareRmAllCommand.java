@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "rm-all",
         description = "Remove all shared files",
         customSynopsis = {
-                "dropfile connections share rm-all"
+                "dropf connections share rm-all"
         }
 )
 public class ShareRmAllCommand extends AbstractCommandHttpHandler<Void> {

@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "rm-all",
         description = "Remove all access keys",
         customSynopsis = {
-                "dropfile connections access rm-all"
+                "dropf connections access rm-all"
         }
 )
 public class AccessRmAllCommand extends AbstractCommandHttpHandler<Void> {

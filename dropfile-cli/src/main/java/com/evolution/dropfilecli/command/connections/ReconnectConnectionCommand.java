@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "reconnect",
         description = "Reconnect to the current connection and rotate session keys",
-        customSynopsis = "dropfile connections reconnect",
+        customSynopsis = "dropf connections reconnect",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

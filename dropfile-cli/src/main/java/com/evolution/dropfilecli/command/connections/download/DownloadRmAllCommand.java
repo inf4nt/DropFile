@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "rm-all",
         description = "Remove all download process",
         customSynopsis = {
-                "dropfile connections download rm-all"
+                "dropf connections download rm-all"
         }
 )
 public class DownloadRmAllCommand extends AbstractCommandHttpHandler<Void> {

@@ -12,8 +12,8 @@ import java.util.Set;
         name = "rm",
         description = "Remove quickshare file",
         customSynopsis = {
-                "dropfile quickshare rm <ids>",
-                "dropfile quickshare rm one two three"
+                "dropf quickshare rm <ids>",
+                "dropf quickshare rm one two three"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"

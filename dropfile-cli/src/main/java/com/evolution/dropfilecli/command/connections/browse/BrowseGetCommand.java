@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
         name = "get",
         aliases = {"g"},
         description = "Get file",
-        customSynopsis = "dropfile connections browse get <id> [options]",
+        customSynopsis = "dropf connections browse get <id> [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

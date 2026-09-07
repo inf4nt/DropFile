@@ -42,7 +42,7 @@ set "CDS_JVM_OPTS="
 
 if /I "%DROPFILE_CLI_CDS_ENABLED%"=="true" (
     if not exist "%JSA_PATH%" (
-        echo [dropfile] First run detected. Optimizing application startup time...
+        echo [dropf] First run detected. Optimizing application startup time...
 
         if exist "%CDS_DIR%" rmdir /s /q "%CDS_DIR%"
 
@@ -60,7 +60,7 @@ if /I "%DROPFILE_CLI_CDS_ENABLED%"=="true" (
                 "-Ddropfile.daemon.installation-seed.directory=%DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY%" ^
                 -jar "%CDS_JAR%" >nul 2>&1
 
-        echo [dropfile] Optimization completed successfully!
+        echo [dropf] Optimization completed successfully!
     )
 
     set "TARGET_JAR=%CDS_JAR%"

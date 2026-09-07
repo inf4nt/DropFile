@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "ls",
         description = "Retrieve download processes",
-        customSynopsis = "dropfile connections download ls [options]",
+        customSynopsis = "dropf connections download ls [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

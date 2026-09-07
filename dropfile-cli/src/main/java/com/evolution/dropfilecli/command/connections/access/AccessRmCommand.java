@@ -12,8 +12,8 @@ import java.util.Set;
         name = "rm",
         description = "Remove access key",
         customSynopsis = {
-                "dropfile connections access rm <ids>",
-                "dropfile connections access rm one two three"
+                "dropf connections access rm <ids>",
+                "dropf connections access rm one two three"
         }
 )
 public class AccessRmCommand extends AbstractApiBatchOperationResultCommandHttpHandler {

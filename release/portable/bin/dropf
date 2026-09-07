@@ -26,7 +26,7 @@ CDS_JVM_OPTS=""
 
 if [ "$DROPFILE_CLI_CDS_ENABLED" = "true" ]; then
     if [ ! -f "$JSA_PATH" ]; then
-        echo "[dropfile] First run detected. Optimizing application startup time..."
+        echo "[dropf] First run detected. Optimizing application startup time..."
 
         rm -rf "$CDS_DIR"
 
@@ -44,7 +44,7 @@ if [ "$DROPFILE_CLI_CDS_ENABLED" = "true" ]; then
             "-Ddropfile.daemon.installation-seed.directory=$DROPFILE_DAEMON_INSTALLATION_SEED_DIRECTORY" \
             -jar "$CDS_JAR" >/dev/null 2>&1
 
-        echo "[dropfile] Optimization completed successfully!"
+        echo "[dropf] Optimization completed successfully!"
     fi
 
     TARGET_JAR="$CDS_JAR"

@@ -12,8 +12,8 @@ import java.util.Set;
         name = "stop",
         description = "Stop download processes",
         customSynopsis = {
-                "dropfile connections download stop <ids>",
-                "dropfile connections download stop one two three"
+                "dropf connections download stop <ids>",
+                "dropf connections download stop one two three"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"

@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "revoke",
         description = "Drop trusted-in connection",
-        customSynopsis = "dropfile connections revoke <fingerprint>",
+        customSynopsis = "dropf connections revoke <fingerprint>",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

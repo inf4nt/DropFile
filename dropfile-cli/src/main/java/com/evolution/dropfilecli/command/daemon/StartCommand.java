@@ -19,7 +19,7 @@ import java.time.Duration;
 @CommandLine.Command(
         name = "start",
         description = "Daemon start",
-        customSynopsis = "dropfile daemon start",
+        customSynopsis = "dropf daemon start",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
@@ -51,7 +51,7 @@ public class StartCommand extends AbstractCommandHandler {
             throw new IllegalStateException("System property 'dropfile.home' is not set");
         }
 
-        String executableName = isWindows() ? "dropfile-daemon.cmd" : "dropfile-daemon";
+        String executableName = isWindows() ? "dropfd.cmd" : "dropfd";
         return Paths.get(appHome, "bin", executableName).toAbsolutePath().normalize();
     }
 
@@ -70,7 +70,7 @@ public class StartCommand extends AbstractCommandHandler {
         boolean exited = process.waitFor(Duration.ofSeconds(5));
 
         if (!exited) {
-            System.out.println("Command completed successfully. To get daemon execution status execute $dropfile daemon status");
+            System.out.println("Command completed successfully. To get daemon execution status execute $dropf daemon status");
         } else {
             System.out.println("Process failed. Exit code " + process.exitValue());
         }

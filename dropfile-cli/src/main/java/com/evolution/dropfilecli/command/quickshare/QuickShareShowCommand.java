@@ -16,7 +16,7 @@ import java.util.Optional;
 @CommandLine.Command(
         name = "show",
         description = "Retrieve quickshare file information",
-        customSynopsis = "dropfile quickshare show <id> [options]",
+        customSynopsis = "dropf quickshare show <id> [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n",
         sortOptions = false

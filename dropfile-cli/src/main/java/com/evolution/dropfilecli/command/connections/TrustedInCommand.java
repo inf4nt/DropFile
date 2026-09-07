@@ -14,7 +14,7 @@ import java.util.List;
         name = "trusted-in",
         aliases = {"in", "i"},
         description = "Retrieve trusted-in connections",
-        customSynopsis = "dropfile connections trusted-in",
+        customSynopsis = "dropf connections trusted-in",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

@@ -15,8 +15,8 @@ import java.net.http.HttpResponse;
         aliases = {"c"},
         description = "Perform connection to the given address",
         customSynopsis = {
-                "dropfile connections connect <address> <access-key> [options]",
-                "dropfile connections connect 192.168.1.3:28282 top_secret"
+                "dropf connections connect <address> <access-key> [options]",
+                "dropf connections connect 192.168.1.3:28282 top_secret"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"

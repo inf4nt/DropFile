@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "cache-reset",
         description = "Daemon cache reset",
-        customSynopsis = "dropfile daemon cache-reset",
+        customSynopsis = "dropf daemon cache-reset",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

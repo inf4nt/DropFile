@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
         name = "stop-all",
         description = "Stop all download processes",
         customSynopsis = {
-                "dropfile connections download stop-all"
+                "dropf connections download stop-all"
         }
 )
 public class DownloadStopAllCommand extends AbstractCommandHttpHandler<Void> {

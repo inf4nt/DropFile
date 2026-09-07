@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "add",
         description = "Add a new file to quickshare",
-        customSynopsis = "dropfile quickshare add <file> [options]",
+        customSynopsis = "dropf quickshare add <file> [options]",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

@@ -32,7 +32,7 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
     public void run(String... args) {
         CompletableFuture.runAsync(() -> {
             CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
-            commandLine.setCommandName("dropfile");
+            commandLine.setCommandName("dropf");
 
             addParameterExceptionHandler(commandLine);
             addExecutionExceptionHandler(commandLine);

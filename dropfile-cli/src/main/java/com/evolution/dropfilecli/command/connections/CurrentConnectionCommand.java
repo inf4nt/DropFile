@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "current",
         description = "Retrieve current connection",
-        customSynopsis = "dropfile connections current",
+        customSynopsis = "dropf connections current",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

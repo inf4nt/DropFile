@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "shutdown",
         description = "Daemon shutdown",
-        customSynopsis = "dropfile daemon shutdown",
+        customSynopsis = "dropf daemon shutdown",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

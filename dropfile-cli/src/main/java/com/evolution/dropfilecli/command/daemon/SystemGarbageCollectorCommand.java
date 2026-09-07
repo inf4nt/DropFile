@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "gc",
         description = "Triggers internal garbage collection and cleanup of stale state",
-        customSynopsis = "dropfile daemon gc",
+        customSynopsis = "dropf daemon gc",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

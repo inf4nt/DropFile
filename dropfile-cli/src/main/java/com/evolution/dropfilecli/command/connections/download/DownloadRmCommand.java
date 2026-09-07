@@ -14,8 +14,8 @@ import java.util.Set;
         name = "rm",
         description = "Remove download process",
         customSynopsis = {
-                "dropfile connections download rm <ids>",
-                "dropfile connections download rm one two three"
+                "dropf connections download rm <ids>",
+                "dropf connections download rm one two three"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"

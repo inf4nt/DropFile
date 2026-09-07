@@ -13,7 +13,7 @@ import java.util.List;
 @CommandLine.Command(
         name = "traffic",
         description = "Retrieve connection traffic",
-        customSynopsis = "dropfile connections traffic",
+        customSynopsis = "dropf connections traffic",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )

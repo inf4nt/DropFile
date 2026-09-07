@@ -51,7 +51,7 @@ COPY --from=build_dropfile_daemon /dropfile-daemon/target/*.jar /dropfile/jars/d
 
 RUN find /dropfile/bin/ -type f -exec sed -i 's/\r$//' {} +
 
-RUN chmod +x dropfile/bin/dropfile dropfile/bin/dropfile-daemon
+RUN chmod +x dropfile/bin/dropf dropfile/bin/dropfd
 
 RUN tar -czf dropfile.tar.gz dropfile
 

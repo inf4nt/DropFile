@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "status",
         description = "Daemon status",
-        customSynopsis = "dropfile daemon status",
+        customSynopsis = "dropf daemon status",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
