@@ -19,16 +19,20 @@ public class CliApplicationProperties {
 
     public final int daemonPort;
 
+    public final long daemonClientHttpRequestTimeoutMillis;
+
     @Autowired
     public CliApplicationProperties(@Value("${user.dir}") Path userDir,
                                     @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
                                     @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
                                     @Value("${dropfile.daemon.host}") String daemonHost,
-                                    @Value("${dropfile.daemon.port}") int daemonPort) {
+                                    @Value("${dropfile.daemon.port}") int daemonPort,
+                                    @Value("${dropfile.cli.daemon.client.http.request-timeout-millis}") long daemonClientHttpRequestTimeoutMillis) {
         this.userDir = userDir;
         this.daemonSecretsDirectory = daemonSecretsDirectory;
         this.daemonInstallationSeedDirectory = daemonInstallationSeedDirectory;
         this.daemonHost = daemonHost;
         this.daemonPort = daemonPort;
+        this.daemonClientHttpRequestTimeoutMillis = daemonClientHttpRequestTimeoutMillis;
     }
 }

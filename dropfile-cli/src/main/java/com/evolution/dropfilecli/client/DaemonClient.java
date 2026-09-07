@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -241,6 +242,7 @@ public class DaemonClient {
         return HttpRequest.newBuilder()
                 .uri(uri)
                 .header("Authorization", getDaemonAuthorizationToken())
+                .timeout(Duration.ofMillis(cliApplicationProperties.daemonClientHttpRequestTimeoutMillis))
                 .method(method, bodyPublisher);
     }
 
