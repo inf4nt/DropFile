@@ -128,7 +128,7 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
 
     protected void printTable(Object object) {
         if (!(object instanceof Iterable<?> iterable)) {
-            throw new IllegalArgumentException("Print table supports only Iterable.class");
+            throw new IllegalArgumentException("Is not an array. Print table supports only arrays");
         }
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
         String print = TablePrinter.get(data);

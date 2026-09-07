@@ -7,20 +7,45 @@ import lombok.SneakyThrows;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class TablePrinter {
-
-    private static final int INSTANT_WIDTH = 10;
 
     private static final int MAX_TABLE_WIDTH = 190;
 
     private static final int MAX_LINES = 5;
 
     private static final int PADDING = 0;
+
+    private static final Map<Class, Integer> CUSTOM_CLASS_FIELD_SIZE = Map.of(
+            Instant.class, 10
+    );
+
+    private static final Map<String, Integer> CUSTOM_FIELD_SIZE = Map.of(
+            "fingerprint", 14,
+            "remoteFingerprint", 14,
+            "publicKeyRSA", 14,
+            "remotePublicRSA", 14,
+            "PublicKeyDH", 14,
+            "RemotePublicKeyDH", 14,
+            "path", 40,
+            "file", 40,
+            "alias", 40
+    );
+
+    private static Optional<Integer> getSizeByField(Field field) {
+        Class<?> type = field.getType();
+        String name = field.getName();
+        return CUSTOM_CLASS_FIELD_SIZE.entrySet().stream().filter(it -> it.getKey().isAssignableFrom(type))
+                .map(it -> it.getValue())
+                .findAny()
+                .or(() -> CUSTOM_FIELD_SIZE.entrySet().stream()
+                        .filter(it -> name.toLowerCase().contains(it.getKey().toLowerCase()))
+                        .findAny()
+                        .map(it -> it.getValue())
+                );
+    }
 
     @SneakyThrows
     public static <T> String get(List<T> list) {
@@ -47,17 +72,20 @@ public class TablePrinter {
         for (T item : list) {
             String[] row = new String[colCount];
             for (int i = 0; i < colCount; i++) {
-                Object valOriginal = fields[i].get(item);
+                Field field = fields[i];
+                Object valOriginal = field.get(item);
                 Object val = valOriginal;
                 if (val instanceof Instant instant) {
                     val = DateUtils.FORMATTER.format(instant);
                 }
                 String strVal = (val == null) ? "" : val.toString();
                 row[i] = strVal;
-                if (valOriginal instanceof Instant) {
-                    intrinsicWidths[i] = Math.max(intrinsicWidths[i], INSTANT_WIDTH + PADDING);
-                } else {
+                Integer sizeByField = getSizeByField(field).orElse(null);
+                if (sizeByField == null) {
                     intrinsicWidths[i] = Math.max(intrinsicWidths[i], strVal.length() + PADDING);
+                } else {
+                    int minValue = Math.min(strVal.length(), sizeByField);
+                    intrinsicWidths[i] = Math.max(intrinsicWidths[i], minValue + PADDING);
                 }
             }
             rows.add(row);
