@@ -19,6 +19,7 @@ import org.springframework.web.context.request.async.WebAsyncTask;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -190,6 +191,7 @@ public class ServerQuickShareRestController {
             String filenameContentDisposition = resourcePath.getFileName().toString();
 
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setContentLengthLong(Files.size(resourcePath));
             response.setHeader(
                     HttpHeaders.CONTENT_DISPOSITION,
                     ContentDisposition.attachment()
