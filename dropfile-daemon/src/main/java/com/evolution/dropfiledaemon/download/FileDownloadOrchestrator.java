@@ -57,8 +57,12 @@ public class FileDownloadOrchestrator {
         SingleRunDownloadProcedure downloadProcedure;
         synchronized (this) {
             checkIfClosed();
-            if (downloadProcedures.size() + waitingQueue.size() >= downloadOrchestratorMaxQueueSize) {
-                throw new IllegalStateException("No available permits. Total: " + downloadOrchestratorMaxQueueSize);
+
+            int currentPermits = downloadProcedures.size() + waitingQueue.size();
+            if (currentPermits >= downloadOrchestratorMaxQueueSize) {
+                throw new IllegalStateException(
+                        "No available permits. Current: %s total: %s".formatted(currentPermits, downloadOrchestratorMaxQueueSize)
+                );
             }
 
             Path destinationFilePath = getDestinationFilePath(request);
@@ -395,8 +399,8 @@ public class FileDownloadOrchestrator {
                 .filter(entry -> entry.getValue().filename().equals(downloadFilePath.toAbsolutePath().toString()))
                 .findAny()
                 .ifPresent(duplicate -> {
-                    throw new IllegalArgumentException("File download request failed. Duplicate destination file %s operation %s".formatted(
-                            duplicate.getValue().filename(), duplicate.getKey()
+                    throw new IllegalStateException("File download request is already running operation %s file %s".formatted(
+                            duplicate.getKey(), duplicate.getValue().filename()
                     ));
                 });
 
