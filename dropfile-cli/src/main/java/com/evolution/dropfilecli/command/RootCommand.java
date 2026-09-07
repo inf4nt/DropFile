@@ -40,16 +40,24 @@ public class RootCommand implements Runnable {
         Spinner.stop();
 
         System.out.println("""
-                ░███████                                      ░████ ░██░██           \s
-                ░██   ░██                                    ░██       ░██           \s
-                ░██    ░██ ░██░████  ░███████  ░████████  ░████████ ░██░██  ░███████ \s
-                ░██    ░██ ░███     ░██    ░██ ░██    ░██    ░██    ░██░██ ░██    ░██\s
-                ░██    ░██ ░██      ░██    ░██ ░██    ░██    ░██    ░██░██ ░█████████\s
-                ░██   ░██  ░██      ░██    ░██ ░███   ░██    ░██    ░██░██ ░██       \s
-                ░███████   ░██       ░███████  ░██░█████     ░██    ░██░██  ░███████ \s
-                                               ░██                                   \s
-                                               ░██                                   \s
-                                                                                     \s""");
+                ░███████                                 \s
+                ░██   ░██                                \s
+                ░██    ░██ ░██░████  ░███████  ░████████ \s
+                ░██    ░██ ░███     ░██    ░██ ░██    ░██\s
+                ░██    ░██ ░██      ░██    ░██ ░██    ░██\s
+                ░██   ░██  ░██      ░██    ░██ ░███   ░██\s
+                ░███████   ░██       ░███████  ░██░█████ \s
+                                               ░██       \s
+                                               ░██       \s
+  
+                ░██████████░██░██                        \s
+                ░██           ░██                        \s
+                ░██        ░██░██  ░███████              \s
+                ░█████████ ░██░██ ░██    ░██             \s
+                ░██        ░██░██ ░█████████             \s
+                ░██        ░██░██ ░██                    \s
+                ░██        ░██░██  ░███████              \s
+                """);
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(systemInfoProvider.getSystemInfo()));
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(cliApplicationProperties));
         spec.commandLine().usage(System.out);
