@@ -55,7 +55,11 @@ public class ApiConnectionsBrowseFacade {
         List<ApiConnectionsBrowseLsResponseDTO> responses = ls(
                 fingerprintConnection, new ApiConnectionsBrowseLsRequestDTO(List.of(requestDTO.fileId()))
         );
-        ApiConnectionsBrowseLsResponseDTO response = CommonUtils.requireOne(responses);
+        ApiConnectionsBrowseLsResponseDTO response = CommonUtils.requireOne(
+                responses,
+                () -> "Unable to process file download. No file found. File id: %s".formatted(requestDTO.fileId()),
+                () -> "Unable to process file download. There are more than one file match. File id: %s".formatted(requestDTO.fileId())
+        );
         return new FileDownloadRequest(
                 fingerprintConnection,
                 response.id(),

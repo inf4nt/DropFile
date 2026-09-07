@@ -162,10 +162,16 @@ public class CommonUtils {
         return false;
     }
 
-    public static <T> T requireOne(Collection<T> source) {
-        if (source == null || source.size() != 1) {
-            int size = source == null ? 0 : source.size();
-            throw new IllegalStateException("Source is not a single value collection. Actual size: " + size);
+    public static <T> T requireOne(Collection<T> source,
+                                   Supplier<String> emptyMessageSupplier,
+                                   Supplier<String> moreThanOneMessageSupplier) {
+        if (source == null || source.isEmpty()) {
+            String message = emptyMessageSupplier.get();
+            throw new NoSuchElementException(message);
+        }
+        if (source.size() != 1) {
+            String message = moreThanOneMessageSupplier.get();
+            throw new IllegalStateException("%s. Actual size: %s".formatted(message, source.size()));
         }
         return source.iterator().next();
     }
