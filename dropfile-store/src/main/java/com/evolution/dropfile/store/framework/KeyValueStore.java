@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
+// TODO add Key class as a key for KeyValueStore. Get rid of String.class
 public interface KeyValueStore<V> {
 
     Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy);
