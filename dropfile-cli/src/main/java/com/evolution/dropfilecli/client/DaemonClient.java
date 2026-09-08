@@ -132,8 +132,8 @@ public class DaemonClient {
         return sendPost("/api/connections/download/stop-all");
     }
 
-    public HttpResponse<byte[]> connectionsDownloadRm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes, boolean force) throws IOException {
-        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(operationIdCriteriaEnvelopes, force));
+    public HttpResponse<byte[]> connectionsDownloadRm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
+        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(operationIdCriteriaEnvelopes));
     }
 
     public HttpResponse<byte[]> connectionsDownloadRmAll() throws IOException {

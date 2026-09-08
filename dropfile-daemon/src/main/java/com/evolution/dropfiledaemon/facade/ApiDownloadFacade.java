@@ -2,10 +2,7 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
-import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
-import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
-import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
-import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
@@ -109,8 +106,7 @@ public class ApiDownloadFacade {
 
     public ApiDownloadRmResponse rm(ApiDownloadRmRequest request) {
         FileDownloadOrchestrator.FileDownloadOrchestratorRemoveResponse fileDownloadOrchestratorRemoveResponse = fileDownloadOrchestrator.rm(
-                request.operationIdCriteriaEnvelopes(),
-                request.force()
+                request.operationIdCriteriaEnvelopes()
         );
         return ApiDownloadRmResponse.of(
                 fileDownloadOrchestratorRemoveResponse.removed(),
@@ -121,8 +117,7 @@ public class ApiDownloadFacade {
     }
 
     public void rmAll() {
-        stopAll();
-        fileDownloadStore.removeAll();
+        fileDownloadOrchestrator.rmAll();
     }
 
     private String getProgress(long total, long downloaded) {

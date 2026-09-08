@@ -26,9 +26,6 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
     @CommandLine.Parameters(index = "0..*", arity = "1..*", split = ",", description = "Download operation ids")
     private Set<String> operationIdCriteria;
 
-    @CommandLine.Option(names = {"--force"}, defaultValue = "false")
-    private boolean force;
-
     @Override
     protected TypeReference<ApiDownloadRmResponse> getTypeReference() {
         return new TypeReference<ApiDownloadRmResponse>() {
@@ -44,7 +41,7 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
         });
 
         criteriaResponse.active().forEach((criteria, operationId) -> {
-            System.out.printf("Operation %s (prefix: '%s') is active. Use --force to remove%n", operationId, criteria.value());
+            System.out.printf("Operation %s (prefix: '%s') is active. Use kill command to force stop and remove", operationId, criteria.value());
         });
 
         criteriaResponse.notFound().forEach(criteria ->
@@ -62,6 +59,6 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadRm(CriteriaEnvelope.map(operationIdCriteria), force);
+        return daemonClient.connectionsDownloadRm(CriteriaEnvelope.map(operationIdCriteria));
     }
 }

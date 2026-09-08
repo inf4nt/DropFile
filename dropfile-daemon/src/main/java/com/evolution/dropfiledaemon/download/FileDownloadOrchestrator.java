@@ -202,12 +202,8 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public FileDownloadOrchestratorRemoveResponse rm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes, boolean force) {
-        Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
-
-        Map<CriteriaEnvelope, String> removed = new LinkedHashMap<>();
+    public FileDownloadOrchestratorRemoveResponse rm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         Map<CriteriaEnvelope, String> active = new LinkedHashMap<>();
-
         CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
@@ -222,39 +218,31 @@ public class FileDownloadOrchestrator {
                     (criteria, operationId) -> operationId.startsWith(criteria.value())
             );
 
-            for (Map.Entry<CriteriaEnvelope, String> entry : matchResult.found().entrySet()) {
-                CriteriaEnvelope criteriaEnvelope = entry.getKey();
-                String operationId = entry.getValue();
-
-                if (force) {
-                    SingleRunDownloadProcedure procedure = downloadProcedures.get(operationId);
-                    if (procedure != null) {
-                        targetOperations.put(operationId, procedure);
-                    } else {
-                        waitingQueue.removeIf(e -> e.getKey().equals(operationId));
-                    }
-                    removed.put(criteriaEnvelope, operationId);
-                } else {
-                    active.put(criteriaEnvelope, operationId);
-                }
-            }
+            active.putAll(matchResult.found());
         }
 
-        if (force) {
-            stopAndRemove(targetOperations);
-        }
+        Collection<CriteriaEnvelope> canBeRemovedCriteria = operationIdCriteriaEnvelopes.stream()
+                .filter(criteria -> !active.containsKey(criteria))
+                .collect(Collectors.toSet());
+
+        KeyValueStore.RemoveResult removeResult = fileDownloadStore.removeByCriteria(canBeRemovedCriteria);
+
+        Map<CriteriaEnvelope, List<String>> ambiguous = Stream.concat(
+                matchResult.ambiguous().entrySet().stream(),
+                removeResult.ambiguous().entrySet().stream()
+        ).collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (v1, v2) -> Stream.concat(v1.stream(), v2.stream()).distinct().toList(),
+                LinkedHashMap::new
+        ));
 
         return new FileDownloadOrchestratorRemoveResponse(
-                removed,
+                removeResult.removed(),
                 active,
-                matchResult.notFound(),
-                matchResult.ambiguous()
+                removeResult.notFound(),
+                ambiguous
         );
-    }
-
-    public void stopAndRemove(Map<String, SingleRunDownloadProcedure> operations) {
-        operations.values().forEach(it -> it.stop());
-        fileDownloadStore.remove(operations.keySet());
     }
 
     public FileDownloadOrchestratorStopResponse stop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
@@ -450,6 +438,20 @@ public class FileDownloadOrchestrator {
         if (closed.get()) {
             throw new IllegalStateException("Already closed " + FileDownloadOrchestrator.class);
         }
+    }
+
+    public void rmAll() {
+        Set<String> activeOperationIds;
+
+        synchronized (this) {
+            activeOperationIds = new HashSet<>(downloadProcedures.keySet());
+        }
+
+        Set<String> idsToRemove = fileDownloadStore.getAll().keySet().stream()
+                .filter(s -> !activeOperationIds.contains(s))
+                .collect(Collectors.toSet());
+
+        fileDownloadStore.remove(idsToRemove);
     }
 
     // TODO add ETA
