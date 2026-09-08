@@ -191,7 +191,7 @@ public class FileDownloadOrchestrator {
     public Map<String, DownloadProgress> getDownloadProcedures() {
         Map<String, SingleRunDownloadProcedure> snapshot;
         synchronized (this) {
-            snapshot = new LinkedHashMap<>(downloadProcedures);
+            snapshot = Map.copyOf(downloadProcedures);
         }
 
         return snapshot.entrySet().stream()
@@ -352,7 +352,7 @@ public class FileDownloadOrchestrator {
         Map<String, SingleRunDownloadProcedure> targetOperations;
 
         synchronized (this) {
-            targetOperations = new LinkedHashMap<>(downloadProcedures);
+            targetOperations = Map.copyOf(downloadProcedures);
             waitingQueue.clear();
         }
 
@@ -374,7 +374,7 @@ public class FileDownloadOrchestrator {
             ));
             waitingQueue.clear();
 
-            proceduresSnapshot = new LinkedHashMap<>(downloadProcedures);
+            proceduresSnapshot = Map.copyOf(downloadProcedures);
             downloadProcedures.clear();
         }
 
