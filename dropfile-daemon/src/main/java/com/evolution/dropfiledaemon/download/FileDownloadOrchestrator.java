@@ -289,7 +289,7 @@ public class FileDownloadOrchestrator {
             }
         }
 
-        stop(targetOperations, Collections.emptyMap());
+        stopProcedure(targetOperations);
 
         return new FileDownloadOrchestratorStopResponse(
                 matchResult.found(),
@@ -337,7 +337,7 @@ public class FileDownloadOrchestrator {
             }
         }
 
-        stop(targetOperations, Collections.emptyMap());
+        stopProcedure(targetOperations);
 
         fileDownloadStore.remove(matchResult.found().values());
 
@@ -356,34 +356,26 @@ public class FileDownloadOrchestrator {
             waitingQueue.clear();
         }
 
-        stop(targetOperations, Collections.emptyMap());
+        stopProcedure(targetOperations);
 
         fileDownloadStore.remove(fileDownloadStore.getAll().keySet());
     }
 
     public void stopAll() {
-        Map<String, SingleRunDownloadProcedure> waitingQueueSnapshot;
         Map<String, SingleRunDownloadProcedure> proceduresSnapshot;
 
         synchronized (this) {
-            waitingQueueSnapshot = waitingQueue.stream().collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue,
-                    (o, o2) -> o2,
-                    LinkedHashMap::new
-            ));
             waitingQueue.clear();
 
             proceduresSnapshot = Map.copyOf(downloadProcedures);
             downloadProcedures.clear();
         }
 
-        stop(proceduresSnapshot, waitingQueueSnapshot);
+        stopProcedure(proceduresSnapshot);
     }
 
-    private void stop(Map<String, SingleRunDownloadProcedure> operations,
-                      Map<String, SingleRunDownloadProcedure> waiting) {
-        if (ObjectUtils.isEmpty(operations) && ObjectUtils.isEmpty(waiting)) {
+    private void stopProcedure(Map<String, SingleRunDownloadProcedure> operations) {
+        if (ObjectUtils.isEmpty(operations)) {
             return;
         }
 
@@ -393,8 +385,8 @@ public class FileDownloadOrchestrator {
                 () -> {
                     Instant now = Instant.now();
 
-                    return Stream
-                            .concat(operations.entrySet().stream(), waiting.entrySet().stream())
+                    return operations.entrySet()
+                            .stream()
                             .map(downloadProcedureEntry -> {
                                 String operationId = downloadProcedureEntry.getKey();
                                 SingleRunDownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
@@ -428,7 +420,7 @@ public class FileDownloadOrchestrator {
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     Map.Entry::getValue,
-                                    (v1, v2) -> v2,
+                                    (_, v2) -> v2,
                                     LinkedHashMap::new
                             ));
                 },
