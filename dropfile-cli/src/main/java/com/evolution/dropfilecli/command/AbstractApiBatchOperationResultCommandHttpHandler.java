@@ -12,23 +12,22 @@ public abstract class AbstractApiBatchOperationResultCommandHttpHandler extends 
     }
 
     @Override
-    protected void print(ApiBatchOperationResult object) {
-        object.found().forEach((prefix, fullId) -> {
-            if (prefix.equals(fullId)) {
-                System.out.printf("Removed: %s%n", fullId);
-            } else {
-                System.out.printf("Removed: %s (prefix: '%s')%n", fullId, prefix);
-            }
+    protected void print(ApiBatchOperationResult result) {
+        ApiBatchOperationResult.ApiBatchOperationResultCriteria object = result.toCriteria();
+
+        object.found().forEach((criteria, fullId) -> {
+            String value = criteria.value();
+            System.out.printf("Removed: %s (criteria: '%s')%n", fullId, value);
         });
 
-        object.notFound().forEach(prefix ->
-                System.err.printf("No such element found: %s%n", prefix)
+        object.notFound().forEach(criteria ->
+                System.err.printf("No such element found: %s%n", criteria.value())
         );
 
-        object.ambiguous().forEach((prefix, matches) ->
+        object.ambiguous().forEach((criteria, matches) ->
                 System.err.printf(
                         "Prefix '%s' is ambiguous. Matches: %s%n",
-                        prefix,
+                        criteria.value(),
                         String.join(", ", matches)
                 )
         );

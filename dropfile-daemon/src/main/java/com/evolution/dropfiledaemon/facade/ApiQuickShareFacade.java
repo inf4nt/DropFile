@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
@@ -89,9 +90,9 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
-    public ApiBatchOperationResult removeByCriteria(Collection<String> idCriteria) {
-        KeyValueStore.RemoveResult removeResult = quickShareStore.removeByCriteria(idCriteria);
-        return new ApiBatchOperationResult(
+    public ApiBatchOperationResult removeByCriteria(Collection<CriteriaEnvelope> quickshareIdCriteriaEnvelopes) {
+        KeyValueStore.RemoveResult removeResult = quickShareStore.removeByCriteria(quickshareIdCriteriaEnvelopes);
+        return ApiBatchOperationResult.of(
                 removeResult.removed(),
                 removeResult.notFound(),
                 removeResult.ambiguous()
@@ -102,8 +103,8 @@ public class ApiQuickShareFacade {
         quickShareStore.removeAll();
     }
 
-    public ApiQuickShareLsResponseDTO ls(String id) {
-        String key = quickShareStore.getRequiredByKeyStartWith(id).getKey();
+    public ApiQuickShareLsResponseDTO show(CriteriaEnvelope quickshareIdCriteriaEnvelope) {
+        String key = quickShareStore.getRequiredByCriteria(quickshareIdCriteriaEnvelope).getKey();
         Map.Entry<String, QuickShare> entry = quickShareStore.getRequired(key);
         return map(entry.getKey(), entry.getValue());
     }

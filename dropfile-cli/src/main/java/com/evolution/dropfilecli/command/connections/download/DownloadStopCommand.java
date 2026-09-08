@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections.download;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfilecli.command.AbstractApiBatchOperationResultCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -21,10 +22,10 @@ import java.util.Set;
 public class DownloadStopCommand extends AbstractApiBatchOperationResultCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0..*", arity = "1..*", split = ",", description = "Download operation ids")
-    private Set<String> ids;
+    private Set<String> operationIdCriteria;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadStop(ids);
+        return daemonClient.connectionsDownloadStop(CriteriaEnvelope.map(operationIdCriteria));
     }
 }

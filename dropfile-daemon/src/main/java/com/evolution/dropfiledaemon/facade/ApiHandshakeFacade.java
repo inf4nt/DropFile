@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
@@ -231,8 +232,8 @@ public class ApiHandshakeFacade {
         });
     }
 
-    public void disconnect(String mightFingerprint) {
-        String fingerprint = handshakeTrustedOutStore.getRequiredByKeyStartWith(mightFingerprint).getKey();
+    public void disconnect(CriteriaEnvelope fingerprintCriteria) {
+        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteria(fingerprintCriteria).getKey();
         disconnectByFingerprint(fingerprint);
     }
 

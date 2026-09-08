@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -17,11 +18,11 @@ import java.net.http.HttpResponse;
 public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
-    private Exclusive exclusive;
+    private Arguments arguments;
 
-    private static class Exclusive {
+    private static class Arguments {
         @CommandLine.Parameters(index = "0", description = "Disconnect by fingerprint")
-        private String fingerprint;
+        private String fingerprintCriteria;
 
         @CommandLine.Option(names = {"--current"}, description = "Disconnect current")
         private boolean current;
@@ -32,11 +33,11 @@ public class DisconnectCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (exclusive.all) {
+        if (arguments.all) {
             return daemonClient.handshakeDisconnectAll();
-        } else if (exclusive.current) {
+        } else if (arguments.current) {
             return daemonClient.handshakeDisconnectCurrent();
         }
-        return daemonClient.handshakeDisconnect(exclusive.fingerprint);
+        return daemonClient.handshakeDisconnect(new CriteriaEnvelope(arguments.fingerprintCriteria));
     }
 }

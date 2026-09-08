@@ -40,7 +40,7 @@ public class ApiConnectionsBrowseFacade {
     @SneakyThrows
     private List<ApiConnectionsBrowseLsResponseDTO> ls(String fingerprint,
                                                        ApiConnectionsBrowseLsRequestDTO requestDTO) {
-        List<ShareLsTunnelResponse> files = tunnelClientGateway.shareLs(fingerprint, requestDTO.ids());
+        List<ShareLsTunnelResponse> files = tunnelClientGateway.shareLs(fingerprint, requestDTO.criteriaEnvelopes());
         return files.stream()
                 .map(it -> new ApiConnectionsBrowseLsResponseDTO(
                         fingerprint,
@@ -54,12 +54,12 @@ public class ApiConnectionsBrowseFacade {
 
     private FileDownloadRequest getRequestForDownloadRequest(String fingerprintConnection, ApiConnectionsBrowseGetRequestDTO requestDTO) {
         List<ApiConnectionsBrowseLsResponseDTO> responses = ls(
-                fingerprintConnection, new ApiConnectionsBrowseLsRequestDTO(List.of(requestDTO.fileId()))
+                fingerprintConnection, new ApiConnectionsBrowseLsRequestDTO(List.of(requestDTO.fileIdCriteriaEnvelope()))
         );
         ApiConnectionsBrowseLsResponseDTO response = CommonUtils.requireOne(
                 responses,
-                () -> "Unable to process file download. No file found. File id: %s".formatted(requestDTO.fileId()),
-                () -> "Unable to process file download. There are more than one file match. File id: %s".formatted(requestDTO.fileId())
+                () -> "Unable to process file download. No file found. File id: %s".formatted(requestDTO.fileIdCriteriaEnvelope().value()),
+                () -> "Unable to process file download. There are more than one file match. File id: %s".formatted(requestDTO.fileIdCriteriaEnvelope().value())
         );
         return new FileDownloadRequest(
                 fingerprintConnection,

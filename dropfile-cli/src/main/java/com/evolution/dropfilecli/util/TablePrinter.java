@@ -23,15 +23,16 @@ public class TablePrinter {
     );
 
     private static final Map<String, Integer> CUSTOM_FIELD_SIZE = Map.of(
-            "fingerprint", 14,
-            "remoteFingerprint", 14,
-            "publicKeyRSA", 14,
-            "remotePublicRSA", 14,
-            "PublicKeyDH", 14,
-            "RemotePublicKeyDH", 14,
-            "path", 40,
-            "file", 40,
-            "alias", 40
+            "fingerprint", 12,
+            "remoteFingerprint", "remoteFingerprint".length(),
+            "publicRSA", "publicRSA".length(),
+            "remotePublicRSA", "remotePublicRSA".length(),
+            "PublicDH", "PublicDH".length(),
+            "RemotePublicDH", "RemotePublicDH".length(),
+            "path", 25,
+            "file", 25,
+            "alias", 25,
+            "AddressURI", 18
     );
 
     private static Optional<Integer> getSizeByField(Field field) {

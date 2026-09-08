@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
@@ -91,11 +92,11 @@ public class ApiDownloadFacade {
         return getByStatus(responses, status, limit);
     }
 
-    public ApiBatchOperationResult stop(Collection<String> startWithOperationIds) {
+    public ApiBatchOperationResult stop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         FileDownloadOrchestrator.FileDownloadOrchestratorStopResponse fileDownloadOrchestratorStopResponse = fileDownloadOrchestrator.stop(
-                startWithOperationIds
+                operationIdCriteriaEnvelopes
         );
-        return new ApiBatchOperationResult(
+        return ApiBatchOperationResult.of(
                 fileDownloadOrchestratorStopResponse.found(),
                 fileDownloadOrchestratorStopResponse.notFound(),
                 fileDownloadOrchestratorStopResponse.ambiguous()
@@ -108,10 +109,10 @@ public class ApiDownloadFacade {
 
     public ApiDownloadRmResponse rm(ApiDownloadRmRequest request) {
         FileDownloadOrchestrator.FileDownloadOrchestratorRemoveResponse fileDownloadOrchestratorRemoveResponse = fileDownloadOrchestrator.rm(
-                request.operations(),
+                request.operationIdCriteriaEnvelopes(),
                 request.force()
         );
-        return new ApiDownloadRmResponse(
+        return ApiDownloadRmResponse.of(
                 fileDownloadOrchestratorRemoveResponse.removed(),
                 fileDownloadOrchestratorRemoveResponse.active(),
                 fileDownloadOrchestratorRemoveResponse.notFound(),

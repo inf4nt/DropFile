@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -33,7 +34,7 @@ public interface KeyValueStore<V> {
         ).values().stream().findAny().orElseThrow();
     }
 
-    RemoveResult removeByCriteria(Collection<String> idCriteria);
+    RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes);
 
     Map<String, V> remove(Collection<String> keys);
 
@@ -65,29 +66,29 @@ public interface KeyValueStore<V> {
                 )));
     }
 
-    default Map.Entry<String, V> getRequiredByKeyStartWith(String stringKey) {
-        CommonUtils.MatchResult<String, Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
+    default Map.Entry<String, V> getRequiredByCriteria(CriteriaEnvelope criteriaEnvelope) {
+        CommonUtils.MatchResult<Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
                 getAll().entrySet(),
-                List.of(stringKey),
-                (criteria, entry) -> entry.getKey().startsWith(criteria)
+                List.of(criteriaEnvelope),
+                (criteria, entry) -> entry.getKey().startsWith(criteria.value())
         );
 
         if (!matchResult.notFound().isEmpty()) {
             throw new NoSuchElementException(
-                    "Store %s. No items found for criteria: %s".formatted(getClass().getSimpleName(), stringKey)
+                    "Store %s. No items found for criteria: %s".formatted(getClass().getSimpleName(), criteriaEnvelope.value())
             );
         }
 
-        if (matchResult.found().containsKey(stringKey) && matchResult.ambiguous().isEmpty()) {
-            return matchResult.found().get(stringKey);
+        if (matchResult.found().containsKey(criteriaEnvelope) && matchResult.ambiguous().isEmpty()) {
+            return matchResult.found().get(criteriaEnvelope);
         }
 
-        List<Map.Entry<String, V>> matches = matchResult.ambiguous().get(stringKey);
+        List<Map.Entry<String, V>> matches = matchResult.ambiguous().get(criteriaEnvelope);
         int matchesCount = (matches != null) ? matches.size() : 0;
 
         throw new IllegalStateException(
                 "Store %s. Ambiguous key criteria '%s'. Found %d matches".formatted(
-                        getClass().getSimpleName(), stringKey, matchesCount
+                        getClass().getSimpleName(), criteriaEnvelope.value(), matchesCount
                 )
         );
     }
@@ -98,9 +99,9 @@ public interface KeyValueStore<V> {
     }
 
     record RemoveResult(
-            Map<String, String> removed,
-            Collection<String> notFound,
-            Map<String, List<String>> ambiguous
+            Map<CriteriaEnvelope, String> removed,
+            Collection<CriteriaEnvelope> notFound,
+            Map<CriteriaEnvelope, List<String>> ambiguous
     ) {
         public static final RemoveResult EMPTY = new RemoveResult(Map.of(), Set.of(), Map.of());
     }

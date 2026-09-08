@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
@@ -17,7 +18,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Component
@@ -44,8 +44,8 @@ public class DaemonClient {
         return sendPost("/api/handshake/current/reconnect");
     }
 
-    public HttpResponse<byte[]> handshakeDisconnect(String fingerprint) throws IOException {
-        return sendPost(CommonUtils.joinPaths("/api/handshake/disconnect/fingerprint", fingerprint));
+    public HttpResponse<byte[]> handshakeDisconnect(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {
+        return sendPost(CommonUtils.joinPaths("/api/handshake/disconnect/fingerprint"), fingerprintCriteriaEnvelope);
     }
 
     public HttpResponse<byte[]> handshakeDisconnectCurrent() throws IOException {
@@ -56,8 +56,8 @@ public class DaemonClient {
         return sendPost("/api/handshake/disconnect/all");
     }
 
-    public HttpResponse<byte[]> handshakeRevoke(String fingerprint) throws IOException {
-        return sendPost(CommonUtils.joinPaths("/api/handshake/revoke/fingerprint", fingerprint));
+    public HttpResponse<byte[]> handshakeRevoke(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {
+        return sendPost(CommonUtils.joinPaths("/api/handshake/revoke/fingerprint"), fingerprintCriteriaEnvelope);
     }
 
     public HttpResponse<byte[]> handshakeRevokeAll() throws IOException {
@@ -80,12 +80,12 @@ public class DaemonClient {
         return sendGet("/api/connections/traffic");
     }
 
-    public HttpResponse<byte[]> connectionsBrowseLs(List<String> ids) throws IOException {
-        return sendPost("/api/connections/browse/ls", new ApiConnectionsBrowseLsRequestDTO(ids));
+    public HttpResponse<byte[]> connectionsBrowseLs(Collection<CriteriaEnvelope> criteriaEnvelopes) throws IOException {
+        return sendPost("/api/connections/browse/ls", new ApiConnectionsBrowseLsRequestDTO(criteriaEnvelopes));
     }
 
-    public HttpResponse<byte[]> connectionsBrowseGet(String id, String filename) throws IOException {
-        return sendPost("/api/connections/browse/get", new ApiConnectionsBrowseGetRequestDTO(id, filename));
+    public HttpResponse<byte[]> connectionsBrowseGet(CriteriaEnvelope fileIdCriteriaEnvelope, String filename) throws IOException {
+        return sendPost("/api/connections/browse/get", new ApiConnectionsBrowseGetRequestDTO(fileIdCriteriaEnvelope, filename));
     }
 
     public HttpResponse<byte[]> connectionsShareLs() throws IOException {
@@ -96,8 +96,8 @@ public class DaemonClient {
         return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias));
     }
 
-    public HttpResponse<byte[]> connectionsShareRm(Collection<String> ids) throws IOException {
-        return sendDelete("/api/connections/share/rm", ids);
+    public HttpResponse<byte[]> connectionsShareRm(Collection<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) throws IOException {
+        return sendDelete("/api/connections/share/rm", shareFileIdCriteriaEnvelopes);
     }
 
     public HttpResponse<byte[]> connectionsShareRmAll() throws IOException {
@@ -112,8 +112,8 @@ public class DaemonClient {
         return sendGet("/api/connections/access/ls");
     }
 
-    public HttpResponse<byte[]> connectionsAccessRm(Collection<String> idCriteria) throws IOException {
-        return sendDelete("/api/connections/access/rm", idCriteria);
+    public HttpResponse<byte[]> connectionsAccessRm(Collection<CriteriaEnvelope> accessIdCriteriaEnvelopes) throws IOException {
+        return sendDelete("/api/connections/access/rm", accessIdCriteriaEnvelopes);
     }
 
     public HttpResponse<byte[]> connectionsAccessRmAll() throws IOException {
@@ -124,16 +124,16 @@ public class DaemonClient {
         return sendPost("/api/connections/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    public HttpResponse<byte[]> connectionsDownloadStop(Collection<String> startWithOperationIds) throws IOException {
-        return sendPost("/api/connections/download/stop", startWithOperationIds);
+    public HttpResponse<byte[]> connectionsDownloadStop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
+        return sendPost("/api/connections/download/stop", operationIdCriteriaEnvelopes);
     }
 
     public HttpResponse<byte[]> connectionsDownloadStopAll() throws IOException {
         return sendPost("/api/connections/download/stop-all");
     }
 
-    public HttpResponse<byte[]> connectionsDownloadRm(Collection<String> startWithOperationIds, boolean force) throws IOException {
-        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(startWithOperationIds, force));
+    public HttpResponse<byte[]> connectionsDownloadRm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes, boolean force) throws IOException {
+        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(operationIdCriteriaEnvelopes, force));
     }
 
     public HttpResponse<byte[]> connectionsDownloadRmAll() throws IOException {
@@ -151,12 +151,12 @@ public class DaemonClient {
         return sendGet("/api/quickshare/ls");
     }
 
-    public HttpResponse<byte[]> quickShareShow(String id) throws IOException {
-        return sendGet(CommonUtils.joinPaths("/api/quickshare/ls", id));
+    public HttpResponse<byte[]> quickShareShow(CriteriaEnvelope idCriteriaEnvelope) throws IOException {
+        return sendPost("/api/quickshare/show", idCriteriaEnvelope);
     }
 
-    public HttpResponse<byte[]> quickShareRm(Collection<String> idCriteria) throws IOException {
-        return sendDelete("/api/quickshare/rm", idCriteria);
+    public HttpResponse<byte[]> quickShareRm(Collection<CriteriaEnvelope> idCriteriaEnvelope) throws IOException {
+        return sendDelete("/api/quickshare/rm", idCriteriaEnvelope);
     }
 
     public HttpResponse<byte[]> quickShareRmAll() throws IOException {

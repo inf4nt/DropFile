@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
@@ -39,9 +40,9 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public ApiBatchOperationResult rm(Collection<String> idCriteria) {
-        KeyValueStore.RemoveResult removeResult = accessKeyStore.removeByCriteria(idCriteria);
-        return new ApiBatchOperationResult(
+    public ApiBatchOperationResult rm(Collection<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
+        KeyValueStore.RemoveResult removeResult = accessKeyStore.removeByCriteria(accessIdCriteriaEnvelopes);
+        return ApiBatchOperationResult.of(
                 removeResult.removed(),
                 removeResult.notFound(),
                 removeResult.ambiguous()

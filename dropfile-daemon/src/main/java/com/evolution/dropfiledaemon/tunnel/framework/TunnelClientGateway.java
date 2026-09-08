@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -25,9 +27,9 @@ public class TunnelClientGateway {
     private final TunnelClientRefreshableSessionDecorator tunnelClient;
 
     @SneakyThrows
-    public List<ShareLsTunnelResponse> shareLs(String fingerprint, List<String> ids) {
+    public List<ShareLsTunnelResponse> shareLs(String fingerprint, Collection<CriteriaEnvelope> criteriaEnvelopes) {
         TunnelClient.Request request = TunnelClient.Request.builder(ShareLsCommandHandler.COMMAND_NAME, fingerprint)
-                .body(new ShareLsTunnelRequest(ids))
+                .body(new ShareLsTunnelRequest(criteriaEnvelopes))
                 .build();
         try (InputStream stream = tunnelClient.stream(request)) {
             return objectMapper.readValue(stream, new TypeReference<List<ShareLsTunnelResponse>>() {

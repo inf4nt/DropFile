@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
@@ -28,8 +29,8 @@ public class ApiConnectionsShareRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult rm(@RequestBody Collection<String> idCriteria) {
-        return apiFacade.rm(idCriteria);
+    public ApiBatchOperationResult rm(@RequestBody Collection<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) {
+        return apiFacade.rm(shareFileIdCriteriaEnvelopes);
     }
 
     @DeleteMapping("/rm-all")

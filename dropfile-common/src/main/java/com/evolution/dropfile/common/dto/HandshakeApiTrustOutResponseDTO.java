@@ -3,10 +3,10 @@ package com.evolution.dropfile.common.dto;
 import java.time.Instant;
 
 public record HandshakeApiTrustOutResponseDTO(String remoteFingerprint,
-                                              String publicKeyRSA,
+                                              String publicRSA,
                                               String remotePublicRSA,
-                                              String publicKeyDH,
-                                              String remotePublicKeyDH,
+                                              String publicDH,
+                                              String remotePublicDH,
                                               String addressURI,
                                               Instant created,
                                               Instant updated) {

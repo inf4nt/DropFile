@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.download;
 
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -201,13 +202,13 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public FileDownloadOrchestratorRemoveResponse rm(Collection<String> startWithOperationIds, boolean force) {
+    public FileDownloadOrchestratorRemoveResponse rm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes, boolean force) {
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
 
-        Map<String, String> removed = new LinkedHashMap<>();
-        Map<String, String> active = new LinkedHashMap<>();
+        Map<CriteriaEnvelope, String> removed = new LinkedHashMap<>();
+        Map<CriteriaEnvelope, String> active = new LinkedHashMap<>();
 
-        CommonUtils.MatchResult<String, String> matchResult;
+        CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
             Set<String> currentOperations = Stream.concat(
@@ -217,12 +218,12 @@ public class FileDownloadOrchestrator {
 
             matchResult = CommonUtils.matchBy(
                     currentOperations,
-                    startWithOperationIds,
-                    (prefix, operationId) -> operationId.startsWith(prefix)
+                    operationIdCriteriaEnvelopes,
+                    (criteria, operationId) -> operationId.startsWith(criteria.value())
             );
 
-            for (Map.Entry<String, String> entry : matchResult.found().entrySet()) {
-                String prefix = entry.getKey();
+            for (Map.Entry<CriteriaEnvelope, String> entry : matchResult.found().entrySet()) {
+                CriteriaEnvelope criteriaEnvelope = entry.getKey();
                 String operationId = entry.getValue();
 
                 if (force) {
@@ -232,9 +233,9 @@ public class FileDownloadOrchestrator {
                     } else {
                         waitingQueue.removeIf(e -> e.getKey().equals(operationId));
                     }
-                    removed.put(prefix, operationId);
+                    removed.put(criteriaEnvelope, operationId);
                 } else {
-                    active.put(prefix, operationId);
+                    active.put(criteriaEnvelope, operationId);
                 }
             }
         }
@@ -256,9 +257,9 @@ public class FileDownloadOrchestrator {
         fileDownloadStore.remove(operations.keySet());
     }
 
-    public FileDownloadOrchestratorStopResponse stop(Collection<String> startWithOperationIds) {
+    public FileDownloadOrchestratorStopResponse stop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
-        CommonUtils.MatchResult<String, String> matchResult;
+        CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
             Set<String> currentOperations = Stream.concat(
@@ -268,8 +269,8 @@ public class FileDownloadOrchestrator {
 
             matchResult = CommonUtils.matchBy(
                     currentOperations,
-                    startWithOperationIds,
-                    (prefix, operationId) -> operationId.startsWith(prefix)
+                    operationIdCriteriaEnvelopes,
+                    (criteria, operationId) -> operationId.startsWith(criteria.value())
             );
 
             Set<String> operationsToStop = new HashSet<>(matchResult.found().values());
@@ -465,17 +466,17 @@ public class FileDownloadOrchestrator {
     }
 
     public record FileDownloadOrchestratorRemoveResponse(
-            Map<String, String> removed,
-            Map<String, String> active,
-            Collection<String> notFound,
-            Map<String, List<String>> ambiguous
+            Map<CriteriaEnvelope, String> removed,
+            Map<CriteriaEnvelope, String> active,
+            Collection<CriteriaEnvelope> notFound,
+            Map<CriteriaEnvelope, List<String>> ambiguous
     ) {
     }
 
     public record FileDownloadOrchestratorStopResponse(
-            Map<String, String> found,
-            Collection<String> notFound,
-            Map<String, List<String>> ambiguous
+            Map<CriteriaEnvelope, String> found,
+            Collection<CriteriaEnvelope> notFound,
+            Map<CriteriaEnvelope, List<String>> ambiguous
     ) {
     }
 }

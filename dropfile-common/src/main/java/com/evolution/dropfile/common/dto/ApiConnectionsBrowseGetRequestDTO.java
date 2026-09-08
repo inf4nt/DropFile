@@ -1,5 +1,7 @@
 package com.evolution.dropfile.common.dto;
 
-public record ApiConnectionsBrowseGetRequestDTO(String fileId,
+import com.evolution.dropfile.common.CriteriaEnvelope;
+
+public record ApiConnectionsBrowseGetRequestDTO(CriteriaEnvelope fileIdCriteriaEnvelope,
                                                 String filename) {
 }

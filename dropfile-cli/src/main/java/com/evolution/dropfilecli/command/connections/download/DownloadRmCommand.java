@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections.download;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiDownloadRmResponse;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,7 +24,7 @@ import java.util.Set;
 public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmResponse> {
 
     @CommandLine.Parameters(index = "0..*", arity = "1..*", split = ",", description = "Download operation ids")
-    private Set<String> ids;
+    private Set<String> operationIdCriteria;
 
     @CommandLine.Option(names = {"--force"}, defaultValue = "false")
     private boolean force;
@@ -35,31 +36,25 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
     }
 
     @Override
-    protected void print(ApiDownloadRmResponse response) {
-        response.removed().forEach((prefix, operationId) -> {
-            if (prefix.equals(operationId)) {
-                System.out.printf("Removed operation: %s%n", operationId);
-            } else {
-                System.out.printf("Removed operation: %s (prefix: '%s')%n", operationId, prefix);
-            }
+    protected void print(ApiDownloadRmResponse responseDTO) {
+        ApiDownloadRmResponse.ApiDownloadRmResponseCriteria criteriaResponse = responseDTO.toCriteria();
+
+        criteriaResponse.removed().forEach((criteria, operationId) -> {
+            System.out.printf("Removed operation: %s (prefix: '%s')%n", operationId, criteria.value());
         });
 
-        response.active().forEach((prefix, operationId) -> {
-            if (prefix.equals(operationId)) {
-                System.out.printf("Operation %s is active. Use --force to remove%n", operationId);
-            } else {
-                System.out.printf("Operation %s (prefix: '%s') is active. Use --force to remove%n", operationId, prefix);
-            }
+        criteriaResponse.active().forEach((criteria, operationId) -> {
+            System.out.printf("Operation %s (prefix: '%s') is active. Use --force to remove%n", operationId, criteria.value());
         });
 
-        response.notFound().forEach(prefix ->
-                System.err.printf("Error response from daemon: No such operation: %s%n", prefix)
+        criteriaResponse.notFound().forEach(criteria ->
+                System.err.printf("Error response from daemon: No such operation: %s%n", criteria.value())
         );
 
-        response.ambiguous().forEach((prefix, matches) ->
+        criteriaResponse.ambiguous().forEach((criteria, matches) ->
                 System.err.printf(
                         "Error response from daemon: Prefix '%s' is ambiguous. Matches: %s%n",
-                        prefix,
+                        criteria.value(),
                         String.join(", ", matches)
                 )
         );
@@ -67,6 +62,6 @@ public class DownloadRmCommand extends AbstractCommandHttpHandler<ApiDownloadRmR
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsDownloadRm(ids, force);
+        return daemonClient.connectionsDownloadRm(CriteriaEnvelope.map(operationIdCriteria), force);
     }
 }

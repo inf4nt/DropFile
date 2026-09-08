@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.handshake;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
@@ -194,8 +195,8 @@ public class HandshakeFacade {
         });
     }
 
-    public void revoke(String mightFingerprint) {
-        String fingerprint = handshakeTrustedInStore.getRequiredByKeyStartWith(mightFingerprint)
+    public void revoke(CriteriaEnvelope fingerprintCriteria) {
+        String fingerprint = handshakeTrustedInStore.getRequiredByCriteria(fingerprintCriteria)
                 .getKey();
         lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedInStore.remove(fingerprint);

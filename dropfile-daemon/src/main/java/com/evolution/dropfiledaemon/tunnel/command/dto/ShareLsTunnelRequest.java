@@ -1,6 +1,8 @@
 package com.evolution.dropfiledaemon.tunnel.command.dto;
 
-import java.util.List;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 
-public record ShareLsTunnelRequest(List<String> ids) {
+import java.util.Collection;
+
+public record ShareLsTunnelRequest(Collection<CriteriaEnvelope> criteriaEnvelopes) {
 }

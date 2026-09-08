@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.common.dto.ApiDownloadRmRequest;
@@ -24,8 +25,8 @@ public class ApiConnectionsDownloadRestController {
     }
 
     @PostMapping("/stop")
-    public ApiBatchOperationResult stop(@RequestBody Collection<String> startWithOperationIds) {
-        return downloadFacade.stop(startWithOperationIds);
+    public ApiBatchOperationResult stop(@RequestBody Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        return downloadFacade.stop(operationIdCriteriaEnvelopes);
     }
 
     @DeleteMapping("/rm")

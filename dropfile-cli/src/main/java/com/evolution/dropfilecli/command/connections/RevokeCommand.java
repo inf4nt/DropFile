@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -17,9 +18,9 @@ import java.net.http.HttpResponse;
 public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
 
     @CommandLine.ArgGroup(multiplicity = "1")
-    private Exclusive exclusive;
+    private Arguments arguments;
 
-    private static class Exclusive {
+    private static class Arguments {
         @CommandLine.Parameters(index = "0", description = "Revoke by fingerprint")
         private String fingerprint;
 
@@ -29,9 +30,9 @@ public class RevokeCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (exclusive.all) {
+        if (arguments.all) {
             return daemonClient.handshakeRevokeAll();
         }
-        return daemonClient.handshakeRevoke(exclusive.fingerprint);
+        return daemonClient.handshakeRevoke(new CriteriaEnvelope(arguments.fingerprint));
     }
 }

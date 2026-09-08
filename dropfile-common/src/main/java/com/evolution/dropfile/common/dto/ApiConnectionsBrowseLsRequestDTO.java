@@ -1,6 +1,8 @@
 package com.evolution.dropfile.common.dto;
 
-import java.util.List;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 
-public record ApiConnectionsBrowseLsRequestDTO(List<String> ids) {
+import java.util.Collection;
+
+public record ApiConnectionsBrowseLsRequestDTO(Collection<CriteriaEnvelope> criteriaEnvelopes) {
 }

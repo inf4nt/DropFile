@@ -1,6 +1,7 @@
 package com.evolution.dropfile.store.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import lombok.SneakyThrows;
 
 import java.util.*;
@@ -54,24 +55,18 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public synchronized RemoveResult removeByCriteria(Collection<String> idCriteria) {
-        if (idCriteria == null || idCriteria.isEmpty()) {
+    public synchronized RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
+        if (criteriaEnvelopes == null || criteriaEnvelopes.isEmpty()) {
             return RemoveResult.EMPTY;
         }
 
-        for (String criterion : idCriteria) {
-            if (criterion == null || criterion.isBlank()) {
-                throw new IllegalArgumentException("Id criterion must not be empty string");
-            }
-        }
-
-        CommonUtils.MatchResult<String, Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
+        CommonUtils.MatchResult<Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
                 store.entrySet(),
-                idCriteria,
-                (criteria, entry) -> entry.getKey().startsWith(criteria)
+                criteriaEnvelopes,
+                (criteria, entry) -> entry.getKey().startsWith(criteria.value())
         );
 
-        Map<String, List<String>> ambiguous = matchResult.ambiguous().entrySet().stream()
+        Map<CriteriaEnvelope, List<String>> ambiguous = matchResult.ambiguous().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> entry.getValue().stream().map(Map.Entry::getKey).toList(),
@@ -93,7 +88,7 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
         Map<String, V> removedByFullKey = remove(fullKeys);
 
-        Map<String, String> confirmedFound = new LinkedHashMap<>();
+        Map<CriteriaEnvelope, String> confirmedFound = new LinkedHashMap<>();
         matchResult.found().forEach((criteria, entry) -> {
             V removedValue = removedByFullKey.get(entry.getKey());
             if (removedValue != null) {

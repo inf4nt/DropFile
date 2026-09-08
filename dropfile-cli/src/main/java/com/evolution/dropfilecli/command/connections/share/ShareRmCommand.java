@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections.share;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfilecli.command.AbstractApiBatchOperationResultCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -21,10 +22,10 @@ import java.util.Set;
 public class ShareRmCommand extends AbstractApiBatchOperationResultCommandHttpHandler {
 
     @CommandLine.Parameters(index = "0..*", arity = "1..*", split = ",", description = "Share ids")
-    private Set<String> ids;
+    private Set<String> shareFileIdCriteria;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsShareRm(ids);
+        return daemonClient.connectionsShareRm(CriteriaEnvelope.map(shareFileIdCriteria));
     }
 }

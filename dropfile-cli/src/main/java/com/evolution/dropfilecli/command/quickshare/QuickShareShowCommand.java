@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.quickshare;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.evolution.dropfilecli.util.ConsoleQrPrinter;
@@ -24,7 +25,7 @@ import java.util.Optional;
 public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickShareLsResponseDTO> {
 
     @CommandLine.Parameters(index = "0", description = "Shared file id")
-    private String id;
+    private String idCriteria;
 
     @CommandLine.Option(
             names = {"--qrcode"},
@@ -52,7 +53,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.quickShareShow(id);
+        return daemonClient.quickShareShow(new CriteriaEnvelope(idCriteria));
     }
 
     @Override

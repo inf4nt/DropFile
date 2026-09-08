@@ -176,22 +176,22 @@ public class CommonUtils {
         return source.iterator().next();
     }
 
-    public static <K, T> MatchResult<K, T> matchBy(Collection<T> source,
-                                                   Collection<K> criteria,
-                                                   BiPredicate<K, T> matcher) {
+    public static <T> MatchResult<T> matchBy(Collection<T> source,
+                                                   Collection<CriteriaEnvelope> criteria,
+                                                   BiPredicate<CriteriaEnvelope, T> matcher) {
         if (criteria == null || criteria.isEmpty()) {
             return new MatchResult<>(Map.of(), Set.of(), Map.of());
         }
 
         Collection<T> safeSource = source == null ? List.of() : source;
 
-        Map<K, T> found = new LinkedHashMap<>();
-        Set<K> notFound = new LinkedHashSet<>();
-        Map<K, List<T>> ambiguous = new LinkedHashMap<>();
+        Map<CriteriaEnvelope, T> found = new LinkedHashMap<>();
+        Set<CriteriaEnvelope> notFound = new LinkedHashSet<>();
+        Map<CriteriaEnvelope, List<T>> ambiguous = new LinkedHashMap<>();
 
-        Map<K, T> rawMatches = new LinkedHashMap<>();
+        Map<CriteriaEnvelope, T> rawMatches = new LinkedHashMap<>();
 
-        for (K criterion : criteria) {
+        for (CriteriaEnvelope criterion : criteria) {
             if (criterion == null) {
                 continue;
             }
@@ -213,7 +213,7 @@ public class CommonUtils {
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
-        for (Map.Entry<K, T> entry : rawMatches.entrySet()) {
+        for (Map.Entry<CriteriaEnvelope, T> entry : rawMatches.entrySet()) {
             T matchedItem = entry.getValue();
             if (!ambiguousItems.contains(matchedItem)) {
                 found.put(entry.getKey(), matchedItem);
@@ -321,10 +321,10 @@ public class CommonUtils {
         return totalSize.get();
     }
 
-    public record MatchResult<K, T>(
-            Map<K, T> found,
-            Set<K> notFound,
-            Map<K, List<T>> ambiguous
+    public record MatchResult<T>(
+            Map<CriteriaEnvelope, T> found,
+            Set<CriteriaEnvelope> notFound,
+            Map<CriteriaEnvelope, List<T>> ambiguous
     ) {
     }
 }

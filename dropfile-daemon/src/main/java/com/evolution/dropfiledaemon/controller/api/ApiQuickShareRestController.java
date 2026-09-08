@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiQuickShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiQuickShareLsResponseDTO;
@@ -27,14 +28,14 @@ public class ApiQuickShareRestController {
         return facade.ls();
     }
 
-    @GetMapping("/ls/{id}")
-    public ApiQuickShareLsResponseDTO getById(@PathVariable String id) {
-        return facade.ls(id);
+    @PostMapping("/show")
+    public ApiQuickShareLsResponseDTO show(@RequestBody CriteriaEnvelope idCriteriaEnvelope) {
+        return facade.show(idCriteriaEnvelope);
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult removeByCriteria(@RequestBody Collection<String> idCriteria) {
-        return facade.removeByCriteria(idCriteria);
+    public ApiBatchOperationResult removeByCriteria(@RequestBody Collection<CriteriaEnvelope> idCriteriaEnvelopes) {
+        return facade.removeByCriteria(idCriteriaEnvelopes);
     }
 
     @DeleteMapping("/rm-all")

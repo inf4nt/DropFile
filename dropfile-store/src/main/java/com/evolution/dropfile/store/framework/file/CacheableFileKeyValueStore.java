@@ -1,5 +1,6 @@
 package com.evolution.dropfile.store.framework.file;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 
 import java.util.Collection;
@@ -38,9 +39,9 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized RemoveResult removeByCriteria(Collection<String> idCriteria) {
+    public synchronized RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
         try {
-            return super.removeByCriteria(idCriteria);
+            return super.removeByCriteria(criteriaEnvelopes);
         } finally {
             reset();
         }

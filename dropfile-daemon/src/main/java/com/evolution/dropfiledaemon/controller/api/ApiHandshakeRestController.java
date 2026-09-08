@@ -1,6 +1,10 @@
 package com.evolution.dropfiledaemon.controller.api;
 
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import lombok.RequiredArgsConstructor;
@@ -47,9 +51,9 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.getLatestTrustOut();
     }
 
-    @PostMapping("/revoke/fingerprint/{fingerprint}")
-    public void revoke(@PathVariable String fingerprint) {
-        handshakeFacade.revoke(fingerprint);
+    @PostMapping("/revoke/fingerprint/{fingerprintCriteria}")
+    public void revoke(@PathVariable String fingerprintCriteria) {
+        handshakeFacade.revoke(new CriteriaEnvelope(fingerprintCriteria));
     }
 
     @PostMapping("/revoke/all")
@@ -57,9 +61,9 @@ public class ApiHandshakeRestController {
         handshakeFacade.revokeAll();
     }
 
-    @PostMapping("/disconnect/fingerprint/{fingerprint}")
-    public void disconnect(@PathVariable String fingerprint) {
-        apiHandshakeFacade.disconnect(fingerprint);
+    @PostMapping("/disconnect/fingerprint")
+    public void disconnect(@RequestBody CriteriaEnvelope fingerprintCriteriaEnvelope) {
+        apiHandshakeFacade.disconnect(fingerprintCriteriaEnvelope);
     }
 
     @PostMapping("/disconnect/current")

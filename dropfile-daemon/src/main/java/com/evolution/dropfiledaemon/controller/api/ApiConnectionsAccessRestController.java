@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessGenerateRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsAccessInfoResponseDTO;
@@ -28,8 +29,8 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult rm(@RequestBody Collection<String> idCriteria) {
-        return apiFacade.rm(idCriteria);
+    public ApiBatchOperationResult rm(@RequestBody Collection<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
+        return apiFacade.rm(accessIdCriteriaEnvelopes);
     }
 
     @DeleteMapping("/rm-all")

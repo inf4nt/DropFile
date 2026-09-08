@@ -1,5 +1,6 @@
 package com.evolution.dropfilecli.command.connections.browse;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiConnectionsBrowseGetResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,14 +21,14 @@ import java.net.http.HttpResponse;
 public class BrowseGetCommand extends AbstractCommandHttpHandler<ApiConnectionsBrowseGetResponseDTO> {
 
     @CommandLine.Parameters(index = "0", description = "File id")
-    private String id;
+    private String idCriteria;
 
     @CommandLine.Option(names = {"--filename", "-f"})
     private String filename;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsBrowseGet(id, filename);
+        return daemonClient.connectionsBrowseGet(new CriteriaEnvelope(idCriteria), filename);
     }
 
     @Override
