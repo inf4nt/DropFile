@@ -14,7 +14,9 @@ import picocli.CommandLine;
                 DownloadStopCommand.class,
                 DownloadRmCommand.class,
                 DownloadStopAllCommand.class,
-                DownloadRmAllCommand.class
+                DownloadRmAllCommand.class,
+                DownloadKillCommand.class,
+                DownloadKillAllCommand.class
         }
 )
 public class DownloadCommand extends AbstractCommandHandler {

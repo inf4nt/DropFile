@@ -34,6 +34,11 @@ public class ApiConnectionsDownloadRestController {
         return downloadFacade.rm(request);
     }
 
+    @PostMapping("/kill")
+    public ApiBatchOperationResult kill(@RequestBody Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        return downloadFacade.kill(operationIdCriteriaEnvelopes);
+    }
+
     @PostMapping("/stop-all")
     public void stopAll() {
         downloadFacade.stopAll();
@@ -42,5 +47,10 @@ public class ApiConnectionsDownloadRestController {
     @DeleteMapping("/rm-all")
     public void rmAll() {
         downloadFacade.rmAll();
+    }
+
+    @PostMapping("/kill-all")
+    public void killAll() {
+        downloadFacade.killAll();
     }
 }

@@ -116,6 +116,19 @@ public class ApiDownloadFacade {
         );
     }
 
+    public ApiBatchOperationResult kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        FileDownloadOrchestrator.FileDownloadOrchestratorKillResponse response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
+        return ApiBatchOperationResult.of(
+                response.found(),
+                response.notFound(),
+                response.ambiguous()
+        );
+    }
+
+    public void killAll() {
+        fileDownloadOrchestrator.killAll();
+    }
+
     public void rmAll() {
         fileDownloadOrchestrator.rmAll();
     }

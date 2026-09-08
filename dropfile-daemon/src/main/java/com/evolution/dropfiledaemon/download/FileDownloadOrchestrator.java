@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.nio.file.FileAlreadyExistsException;
@@ -203,6 +204,10 @@ public class FileDownloadOrchestrator {
     }
 
     public FileDownloadOrchestratorRemoveResponse rm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        if (ObjectUtils.isEmpty(operationIdCriteriaEnvelopes)) {
+            return new FileDownloadOrchestratorRemoveResponse(Map.of(), Map.of(), List.of(), Map.of());
+        }
+
         Map<CriteriaEnvelope, String> active = new LinkedHashMap<>();
         CommonUtils.MatchResult<String> matchResult;
 
@@ -246,14 +251,20 @@ public class FileDownloadOrchestrator {
     }
 
     public FileDownloadOrchestratorStopResponse stop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        if (ObjectUtils.isEmpty(operationIdCriteriaEnvelopes)) {
+            return new FileDownloadOrchestratorStopResponse(Map.of(), List.of(), Map.of());
+        }
+
         Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
         CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
-            Set<String> currentOperations = Stream.concat(
-                    waitingQueue.stream().map(Map.Entry::getKey),
-                    downloadProcedures.keySet().stream()
-            ).collect(Collectors.toSet());
+            Set<String> currentOperations = Stream
+                    .concat(
+                            waitingQueue.stream().map(Map.Entry::getKey),
+                            downloadProcedures.keySet().stream()
+                    )
+                    .collect(Collectors.toSet());
 
             matchResult = CommonUtils.matchBy(
                     currentOperations,
@@ -261,7 +272,7 @@ public class FileDownloadOrchestrator {
                     (criteria, operationId) -> operationId.startsWith(criteria.value())
             );
 
-            Set<String> operationsToStop = new HashSet<>(matchResult.found().values());
+            Collection<String> operationsToStop = Collections.unmodifiableCollection(matchResult.found().values());
 
             for (String operation : operationsToStop) {
                 SingleRunDownloadProcedure procedure = downloadProcedures.get(operation);
@@ -287,6 +298,69 @@ public class FileDownloadOrchestrator {
         );
     }
 
+    public FileDownloadOrchestratorKillResponse kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        if (ObjectUtils.isEmpty(operationIdCriteriaEnvelopes)) {
+            return new FileDownloadOrchestratorKillResponse(Map.of(), List.of(), Map.of());
+        }
+
+        Map<String, SingleRunDownloadProcedure> targetOperations = new LinkedHashMap<>();
+        CommonUtils.MatchResult<String> matchResult;
+
+        synchronized (this) {
+            Set<String> ramOperations = Stream.concat(
+                    waitingQueue.stream().map(Map.Entry::getKey),
+                    downloadProcedures.keySet().stream()
+            ).collect(Collectors.toSet());
+
+            Set<String> dbOperations = fileDownloadStore.getAll().keySet();
+
+            Set<String> allOperations = Stream.concat(ramOperations.stream(), dbOperations.stream())
+                    .collect(Collectors.toSet());
+
+            matchResult = CommonUtils.matchBy(
+                    allOperations,
+                    operationIdCriteriaEnvelopes,
+                    (criteria, operationId) -> operationId.startsWith(criteria.value())
+            );
+
+            Set<String> operationsToKill = new HashSet<>(matchResult.found().values());
+
+            for (String operationId : operationsToKill) {
+                SingleRunDownloadProcedure procedure = downloadProcedures.get(operationId);
+                if (procedure != null) {
+                    targetOperations.put(operationId, procedure);
+                }
+            }
+
+            if (!operationsToKill.isEmpty()) {
+                waitingQueue.removeIf(entry -> operationsToKill.contains(entry.getKey()));
+            }
+        }
+
+        stop(targetOperations, Collections.emptyMap());
+
+        fileDownloadStore.remove(matchResult.found().values());
+
+        return new FileDownloadOrchestratorKillResponse(
+                matchResult.found(),
+                matchResult.notFound(),
+                matchResult.ambiguous()
+        );
+    }
+
+    public void killAll() {
+        Map<String, SingleRunDownloadProcedure> targetOperations;
+
+        synchronized (this) {
+            targetOperations = new LinkedHashMap<>(downloadProcedures);
+            waitingQueue.clear();
+        }
+
+        stop(targetOperations, Collections.emptyMap());
+
+        fileDownloadStore.remove(fileDownloadStore.getAll().keySet());
+    }
+
     public void stopAll() {
         Map<String, SingleRunDownloadProcedure> waitingQueueSnapshot;
         Map<String, SingleRunDownloadProcedure> proceduresSnapshot;
@@ -309,6 +383,10 @@ public class FileDownloadOrchestrator {
 
     private void stop(Map<String, SingleRunDownloadProcedure> operations,
                       Map<String, SingleRunDownloadProcedure> waiting) {
+        if (ObjectUtils.isEmpty(operations) && ObjectUtils.isEmpty(waiting)) {
+            return;
+        }
+
         operations.values().forEach(SingleRunDownloadProcedure::stop);
 
         fileDownloadStore.save(
@@ -476,6 +554,13 @@ public class FileDownloadOrchestrator {
     }
 
     public record FileDownloadOrchestratorStopResponse(
+            Map<CriteriaEnvelope, String> found,
+            Collection<CriteriaEnvelope> notFound,
+            Map<CriteriaEnvelope, List<String>> ambiguous
+    ) {
+    }
+
+    public record FileDownloadOrchestratorKillResponse(
             Map<CriteriaEnvelope, String> found,
             Collection<CriteriaEnvelope> notFound,
             Map<CriteriaEnvelope, List<String>> ambiguous

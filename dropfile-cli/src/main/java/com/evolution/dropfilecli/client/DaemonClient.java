@@ -128,6 +128,14 @@ public class DaemonClient {
         return sendPost("/api/connections/download/stop", operationIdCriteriaEnvelopes);
     }
 
+    public HttpResponse<byte[]> connectionsDownloadKill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
+        return sendPost("/api/connections/download/kill", operationIdCriteriaEnvelopes);
+    }
+
+    public HttpResponse<byte[]> connectionsDownloadKillAll() throws IOException {
+        return sendPost("/api/connections/download/kill-all");
+    }
+
     public HttpResponse<byte[]> connectionsDownloadStopAll() throws IOException {
         return sendPost("/api/connections/download/stop-all");
     }
