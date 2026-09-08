@@ -176,7 +176,7 @@ public class FileDownloadOrchestrator {
     public Map<String, DownloadProgress> getWaitingQueue() {
         List<Map.Entry<String, SingleRunDownloadProcedure>> snapshot;
         synchronized (this) {
-            snapshot = new ArrayList<>(waitingQueue);
+            snapshot = List.copyOf(waitingQueue);
         }
 
         return snapshot.stream()
@@ -212,10 +212,12 @@ public class FileDownloadOrchestrator {
         CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
-            Set<String> currentOperations = Stream.concat(
-                    waitingQueue.stream().map(Map.Entry::getKey),
-                    downloadProcedures.keySet().stream()
-            ).collect(Collectors.toSet());
+            Set<String> currentOperations = Stream
+                    .concat(
+                            waitingQueue.stream().map(Map.Entry::getKey),
+                            downloadProcedures.keySet().stream()
+                    )
+                    .collect(Collectors.toSet());
 
             matchResult = CommonUtils.matchBy(
                     currentOperations,
@@ -226,21 +228,24 @@ public class FileDownloadOrchestrator {
             active.putAll(matchResult.found());
         }
 
-        Collection<CriteriaEnvelope> canBeRemovedCriteria = operationIdCriteriaEnvelopes.stream()
+        Collection<CriteriaEnvelope> canBeRemovedCriteria = operationIdCriteriaEnvelopes
+                .stream()
                 .filter(criteria -> !active.containsKey(criteria))
                 .collect(Collectors.toSet());
 
         KeyValueStore.RemoveResult removeResult = fileDownloadStore.removeByCriteria(canBeRemovedCriteria);
 
-        Map<CriteriaEnvelope, List<String>> ambiguous = Stream.concat(
-                matchResult.ambiguous().entrySet().stream(),
-                removeResult.ambiguous().entrySet().stream()
-        ).collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (v1, v2) -> Stream.concat(v1.stream(), v2.stream()).distinct().toList(),
-                LinkedHashMap::new
-        ));
+        Map<CriteriaEnvelope, List<String>> ambiguous = Stream
+                .concat(
+                        matchResult.ambiguous().entrySet().stream(),
+                        removeResult.ambiguous().entrySet().stream()
+                )
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (v1, v2) -> Stream.concat(v1.stream(), v2.stream()).distinct().toList(),
+                        LinkedHashMap::new
+                ));
 
         return new FileDownloadOrchestratorRemoveResponse(
                 removeResult.removed(),
@@ -307,10 +312,12 @@ public class FileDownloadOrchestrator {
         CommonUtils.MatchResult<String> matchResult;
 
         synchronized (this) {
-            Set<String> ramOperations = Stream.concat(
-                    waitingQueue.stream().map(Map.Entry::getKey),
-                    downloadProcedures.keySet().stream()
-            ).collect(Collectors.toSet());
+            Set<String> ramOperations = Stream
+                    .concat(
+                            waitingQueue.stream().map(Map.Entry::getKey),
+                            downloadProcedures.keySet().stream()
+                    )
+                    .collect(Collectors.toSet());
 
             Set<String> dbOperations = fileDownloadStore.getAll().keySet();
 
@@ -514,7 +521,7 @@ public class FileDownloadOrchestrator {
         Set<String> activeOperationIds;
 
         synchronized (this) {
-            activeOperationIds = new HashSet<>(downloadProcedures.keySet());
+            activeOperationIds = Set.copyOf(downloadProcedures.keySet());
         }
 
         Set<String> idsToRemove = fileDownloadStore.getAll().keySet().stream()
