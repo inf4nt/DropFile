@@ -233,7 +233,7 @@ public class DaemonClient {
             throw new IOException("Daemon client call execution interrupted: %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
         } catch (ConnectException e) {
-            String message = "Is daemon running? Daemon is not running or unreachable %s %s"
+            String message = "Is daemon running? Daemon is not running or unreachable %s %s. Execute $ dropf daemon start"
                     .formatted(httpRequest.method(), httpRequest.uri());
             throw new ConnectException(message);
         } catch (IOException e) {
@@ -256,7 +256,7 @@ public class DaemonClient {
 
     private String getDaemonAuthorizationToken() {
         DaemonSecret daemonSecret = daemonSecretStore.get()
-                .orElseThrow(() -> new NoSuchElementException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet"));
+                .orElseThrow(() -> new NoSuchElementException("Is daemon running? Unable to get daemon token from the store. It might be daemon has not initialized yet. Execute $ dropf daemon start"));
         return "Bearer " + daemonSecret.daemonToken();
     }
 }
