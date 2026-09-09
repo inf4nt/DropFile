@@ -6,15 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.Channels;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -103,54 +100,44 @@ public class FileManifestBuilder {
 
         long fileSize = Files.size(source);
 
-        List<ChunkManifest> chunkManifests = new ArrayList<>();
+        int expectedChunks = (int) Math.ceil((double) fileSize / chunkSize);
+        List<ChunkManifest> chunkManifests = new ArrayList<>(Math.max(expectedChunks, 1));
+
         long totalSizeAccumulated = 0;
 
         MessageDigest manifestDigest = MessageDigest.getInstance(SHA256);
         MessageDigest chunkDigest = MessageDigest.getInstance(SHA256);
 
-        OutputStream digestOutputStream = new OutputStream() {
-            @Override
-            public void write(int b) {
-                manifestDigest.update((byte) b);
-                chunkDigest.update((byte) b);
-            }
+        int bufferSize = Math.min(64 * 1024, chunkSize);
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
 
-            @Override
-            public void write(byte[] b, int off, int len) {
-                manifestDigest.update(b, off, len);
-                chunkDigest.update(b, off, len);
-            }
-        };
-
-        try (FileChannel fileChannel = FileChannel.open(source, StandardOpenOption.READ);
-             WritableByteChannel targetChannel = Channels.newChannel(digestOutputStream)) {
-
+        try (FileChannel fileChannel = FileChannel.open(source, StandardOpenOption.READ)) {
             long position = 0;
 
             while (position < fileSize) {
                 checkIfClosed();
 
                 int bytesInChunk = (int) Math.min(chunkSize, fileSize - position);
-                long bytesTransferredInChunk = 0;
+                int bytesReadInChunk = 0;
 
-                while (bytesTransferredInChunk < bytesInChunk) {
+                while (bytesReadInChunk < bytesInChunk) {
+                    int toRead = Math.min(buffer.capacity(), bytesInChunk - bytesReadInChunk);
+                    buffer.limit(toRead);
 
-                    long transferred = fileChannel.transferTo(
-                            position + bytesTransferredInChunk,
-                            bytesInChunk - bytesTransferredInChunk,
-                            targetChannel
-                    );
-
-                    if (transferred <= 0) {
+                    int read = fileChannel.read(buffer);
+                    if (read == -1) {
                         throw new IOException("Unexpected EOF or channel closed during chunk transfer");
                     }
 
-                    bytesTransferredInChunk += transferred;
+                    byte[] array = buffer.array();
+                    manifestDigest.update(array, 0, read);
+                    chunkDigest.update(array, 0, read);
+
+                    bytesReadInChunk += read;
+                    buffer.clear();
                 }
 
                 byte[] chunkHash = chunkDigest.digest();
-
                 ChunkManifest chunkManifest = new ChunkManifest(HEX_FORMAT.formatHex(chunkHash), bytesInChunk, position);
                 chunkManifests.add(chunkManifest);
 
