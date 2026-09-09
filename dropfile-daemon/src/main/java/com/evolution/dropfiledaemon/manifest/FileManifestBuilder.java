@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.manifest;
 
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,16 +11,11 @@ import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,19 +25,18 @@ public class FileManifestBuilder {
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private static final String SHA256 = "SHA-256";
-
-    private static final HexFormat HEX_FORMAT = HexFormat.of();
+    private final FileHelper fileHelper;
 
     private final int chunkMaxSize;
 
     @Autowired
-    public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties) {
-        this(daemonApplicationProperties.daemonManifestChunkMaxSize);
+    public FileManifestBuilder(DaemonApplicationProperties daemonApplicationProperties, FileHelper fileHelper) {
+        this(daemonApplicationProperties.daemonManifestChunkMaxSize, fileHelper);
     }
 
-    FileManifestBuilder(int chunkMaxSize) {
+    FileManifestBuilder(int chunkMaxSize, FileHelper fileHelper) {
         this.chunkMaxSize = chunkMaxSize;
+        this.fileHelper = fileHelper;
     }
 
     public void validate(FileManifest fileManifest) {
@@ -100,59 +95,21 @@ public class FileManifestBuilder {
 
         long fileSize = Files.size(source);
 
-        int expectedChunks = (int) Math.ceil((double) fileSize / chunkSize);
-        List<ChunkManifest> chunkManifests = new ArrayList<>(Math.max(expectedChunks, 1));
+        List<ChunkManifest> chunkManifests = new ArrayList<>();
 
-        long totalSizeAccumulated = 0;
-
-        MessageDigest manifestDigest = MessageDigest.getInstance(SHA256);
-        MessageDigest chunkDigest = MessageDigest.getInstance(SHA256);
-
-        int bufferSize = Math.min(64 * 1024, chunkSize);
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-
-        try (FileChannel fileChannel = FileChannel.open(source, StandardOpenOption.READ)) {
-            long position = 0;
-
-            while (position < fileSize) {
-                checkIfClosed();
-
-                int bytesInChunk = (int) Math.min(chunkSize, fileSize - position);
-                int bytesReadInChunk = 0;
-
-                while (bytesReadInChunk < bytesInChunk) {
-                    int toRead = Math.min(buffer.capacity(), bytesInChunk - bytesReadInChunk);
-                    buffer.limit(toRead);
-
-                    int read = fileChannel.read(buffer);
-                    if (read == -1) {
-                        throw new IOException("Unexpected EOF or channel closed during chunk transfer");
-                    }
-
-                    byte[] array = buffer.array();
-                    manifestDigest.update(array, 0, read);
-                    chunkDigest.update(array, 0, read);
-
-                    bytesReadInChunk += read;
-                    buffer.clear();
-                }
-
-                byte[] chunkHash = chunkDigest.digest();
-                ChunkManifest chunkManifest = new ChunkManifest(HEX_FORMAT.formatHex(chunkHash), bytesInChunk, position);
-                chunkManifests.add(chunkManifest);
-
-                position += bytesInChunk;
-                totalSizeAccumulated += bytesInChunk;
-            }
+        long position = 0;
+        while (position < fileSize) {
+            int bytesInChunk = (int) Math.min(chunkSize, fileSize - position);
+            chunkManifests.add(new ChunkManifest(bytesInChunk, position));
+            position += bytesInChunk;
         }
 
-        if (totalSizeAccumulated != fileSize) {
-            throw new IOException("Calculated size does not match file size: " + fileSize + " total size: " + totalSizeAccumulated);
-        }
+        checkIfClosed();
+        String hash = fileHelper.sha256(source);
 
         return new FileManifest(
                 fileManifestName,
-                HEX_FORMAT.formatHex(manifestDigest.digest()),
+                hash,
                 fileSize,
                 chunkManifests
         );

@@ -1,4 +1,4 @@
 package com.evolution.dropfiledaemon.manifest;
 
-public record ChunkManifest(String hash, int size, long position) {
+public record ChunkManifest(int size, long position) {
 }
