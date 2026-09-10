@@ -23,13 +23,14 @@ public interface KeyValueStore<V> {
         return save(callable, ValidatePolicy.STRICT);
     }
 
-    default V save(String key, Callable<V> callable, UnaryOperator<Map.Entry<String, V>> preCommit) {
+    default V save(String key, Callable<V> callable, UnaryOperator<V> preCommit) {
         return save(
                 () -> Map.of(key, callable.call()),
                 map -> {
                     Map.Entry<String, V> entry = map.entrySet().stream().findFirst().orElseThrow();
-                    Map.Entry<String, V> next = preCommit.apply(entry);
-                    return Map.ofEntries(next);
+                    V value = entry.getValue();
+                    V next = preCommit.apply(value);
+                    return Map.of(entry.getKey(), next);
                 },
                 ValidatePolicy.STRICT
         ).values().stream().findAny().orElseThrow();
