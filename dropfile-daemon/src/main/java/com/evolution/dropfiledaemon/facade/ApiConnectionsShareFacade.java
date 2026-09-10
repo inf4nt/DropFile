@@ -11,7 +11,7 @@ import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.SharedFileUtils;
+import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -109,7 +109,7 @@ public class ApiConnectionsShareFacade {
     }
 
     private ApiConnectionsShareLsResponseDTO map(String id, ShareFile shareFile) {
-        boolean accessible = SharedFileUtils.isAccessible(shareFile);
+        boolean accessible = Utils.isAccessible(shareFile);
 
         return new ApiConnectionsShareLsResponseDTO(
                 id,

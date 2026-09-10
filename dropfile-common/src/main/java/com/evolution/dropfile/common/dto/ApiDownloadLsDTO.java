@@ -10,6 +10,7 @@ public class ApiDownloadLsDTO {
                            String file,
                            String progress,
                            String speed,
+                           Boolean accessible,
                            ApiDownloadLsDTO.Status status,
                            Instant created,
                            Instant updated) {

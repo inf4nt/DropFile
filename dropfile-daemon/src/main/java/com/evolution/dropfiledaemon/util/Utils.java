@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.share.ShareFile;
 
 import java.io.IOException;
@@ -8,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 
-public class SharedFileUtils {
+public class Utils {
 
     public static boolean isAccessible(ShareFile shareFile) {
         if (!shareFile.accessible()) {
@@ -29,5 +30,11 @@ public class SharedFileUtils {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public static boolean isAccessible(DownloadFile downloadFile) {
+        String destinationFileString = downloadFile.destinationFile();
+        Path destinationFilePath = Paths.get(destinationFileString);
+        return Files.exists(destinationFilePath);
     }
 }

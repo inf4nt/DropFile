@@ -6,6 +6,7 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +49,7 @@ public class ApiDownloadFacade {
                     downloadFile.destinationFile(),
                     progress,
                     speedPerSecond,
+                    Utils.isAccessible(downloadFile),
                     status,
                     downloadFile.created(),
                     downloadFile.updated()
@@ -67,6 +69,7 @@ public class ApiDownloadFacade {
                     downloadProgress.fingerprint(),
                     downloadProgress.fileId(),
                     downloadProgress.filename(),
+                    null,
                     null,
                     null,
                     ApiDownloadLsDTO.Status.QUEUE,
