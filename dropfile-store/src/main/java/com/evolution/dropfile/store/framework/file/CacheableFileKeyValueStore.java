@@ -1,12 +1,9 @@
 package com.evolution.dropfile.store.framework.file;
 
-import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 public class CacheableFileKeyValueStore<V>
         extends FileKeyValueStore<V>
@@ -18,42 +15,6 @@ public class CacheableFileKeyValueStore<V>
                                       FileOperations fileOperations,
                                       SerdeOperations<V> serdeOperations) {
         super(fileProvider, fileOperations, serdeOperations);
-    }
-
-    @Override
-    public synchronized Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy) {
-        try {
-            return super.save(callable, validatePolicy);
-        } finally {
-            reset();
-        }
-    }
-
-    @Override
-    public synchronized Map<String, V> remove(Collection<String> keys) {
-        try {
-            return super.remove(keys);
-        } finally {
-            reset();
-        }
-    }
-
-    @Override
-    public synchronized RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
-        try {
-            return super.removeByCriteria(criteriaEnvelopes);
-        } finally {
-            reset();
-        }
-    }
-
-    @Override
-    public synchronized void removeAll() {
-        try {
-            super.removeAll();
-        } finally {
-            reset();
-        }
     }
 
     @Override
@@ -73,7 +34,12 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    public synchronized void reset() {
+    protected void afterMutation() {
+        reset();
+    }
+
+    @Override
+    public void reset() {
         cache = null;
     }
 }
