@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
+import com.evolution.dropfiledaemon.tunnel.command.TunnelPingCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.*;
 import com.evolution.dropfiledaemon.tunnel.framework.client.TunnelClientRefreshableSessionDecorator;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -25,6 +26,15 @@ public class TunnelClientGateway {
     private final ObjectMapper objectMapper;
 
     private final TunnelClientRefreshableSessionDecorator tunnelClient;
+
+    @SneakyThrows
+    public void ping(String fingerprint) {
+        TunnelClient.Request request = TunnelClient.Request.builder(TunnelPingCommandHandler.COMMAND_NAME, fingerprint)
+                .build();
+        try (InputStream _ = tunnelClient.stream(request)) {
+            // nothing to do
+        }
+    }
 
     @SneakyThrows
     public List<ShareLsTunnelResponse> shareLs(String fingerprint, Collection<CriteriaEnvelope> criteriaEnvelopes) {
