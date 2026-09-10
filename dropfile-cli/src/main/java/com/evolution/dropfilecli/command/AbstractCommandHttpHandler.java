@@ -1,6 +1,7 @@
 package com.evolution.dropfilecli.command;
 
 import com.evolution.dropfilecli.client.DaemonClient;
+import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.evolution.dropfilecli.util.Spinner;
 import com.evolution.dropfilecli.util.TablePrinter;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,6 +27,8 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
 
     protected ObjectMapper objectMapper;
 
+    protected CliApplicationProperties applicationProperties;
+
     @Autowired
     public void setDaemonClient(DaemonClient daemonClient) {
         this.daemonClient = daemonClient;
@@ -34,6 +37,11 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
     @Autowired
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    @Autowired
+    public void setApplicationProperties(CliApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
     }
 
     public abstract HttpResponse<byte[]> execute() throws Exception;
@@ -89,6 +97,11 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
     }
 
     protected PrintModeEnum getPrintMode() {
+        PrintModeEnum printModeDefault = applicationProperties.printModeDefault;
+        if (printModeDefault != null) {
+            return printModeDefault;
+        }
+
         TypeReference<?> typeReference = getTypeReference();
         if (typeReference == null) {
             return PrintModeEnum.LIST;
@@ -133,11 +146,6 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
         List<?> data = StreamSupport.stream(iterable.spliterator(), false).toList();
         String print = TablePrinter.get(data);
         System.out.println(StringUtils.hasText(print) ? print : "No values present");
-    }
-
-    protected enum PrintModeEnum {
-        TABLE,
-        LIST
     }
 
     private boolean isTable() {
