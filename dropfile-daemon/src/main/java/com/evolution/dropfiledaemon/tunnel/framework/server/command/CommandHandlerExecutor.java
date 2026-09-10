@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,20 +31,14 @@ public class CommandHandlerExecutor {
         ));
     }
 
-    @SneakyThrows
+    @Nullable
     public Object handle(TunnelRequestDTO.Payload payload) {
         CommandHandler commandHandler = getHandler(payload.command());
 
         @Nullable
         Object deserializedPayload = deserialize(commandHandler.getPayloadType(), payload.payload());
-        Object result = commandHandler.handle(deserializedPayload);
 
-        Objects.requireNonNull(
-                result,
-                String.format("Tunnel command handler '%s' returned null result", commandHandler.getCommandName())
-        );
-
-        return result;
+        return commandHandler.handle(deserializedPayload);
     }
 
     @Nullable

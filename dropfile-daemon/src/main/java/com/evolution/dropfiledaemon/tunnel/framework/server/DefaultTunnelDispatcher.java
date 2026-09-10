@@ -13,6 +13,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonito
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -163,13 +164,19 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     }
 
     @SneakyThrows
-    private InputStream handlerResultToInputStream(Object handlerResult) {
+    private InputStream handlerResultToInputStream(@Nullable Object handlerResult) {
+        if (handlerResult == null) {
+            return InputStream.nullInputStream();
+        }
+
         if (handlerResult instanceof InputStream inputStream) {
             return inputStream;
         }
+
         if (handlerResult instanceof byte[] arrayResult) {
             return new ByteArrayInputStream(arrayResult);
         }
+
         if (handlerResult instanceof String stringResult) {
             return new ByteArrayInputStream(stringResult.getBytes(StandardCharsets.UTF_8));
         }
