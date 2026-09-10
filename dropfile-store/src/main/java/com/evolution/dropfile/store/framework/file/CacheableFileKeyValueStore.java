@@ -34,7 +34,7 @@ public class CacheableFileKeyValueStore<V>
     }
 
     @Override
-    protected void afterMutation() {
+    protected void doAfterMutation() {
         reset();
     }
 

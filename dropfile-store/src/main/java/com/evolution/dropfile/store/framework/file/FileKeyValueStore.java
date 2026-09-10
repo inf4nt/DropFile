@@ -37,7 +37,15 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final SerdeOperations<V> serdeOperations;
 
-    protected void afterMutation() {
+    private void afterMutation() {
+        try {
+            doAfterMutation();
+        } catch (Exception _) {
+            // nothing to do
+        }
+    }
+
+    protected void doAfterMutation() {
     }
 
     @SneakyThrows
@@ -101,7 +109,10 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private void validateNotNull(Map<String, V> map) {
         for (Map.Entry<String, V> entry : map.entrySet()) {
-            Objects.requireNonNull(entry.getKey(), "key cannot be null");
+            String key = entry.getKey();
+            if (key == null || key.isBlank()) {
+                throw new IllegalArgumentException("key cannot be null or empty");
+            }
             Objects.requireNonNull(entry.getValue(), "value cannot be null");
         }
     }
@@ -208,12 +219,14 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
                 }
             }
 
-            if (!removed.isEmpty()) {
-                Path filePath = fileProvider.getFilePath();
-                fileOperations.write(filePath, outputStream -> {
-                    serdeOperations.serialize(toUpdate, outputStream);
-                });
+            if (removed.isEmpty()) {
+                return Collections.emptyMap();
             }
+
+            Path filePath = fileProvider.getFilePath();
+            fileOperations.write(filePath, outputStream -> {
+                serdeOperations.serialize(toUpdate, outputStream);
+            });
 
             afterMutation();
 
