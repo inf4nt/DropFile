@@ -10,6 +10,8 @@ import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
 import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
+import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
+import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifestService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +55,8 @@ public class FileDownloadOrchestrator {
 
     private final DirectoryProvider daemonDownloadsDirectoryProvider;
 
+    private final FileManifestService fileManifestService;
+
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorMaxQueueSize;
@@ -72,11 +76,13 @@ public class FileDownloadOrchestrator {
             Path temporaryFilePath = getTemporaryFilePath(request);
 
             String operationId = CommonUtils.random();
+            FileManifest fileManifest = fileManifestService.build(request.hash(), request.size());
             downloadProcedure = downloadProcedureFactory.get(
                     operationId,
                     request.fingerprint(),
                     request.fileId(),
                     request.filename(),
+                    fileManifest,
                     destinationFilePath,
                     temporaryFilePath,
                     manifestFilePath

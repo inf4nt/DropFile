@@ -4,10 +4,8 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.manifest.ChunkManifest;
-import com.evolution.dropfiledaemon.manifest.FileManifest;
-import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
-import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadManifestCommandResponse;
+import com.evolution.dropfiledaemon.download.procedure.manifest.ChunkManifest;
+import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
@@ -47,13 +45,9 @@ public class SingleRunDownloadProcedure {
 
     private final FileHelper fileHelper;
 
-    private final FileManifestBuilder fileManifestBuilder;
-
     private final DownloadProcedureConfiguration configuration;
 
     private final DownloadProcedureRequest request;
-
-    private FileManifest manifest;
 
     public DownloadProcedureRequest getRequest() {
         return request;
@@ -97,14 +91,8 @@ public class SingleRunDownloadProcedure {
                         request.operation(), request.fingerprint(), request.fileId()),
                 () -> {
                     ExecutionProfiling.run(
-                            String.format("download-manifest operation: %s fingerprint %s fileId: %s",
-                                    request.operation(), request.fingerprint(), request.fileId()),
-                            () -> manifestHandler()
-                    );
-
-                    ExecutionProfiling.run(
                             String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
-                                    request.operation(), request.fingerprint(), request.fileId(), manifest.chunkManifests().size()
+                                    request.operation(), request.fingerprint(), request.fileId(), request.fileManifest().chunks().size()
                             ),
                             () -> chunksHandler()
                     );
@@ -128,20 +116,7 @@ public class SingleRunDownloadProcedure {
     }
 
     public FileDownloadOrchestrator.DownloadProgress getProgress() {
-        if (manifest == null) {
-            return new FileDownloadOrchestrator.DownloadProgress(
-                    request.operation(),
-                    request.fingerprint(),
-                    request.fileId(),
-                    request.destinationFilePath().toAbsolutePath().toString(),
-                    null,
-                    0,
-                    0,
-                    0,
-                    CommonUtils.percent(0, 0)
-            );
-        }
-
+        FileManifest manifest = request.fileManifest();
         long totalDownloaded = throughputMeter.getTotalThroughput();
         long speedBytesPerSec = throughputMeter.getSpeedBytesPerSec();
         String percent = CommonUtils.percent(totalDownloaded, manifest.size());
@@ -159,32 +134,6 @@ public class SingleRunDownloadProcedure {
         );
     }
 
-    private void manifestHandler() {
-        manifest = RetryExecutor.call(() -> {
-                    isInterrupted();
-                    int manifestChunkMaxSize = configuration.manifestChunkMaxSize();
-
-                    ShareDownloadManifestCommandResponse response = tunnelClientGateway.shareDownloadManifest(
-                            request.fingerprint(),
-                            request.fileId(),
-                            manifestChunkMaxSize
-                    );
-                    if (!request.fileId().equals(response.fileId())) {
-                        throw new SecurityException("Mismatched fileId in manifest response! Requested: %s, but got: %s"
-                                .formatted(request.fileId(), response.fileId()));
-                    }
-                    FileManifest fileManifest = response.fileManifest();
-                    fileManifestBuilder.validate(fileManifest);
-                    return fileManifest;
-                })
-                .doOnError((attempt, exception) -> {
-                    log.error("Retry 'share-download-manifest'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} exception: {}",
-                            request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt, exception.getMessage(), exception
-                    );
-                })
-                .run();
-    }
-
     private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
@@ -194,7 +143,7 @@ public class SingleRunDownloadProcedure {
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
-            Iterator<ChunkManifest> iterator = manifest.chunkManifests().iterator();
+            Iterator<ChunkManifest> iterator = request.fileManifest().chunks().iterator();
             while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
                 isInterrupted();
                 ChunkManifest chunkManifest = iterator.next();
@@ -236,7 +185,10 @@ public class SingleRunDownloadProcedure {
         RetryExecutor
                 .call(() -> {
                     isInterrupted();
-                    try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(), request.fileId(), chunkManifest.size(), chunkManifest.position())) {
+                    try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(),
+                            request.fileId(),
+                            chunkManifest.size(),
+                            chunkManifest.position())) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
                     return 1;
@@ -252,6 +204,7 @@ public class SingleRunDownloadProcedure {
 
     private void totalDigestHandler() throws NoSuchAlgorithmException, IOException {
         String actualSha256 = fileHelper.sha256(request.temporaryFilePath());
+        FileManifest manifest = request.fileManifest();
         if (!manifest.hash().equals(actualSha256)) {
             throw new SecurityException(String.format(
                     "Total digest mismatch. Operation: %s expected: %s actual: %s",

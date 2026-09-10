@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Deprecated
 @Slf4j
 @Component
 public class FileManifestBuilder {
@@ -79,7 +80,9 @@ public class FileManifestBuilder {
         }
     }
 
-    public FileManifest build(Path source, String fileManifestName, int chunkSize) throws IOException, NoSuchAlgorithmException {
+    public FileManifest build(Path source,
+                              String fileManifestName,
+                              int chunkSize) throws IOException, NoSuchAlgorithmException {
         if (!StringUtils.hasText(fileManifestName)) {
             throw new IllegalArgumentException("File manifest name is empty");
         }

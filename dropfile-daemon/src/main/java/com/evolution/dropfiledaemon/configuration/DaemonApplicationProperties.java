@@ -60,6 +60,8 @@ public class DaemonApplicationProperties {
 
     public final long daemonIdleRateMillis;
 
+    public final int daemonShareAddHashExecutionTimeoutMillis;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -68,6 +70,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
             @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
+            @Value("${dropfile.daemon.share.add.hash.execution-timeout-millis}") int daemonShareAddHashExecutionTimeoutMillis,
             @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
@@ -95,6 +98,7 @@ public class DaemonApplicationProperties {
         this.daemonDownloadsDirectory = daemonDownloadsDirectory;
         this.daemonTunnelClientHttpRequestTimeoutMillis = daemonTunnelClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientStreamDeadlineTimeoutMillis = daemonTunnelClientStreamDeadlineTimeoutMillis;
+        this.daemonShareAddHashExecutionTimeoutMillis = daemonShareAddHashExecutionTimeoutMillis;
         this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;

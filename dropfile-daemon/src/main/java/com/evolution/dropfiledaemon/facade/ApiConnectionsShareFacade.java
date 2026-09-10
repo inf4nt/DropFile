@@ -5,51 +5,86 @@ import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
+import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.util.SharedFileUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class ApiConnectionsShareFacade {
 
+    private final DaemonApplicationProperties applicationProperties;
+
+    private final FileHelper fileHelper;
+
     private final ShareFileStore shareFileStore;
 
-    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) throws IOException {
-        Path absoluteResourcePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
-        String alias = Paths.get(requestDTO.alias()).toString();
+    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) throws IOException, NoSuchAlgorithmException {
+        Path path = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
-        if (Files.notExists(absoluteResourcePath)) {
-            throw new FileNotFoundException("No file found %s".formatted(absoluteResourcePath.toString()));
+        if (Files.notExists(path)) {
+            throw new FileNotFoundException("No file found %s".formatted(path));
         }
 
-        if (!Files.isRegularFile(absoluteResourcePath)) {
+        if (!Files.isRegularFile(path)) {
             throw new IllegalArgumentException("File is not a regular file: " + requestDTO.resourcePath());
         }
 
-        String id = CommonUtils.random();
-        ShareFile entry = shareFileStore.save(
-                id,
-                new ShareFile(
-                        alias,
-                        absoluteResourcePath.toFile().getCanonicalPath(),
-                        Files.size(absoluteResourcePath),
-                        Instant.now()
-                )
-        );
-        return map(id, entry);
+        Path realPath = path.toRealPath();
+
+        String alias = StringUtils.hasText(requestDTO.alias())
+                ? Paths.get(requestDTO.alias()).getFileName().toString()
+                : realPath.getFileName().toString();
+
+        String key = CommonUtils.random();
+        ShareFile shareFile = shareFileStore.save(key,
+                () -> {
+                    Instant fileLastModified = Files.getLastModifiedTime(realPath).toInstant();
+                    return new ShareFile(
+                            alias,
+                            realPath.toString(),
+                            null,
+                            Files.size(realPath),
+                            false,
+                            fileLastModified,
+                            Instant.now()
+                    );
+                }, value -> {
+                    log.info("Calculating sha256 file {} alias {}", realPath, alias);
+                    String sha256 = calculateSha256(realPath);
+                    log.info("Calculating sha256 file {} alias {} finished {}", realPath, alias, sha256);
+                    return value.withHash(sha256).withAccessible(true);
+                });
+
+        return map(key, shareFile);
+    }
+
+    private String calculateSha256(Path source) {
+        return RetryExecutor
+                .call(() -> fileHelper.sha256(source))
+                .attempts(1)
+                .callTimeout(Duration.ofMillis(applicationProperties.daemonShareAddHashExecutionTimeoutMillis))
+                .run();
     }
 
     public List<ApiConnectionsShareLsResponseDTO> ls() {
@@ -74,15 +109,15 @@ public class ApiConnectionsShareFacade {
     }
 
     private ApiConnectionsShareLsResponseDTO map(String id, ShareFile shareFile) {
-        Path path = Paths.get(shareFile.resourcePath());
-        boolean exists = Files.exists(path);
+        boolean accessible = SharedFileUtils.isAccessible(shareFile);
 
         return new ApiConnectionsShareLsResponseDTO(
                 id,
                 shareFile.alias(),
                 shareFile.resourcePath(),
+                shareFile.hash(),
                 CommonUtils.toDisplaySize(shareFile.size()),
-                exists,
+                accessible,
                 shareFile.created()
         );
     }

@@ -4,12 +4,11 @@ import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import picocli.CommandLine;
 
 import java.io.File;
 import java.net.http.HttpResponse;
+import java.util.Scanner;
 
 @Component
 @CommandLine.Command(
@@ -27,9 +26,36 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
     @CommandLine.Option(names = {"--alias"}, description = "Alias")
     private String alias;
 
+    @CommandLine.Option(names = {"-y"}, description = "Automatic yes to prompts")
+    private boolean assumeYes;
+
+    @Override
+    public void run() {
+        if (assumeYes || runConfirmation()) {
+            System.out.println("Confirmed. Executing");
+            super.run();
+        } else {
+            System.out.println("Rejected");
+        }
+    }
+
+    private boolean runConfirmation() {
+        System.out.println("Calculating SHA-256 checksum. Please, DO NOT turn off the screen and wait until it finishes");
+        System.out.println("Large files may cause a request timeout if hashing takes too long");
+        System.out.print("Enter 'y' to continue... ");
+
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.hasNextLine() ? scanner.nextLine() : "n";
+
+        if (input == null) {
+            return false;
+        }
+
+        return input.trim().equalsIgnoreCase("y");
+    }
+
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        String alias = getAlias();
         return daemonClient.connectionsShareAdd(file.toPath().toAbsolutePath().normalize().toString(), alias);
     }
 
@@ -37,12 +63,5 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
     protected TypeReference<ApiConnectionsShareLsResponseDTO> getTypeReference() {
         return new TypeReference<ApiConnectionsShareLsResponseDTO>() {
         };
-    }
-
-    private String getAlias() {
-        if (StringUtils.hasText(alias)) {
-            return alias;
-        }
-        return file.getName();
     }
 }

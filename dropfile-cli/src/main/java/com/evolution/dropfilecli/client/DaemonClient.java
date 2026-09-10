@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -236,6 +237,9 @@ public class DaemonClient {
             String message = "Is daemon running? Daemon is not running or unreachable %s %s. Execute $ dropf daemon start"
                     .formatted(httpRequest.method(), httpRequest.uri());
             throw new ConnectException(message);
+        } catch (HttpConnectTimeoutException e) {
+            throw new IOException("HTTP connect timed out during daemon client call %s %s"
+                    .formatted(httpRequest.method(), httpRequest.uri()), e);
         } catch (IOException e) {
             throw new IOException("I/O error during daemon client call %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);

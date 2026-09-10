@@ -53,18 +53,22 @@ public class ApiConnectionsBrowseFacade {
     }
 
     private FileDownloadRequest getRequestForDownloadRequest(String fingerprintConnection, ApiConnectionsBrowseGetRequestDTO requestDTO) {
-        List<ApiConnectionsBrowseLsResponseDTO> responses = ls(
-                fingerprintConnection, new ApiConnectionsBrowseLsRequestDTO(List.of(requestDTO.fileIdCriteriaEnvelope()))
+        List<ShareLsTunnelResponse> shareLsTunnelResponses = tunnelClientGateway.shareLs(
+                fingerprintConnection,
+                List.of(requestDTO.fileIdCriteriaEnvelope())
         );
-        ApiConnectionsBrowseLsResponseDTO response = CommonUtils.requireOne(
-                responses,
+
+        ShareLsTunnelResponse tunnelLsResponse = CommonUtils.requireOne(
+                shareLsTunnelResponses,
                 () -> "Unable to process file download. No file found. File id: %s".formatted(requestDTO.fileIdCriteriaEnvelope().value()),
                 () -> "Unable to process file download. There are more than one file match. File id: %s".formatted(requestDTO.fileIdCriteriaEnvelope().value())
         );
         return new FileDownloadRequest(
                 fingerprintConnection,
-                response.id(),
-                StringUtils.hasText(requestDTO.filename()) ? requestDTO.filename() : response.alias()
+                tunnelLsResponse.id(),
+                StringUtils.hasText(requestDTO.filename()) ? requestDTO.filename() : tunnelLsResponse.alias(),
+                tunnelLsResponse.size(),
+                tunnelLsResponse.hash()
         );
     }
 
@@ -81,7 +85,11 @@ public class ApiConnectionsBrowseFacade {
             for (int i = 0; i < iterations; i++) {
                 String filename = i + "-" + fileDownloadRequest.filename();
                 fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(fileDownloadRequest.fingerprint(), fileDownloadRequest.fileId(), filename)
+                        new FileDownloadRequest(fileDownloadRequest.fingerprint(),
+                                fileDownloadRequest.fileId(),
+                                filename,
+                                fileDownloadRequest.size(),
+                                fileDownloadRequest.hash())
                 );
             }
             return null;

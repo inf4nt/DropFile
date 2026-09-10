@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@Deprecated
 public class FileManifestBuilderTest {
 
     private File file;

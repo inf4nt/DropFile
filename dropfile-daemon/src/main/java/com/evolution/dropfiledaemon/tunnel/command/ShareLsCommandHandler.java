@@ -5,6 +5,7 @@ import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelRequest;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
+import com.evolution.dropfiledaemon.util.SharedFileUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -41,7 +42,7 @@ public class ShareLsCommandHandler
                 .getAll()
                 .entrySet()
                 .stream()
-                .filter(it -> Files.exists(Paths.get(it.getValue().resourcePath())))
+                .filter(it -> SharedFileUtils.isAccessible(it.getValue()))
                 .filter(entry -> {
                     if (ObjectUtils.isEmpty(request.criteriaEnvelopes())) {
                         return true;
@@ -52,6 +53,7 @@ public class ShareLsCommandHandler
                 .map(it -> new ShareLsTunnelResponse(
                         it.getKey(),
                         it.getValue().alias(),
+                        it.getValue().hash(),
                         it.getValue().size(),
                         it.getValue().created()
                 ))

@@ -22,17 +22,21 @@ public class TablePrinter {
             Instant.class, 10
     );
 
-    private static final Map<String, Integer> CUSTOM_FIELD_SIZE = Map.of(
-            "fingerprint", 12,
-            "remoteFingerprint", "remoteFingerprint".length(),
-            "publicRSA", "publicRSA".length(),
-            "remotePublicRSA", "remotePublicRSA".length(),
-            "PublicDH", "PublicDH".length(),
-            "RemotePublicDH", "RemotePublicDH".length(),
-            "path", 25,
-            "file", 25,
-            "alias", 25,
-            "AddressURI", 18
+    private static final Map<String, Integer> CUSTOM_FIELD_SIZE = Map.copyOf(
+            new HashMap<>() {{
+                put("fingerprint", 12);
+                put("remoteFingerprint", "remoteFingerprint".length());
+                put("publicRSA", "publicRSA".length());
+                put("remotePublicRSA", "remotePublicRSA".length());
+                put("PublicDH", "PublicDH".length());
+                put("RemotePublicDH", "RemotePublicDH".length());
+                put("path", 25);
+                put("file", 25);
+                put("alias", 25);
+                put("AddressURI", 18);
+                put("hash", 13);
+                put("size", 14);
+            }}
     );
 
     private static Optional<Integer> getSizeByField(Field field) {

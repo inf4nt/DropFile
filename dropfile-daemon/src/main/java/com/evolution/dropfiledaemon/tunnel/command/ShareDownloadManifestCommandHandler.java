@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Paths;
 
+@Deprecated
 @RequiredArgsConstructor
 @Component
 public class ShareDownloadManifestCommandHandler

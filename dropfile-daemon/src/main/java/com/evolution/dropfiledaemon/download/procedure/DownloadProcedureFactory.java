@@ -2,6 +2,8 @@ package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.manifest.FileManifestBuilder;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +19,13 @@ public class DownloadProcedureFactory {
 
     private final FileHelper fileHelper;
 
-    private final FileManifestBuilder fileManifestBuilder;
-
     private final DaemonApplicationProperties daemonApplicationProperties;
 
     public SingleRunDownloadProcedure get(String operation,
                                           String fingerprint,
                                           String fileId,
                                           String filename,
+                                          FileManifest fileManifest,
                                           Path destinationFilePath,
                                           Path temporaryFilePath,
                                           Path manifestFilePath) {
@@ -34,7 +35,6 @@ public class DownloadProcedureFactory {
         return new SingleRunDownloadProcedure(
                 tunnelClientGateway,
                 fileHelper,
-                fileManifestBuilder,
                 new DownloadProcedureConfiguration(
                         downloadProcedureThreadSize,
                         manifestChunkMaxSize
@@ -44,6 +44,7 @@ public class DownloadProcedureFactory {
                         fingerprint,
                         fileId,
                         filename,
+                        fileManifest,
                         destinationFilePath,
                         temporaryFilePath,
                         manifestFilePath
