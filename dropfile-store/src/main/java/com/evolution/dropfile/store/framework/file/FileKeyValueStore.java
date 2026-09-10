@@ -37,14 +37,6 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final SerdeOperations<V> serdeOperations;
 
-    private void afterMutation() {
-        try {
-            doAfterMutation();
-        } catch (Exception _) {
-            // nothing to do
-        }
-    }
-
     protected void doAfterMutation() {
     }
 
@@ -277,6 +269,14 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             throw new TimeoutException("Could not acquire read lock for %s within %d seconds"
                     .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
+        }
+    }
+
+    private void afterMutation() {
+        try {
+            doAfterMutation();
+        } catch (Exception _) {
+            // nothing to do
         }
     }
 }
