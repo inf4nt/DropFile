@@ -6,14 +6,33 @@ import com.evolution.dropfile.common.CriteriaEnvelope;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 // TODO add Key class as a key for KeyValueStore. Get rid of String.class
 public interface KeyValueStore<V> {
 
-    Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy);
+    Map<String, V> save(Callable<? extends Map<String, V>> callable,
+                        UnaryOperator<Map<String, V>> preCommit,
+                        ValidatePolicy validatePolicy);
+
+    default Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy) {
+        return save(callable, null, validatePolicy);
+    }
 
     default Map<String, V> save(Callable<? extends Map<String, V>> callable) {
         return save(callable, ValidatePolicy.STRICT);
+    }
+
+    default V save(String key, Callable<V> callable, UnaryOperator<Map.Entry<String, V>> preCommit) {
+        return save(
+                () -> Map.of(key, callable.call()),
+                map -> {
+                    Map.Entry<String, V> entry = map.entrySet().stream().findFirst().orElseThrow();
+                    Map.Entry<String, V> next = preCommit.apply(entry);
+                    return Map.ofEntries(next);
+                },
+                ValidatePolicy.STRICT
+        ).values().stream().findAny().orElseThrow();
     }
 
     default V save(String key, Callable<V> callable) {

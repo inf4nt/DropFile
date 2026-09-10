@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
@@ -43,42 +44,45 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
     @SneakyThrows
     @Override
-    public Map<String, V> save(Callable<? extends Map<String, V>> callable, ValidatePolicy validatePolicy) {
+    public Map<String, V> save(Callable<? extends Map<String, V>> callable,
+                               UnaryOperator<Map<String, V>> preCommit,
+                               ValidatePolicy validatePolicy) {
         Objects.requireNonNull(callable);
         Objects.requireNonNull(validatePolicy);
 
         acquireWriteLock();
         try {
             Map<String, V> newValues = callable.call();
+
             if (newValues == null || newValues.isEmpty()) {
                 return Collections.emptyMap();
             }
 
-            for (Map.Entry<String, V> entry : newValues.entrySet()) {
-                Objects.requireNonNull(entry.getKey(), "key cannot be null");
-                Objects.requireNonNull(entry.getValue(), "value cannot be null");
-                if (entry.getKey().isBlank()) {
-                    throw new IllegalArgumentException("Key must not be empty string");
-                }
-            }
+            validateNotNull(newValues);
 
-            Map<String, V> toSave = new LinkedHashMap<>();
-            for (Map.Entry<String, V> entry : newValues.entrySet()) {
-                try {
-                    validate(entry.getKey(), entry.getValue());
-                    toSave.put(entry.getKey(), entry.getValue());
-                } catch (Exception e) {
-                    if (validatePolicy == ValidatePolicy.GENTLE) {
-                        continue;
-                    } else if (validatePolicy == ValidatePolicy.STRICT) {
-                        throw e;
-                    }
-                    throw new IllegalArgumentException("Unknown validate policy " + validatePolicy);
-                }
-            }
+            newValues = Collections.unmodifiableMap(newValues);
+
+            Map<String, V> toSave = validateEntries(newValues, validatePolicy);
 
             if (toSave.isEmpty()) {
                 return Collections.emptyMap();
+            }
+
+            if (preCommit != null) {
+                toSave = Collections.unmodifiableMap(toSave);
+
+                toSave = preCommit.apply(toSave);
+
+                if (toSave == null || toSave.isEmpty()) {
+                    return Collections.emptyMap();
+                }
+
+                validateNotNull(toSave);
+                toSave = validateEntries(toSave, validatePolicy);
+
+                if (toSave.isEmpty()) {
+                    return Collections.emptyMap();
+                }
             }
 
             store.putAll(toSave);
@@ -87,6 +91,34 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
         } finally {
             writeLock.unlock();
         }
+    }
+
+    private void validateNotNull(Map<String, V> map) {
+        for (Map.Entry<String, V> entry : map.entrySet()) {
+            Objects.requireNonNull(entry.getKey(), "key cannot be null");
+            Objects.requireNonNull(entry.getValue(), "value cannot be null");
+            if (entry.getKey().isBlank()) {
+                throw new IllegalArgumentException("Key must not be empty string");
+            }
+        }
+    }
+
+    private Map<String, V> validateEntries(Map<String, V> entries,
+                                           ValidatePolicy validatePolicy) {
+        Map<String, V> validEntries = new LinkedHashMap<>();
+        for (Map.Entry<String, V> entry : entries.entrySet()) {
+            try {
+                validate(entry.getKey(), entry.getValue());
+                validEntries.put(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                if (validatePolicy == ValidatePolicy.STRICT) {
+                    throw e;
+                } else if (validatePolicy != ValidatePolicy.GENTLE) {
+                    throw new IllegalArgumentException("Unknown validate policy " + validatePolicy);
+                }
+            }
+        }
+        return validEntries;
     }
 
     @SneakyThrows
