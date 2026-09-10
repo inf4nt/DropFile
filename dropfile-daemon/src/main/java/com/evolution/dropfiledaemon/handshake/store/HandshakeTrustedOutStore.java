@@ -37,7 +37,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
         return getAll().entrySet()
                 .stream()
                 .max(Comparator.comparing(o -> o.getValue().updated()))
-                .orElseThrow(() -> new NoSuchElementException("No trusted out last updated found. The trusted out store im empty"));
+                .orElseThrow(() -> new NoSuchElementException("No trusted out last updated found. The trusted out store is empty"));
     }
 
     default Optional<Map.Entry<String, TrustedOut>> getByAddressURI(URI addressURI) {

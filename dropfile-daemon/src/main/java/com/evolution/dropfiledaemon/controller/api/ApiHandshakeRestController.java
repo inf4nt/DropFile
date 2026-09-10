@@ -51,9 +51,9 @@ public class ApiHandshakeRestController {
         return apiHandshakeFacade.getLatestTrustOut();
     }
 
-    @PostMapping("/revoke/fingerprint/{fingerprintCriteria}")
-    public void revoke(@PathVariable String fingerprintCriteria) {
-        handshakeFacade.revoke(new CriteriaEnvelope(fingerprintCriteria));
+    @PostMapping("/revoke/fingerprint")
+    public void revoke(@RequestBody CriteriaEnvelope fingerprintCriteria) {
+        handshakeFacade.revoke(fingerprintCriteria);
     }
 
     @PostMapping("/revoke/all")

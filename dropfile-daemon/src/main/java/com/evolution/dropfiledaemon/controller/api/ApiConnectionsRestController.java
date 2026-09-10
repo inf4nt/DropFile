@@ -20,4 +20,9 @@ public class ApiConnectionsRestController {
     public List<TunnelTrafficResponseDTO> getTraffic() {
         return apiFacade.getTraffic();
     }
+
+    @GetMapping("/tunnel/ping")
+    public void tunnelPing() {
+        apiFacade.tunnelPing();
+    }
 }

@@ -91,9 +91,8 @@ public class HandshakeClient {
         byte[] body = httpResponse.body();
 
         if (statusCode != 200) {
-            String responseDetails = (body != null && body.length > 0) ? new String(body, StandardCharsets.UTF_8) : "empty body";
-            throw new IllegalStateException("Handshake %s %s failed with status code %s. Response body: %s"
-                    .formatted(httpRequest.method(), httpRequest.uri(), statusCode, responseDetails));
+            throw new IllegalStateException("Handshake %s %s failed with status code %s. Perhaps connection was revoked"
+                    .formatted(httpRequest.method(), httpRequest.uri(), statusCode));
         }
 
         if (body == null || body.length == 0) {

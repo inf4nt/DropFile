@@ -81,6 +81,10 @@ public class DaemonClient {
         return sendGet("/api/connections/traffic");
     }
 
+    public HttpResponse<byte[]> connectionsTunnelPing() throws IOException {
+        return sendGet("/api/connections/tunnel/ping");
+    }
+
     public HttpResponse<byte[]> connectionsBrowseLs(Collection<CriteriaEnvelope> criteriaEnvelopes) throws IOException {
         return sendPost("/api/connections/browse/ls", new ApiConnectionsBrowseLsRequestDTO(criteriaEnvelopes));
     }

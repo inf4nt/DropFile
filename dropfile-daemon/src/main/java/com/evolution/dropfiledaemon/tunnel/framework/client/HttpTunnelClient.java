@@ -121,9 +121,9 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            String message = "Tunnel streaming request failed. Fingerprint %s command %s".formatted(
-                    request.getFingerprint(),
-                    request.getCommand()
+            String message = "Tunnel operation '%s' failed. Fingerprint %s".formatted(
+                    request.getCommand(),
+                    request.getFingerprint()
             );
             throw CommonUtils.toRuntimeException(message, throwable);
         }

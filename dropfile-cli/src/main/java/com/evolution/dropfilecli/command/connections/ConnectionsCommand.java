@@ -25,7 +25,8 @@ import picocli.CommandLine;
                 BrowseCommand.class,
                 ShareCommand.class,
                 DownloadCommand.class,
-                TrafficCommand.class
+                TrafficCommand.class,
+                ConnectionPingCommand.class
         }
 )
 public class ConnectionsCommand extends AbstractCommandHandler {
