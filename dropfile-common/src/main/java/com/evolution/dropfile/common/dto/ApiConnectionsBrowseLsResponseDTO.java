@@ -2,8 +2,8 @@ package com.evolution.dropfile.common.dto;
 
 import java.time.Instant;
 
-public record ApiConnectionsBrowseLsResponseDTO(String fingerprint,
-                                                String id,
+public record ApiConnectionsBrowseLsResponseDTO(String id,
+                                                String fingerprint,
                                                 String alias,
                                                 String size,
                                                 Instant created) {

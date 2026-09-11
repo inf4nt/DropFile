@@ -43,8 +43,8 @@ public class ApiConnectionsBrowseFacade {
         List<ShareLsTunnelResponse> files = tunnelClientGateway.shareLs(fingerprint, requestDTO.criteriaEnvelopes());
         return files.stream()
                 .map(it -> new ApiConnectionsBrowseLsResponseDTO(
-                        fingerprint,
                         it.id(),
+                        fingerprint,
                         it.alias(),
                         CommonUtils.toDisplaySize(it.size()),
                         it.created()

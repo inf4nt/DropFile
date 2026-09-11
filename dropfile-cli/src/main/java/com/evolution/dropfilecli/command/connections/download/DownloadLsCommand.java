@@ -60,7 +60,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
                 .map(it -> it.operation())
                 .collect(Collectors.joining(", "));
         if (!ids.isEmpty()) {
-            String message = "Inaccessible resources detected. They do not exist or have been modified since they were added: %s".formatted(ids);
+            String message = "Inaccessible resources detected. They do not exist: %s".formatted(ids);
             System.out.println(message);
         }
     }
