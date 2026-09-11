@@ -44,7 +44,7 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
 
     private boolean runConfirmation() {
         System.out.println("Calculating SHA-256 checksum. Please, DO NOT turn off the screen and wait until it finishes");
-        System.out.println("Large files may cause a request timeout if hashing takes too long");
+        System.out.println("Large files may cause a request timeout if hashing takes too long. Pass '--timeout' (in milliseconds) to increase the limit");
         System.out.print("Enter 'y' to continue... ");
 
         Scanner scanner = new Scanner(System.in);
