@@ -71,7 +71,7 @@ public class ApiConnectionsShareFacade {
                     );
                 }, value -> {
                     long timeoutMillis = getTimeout(timeout);
-                    log.info("Calculating sha256 file {} alias {} timeout {}", realPath, alias, t);
+                    log.info("Calculating sha256 file {} alias {} timeout {}", realPath, alias, timeoutMillis);
                     String sha256 = calculateSha256(realPath, timeoutMillis);
                     log.info("Calculating sha256 file {} alias {} finished {}", realPath, alias, sha256);
                     return value.withHash(sha256).withAccessible(true);
