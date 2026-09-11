@@ -283,7 +283,7 @@ public class FileDownloadOrchestrator {
         for (DownloadFile file : files) {
             try {
                 Path path = Paths.get(file.destinationFile());
-                if (!Files.isRegularFile(path)) {
+                if (Files.exists(path) && !Files.isRegularFile(path)) {
                     throw new IllegalArgumentException("File is not a regular file. Unable to remove it");
                 }
                 Files.deleteIfExists(path);
