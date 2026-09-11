@@ -132,28 +132,12 @@ public class DaemonClient {
         return sendPost("/api/connections/download/ls", new ApiDownloadLsDTO.Request(status, limit));
     }
 
-    public HttpResponse<byte[]> connectionsDownloadStop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
-        return sendPost("/api/connections/download/stop", operationIdCriteriaEnvelopes);
-    }
-
     public HttpResponse<byte[]> connectionsDownloadKill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
         return sendPost("/api/connections/download/kill", operationIdCriteriaEnvelopes);
     }
 
     public HttpResponse<byte[]> connectionsDownloadKillAll() throws IOException {
         return sendPost("/api/connections/download/kill-all");
-    }
-
-    public HttpResponse<byte[]> connectionsDownloadStopAll() throws IOException {
-        return sendPost("/api/connections/download/stop-all");
-    }
-
-    public HttpResponse<byte[]> connectionsDownloadRm(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) throws IOException {
-        return sendDelete("/api/connections/download/rm", new ApiDownloadRmRequest(operationIdCriteriaEnvelopes));
-    }
-
-    public HttpResponse<byte[]> connectionsDownloadRmAll() throws IOException {
-        return sendDelete("/api/connections/download/rm-all");
     }
 
     public HttpResponse<byte[]> quickShareAdd(String resourcePath,

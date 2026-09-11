@@ -92,33 +92,6 @@ public class ApiDownloadFacade {
         return getByStatus(responses, status, limit);
     }
 
-    public ApiBatchOperationResult stop(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
-        FileDownloadOrchestrator.FileDownloadOrchestratorStopResponse fileDownloadOrchestratorStopResponse = fileDownloadOrchestrator.stop(
-                operationIdCriteriaEnvelopes
-        );
-        return ApiBatchOperationResult.of(
-                fileDownloadOrchestratorStopResponse.found(),
-                fileDownloadOrchestratorStopResponse.notFound(),
-                fileDownloadOrchestratorStopResponse.ambiguous()
-        );
-    }
-
-    public void stopAll() {
-        fileDownloadOrchestrator.stopAll();
-    }
-
-    public ApiDownloadRmResponse rm(ApiDownloadRmRequest request) {
-        FileDownloadOrchestrator.FileDownloadOrchestratorRemoveResponse fileDownloadOrchestratorRemoveResponse = fileDownloadOrchestrator.rm(
-                request.operationIdCriteriaEnvelopes()
-        );
-        return ApiDownloadRmResponse.of(
-                fileDownloadOrchestratorRemoveResponse.removed(),
-                fileDownloadOrchestratorRemoveResponse.active(),
-                fileDownloadOrchestratorRemoveResponse.notFound(),
-                fileDownloadOrchestratorRemoveResponse.ambiguous()
-        );
-    }
-
     public ApiBatchOperationResult kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         FileDownloadOrchestrator.FileDownloadOrchestratorKillResponse response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
         return ApiBatchOperationResult.of(
@@ -130,10 +103,6 @@ public class ApiDownloadFacade {
 
     public void killAll() {
         fileDownloadOrchestrator.killAll();
-    }
-
-    public void rmAll() {
-        fileDownloadOrchestrator.rmAll();
     }
 
     private String getProgress(long total, long downloaded) {

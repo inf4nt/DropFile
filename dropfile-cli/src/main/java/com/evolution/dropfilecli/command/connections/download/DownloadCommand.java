@@ -11,10 +11,6 @@ import picocli.CommandLine;
         aliases = {"d"},
         subcommands = {
                 DownloadLsCommand.class,
-                DownloadStopCommand.class,
-                DownloadRmCommand.class,
-                DownloadStopAllCommand.class,
-                DownloadRmAllCommand.class,
                 DownloadKillCommand.class,
                 DownloadKillAllCommand.class
         }
