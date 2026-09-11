@@ -6,8 +6,8 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.controller.server.ServerTunnelRestController;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
@@ -55,57 +55,30 @@ public class HttpTunnelClient implements TunnelClient {
     public InputStream stream(Request request) {
         Objects.requireNonNull(request, "Request must not be null");
 
+        HttpTunnelRequestContext httpTunnelRequestContext = buildHttpTunnelRequestContext(request);
+
         HttpResponse<InputStream> httpResponse = null;
         try {
-            String fingerprint = request.getFingerprint();
-
-            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
-            SecretKey secretKey = getSecretKey(trustedOut);
-
-            UUID requestId = UUID.randomUUID();
-
-            SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
-
-            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
-                    CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
-                    secureEnvelope.payload(),
-                    secureEnvelope.nonce()
-            );
-
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(
-                            CommonUtils.joinPaths(
-                                    trustedOut.addressURI().toString(),
-                                    ServerTunnelRestController.TUNNEL_ENDPOINT
-                            )
-                    ))
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(
-                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
-                    )
-                    .header("Content-Type", "application/json")
-                    .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
-                    .build();
-
             try {
-                httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+                httpResponse = httpClient.send(httpTunnelRequestContext.request(), HttpResponse.BodyHandlers.ofInputStream());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new IllegalStateException("Tunnel client call interrupted: %s %s"
-                        .formatted(httpRequest.method(), httpRequest.uri()), e);
+                throw new IllegalStateException("Call interrupted", e);
             } catch (ConnectException e) {
-                String message = "Tunnel client target address is unreachable %s %s"
-                        .formatted(httpRequest.method(), httpRequest.uri());
-                throw new ConnectException(message);
+                throw new ConnectException("Target address is unreachable");
             }
 
             if (httpResponse.statusCode() != 200) {
-                throw new IllegalStateException("Tunnel client unexpected HTTP response status code. Expected: 200, actual: %s %s %s fingerprint %s command %s"
-                        .formatted(httpResponse.statusCode(), httpRequest.method(), httpRequest.uri(), fingerprint, request.getCommand())
-                );
+                throw new IllegalStateException("Unexpected HTTP response status code. Expected: 200 actual: %s".formatted(
+                        httpResponse.statusCode()
+                ));
             }
 
-            InputStream inputStreamResponse = getInputStreamResponse(httpResponse.body(), fingerprint, secretKey);
-            validateInputStream(requestId, inputStreamResponse);
+            InputStream inputStreamResponse = getInputStreamResponse(httpResponse.body(),
+                    httpTunnelRequestContext.fingerprint(),
+                    httpTunnelRequestContext.secretKey()
+            );
+            validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
             return inputStreamResponse;
         } catch (Throwable throwable) {
             if (httpResponse != null) {
@@ -121,10 +94,16 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            String message = "Tunnel operation '%s' failed. Fingerprint %s".formatted(
+            HttpRequest httpRequest = httpTunnelRequestContext.request();
+            String message = "Tunnel call failed. Fingerprint %s command %s'. Reason '%s'. Method %s uri %s timeout %s".formatted(
+                    request.getFingerprint(),
                     request.getCommand(),
-                    request.getFingerprint()
+                    throwable.getMessage(),
+                    httpRequest.method(),
+                    httpRequest.uri(),
+                    httpRequest.timeout().map(it -> it.toMillis()).orElseThrow()
             );
+
             throw CommonUtils.toRuntimeException(message, throwable);
         }
     }
@@ -192,5 +171,47 @@ public class HttpTunnelClient implements TunnelClient {
                 || !MessageDigest.isEqual(actualRequestIdBytes, expectedRequestIdBytes)) {
             throw new SecurityException("Tunnel response request ID mismatch or stream truncated");
         }
+    }
+
+    private HttpTunnelRequestContext buildHttpTunnelRequestContext(Request request) {
+        try {
+            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(request.getFingerprint());
+            SecretKey secretKey = getSecretKey(trustedOut);
+
+            UUID requestId = UUID.randomUUID();
+
+            SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
+
+            TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
+                    CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
+                    secureEnvelope.payload(),
+                    secureEnvelope.nonce()
+            );
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(
+                            CommonUtils.joinPaths(
+                                    trustedOut.addressURI().toString(),
+                                    ServerTunnelRestController.TUNNEL_ENDPOINT
+                            )
+                    ))
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(
+                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
+                    )
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
+                    .build();
+
+            return new HttpTunnelRequestContext(request.getFingerprint(), requestId, httpRequest, secretKey);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to build tunnel request. Fingerprint %s command %s".formatted(request.getFingerprint(), request.getCommand()));
+        }
+    }
+
+    private record HttpTunnelRequestContext(String fingerprint,
+                                            UUID requestId,
+                                            HttpRequest request,
+                                            SecretKey secretKey) {
+
     }
 }
