@@ -1,9 +1,11 @@
 package com.evolution.dropfiledaemon.facade;
 
-import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
+import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,7 @@ public class ApiConnectionsFacade {
 
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
-    private final ApiHandshakeFacade apiHandshakeFacade;
+    private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     public List<TunnelTrafficResponseDTO> getTraffic() {
         TunnelTrafficMonitor.Traffic traffic = tunnelTrafficMonitor.getTraffic();
@@ -33,8 +35,10 @@ public class ApiConnectionsFacade {
                 .toList();
     }
 
-    public void tunnelPing() {
-        HandshakeApiTrustOutResponseDTO latestTrustOut = apiHandshakeFacade.getLatestTrustOut();
-        tunnelClientGateway.ping(latestTrustOut.remoteFingerprint());
+    public void tunnelPing(@Nullable CriteriaEnvelope fingerprintCriteria) {
+        String fingerprint = fingerprintCriteria != null
+                ? handshakeTrustedOutStore.getRequiredByCriteria(fingerprintCriteria).getKey()
+                : handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
+        tunnelClientGateway.ping(fingerprint);
     }
 }

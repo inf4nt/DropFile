@@ -1,11 +1,10 @@
 package com.evolution.dropfiledaemon.controller.api;
 
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsFacade;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,8 +20,8 @@ public class ApiConnectionsRestController {
         return apiFacade.getTraffic();
     }
 
-    @GetMapping("/tunnel/ping")
-    public void tunnelPing() {
-        apiFacade.tunnelPing();
+    @PostMapping("/tunnel/ping")
+    public void tunnelPing(@RequestBody(required = false) CriteriaEnvelope fingerprintCriteria) {
+        apiFacade.tunnelPing(fingerprintCriteria);
     }
 }

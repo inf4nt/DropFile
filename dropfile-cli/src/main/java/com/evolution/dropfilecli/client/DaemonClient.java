@@ -84,8 +84,8 @@ public class DaemonClient {
         return sendGet("/api/connections/traffic");
     }
 
-    public HttpResponse<byte[]> connectionsTunnelPing() throws IOException {
-        return sendGet("/api/connections/tunnel/ping");
+    public HttpResponse<byte[]> connectionsTunnelPing(@Nullable CriteriaEnvelope fingerprintCriteria) throws IOException {
+        return sendPost("/api/connections/tunnel/ping", fingerprintCriteria);
     }
 
     public HttpResponse<byte[]> connectionsBrowseLs(Collection<CriteriaEnvelope> criteriaEnvelopes) throws IOException {
@@ -195,14 +195,20 @@ public class DaemonClient {
         return execute(httpRequest);
     }
 
-    private HttpResponse<byte[]> sendPost(String path, Object bodyDTO) throws IOException {
+    private HttpResponse<byte[]> sendPost(String path, @Nullable Object bodyDTO) throws IOException {
         return sendPost(path, bodyDTO, null);
     }
 
-    private HttpResponse<byte[]> sendPost(String path, Object bodyDTO, @Nullable Long timeout) throws IOException {
-        byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
-        HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
-        httpRequestBuilder.header("Content-Type", "application/json");
+    private HttpResponse<byte[]> sendPost(String path, @Nullable Object bodyDTO, @Nullable Long timeout) throws IOException {
+        HttpRequest.Builder httpRequestBuilder;
+        if (bodyDTO != null) {
+            byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
+            httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
+            httpRequestBuilder.header("Content-Type", "application/json");
+        } else {
+            httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.noBody());
+        }
+
         if (timeout != null) {
             httpRequestBuilder.header(HEADER_TIMEOUT, String.valueOf(timeout));
             httpRequestBuilder.timeout(Duration.ofMillis(timeout));
