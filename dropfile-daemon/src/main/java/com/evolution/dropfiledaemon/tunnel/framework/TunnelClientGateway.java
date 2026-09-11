@@ -2,7 +2,6 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
-import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadManifestCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.TunnelPingCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.*;
@@ -44,19 +43,6 @@ public class TunnelClientGateway {
         try (InputStream stream = tunnelClient.stream(request)) {
             return objectMapper.readValue(stream, new TypeReference<List<ShareLsTunnelResponse>>() {
             });
-        }
-    }
-
-    @SneakyThrows
-    public ShareDownloadManifestCommandResponse shareDownloadManifest(String fingerprint, String fileId, int chunkSize) {
-        TunnelClient.Request request = TunnelClient.Request.builder(ShareDownloadManifestCommandHandler.COMMAND_NAME, fingerprint)
-                .body(new ShareDownloadManifestCommandRequest(
-                        fileId,
-                        chunkSize
-                ))
-                .build();
-        try (InputStream stream = tunnelClient.stream(request)) {
-            return objectMapper.readValue(stream, ShareDownloadManifestCommandResponse.class);
         }
     }
 
