@@ -90,7 +90,7 @@ public class HandshakeClient {
         byte[] body = httpResponse.body();
 
         if (statusCode != 200) {
-            throw new IllegalStateException("Handshake %s %s failed with status code %s. Perhaps connection was revoked"
+            throw new IllegalStateException("Handshake %s %s failed with status code %s. Expected 200"
                     .formatted(httpRequest.method(), httpRequest.uri(), statusCode));
         }
 
