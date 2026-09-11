@@ -17,16 +17,16 @@ public abstract class AbstractApiBatchOperationResultCommandHttpHandler extends 
 
         object.found().forEach((criteria, fullId) -> {
             String value = criteria.value();
-            System.out.printf("Removed: %s (criteria: '%s')%n", fullId, value);
+            System.out.printf("Processed: %s (criteria: '%s')", fullId, value);
         });
 
         object.notFound().forEach(criteria ->
-                System.err.printf("No such element found: %s%n", criteria.value())
+                System.err.printf("No such element found: %s", criteria.value())
         );
 
         object.ambiguous().forEach((criteria, matches) ->
                 System.err.printf(
-                        "Prefix '%s' is ambiguous. Matches: %s%n",
+                        "Prefix '%s' is ambiguous. Matches: %s. Please provide a longer criteria or full identifier",
                         criteria.value(),
                         String.join(", ", matches)
                 )
