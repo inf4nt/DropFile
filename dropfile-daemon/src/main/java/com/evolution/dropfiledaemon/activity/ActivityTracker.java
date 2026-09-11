@@ -28,6 +28,27 @@ public class ActivityTracker {
         activeRequests.decrementAndGet();
     }
 
+    /**
+     * Evaluates whether the application is considered idle and should trigger a daemon shutdown.
+     *
+     * Timeout Definitions:
+     *
+     * 1. Soft Idle Timeout:
+     *    Graceful shutdown condition. Triggers ONLY when there are zero active HTTP requests
+     *    (activeRequests == 0) AND the time since the last recorded activity exceeds the
+     *    configured soft threshold. This guarantees active transfers (e.g., file downloads)
+     *    are never interrupted.
+     *
+     * 2. Hard Idle Timeout:
+     *    Safety-net fallback condition. Forces daemon shutdown once inactivity exceeds
+     *    the hard threshold regardless of active requests (activeRequests > 0).
+     *    This prevents zombie processes caused by leaked connections, unclosed IO streams,
+     *    or abnormal client disconnects.
+     *
+     * @param idleTimeoutMillis  The soft idle threshold in milliseconds.
+     * @param hardTimeoutMillis  The hard idle threshold in milliseconds (absolute safety limit).
+     * @return true if the system meets either soft or hard idle criteria; false otherwise.
+     */
     public boolean isIdle(long idleTimeoutMillis, long hardTimeoutMillis) {
         long now = System.currentTimeMillis();
         long timeSinceLastActivity = now - lastActivityTime.get();
