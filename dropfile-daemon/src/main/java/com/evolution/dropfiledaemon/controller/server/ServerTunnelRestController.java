@@ -5,6 +5,7 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.io.OutputStream;
+import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -62,6 +65,12 @@ public class ServerTunnelRestController {
         };
 
         webAsyncTask.onTimeout(() -> {
+            String message = extractMessage(contextAtomicReference.get());
+            log.error("Tunnel dispatcher failed due to timeout. Timeout '{}' fingerprint '{}' {}",
+                    applicationProperties.daemonTunnelServerAsyncRequestTimeout,
+                    requestDTO.fingerprint(),
+                    message
+            );
             safeClose.run();
             return null;
         });
@@ -74,5 +83,20 @@ public class ServerTunnelRestController {
         webAsyncTask.onCompletion(safeClose);
 
         return webAsyncTask;
+    }
+
+    private String extractMessage(@Nullable TunnelDispatcherContext context) {
+        if (context == null) {
+            return "";
+        }
+        String command = context.getRequestPayload().command();
+        UUID requestId = context.getRequestPayload().requestId();
+        long timestamp = context.getRequestPayload().timestamp();
+        return "command '%s' requestId '%s' timestamp '%s' instant '%s'".formatted(
+                command,
+                requestId,
+                timestamp,
+                Instant.ofEpochMilli(timestamp)
+        );
     }
 }
