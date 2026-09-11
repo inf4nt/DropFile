@@ -39,7 +39,7 @@ public class ApiConnectionsShareFacade {
 
     private final ShareFileStore shareFileStore;
 
-    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO) throws IOException, NoSuchAlgorithmException {
+    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
         Path path = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
         if (Files.notExists(path)) {
@@ -70,8 +70,9 @@ public class ApiConnectionsShareFacade {
                             Instant.now()
                     );
                 }, value -> {
-                    log.info("Calculating sha256 file {} alias {}", realPath, alias);
-                    String sha256 = calculateSha256(realPath);
+                    long timeoutMillis = getTimeout(timeout);
+                    log.info("Calculating sha256 file {} alias {} timeout {}", realPath, alias, t);
+                    String sha256 = calculateSha256(realPath, timeoutMillis);
                     log.info("Calculating sha256 file {} alias {} finished {}", realPath, alias, sha256);
                     return value.withHash(sha256).withAccessible(true);
                 });
@@ -79,11 +80,11 @@ public class ApiConnectionsShareFacade {
         return map(key, shareFile);
     }
 
-    private String calculateSha256(Path source) {
+    private String calculateSha256(Path source, long timeout) {
         return RetryExecutor
                 .call(() -> fileHelper.sha256(source))
                 .attempts(1)
-                .callTimeout(Duration.ofMillis(applicationProperties.daemonShareAddHashExecutionTimeoutMillis))
+                .callTimeout(Duration.ofMillis(timeout))
                 .run();
     }
 
@@ -120,5 +121,9 @@ public class ApiConnectionsShareFacade {
                 accessible,
                 shareFile.created()
         );
+    }
+
+    public long getTimeout(Long timeout) {
+        return timeout != null && timeout > 0 ? timeout : applicationProperties.daemonShareAddHashExecutionTimeoutMillis;
     }
 }

@@ -16,11 +16,13 @@ import java.util.List;
 @RequestMapping("/api/connections/share")
 public class ApiConnectionsShareRestController {
 
+    private static final String HEADER_TIMEOUT = "X-Timeout-Ms";
+
     private final ApiConnectionsShareFacade apiFacade;
 
     @PostMapping("/add")
-    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO) throws Exception {
-        return apiFacade.add(requestDTO);
+    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO, @RequestHeader(value = HEADER_TIMEOUT, required = false) Long timeout) throws Exception {
+        return apiFacade.add(requestDTO, timeout);
     }
 
     @GetMapping("/ls")

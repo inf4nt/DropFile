@@ -29,6 +29,9 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
     @CommandLine.Option(names = {"-y"}, description = "Automatic yes to prompts")
     private boolean assumeYes;
 
+    @CommandLine.Option(names = {"--timeout"}, description = "Operation timeout millis")
+    private Long operationTimeout;
+
     @Override
     public void run() {
         if (assumeYes || runConfirmation()) {
@@ -56,7 +59,8 @@ public class ShareAddCommand extends AbstractCommandHttpHandler<ApiConnectionsSh
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.connectionsShareAdd(file.toPath().toAbsolutePath().normalize().toString(), alias);
+        String absolutePath = file.toPath().toAbsolutePath().normalize().toString();
+        return daemonClient.connectionsShareAdd(absolutePath, alias, operationTimeout);
     }
 
     @Override

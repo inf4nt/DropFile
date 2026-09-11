@@ -7,6 +7,7 @@ import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,8 @@ import java.util.NoSuchElementException;
 @Component
 @RequiredArgsConstructor
 public class DaemonClient {
+
+    private static final String HEADER_TIMEOUT = "X-Timeout-Ms";
 
     private final HttpClient httpClient;
 
@@ -97,8 +100,8 @@ public class DaemonClient {
         return sendGet("/api/connections/share/ls");
     }
 
-    public HttpResponse<byte[]> connectionsShareAdd(String resourcePath, String alias) throws IOException {
-        return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias));
+    public HttpResponse<byte[]> connectionsShareAdd(String resourcePath, String alias, Long timeout) throws IOException {
+        return sendPost("/api/connections/share/add", new ApiConnectionsShareAddRequestDTO(resourcePath, alias), timeout);
     }
 
     public HttpResponse<byte[]> connectionsShareRm(Collection<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) throws IOException {
@@ -209,9 +212,17 @@ public class DaemonClient {
     }
 
     private HttpResponse<byte[]> sendPost(String path, Object bodyDTO) throws IOException {
+        return sendPost(path, bodyDTO, null);
+    }
+
+    private HttpResponse<byte[]> sendPost(String path, Object bodyDTO, @Nullable Long timeout) throws IOException {
         byte[] jsonBytes = objectMapper.writeValueAsBytes(bodyDTO);
         HttpRequest.Builder httpRequestBuilder = HttpRequestBuilder("POST", path, HttpRequest.BodyPublishers.ofByteArray(jsonBytes));
         httpRequestBuilder.header("Content-Type", "application/json");
+        if (timeout != null) {
+            httpRequestBuilder.header(HEADER_TIMEOUT, String.valueOf(timeout));
+            httpRequestBuilder.timeout(Duration.ofMillis(timeout));
+        }
         HttpRequest httpRequest = httpRequestBuilder.build();
         return execute(httpRequest);
     }
