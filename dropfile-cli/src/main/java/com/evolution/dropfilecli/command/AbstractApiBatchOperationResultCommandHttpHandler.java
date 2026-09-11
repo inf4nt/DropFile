@@ -26,7 +26,7 @@ public abstract class AbstractApiBatchOperationResultCommandHttpHandler extends 
 
         object.ambiguous().forEach((criteria, matches) ->
                 System.err.printf(
-                        "Prefix '%s' is ambiguous. Matches: %s. Please provide a longer criteria or full identifier",
+                        "Criteria '%s' is ambiguous. Matches: %s. Please provide a longer criteria or full identifier",
                         criteria.value(),
                         String.join(", ", matches)
                 )
