@@ -41,7 +41,7 @@ public class ApiQuickShareFacade {
 
     @SneakyThrows
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
-        Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
+        Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize().toRealPath();
 
         if (Files.notExists(resourceAbsolutePath)) {
             throw new FileNotFoundException("No file found %s".formatted(resourceAbsolutePath.toString()));
