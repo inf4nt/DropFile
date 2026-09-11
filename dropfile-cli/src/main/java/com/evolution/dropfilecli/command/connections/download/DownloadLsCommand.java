@@ -8,6 +8,7 @@ import picocli.CommandLine;
 
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @CommandLine.Command(
@@ -48,6 +49,19 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
         @Override
         public ApiDownloadLsDTO.Status convert(String value) {
             return ApiDownloadLsDTO.Status.valueOf(value.toUpperCase());
+        }
+    }
+
+    @Override
+    protected void print(List<ApiDownloadLsDTO.Response> object) {
+        super.print(object);
+        String ids = object.stream()
+                .filter(it -> !it.accessible())
+                .map(it -> it.operation())
+                .collect(Collectors.joining(", "));
+        if (!ids.isEmpty()) {
+            String message = "Inaccessible resources detected. They do not exist or have been modified since they were added: %s".formatted(ids);
+            System.out.println(message);
         }
     }
 }

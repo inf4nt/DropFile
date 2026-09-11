@@ -17,19 +17,21 @@ public abstract class AbstractApiBatchOperationResultCommandHttpHandler extends 
 
         object.found().forEach((criteria, fullId) -> {
             String value = criteria.value();
-            System.out.printf("Processed: %s (criteria: '%s')", fullId, value);
+            String message = "Processed: %s (criteria: '%s')".formatted(fullId, value);
+            System.out.println(message);
         });
 
-        object.notFound().forEach(criteria ->
-                System.err.printf("No such element found: %s", criteria.value())
-        );
+        object.notFound().forEach(criteria -> {
+            String message = "No such element found: %s".formatted(criteria.value());
+            System.err.println(message);
+        });
 
-        object.ambiguous().forEach((criteria, matches) ->
-                System.err.printf(
-                        "Criteria '%s' is ambiguous. Matches: %s. Please provide a longer criteria or full identifier",
-                        criteria.value(),
-                        String.join(", ", matches)
-                )
-        );
+        object.ambiguous().forEach((criteria, matches) -> {
+            String message = "Criteria '%s' is ambiguous. Matches: %s. Please provide a longer criteria or full identifier".formatted(
+                    criteria.value(),
+                    String.join(", ", matches)
+            );
+            System.err.println(message);
+        });
     }
 }
