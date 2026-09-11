@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -64,6 +65,10 @@ public class HttpTunnelClient implements TunnelClient {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Call interrupted", e);
+            } catch (HttpConnectTimeoutException e) {
+                HttpRequest httpRequest = httpTunnelRequestContext.request();
+                throw new HttpConnectTimeoutException("HTTP connect timed out during call %s %s timeout %s millis"
+                        .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
             } catch (ConnectException e) {
                 throw new ConnectException("Target address is unreachable");
             }

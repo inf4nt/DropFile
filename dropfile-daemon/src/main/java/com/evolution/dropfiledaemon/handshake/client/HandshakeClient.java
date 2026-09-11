@@ -18,7 +18,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @RequiredArgsConstructor
@@ -76,8 +75,8 @@ public class HandshakeClient {
             throw new ConnectException("Handshake client failed. Target address is unreachable %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()));
         } catch (HttpConnectTimeoutException e) {
-            throw new IOException("HTTP connect timed out during handshake client call %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+            throw new HttpConnectTimeoutException("HTTP connect timed out during handshake client call %s %s timeout %s millis"
+                    .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Handshake client interrupted: %s %s"

@@ -211,6 +211,12 @@ public class DaemonClient {
 
         if (timeout != null) {
             httpRequestBuilder.header(HEADER_TIMEOUT, String.valueOf(timeout));
+            Duration timeoutDuration = Duration.ofMillis(timeout);
+            if (timeoutDuration.isZero() || timeoutDuration.isNegative()) {
+                throw new IllegalArgumentException("Invalid timeout %s. Timeout must be greater than zero".formatted(
+                        timeoutDuration.toMillis()
+                ));
+            }
             httpRequestBuilder.timeout(Duration.ofMillis(timeout));
         }
         HttpRequest httpRequest = httpRequestBuilder.build();
@@ -243,8 +249,8 @@ public class DaemonClient {
                     .formatted(httpRequest.method(), httpRequest.uri());
             throw new ConnectException(message);
         } catch (HttpConnectTimeoutException e) {
-            throw new IOException("HTTP connect timed out during daemon client call %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+            throw new HttpConnectTimeoutException("HTTP connect timed out during daemon client call %s %s timeout %s millis"
+                    .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
         } catch (IOException e) {
             throw new IOException("I/O error during daemon client call %s %s"
                     .formatted(httpRequest.method(), httpRequest.uri()), e);
@@ -256,10 +262,16 @@ public class DaemonClient {
                                                    HttpRequest.BodyPublisher bodyPublisher) {
         URI uri = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
                 .resolve(path);
+        Duration timeoutDuration = Duration.ofMillis(cliApplicationProperties.daemonClientHttpRequestTimeoutMillis);
+        if (timeoutDuration.isZero() || timeoutDuration.isNegative()) {
+            throw new IllegalArgumentException("Invalid timeout %s. Timeout must be greater than zero".formatted(
+                    timeoutDuration.toMillis()
+            ));
+        }
         return HttpRequest.newBuilder()
                 .uri(uri)
                 .header("Authorization", getDaemonAuthorizationToken())
-                .timeout(Duration.ofMillis(cliApplicationProperties.daemonClientHttpRequestTimeoutMillis))
+                .timeout(timeoutDuration)
                 .method(method, bodyPublisher);
     }
 
