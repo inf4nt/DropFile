@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -250,9 +251,10 @@ public class FileDownloadOrchestrator {
             }
         }
 
-        stopProcedure(targetOperations);
+        stopProcedures(targetOperations);
 
-        fileDownloadStore.remove(matchResult.found().values());
+        Map<String, DownloadFile> removed = fileDownloadStore.remove(matchResult.found().values());
+        deleteFilesBatch(removed.values());
 
         return new FileDownloadOrchestratorKillResponse(
                 matchResult.found(),
@@ -269,9 +271,32 @@ public class FileDownloadOrchestrator {
             waitingQueue.clear();
         }
 
-        stopProcedure(targetOperations);
+        stopProcedures(targetOperations);
 
-        fileDownloadStore.remove(fileDownloadStore.getAll().keySet());
+        Map<String, DownloadFile> removed = fileDownloadStore.remove(fileDownloadStore.getAll().keySet());
+        deleteFilesBatch(removed.values());
+    }
+
+    private void deleteFilesBatch(Collection<DownloadFile> files) {
+        List<Exception> suppressedExceptions = new ArrayList<>();
+
+        for (DownloadFile file : files) {
+            try {
+                Path path = Paths.get(file.destinationFile());
+                if (!Files.isRegularFile(path)) {
+                    throw new IllegalArgumentException("File is not a regular file. Unable to remove it");
+                }
+                Files.deleteIfExists(path);
+            } catch (Exception e) {
+                suppressedExceptions.add(e);
+            }
+        }
+
+        if (!suppressedExceptions.isEmpty()) {
+            IOException aggregate = new IOException("Failed to delete some files in batch");
+            suppressedExceptions.forEach(aggregate::addSuppressed);
+            log.error("Batch deletion completed with errors", aggregate);
+        }
     }
 
     public void stopAll() {
@@ -284,10 +309,10 @@ public class FileDownloadOrchestrator {
             downloadProcedures.clear();
         }
 
-        stopProcedure(proceduresSnapshot);
+        stopProcedures(proceduresSnapshot);
     }
 
-    private void stopProcedure(Map<String, SingleRunDownloadProcedure> operations) {
+    private void stopProcedures(Map<String, SingleRunDownloadProcedure> operations) {
         if (ObjectUtils.isEmpty(operations)) {
             return;
         }
