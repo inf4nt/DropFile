@@ -131,6 +131,10 @@ public class HttpTunnelClient implements TunnelClient {
                     }
                     return in;
                 })
+                .add(in -> new WatchdogInputStream(
+                        in,
+                        daemonApplicationProperties.daemonTunnelClientStreamMaxSize
+                ))
                 .get();
     }
 
