@@ -42,17 +42,7 @@ public class ApiConnectionsShareFacade {
     private final ShareFileStore shareFileStore;
 
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
-        Path path = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
-
-        if (Files.notExists(path)) {
-            throw new FileNotFoundException("No file found %s".formatted(path));
-        }
-
-        if (!Files.isRegularFile(path)) {
-            throw new IllegalArgumentException("File is not a regular file: " + requestDTO.resourcePath());
-        }
-
-        Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
+        Path realPath = SafePathResolver.safeRealPathRegularFileResolver(requestDTO.resourcePath());
 
         String rawFileName = StringUtils.hasText(requestDTO.alias())
                 ? Paths.get(requestDTO.alias()).getFileName().toString()

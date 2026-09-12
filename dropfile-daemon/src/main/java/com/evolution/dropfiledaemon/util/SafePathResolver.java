@@ -3,6 +3,13 @@ package com.evolution.dropfiledaemon.util;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class SafePathResolver {
 
     public static String sanitizeFilename(String rawFilename) {
@@ -35,5 +42,27 @@ public class SafePathResolver {
         }
 
         throw new IllegalArgumentException("Unable to build safe filename");
+    }
+
+    public static Path safeRealPathRegularFileResolver(String resourcePath) throws IOException {
+        if (!StringUtils.hasText(resourcePath)) {
+            throw new IllegalArgumentException("Resource path cannot be null or empty");
+        }
+
+        Path path = Paths.get(resourcePath).toAbsolutePath().normalize();
+
+        if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException("No file found: " + resourcePath);
+        }
+
+        if (Files.isSymbolicLink(path)) {
+            throw new IllegalArgumentException("Symbolic links are not allowed: " + resourcePath);
+        }
+
+        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
+        }
+
+        return path.toRealPath(LinkOption.NOFOLLOW_LINKS);
     }
 }
