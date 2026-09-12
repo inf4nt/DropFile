@@ -390,6 +390,10 @@ public class FileDownloadOrchestrator {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
         Path downloadFilePath = downloadDirectoryPath.resolve(request.filename()).normalize();
 
+        if (!downloadFilePath.startsWith(downloadDirectoryPath)) {
+            throw new SecurityException("Path traversal attempt detected: " + request.filename());
+        }
+
         Stream.concat(
                         waitingQueue.stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress())),
                         downloadProcedures.entrySet().stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress()))
