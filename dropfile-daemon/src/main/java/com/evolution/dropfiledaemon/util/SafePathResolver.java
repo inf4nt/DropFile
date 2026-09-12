@@ -44,7 +44,7 @@ public class SafePathResolver {
         throw new IllegalArgumentException("Unable to build safe filename");
     }
 
-    public static Path safeRealPathRegularFileResolver(String resourcePath) throws IOException {
+    public static Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {
         if (!StringUtils.hasText(resourcePath)) {
             throw new IllegalArgumentException("Resource path cannot be null or empty");
         }

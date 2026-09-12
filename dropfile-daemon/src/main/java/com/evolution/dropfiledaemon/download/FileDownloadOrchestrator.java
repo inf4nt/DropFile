@@ -12,6 +12,7 @@ import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
 import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifestService;
+import com.evolution.dropfiledaemon.util.SafePathResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -60,6 +60,14 @@ public class FileDownloadOrchestrator {
 
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
+        String filename = SafePathResolver.sanitizeFilename(request.filename());
+        request = request.withFilename(filename);
+
+        return doStart(request);
+    }
+
+    @SneakyThrows
+    private FileDownloadResponse doStart(FileDownloadRequest request) {
         int downloadOrchestratorMaxQueueSize = daemonApplicationProperties.daemonDownloadOrchestratorMaxQueueSize;
         SingleRunDownloadProcedure downloadProcedure;
         synchronized (this) {
@@ -73,8 +81,8 @@ public class FileDownloadOrchestrator {
             }
 
             Path destinationFilePath = getDestinationFilePath(request);
+            Path temporaryFilePath = getTemporaryFilePath(destinationFilePath);
             Path manifestFilePath = getManifestFilePath(destinationFilePath);
-            Path temporaryFilePath = getTemporaryFilePath(request);
 
             String operationId = CommonUtils.random();
             FileManifest fileManifest = fileManifestService.build(request.hash(), request.size());
@@ -378,16 +386,9 @@ public class FileDownloadOrchestrator {
         return manifestPath;
     }
 
-    private Path getDestinationFilePath(FileDownloadRequest request) throws FileAlreadyExistsException {
-        if (!StringUtils.hasText(request.filename())) {
-            throw new IllegalArgumentException("File download request failed. The request has am empty filename argument");
-        }
-        if (Paths.get(request.filename()).isAbsolute()) {
-            throw new IllegalArgumentException("File download request failed. Absolute paths are not supported yet: " + request.filename());
-        }
-
+    private Path getDestinationFilePath(FileDownloadRequest request) throws IOException {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
-        Path downloadFilePath = downloadDirectoryPath.resolve(request.filename());
+        Path downloadFilePath = downloadDirectoryPath.resolve(request.filename()).normalize();
 
         Stream.concat(
                         waitingQueue.stream().map(e -> Map.entry(e.getKey(), e.getValue().getProgress())),
@@ -408,10 +409,19 @@ public class FileDownloadOrchestrator {
         return downloadFilePath;
     }
 
-    private Path getTemporaryFilePath(FileDownloadRequest request) {
-        String temporaryFileName = CommonFileUtils.getTemporaryFileName(request.filename());
+    private Path getTemporaryFilePath(Path destinationFilePath) throws IOException {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
-        return downloadDirectoryPath.resolve(temporaryFileName);
+
+        String safeFilename = destinationFilePath.getFileName().toString();
+        String temporaryFileName = CommonFileUtils.getTemporaryFileName(safeFilename);
+
+        Path temporaryFile = downloadDirectoryPath.resolve(temporaryFileName);
+
+        if (Files.exists(temporaryFile)) {
+            throw new FileAlreadyExistsException("File already exists: %s".formatted(temporaryFile));
+        }
+
+        return temporaryFile;
     }
 
     @EventListener(ContextClosedEvent.class)

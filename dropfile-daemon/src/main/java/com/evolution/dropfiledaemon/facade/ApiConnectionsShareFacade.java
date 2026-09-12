@@ -18,10 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -42,7 +40,7 @@ public class ApiConnectionsShareFacade {
     private final ShareFileStore shareFileStore;
 
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
-        Path realPath = SafePathResolver.safeRealPathRegularFileResolver(requestDTO.resourcePath());
+        Path realPath = SafePathResolver.safeExistingRealPathRegularFileResolver(requestDTO.resourcePath());
 
         String rawFileName = StringUtils.hasText(requestDTO.alias())
                 ? Paths.get(requestDTO.alias()).getFileName().toString()
