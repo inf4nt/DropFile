@@ -1,5 +1,6 @@
 package com.evolution.dropfile.store.framework.file;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class DirectoryProviderImpl implements DirectoryProvider {
@@ -10,6 +11,11 @@ public class DirectoryProviderImpl implements DirectoryProvider {
         if (!root.isAbsolute()) {
             throw new IllegalArgumentException("Root path must be absolute. Got relative path: " + root);
         }
+        if (Files.exists(root)) {
+            if (!Files.isDirectory(root)) {
+                throw new IllegalArgumentException("Root path must resolve to a directory: " + root);
+            }
+        }
         this.directoryPath = root;
     }
 
@@ -17,7 +23,15 @@ public class DirectoryProviderImpl implements DirectoryProvider {
         if (directoryRelativePath.isAbsolute()) {
             throw new IllegalArgumentException("Path must be relative. Got absolute path: " + directoryRelativePath);
         }
-        this.directoryPath = directoryProvider.getDirectoryPath().resolve(directoryRelativePath);
+        Path resolvedPath = directoryProvider.getDirectoryPath().resolve(directoryRelativePath);
+
+        if (Files.exists(resolvedPath)) {
+            if (!Files.isDirectory(resolvedPath)) {
+                throw new IllegalArgumentException("Target path must resolve to a directory: " + resolvedPath);
+            }
+        }
+
+        this.directoryPath = resolvedPath;
     }
 
     @Override
