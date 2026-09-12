@@ -6,6 +6,13 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 
+// TODO
+// @ConfigurationProperties(prefix = "dropfile.daemon")
+// @Validated
+// and record instead of class
+// @EnableConfigurationProperties(DaemonApplicationProperties.class)
+
+
 @Component
 public class DaemonApplicationProperties {
 
@@ -42,7 +49,7 @@ public class DaemonApplicationProperties {
 
     public final long daemonTunnelServerAsyncRequestTimeout;
 
-    public final int daemonManifestChunkSize;
+    public final int daemonTunnelClientManifestChunkSize;
 
     public final int daemonHandshakeClientHttpRequestTimeoutMillis;
 
@@ -81,7 +88,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
             @Value("${dropfile.daemon.tunnel.server.async.request-timeout}") int daemonTunnelServerAsyncRequestTimeout,
-            @Value("${dropfile.daemon.manifest.chunk-size}") int daemonManifestChunkSize,
+            @Value("${dropfile.daemon.tunnel.client.manifest.chunk-size}") int daemonTunnelClientManifestChunkSize,
             @Value("${dropfile.daemon.quickshare.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
             @Value("${dropfile.daemon.quickshare.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
             @Value("${dropfile.daemon.quickshare.insecure.compress.enabled}") boolean daemonQuickShareInsecureCompressEnabled,
@@ -106,7 +113,7 @@ public class DaemonApplicationProperties {
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonTunnelServerAsyncRequestTimeout = daemonTunnelServerAsyncRequestTimeout;
-        this.daemonManifestChunkSize = daemonManifestChunkSize;
+        this.daemonTunnelClientManifestChunkSize = validateDaemonTunnelClientManifestChunkSize(daemonTunnelClientManifestChunkSize);
         this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
         this.daemonQuickShareSecureAsyncRequestTimeout = daemonQuickShareSecureAsyncRequestTimeout;
         this.daemonQuickShareSecureCompressLevel = daemonQuickShareSecureCompressLevel;
@@ -115,5 +122,14 @@ public class DaemonApplicationProperties {
         this.daemonGcRateMillis = daemonGcRateMillis;
         this.daemonIdleTimeoutMillis = daemonIdleTimeoutMillis;
         this.daemonIdleRateMillis = daemonIdleRateMillis;
+    }
+
+    private int validateDaemonTunnelClientManifestChunkSize(int daemonTunnelClientManifestChunkSize) {
+        if (daemonTunnelClientManifestChunkSize <= 0) {
+            throw new IllegalArgumentException("daemonTunnelClientManifestChunkSize '%d' must be greater than 0".formatted(
+                    daemonTunnelClientManifestChunkSize
+            ));
+        }
+        return daemonTunnelClientManifestChunkSize;
     }
 }
