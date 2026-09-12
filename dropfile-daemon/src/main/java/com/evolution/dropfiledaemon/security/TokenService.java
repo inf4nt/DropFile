@@ -24,7 +24,7 @@ public class TokenService {
 
     private final DaemonSecretStore daemonSecretStore;
 
-    public boolean isValid(UUID token) {
+    public boolean isValid(@Nullable UUID token) {
         if (token == null) {
             return false;
         }
@@ -40,7 +40,7 @@ public class TokenService {
     }
 
     @Nullable
-    public UUID extractToken(HttpServletRequest request) {
+    public UUID extractToken(@Nullable HttpServletRequest request) {
         if (request == null) {
             return null;
         }
