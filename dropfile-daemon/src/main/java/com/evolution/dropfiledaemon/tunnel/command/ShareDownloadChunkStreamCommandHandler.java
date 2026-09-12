@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.tunnel.command;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -23,6 +25,8 @@ public class ShareDownloadChunkStreamCommandHandler
     private final FileHelper fileHelper;
 
     private final ShareFileStore shareFileStore;
+
+    private final DaemonApplicationProperties daemonApplicationProperties;
 
     @Override
     public String getCommandName() {
@@ -42,8 +46,27 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getValue();
 
         Path path = Paths.get(shareFile.resourcePath());
+        long fileSize = shareFile.size();
         long skip = request.position();
         int take = request.size();
+
+        int maxLimit = daemonApplicationProperties.daemonTunnelServerChunkLimitMax;
+
+        if (take > maxLimit) {
+            throw new IllegalArgumentException(
+                    "Requested chunk size %d exceeds maximum limit %d".formatted(take, maxLimit)
+            );
+        }
+
+        long remainingBytes = fileSize - skip;
+        int expectedMin = (int) Math.min(daemonApplicationProperties.daemonTunnelServerChunkLimitMin, remainingBytes);
+
+        if (take < expectedMin) {
+            throw new IllegalArgumentException(
+                    "Requested chunk size %d is below minimum limit %d (remaining bytes: %d)"
+                            .formatted(take, expectedMin, remainingBytes)
+            );
+        }
 
         return fileHelper.readStream(path, skip, take);
     }

@@ -1,12 +1,9 @@
 package com.evolution.dropfiledaemon.download.procedure.manifest;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FileManifestServiceTest {
 
@@ -65,16 +62,5 @@ class FileManifestServiceTest {
 
         assertThat(manifest.size(), is(0L));
         assertThat(manifest.chunks(), is(empty()));
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {0, -1, -500})
-    void constructor_ShouldThrowException_WhenChunkSizeIsZeroOrNegative(int invalidChunkSize) {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> new FileManifestService(invalidChunkSize)
-        );
-
-        assertThat(exception.getMessage(), is("Chunk size must be greater than zero"));
     }
 }

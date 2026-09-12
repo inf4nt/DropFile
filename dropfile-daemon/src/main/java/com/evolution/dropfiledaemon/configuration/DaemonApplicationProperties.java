@@ -49,6 +49,10 @@ public class DaemonApplicationProperties {
 
     public final long daemonTunnelServerAsyncRequestTimeout;
 
+    public final int daemonTunnelServerChunkLimitMax;
+
+    public final int daemonTunnelServerChunkLimitMin;
+
     public final int daemonTunnelClientManifestChunkSize;
 
     public final int daemonHandshakeClientHttpRequestTimeoutMillis;
@@ -88,6 +92,8 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
             @Value("${dropfile.daemon.tunnel.server.async.request-timeout}") int daemonTunnelServerAsyncRequestTimeout,
+            @Value("${dropfile.daemon.tunnel.server.chunk.limit.max}") int daemonTunnelServerChunkLimitMax,
+            @Value("${dropfile.daemon.tunnel.server.chunk.limit.min}") int daemonTunnelServerChunkLimitMin,
             @Value("${dropfile.daemon.tunnel.client.manifest.chunk-size}") int daemonTunnelClientManifestChunkSize,
             @Value("${dropfile.daemon.quickshare.async.request-timeout}") long daemonQuickShareSecureAsyncRequestTimeout,
             @Value("${dropfile.daemon.quickshare.secure.compress.level}") int daemonQuickShareSecureCompressLevel,
@@ -113,6 +119,8 @@ public class DaemonApplicationProperties {
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonTunnelServerAsyncRequestTimeout = daemonTunnelServerAsyncRequestTimeout;
+        this.daemonTunnelServerChunkLimitMax = daemonTunnelServerChunkLimitMax;
+        this.daemonTunnelServerChunkLimitMin = daemonTunnelServerChunkLimitMin;
         this.daemonTunnelClientManifestChunkSize = validateDaemonTunnelClientManifestChunkSize(daemonTunnelClientManifestChunkSize);
         this.daemonTunnelClientStreamMaxSize = daemonTunnelClientStreamMaxSize;
         this.daemonQuickShareSecureAsyncRequestTimeout = daemonQuickShareSecureAsyncRequestTimeout;
