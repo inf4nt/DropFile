@@ -10,18 +10,18 @@ import java.util.List;
 @Component
 public class FileManifestService {
 
-    private final int daemonManifestChunkMaxSize;
+    private final int daemonManifestChunkSize;
 
     @Autowired
     public FileManifestService(DaemonApplicationProperties daemonApplicationProperties) {
-        this(daemonApplicationProperties.daemonManifestChunkMaxSize);
+        this(daemonApplicationProperties.daemonManifestChunkSize);
     }
 
-    public FileManifestService(int daemonManifestChunkMaxSize) {
-        if (daemonManifestChunkMaxSize <= 0) {
+    public FileManifestService(int daemonManifestChunkSize) {
+        if (daemonManifestChunkSize <= 0) {
             throw new IllegalArgumentException("Chunk size must be greater than zero");
         }
-        this.daemonManifestChunkMaxSize = daemonManifestChunkMaxSize;
+        this.daemonManifestChunkSize = daemonManifestChunkSize;
     }
 
     public FileManifest build(String fileHash, long fileSize) {
@@ -29,7 +29,7 @@ public class FileManifestService {
 
         long position = 0;
         while (position < fileSize) {
-            int bytesInChunk = (int) Math.min(daemonManifestChunkMaxSize, fileSize - position);
+            int bytesInChunk = (int) Math.min(daemonManifestChunkSize, fileSize - position);
             chunks.add(new ChunkManifest(bytesInChunk, position));
             position += bytesInChunk;
         }
