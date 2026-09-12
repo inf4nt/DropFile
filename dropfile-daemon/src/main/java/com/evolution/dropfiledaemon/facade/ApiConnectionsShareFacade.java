@@ -11,6 +11,7 @@ import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.util.SafePathResolver;
 import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.util.StringUtils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -50,11 +52,13 @@ public class ApiConnectionsShareFacade {
             throw new IllegalArgumentException("File is not a regular file: " + requestDTO.resourcePath());
         }
 
-        Path realPath = path.toRealPath();
+        Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
 
-        String alias = StringUtils.hasText(requestDTO.alias())
+        String rawFileName = StringUtils.hasText(requestDTO.alias())
                 ? Paths.get(requestDTO.alias()).getFileName().toString()
                 : realPath.getFileName().toString();
+
+        String alias = SafePathResolver.sanitizeFilename(rawFileName);
 
         String key = CommonUtils.random();
         ShareFile shareFile = shareFileStore.save(key,

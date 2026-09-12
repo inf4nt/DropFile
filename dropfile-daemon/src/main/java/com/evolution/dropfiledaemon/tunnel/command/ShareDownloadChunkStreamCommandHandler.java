@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -45,7 +46,7 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getRequired(request.id())
                 .getValue();
 
-        Path path = Paths.get(shareFile.resourcePath());
+        Path path = Paths.get(shareFile.resourcePath()).toRealPath(LinkOption.NOFOLLOW_LINKS);
         long fileSize = shareFile.size();
         long skip = request.position();
         int take = request.size();

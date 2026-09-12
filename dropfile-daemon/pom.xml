@@ -18,6 +18,7 @@
         <zip4j.version>2.11.5</zip4j.version>
         <dropfile.common.version>1.22.0</dropfile.common.version>
         <dropfile.store.version>1.22.0</dropfile.store.version>
+        <commons.io.version>2.22.0</commons.io.version>
     </properties>
 
     <dependencies>
@@ -37,6 +38,12 @@
             <groupId>net.lingala.zip4j</groupId>
             <artifactId>zip4j</artifactId>
             <version>${zip4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
