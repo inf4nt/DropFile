@@ -10,6 +10,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
@@ -80,6 +81,11 @@ public class FileHelper {
     }
 
     public InputStream readStream(Path path, long skip, int take) throws IOException {
+        long fileSize = Files.size(path);
+        if (skip < 0 || skip >= fileSize) {
+            throw new IllegalArgumentException("Invalid skip position: %d. File size: %d".formatted(skip, fileSize));
+        }
+
         FileChannel fileChannel = null;
         InputStream channelInputStream = null;
         try {

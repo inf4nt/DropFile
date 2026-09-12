@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FileHelperTest {
 
@@ -113,5 +114,36 @@ public class FileHelperTest {
                 fileHelper.sha256(file.toPath()),
                 is(expected)
         );
+    }
+
+    @Test
+    public void readStream_ShouldThrowException_WhenSkipIsNegative() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> fileHelper.readStream(file.toPath(), -1, 4)
+        );
+    }
+
+    @Test
+    public void readStream_ShouldThrowException_WhenSkipIsGreaterThanOrEqualToFileSize() {
+        long fileSize = file.length();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> fileHelper.readStream(file.toPath(), fileSize, 4)
+        );
+    }
+
+    @Test
+    public void readStream_ShouldReadRemainingBytes_WhenTakeExceedsRemainingLength() throws Exception {
+        try (InputStream inputStream = fileHelper.readStream(file.toPath(), 7, 5)) {
+            byte[] bytes = inputStream.readAllBytes();
+            String actual = new String(bytes);
+
+            assertThat(
+                    actual,
+                    is("890")
+            );
+        }
     }
 }
