@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.LockableOperation;
-import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
@@ -9,12 +8,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -34,7 +32,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     @Override
-    public InputStream stream(Request request) {
+    public InputStream stream(Request request) throws IOException {
         String fingerprint = request.getFingerprint();
         if (isSessionExpired(fingerprint)) {
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {

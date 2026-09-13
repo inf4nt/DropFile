@@ -56,7 +56,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
     protected void print(List<ApiDownloadLsDTO.Response> object) {
         super.print(object);
         String ids = object.stream()
-                .filter(it -> !it.accessible())
+                .filter(it -> !Boolean.TRUE.equals(it.accessible()))
                 .filter(it -> it.status() != ApiDownloadLsDTO.Status.DOWNLOADING)
                 .map(it -> it.operation())
                 .collect(Collectors.joining(", "));

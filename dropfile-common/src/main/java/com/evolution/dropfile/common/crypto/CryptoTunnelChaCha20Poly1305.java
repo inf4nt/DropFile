@@ -9,11 +9,14 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
-import java.util.Arrays;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
+
+    private static final int POLY1305_TAG_LENGTH = 16;
 
     private static final String CIPHER_ALGORITHM = "ChaCha20-Poly1305";
 
@@ -40,34 +43,11 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     @SneakyThrows
     @Override
-    public InputStream encryptSealStream(InputStream inputStream, SecretKey key) {
-        byte[] nonce = CommonUtils.nonce12();
-        InputStream nonceStream = new ByteArrayInputStream(nonce);
-
-        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
-
-        CipherInputStream cipherInputStream = new CipherInputStream(inputStream, cipher);
-
-        return new SequenceInputStream(nonceStream, cipherInputStream);
-    }
-
-    @SneakyThrows
-    @Override
-    public byte[] encryptInline(byte[] data, SecretKey key) {
-        SecureEnvelope encrypt = encrypt(data, key);
-        byte[] finalArray = new byte[encrypt.nonce().length + encrypt.payload().length];
-        System.arraycopy(encrypt.nonce(), 0, finalArray, 0, encrypt.nonce().length);
-        System.arraycopy(
-                encrypt.payload(), 0, finalArray, encrypt.nonce().length, encrypt.payload().length
-        );
-        return finalArray;
-    }
-
-    @SneakyThrows
-    @Override
     public SecureEnvelope encrypt(byte[] data, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IOException("Invalid nonce length " + nonce.length);
+        }
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
@@ -85,25 +65,28 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         return cipher.doFinal(payload);
     }
 
-    @Override
-    public byte[] decryptInline(byte[] data, SecretKey key) {
-        byte[] nonce = Arrays.copyOfRange(data, 0, NONCE_LENGTH);
-        byte[] encrypt = Arrays.copyOfRange(data, NONCE_LENGTH, data.length);
-        return decrypt(encrypt, nonce, key);
-    }
-
     @SneakyThrows
     @Override
-    public void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key) {
-        try (CipherOutputStream cipherOut = encryptWrapper(outputStream, key)) {
-            inputStream.transferTo(cipherOut);
+    public byte[] decrypt(InputStream inputStream, SecretKey key) {
+        byte[] nonce = readNonce(inputStream);
+
+        byte[] encryptedPayload = inputStream.readAllBytes();
+
+        if (encryptedPayload.length < POLY1305_TAG_LENGTH) {
+            throw new IOException("Premature EOF: stream too short for Poly1305 MAC tag");
         }
+
+        return decrypt(encryptedPayload, nonce, key);
     }
 
     @SneakyThrows
     @Override
     public CipherOutputStream encryptWrapper(OutputStream outputStream, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IOException("Invalid nonce length " + nonce.length);
+        }
+
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
 
@@ -113,15 +96,21 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     @SneakyThrows
     @Override
-    public InputStream decrypt(InputStream inputStream, SecretKey key) {
-        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
-        if (nonce.length != NONCE_LENGTH) {
-            throw new IOException("Premature EOF: incomplete nonce in stream");
-        }
+    public InputStream decryptStreaming(InputStream inputStream, SecretKey key) {
+        byte[] nonce = readNonce(inputStream);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 
         return new CipherInputStream(inputStream, cipher);
+    }
+
+    @Override
+    public byte[] readNonce(InputStream inputStream) throws IOException {
+        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IOException("Premature EOF: incomplete nonce in stream");
+        }
+        return nonce;
     }
 }

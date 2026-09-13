@@ -50,7 +50,7 @@ public class CryptoFileOperations implements FileOperations {
                 .add(in -> {
                     byte[] fingerprint = getFingerprint();
                     SecretKey secretKey = cryptoTunnel.secretKey(fingerprint);
-                    return cryptoTunnel.decrypt(in, secretKey);
+                    return cryptoTunnel.decryptStreaming(in, secretKey);
                 })
                 .get();
     }

@@ -12,14 +12,14 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
@@ -53,7 +53,7 @@ public class HttpTunnelClient implements TunnelClient {
     private final ObjectMapper objectMapper;
 
     @Override
-    public InputStream stream(Request request) {
+    public InputStream stream(Request request) throws IOException {
         Objects.requireNonNull(request, "Request must not be null");
 
         HttpTunnelRequestContext httpTunnelRequestContext = buildHttpTunnelRequestContext(request);
@@ -67,10 +67,12 @@ public class HttpTunnelClient implements TunnelClient {
                 throw new IllegalStateException("Call interrupted", e);
             } catch (HttpConnectTimeoutException e) {
                 HttpRequest httpRequest = httpTunnelRequestContext.request();
-                throw new HttpConnectTimeoutException("HTTP connect timed out during call %s %s timeout %s millis"
-                        .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
+                long timeout = httpRequest.timeout().map(Duration::toMillis).orElse(0L);
+                String message = "HTTP connect timed out during call %s %s timeout %s millis"
+                        .formatted(httpRequest.method(), httpRequest.uri(), timeout);
+                throw new HttpConnectTimeoutException(message).initCause(e);
             } catch (ConnectException e) {
-                throw new ConnectException("Target address is unreachable");
+                throw new ConnectException("Target address is unreachable").initCause(e);
             }
 
             if (httpResponse.statusCode() != 200) {
@@ -106,10 +108,18 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.getMessage(),
                     httpRequest.method(),
                     httpRequest.uri(),
-                    httpRequest.timeout().map(it -> it.toMillis()).orElseThrow()
+                    httpRequest.timeout().map(it -> it.toMillis()).orElse(0L)
             );
 
-            throw CommonUtils.toRuntimeException(message, throwable);
+            if (throwable instanceof IOException ioException) {
+                throw new IOException(message, ioException);
+            }
+
+            if (throwable instanceof Error error) {
+                throw error;
+            }
+
+            throw new RuntimeException(message, throwable);
         }
     }
 
@@ -124,7 +134,10 @@ public class HttpTunnelClient implements TunnelClient {
                         Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
                 ))
                 .add(in -> tunnelTrafficMonitor.inputStreamWrapper(fingerprint, in))
-                .add(in -> cryptoTunnel.decrypt(in, secretKey))
+                .add(in -> {
+                    byte[] decrypt = cryptoTunnel.decrypt(in, secretKey);
+                    return new ByteArrayInputStream(decrypt);
+                })
                 .add(in -> {
                     if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
                         return compressTunnelService.decompress(in);
@@ -138,7 +151,7 @@ public class HttpTunnelClient implements TunnelClient {
                 .get();
     }
 
-    private SecureEnvelope encrypt(UUID requestId, Request request, SecretKey secretKey) throws JsonProcessingException {
+    private SecureEnvelope encrypt(UUID requestId, Request request, SecretKey secretKey) throws IOException {
         byte[] payload = switch (request.getBody()) {
             case null -> null;
             case String string -> string.getBytes(StandardCharsets.UTF_8);
@@ -171,8 +184,7 @@ public class HttpTunnelClient implements TunnelClient {
         return handshakeTrustedOutStore.getRequired(fingerprint).getValue();
     }
 
-    @SneakyThrows
-    private void validateInputStream(UUID requestId, InputStream inputStream) {
+    private void validateInputStream(UUID requestId, InputStream inputStream) throws IOException {
         byte[] expectedRequestIdBytes = requestId.toString().getBytes(StandardCharsets.UTF_8);
 
         byte[] actualRequestIdBytes = inputStream.readNBytes(expectedRequestIdBytes.length);

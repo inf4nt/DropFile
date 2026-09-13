@@ -1,6 +1,7 @@
 package com.evolution.dropfile.common.crypto;
 
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -10,19 +11,15 @@ public interface CryptoTunnel {
 
     SecretKey secretKey(byte[] rawSecret);
 
-    InputStream encryptSealStream(InputStream inputStream, SecretKey key);
-
-    byte[] encryptInline(byte[] data, SecretKey key);
-
     SecureEnvelope encrypt(byte[] data, SecretKey key);
 
     byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key);
 
-    byte[] decryptInline(byte[] data, SecretKey key);
-
-    void encrypt(InputStream inputStream, OutputStream outputStream, SecretKey key);
-
     OutputStream encryptWrapper(OutputStream outputStream, SecretKey key);
 
-    InputStream decrypt(InputStream inputStream, SecretKey key);
+    byte[] decrypt(InputStream inputStream, SecretKey key);
+
+    InputStream decryptStreaming(InputStream inputStream, SecretKey key);
+
+    byte[] readNonce(InputStream inputStream) throws IOException;
 }

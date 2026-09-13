@@ -3,11 +3,12 @@ package com.evolution.dropfiledaemon.tunnel.framework;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 public interface TunnelClient {
 
-    InputStream stream(Request request);
+    InputStream stream(Request request) throws IOException;
 
     @Builder
     @Getter
