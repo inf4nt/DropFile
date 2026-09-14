@@ -13,8 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class WatchdogInputStreamTest {
 
@@ -27,6 +26,9 @@ public class WatchdogInputStreamTest {
         assertThat("Watchdog task should be null when duration is null", watchdogInputStream.watchdogTask, nullValue());
 
         watchdogInputStream = new WatchdogInputStream(InputStream.nullInputStream(), Long.MAX_VALUE, Duration.ofMillis(0));
+        assertThat("Watchdog task should be null when duration is zero", watchdogInputStream.watchdogTask, nullValue());
+
+        watchdogInputStream = new WatchdogInputStream(InputStream.nullInputStream(), Long.MAX_VALUE, Duration.ofMillis(-500));
         assertThat("Watchdog task should be null when duration is zero", watchdogInputStream.watchdogTask, nullValue());
     }
 
@@ -235,12 +237,6 @@ public class WatchdogInputStreamTest {
         watchdogInputStream.close();
 
         assertAllStreamOperationsThrowClosedException(watchdogInputStream);
-    }
-
-    @Test
-    public void shouldThrowIllegalArgumentExceptionWhenDurationIsNegative() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new WatchdogInputStream(InputStream.nullInputStream(), 100, Duration.ofMillis(-500)));
     }
 
     @Test

@@ -26,7 +26,7 @@ public class WatchdogInputStream extends FilterInputStream {
         this(in, limit, null);
     }
 
-    public WatchdogInputStream(InputStream in, long limit, Duration duration) {
+    public WatchdogInputStream(InputStream in, long limit, Duration timeout) {
         super(Objects.requireNonNull(in, "InputStream cannot be null"));
 
         if (limit <= 0) {
@@ -35,23 +35,18 @@ public class WatchdogInputStream extends FilterInputStream {
 
         this.limit = limit;
 
-        if (duration == null || duration.isZero()) {
+        if (timeout != null && timeout.isPositive()) {
+            this.watchdogTask = EXECUTOR_SERVICE.submit(() -> {
+                try {
+                    Thread.sleep(timeout.toMillis());
+                    safeClose();
+                } catch (InterruptedException _) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+        } else {
             this.watchdogTask = null;
-            return;
         }
-
-        if (duration.isNegative()) {
-            throw new IllegalArgumentException("Duration must be positive");
-        }
-
-        this.watchdogTask = EXECUTOR_SERVICE.submit(() -> {
-            try {
-                Thread.sleep(duration.toMillis());
-                safeClose();
-            } catch (InterruptedException _) {
-                Thread.currentThread().interrupt();
-            }
-        });
     }
 
     @Override
