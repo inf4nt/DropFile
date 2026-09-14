@@ -129,63 +129,72 @@ public class FileDownloadOrchestrator {
         Path manifestFilePath = downloadProcedure.getRequest().manifestFilePath();
         Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
 
-        fileDownloadingExecutorService.execute(() -> {
-            try {
-                checkIfClosed();
-                downloadProcedure.run(
-                        () -> fileDownloadStore.save(
-                                operationId,
-                                () -> {
-                                    Instant createInstantTime = Instant.now();
-                                    return new DownloadFile(
-                                            fingerprint,
-                                            fileId,
-                                            destinationFilePath.toAbsolutePath().toString(),
-                                            temporaryFilePath.toAbsolutePath().toString(),
-                                            manifestFilePath.toAbsolutePath().toString(),
-                                            DownloadFile.DownloadFileEntryStatus.DOWNLOADING,
-                                            createInstantTime,
-                                            createInstantTime
-                                    );
-                                }),
-                        () -> fileDownloadStore.update(
-                                operationId,
-                                downloadFileEntry -> downloadFileEntry
-                                        .withHash(downloadProcedure.getProgress().hash())
-                                        .withTotal(downloadProcedure.getProgress().total())
-                                        .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                        .withStatus(DownloadFile.DownloadFileEntryStatus.COMPLETED)
-                                        .withUpdated(Instant.now())
-                        )
-                );
-            } catch (Exception exception) {
-                if (downloadProcedure.isStopped()) {
-                    log.info("Download operation {} (fingerprint {}) was stopped by user request.",
-                            operationId, fingerprint);
-                    return;
-                }
+        try {
+            fileDownloadingExecutorService.execute(() -> {
+                try {
+                    checkIfClosed();
+                    downloadProcedure.run(
+                            () -> fileDownloadStore.save(
+                                    operationId,
+                                    () -> {
+                                        Instant createInstantTime = Instant.now();
+                                        return new DownloadFile(
+                                                fingerprint,
+                                                fileId,
+                                                destinationFilePath.toAbsolutePath().toString(),
+                                                temporaryFilePath.toAbsolutePath().toString(),
+                                                manifestFilePath.toAbsolutePath().toString(),
+                                                DownloadFile.DownloadFileEntryStatus.DOWNLOADING,
+                                                createInstantTime,
+                                                createInstantTime
+                                        );
+                                    }),
+                            () -> fileDownloadStore.update(
+                                    operationId,
+                                    downloadFileEntry -> downloadFileEntry
+                                            .withHash(downloadProcedure.getProgress().hash())
+                                            .withTotal(downloadProcedure.getProgress().total())
+                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                            .withStatus(DownloadFile.DownloadFileEntryStatus.COMPLETED)
+                                            .withUpdated(Instant.now())
+                            )
+                    );
+                } catch (Exception exception) {
+                    if (downloadProcedure.isStopped()) {
+                        log.info("Download operation {} (fingerprint {}) was stopped by user request.",
+                                operationId, fingerprint);
+                        return;
+                    }
 
-                log.error("Exception occurred during download process operation {} fingerprint {} {}",
-                        operationId, fingerprint, exception.getMessage(), exception
-                );
-                fileDownloadStore.update(
-                        operationId,
-                        downloadFileEntry -> downloadFileEntry
-                                .withHash(downloadProcedure.getProgress().hash())
-                                .withTotal(downloadProcedure.getProgress().total())
-                                .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                .withStatus(DownloadFile.DownloadFileEntryStatus.ERROR)
-                                .withUpdated(Instant.now())
-                );
-                throw exception;
-            } finally {
-                synchronized (this) {
-                    CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
+                    log.error("Exception occurred during download process operation {} fingerprint {} {}",
+                            operationId, fingerprint, exception.getMessage(), exception
+                    );
+                    fileDownloadStore.update(
+                            operationId,
+                            downloadFileEntry -> downloadFileEntry
+                                    .withHash(downloadProcedure.getProgress().hash())
+                                    .withTotal(downloadProcedure.getProgress().total())
+                                    .withDownloaded(downloadProcedure.getProgress().downloaded())
+                                    .withStatus(DownloadFile.DownloadFileEntryStatus.ERROR)
+                                    .withUpdated(Instant.now())
+                    );
+                    throw exception;
+                } finally {
+                    synchronized (this) {
+                        CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
+                    }
+                    CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
+                    CommonUtils.executeSafety(() -> tryToStartNext());
                 }
-                CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
-                CommonUtils.executeSafety(() -> tryToStartNext());
+            });
+        } catch (Exception e) {
+            log.error("Error during starting download process {} {}", operationId, e.getMessage(), e);
+            synchronized (this) {
+                CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
             }
-        });
+            CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
+            CommonUtils.executeSafety(() -> tryToStartNext());
+        }
     }
 
     public Map<String, DownloadProgress> getWaitingQueue() {
