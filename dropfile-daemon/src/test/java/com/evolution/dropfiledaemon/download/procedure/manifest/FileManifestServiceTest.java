@@ -1,9 +1,11 @@
 package com.evolution.dropfiledaemon.download.procedure.manifest;
 
+import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FileManifestServiceTest {
 
@@ -55,12 +57,10 @@ class FileManifestServiceTest {
     }
 
     @Test
-    void build_ShouldReturnEmptyChunks_WhenFileSizeIsZero() {
+    void shouldFail_WhenFileSizeIsZero() {
         FileManifestService service = new FileManifestService(1000);
 
-        FileManifest manifest = service.build(FILE_HASH, 0);
-
-        assertThat(manifest.size(), is(0L));
-        assertThat(manifest.chunks(), is(empty()));
+        assertThrows(IllegalArgumentException.class, () -> service.build(FILE_HASH, 0));
+        assertThrows(IllegalArgumentException.class, () -> service.build(FILE_HASH, -1));
     }
 }

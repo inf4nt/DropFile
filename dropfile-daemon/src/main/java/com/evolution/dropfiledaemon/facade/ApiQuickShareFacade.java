@@ -11,6 +11,7 @@ import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
+import com.evolution.dropfiledaemon.util.SafePathResolver;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -22,6 +23,7 @@ import org.springframework.util.StringUtils;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -41,27 +43,46 @@ public class ApiQuickShareFacade {
 
     @SneakyThrows
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
-        Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize().toRealPath();
-
-        if (Files.notExists(resourceAbsolutePath)) {
-            throw new FileNotFoundException("No file found %s".formatted(resourceAbsolutePath.toString()));
+        if (!StringUtils.hasText(requestDTO.resourcePath())) {
+            throw new IllegalArgumentException("Resource path cannot be empty");
         }
+
+        Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
+
+        if (Files.notExists(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException("No file or directory found: %s".formatted(resourceAbsolutePath));
+        }
+
+        if (Files.isSymbolicLink(resourceAbsolutePath)) {
+            throw new IllegalArgumentException("Symbolic links are not allowed: " + resourceAbsolutePath);
+        }
+
+        boolean isDirectory = Files.isDirectory(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS);
+        boolean isRegularFile = Files.isRegularFile(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS);
+
+        if (!isDirectory && !isRegularFile) {
+            throw new IllegalArgumentException("Target must be a regular file or directory: " + resourceAbsolutePath);
+        }
+
+        Path realPath = resourceAbsolutePath.toRealPath(LinkOption.NOFOLLOW_LINKS);
 
         String id = CommonUtils.random();
 
         QuickShare quickShare = quickShareStore.save(
                 id,
                 () -> {
-                    boolean directory = Files.isDirectory(resourceAbsolutePath);
                     Instant createInstantTime = Instant.now();
 
                     if (requestDTO.secure()) {
-                        String secret = Objects.requireNonNullElseGet(requestDTO.secret(), () -> CommonUtils.generateRawSecretNonce12());
+                        String secret = Objects.requireNonNullElseGet(
+                                requestDTO.secret(),
+                                CommonUtils::generateRawSecretNonce12
+                        );
 
                         return new QuickShare(
-                                resourceAbsolutePath.toString(),
+                                realPath.toString(),
                                 secret,
-                                directory,
+                                isDirectory,
                                 requestDTO.singleUse(),
                                 true,
                                 false,
@@ -70,9 +91,9 @@ public class ApiQuickShareFacade {
                         );
                     }
                     return new QuickShare(
-                            resourceAbsolutePath.toString(),
+                            realPath.toString(),
                             null,
-                            directory,
+                            isDirectory,
                             requestDTO.singleUse(),
                             false,
                             false,

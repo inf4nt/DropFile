@@ -22,6 +22,10 @@ public class FileManifestService {
     }
 
     public FileManifest build(String fileHash, long fileSize) {
+        if (fileSize <= 0) {
+            throw new IllegalArgumentException("FileSize must be greater than zero");
+        }
+
         List<ChunkManifest> chunks = new ArrayList<>();
 
         long position = 0;

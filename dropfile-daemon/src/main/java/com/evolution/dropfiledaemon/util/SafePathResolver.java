@@ -5,6 +5,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -33,15 +34,15 @@ public class SafePathResolver {
 
         name = name.trim();
 
-        if (name.matches("^[.\\s]+$")) {
-            throw new IllegalArgumentException("Filename consists only of dots and spaces");
+        if (!StringUtils.hasText(name) || name.matches("^[.\\s]+$")) {
+            throw new IllegalArgumentException("Filename is empty or consists only of dots and spaces");
         }
 
-        if (StringUtils.hasText(name)) {
-            return name;
+        if (name.getBytes(StandardCharsets.UTF_8).length > 200) {
+            throw new IllegalArgumentException("Request filename must be 200 bytes or less in UTF-8");
         }
 
-        throw new IllegalArgumentException("Unable to build safe filename");
+        return name;
     }
 
     public static Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {

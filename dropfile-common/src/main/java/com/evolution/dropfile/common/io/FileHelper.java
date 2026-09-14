@@ -3,6 +3,7 @@ package com.evolution.dropfile.common.io;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.function.OutputStreamConsumer;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,14 +49,6 @@ public class FileHelper {
         }
     }
 
-    public void write(Path path, InputStream inputStream) throws IOException {
-        try (FileChannel channel = FileChannel.open(path,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.TRUNCATE_EXISTING)) {
-            write(channel, inputStream, 0, Long.MAX_VALUE);
-        }
-    }
-
     public void write(FileChannel fileChannel,
                       InputStream inputStream,
                       long position,
@@ -68,7 +61,7 @@ public class FileHelper {
                 long transferred = fileChannel.transferFrom(readableByteChannel, offset, remaining);
 
                 if (transferred <= 0) {
-                    throw new IOException(String.format(
+                    throw new EOFException(String.format(
                             "Premature EOF: Failed to transfer entire file content. Expected %d bytes, but was missing %d bytes",
                             size, remaining
                     ));
