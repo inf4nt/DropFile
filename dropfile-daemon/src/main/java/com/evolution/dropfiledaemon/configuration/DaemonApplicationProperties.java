@@ -73,6 +73,12 @@ public class DaemonApplicationProperties {
 
     public final int daemonShareAddHashExecutionTimeoutMillis;
 
+    public final int daemonServerServletInputStreamTimeoutMillis;
+
+    public final int daemonServerServletInputStreamLimitMax;
+
+    public final int daemonServerServletOutputStreamTimeoutMillis;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -101,7 +107,10 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.quickshare.insecure.compress.level}") int daemonQuickShareInsecureCompressLevel,
             @Value("${dropfile.daemon.gc.rate-millis}") int daemonGcRateMillis,
             @Value("${dropfile.daemon.idle.timeout-millis}") long daemonIdleTimeoutMillis,
-            @Value("${dropfile.daemon.idle.rate-millis}") long daemonIdleRateMillis) {
+            @Value("${dropfile.daemon.idle.rate-millis}") long daemonIdleRateMillis,
+            @Value("${dropfile.daemon.server.servlet.input.stream.timeout-millis}") int daemonServerServletInputStreamTimeoutMillis,
+            @Value("${dropfile.daemon.server.servlet.input.stream.limit.max}") int daemonServerServletInputStreamLimitMax,
+            @Value("${dropfile.daemon.server.servlet.output.stream.timeout-millis}") int daemonServerServletOutputStreamTimeoutMillis) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -130,6 +139,9 @@ public class DaemonApplicationProperties {
         this.daemonGcRateMillis = daemonGcRateMillis;
         this.daemonIdleTimeoutMillis = daemonIdleTimeoutMillis;
         this.daemonIdleRateMillis = daemonIdleRateMillis;
+        this.daemonServerServletInputStreamTimeoutMillis = daemonServerServletInputStreamTimeoutMillis;
+        this.daemonServerServletInputStreamLimitMax = daemonServerServletInputStreamLimitMax;
+        this.daemonServerServletOutputStreamTimeoutMillis = daemonServerServletOutputStreamTimeoutMillis;
     }
 
     private int validateDaemonTunnelClientManifestChunkSize(int daemonTunnelClientManifestChunkSize) {

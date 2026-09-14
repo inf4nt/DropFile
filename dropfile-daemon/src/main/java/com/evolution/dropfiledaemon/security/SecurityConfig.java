@@ -14,18 +14,31 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http,
-                                        GlobalOncePerRequestFilter globalOncePerRequestFilter) throws Exception {
+                                        WatchdogStreamingRequestResponseFilter watchdogFilter,
+                                        GlobalOncePerRequestFilter globalFilter) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterBefore(globalOncePerRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(watchdogFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(globalFilter, WatchdogStreamingRequestResponseFilter.class)
                 .build();
     }
 
     @Bean
-    public FilterRegistrationBean<GlobalOncePerRequestFilter> disableAutoRegistration(GlobalOncePerRequestFilter filter) {
+    public FilterRegistrationBean<WatchdogStreamingRequestResponseFilter> disableWatchdogStreamingRequestResponseFilterAutoReg(
+            WatchdogStreamingRequestResponseFilter filter) {
+        FilterRegistrationBean<WatchdogStreamingRequestResponseFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<GlobalOncePerRequestFilter> disableGlobalFilterAutoReg(
+            GlobalOncePerRequestFilter filter) {
         FilterRegistrationBean<GlobalOncePerRequestFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
