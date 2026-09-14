@@ -105,8 +105,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
         return new CipherInputStream(inputStream, cipher);
     }
 
-    @Override
-    public byte[] readNonce(InputStream inputStream) throws IOException {
+    private byte[] readNonce(InputStream inputStream) throws IOException {
         byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
         if (nonce.length != NONCE_LENGTH) {
             throw new IOException("Premature EOF: incomplete nonce in stream");
