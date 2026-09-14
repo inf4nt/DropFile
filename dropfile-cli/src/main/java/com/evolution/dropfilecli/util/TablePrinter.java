@@ -36,6 +36,8 @@ public class TablePrinter {
                 put("AddressURI", 18);
                 put("hash", 13);
                 put("size", 14);
+                put("operation", "operation".length());
+                put("id", 5);
             }}
     );
 

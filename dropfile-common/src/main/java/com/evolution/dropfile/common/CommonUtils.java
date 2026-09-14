@@ -37,9 +37,8 @@ public class CommonUtils {
     }
 
     public static String random() {
-        return UUID.randomUUID().toString()
-                .replace("-", "")
-                .substring(0, 10);
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        return uuid.substring(0, 12);
     }
 
     public static String generateRawSecretNonce12() {
@@ -177,8 +176,8 @@ public class CommonUtils {
     }
 
     public static <T> MatchResult<T> matchBy(Collection<T> source,
-                                                   Collection<CriteriaEnvelope> criteria,
-                                                   BiPredicate<CriteriaEnvelope, T> matcher) {
+                                             Collection<CriteriaEnvelope> criteria,
+                                             BiPredicate<CriteriaEnvelope, T> matcher) {
         if (criteria == null || criteria.isEmpty()) {
             return new MatchResult<>(Map.of(), Set.of(), Map.of());
         }
