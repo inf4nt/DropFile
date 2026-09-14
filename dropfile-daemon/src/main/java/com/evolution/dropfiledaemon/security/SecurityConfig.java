@@ -14,6 +14,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http,
+                                        GlobalRateLimitingFilter rateLimitingFilter,
                                         WatchdogStreamingRequestResponseFilter watchdogFilter,
                                         GlobalOncePerRequestFilter globalFilter) throws Exception {
         return http
@@ -23,9 +24,18 @@ public class SecurityConfig {
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterBefore(watchdogFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(watchdogFilter, GlobalRateLimitingFilter.class)
                 .addFilterAfter(globalFilter, WatchdogStreamingRequestResponseFilter.class)
                 .build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<GlobalRateLimitingFilter> disableGlobalRateLimitingFilterAutoReg(
+            GlobalRateLimitingFilter filter) {
+        FilterRegistrationBean<GlobalRateLimitingFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean

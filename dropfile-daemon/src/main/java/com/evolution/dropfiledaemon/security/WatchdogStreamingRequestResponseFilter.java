@@ -35,17 +35,21 @@ public class WatchdogStreamingRequestResponseFilter extends OncePerRequestFilter
         );
 
         Duration outputTimeout = Duration.ofMillis(applicationProperties.daemonServerServletOutputStreamTimeoutMillis);
-        if (!isQuickshareRequest(request) && outputTimeout.isPositive()) {
+        if (shouldApplyOutputWatchdog(request) && outputTimeout.isPositive()) {
             response = new WatchdogResponseWrapper(response, outputTimeout);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private boolean isQuickshareRequest(HttpServletRequest request) {
+    private boolean shouldApplyOutputWatchdog(HttpServletRequest request) {
         String servletPath = request.getServletPath();
-        return StringUtils.hasText(servletPath)
-                && servletPath.startsWith(ServerQuickShareRestController.QUICKSHARE_ENDPOINT);
+
+        if (StringUtils.hasText(servletPath) && servletPath.startsWith(ServerQuickShareRestController.QUICKSHARE_ENDPOINT)) {
+            return false;
+        }
+
+        return true;
     }
 
     private static class WatchdogRequestWrapper extends HttpServletRequestWrapper {

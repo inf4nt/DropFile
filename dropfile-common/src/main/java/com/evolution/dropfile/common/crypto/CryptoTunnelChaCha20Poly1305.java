@@ -45,9 +45,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @Override
     public SecureEnvelope encrypt(byte[] data, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
-        if (nonce.length != NONCE_LENGTH) {
-            throw new IOException("Invalid nonce length " + nonce.length);
-        }
+        validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
@@ -59,6 +57,8 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @SneakyThrows
     @Override
     public byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key) {
+        validateNonce(nonce);
+
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
 
@@ -83,9 +83,7 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
     @Override
     public CipherOutputStream encryptWrapper(OutputStream outputStream, SecretKey key) {
         byte[] nonce = CommonUtils.nonce12();
-        if (nonce.length != NONCE_LENGTH) {
-            throw new IOException("Invalid nonce length " + nonce.length);
-        }
+        validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
@@ -107,9 +105,13 @@ public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
     private byte[] readNonce(InputStream inputStream) throws IOException {
         byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
-        if (nonce.length != NONCE_LENGTH) {
-            throw new IOException("Premature EOF: incomplete nonce in stream");
-        }
+        validateNonce(nonce);
         return nonce;
+    }
+
+    private void validateNonce(byte[] nonce) throws IOException {
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IOException("Invalid nonce length " + nonce.length);
+        }
     }
 }

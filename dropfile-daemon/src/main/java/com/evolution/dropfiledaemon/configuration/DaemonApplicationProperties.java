@@ -79,6 +79,12 @@ public class DaemonApplicationProperties {
 
     public final int daemonServerServletOutputStreamTimeoutMillis;
 
+    public final int daemonServerServletRateRequestHandshakeLimitMax;
+
+    public final int daemonServerServletRateRequestTunnelLimitMax;
+
+    public final int daemonServerServletRateRequestQuickshareLimitMax;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -110,7 +116,10 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.idle.rate-millis}") long daemonIdleRateMillis,
             @Value("${dropfile.daemon.server.servlet.input.stream.timeout-millis}") int daemonServerServletInputStreamTimeoutMillis,
             @Value("${dropfile.daemon.server.servlet.input.stream.limit.max}") int daemonServerServletInputStreamLimitMax,
-            @Value("${dropfile.daemon.server.servlet.output.stream.timeout-millis}") int daemonServerServletOutputStreamTimeoutMillis) {
+            @Value("${dropfile.daemon.server.servlet.output.stream.timeout-millis}") int daemonServerServletOutputStreamTimeoutMillis,
+            @Value("${dropfile.daemon.server.servlet.rate-request.handshake.limit.max}") int daemonServerServletRateRequestHandshakeLimitMax,
+            @Value("${dropfile.daemon.server.servlet.rate-request.tunnel.limit.max}") int daemonServerServletRateRequestTunnelLimitMax,
+            @Value("${dropfile.daemon.server.servlet.rate-request.quickshare.limit.max}") int daemonServerServletRateRequestQuickshareLimitMax) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -142,6 +151,9 @@ public class DaemonApplicationProperties {
         this.daemonServerServletInputStreamTimeoutMillis = daemonServerServletInputStreamTimeoutMillis;
         this.daemonServerServletInputStreamLimitMax = daemonServerServletInputStreamLimitMax;
         this.daemonServerServletOutputStreamTimeoutMillis = daemonServerServletOutputStreamTimeoutMillis;
+        this.daemonServerServletRateRequestHandshakeLimitMax = daemonServerServletRateRequestHandshakeLimitMax;
+        this.daemonServerServletRateRequestTunnelLimitMax = daemonServerServletRateRequestTunnelLimitMax;
+        this.daemonServerServletRateRequestQuickshareLimitMax = daemonServerServletRateRequestQuickshareLimitMax;
     }
 
     private int validateDaemonTunnelClientManifestChunkSize(int daemonTunnelClientManifestChunkSize) {
