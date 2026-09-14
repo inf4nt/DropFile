@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.handshake.store;
+package com.evolution.dropfiledaemon.handshake.store.api;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.With;

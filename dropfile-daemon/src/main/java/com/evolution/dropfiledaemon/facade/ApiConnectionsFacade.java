@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import jakarta.annotation.Nullable;

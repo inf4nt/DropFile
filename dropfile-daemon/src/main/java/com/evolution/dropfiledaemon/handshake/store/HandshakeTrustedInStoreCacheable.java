@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.framework.file.CacheableFileKeyValueStore;
 import com.evolution.dropfile.store.framework.file.FileOperations;
 import com.evolution.dropfile.store.framework.file.FileProvider;
 import com.evolution.dropfile.store.framework.file.SerdeOperations;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 
 public class HandshakeTrustedInStoreCacheable
         extends CacheableFileKeyValueStore<HandshakeTrustedInStore.TrustedIn>

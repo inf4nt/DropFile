@@ -21,8 +21,8 @@ import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfile.store.share.ShareFileStoreCacheable;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStoreCacheable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStoreCacheable;
 import com.fasterxml.jackson.databind.ObjectMapper;

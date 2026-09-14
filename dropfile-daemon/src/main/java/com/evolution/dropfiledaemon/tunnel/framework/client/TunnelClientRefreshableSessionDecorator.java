@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
-import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
