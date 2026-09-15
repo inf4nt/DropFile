@@ -25,7 +25,7 @@ public class StoresReadinessGuardAspect {
             BootstrapStoreInitializationProcedure.class
     );
 
-    private boolean ready;
+    private volatile boolean ready;
 
     @EventListener(DropFileDaemonBeforeApplicationReadyEvent.class)
     public void listener() {
