@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.io.InterruptibleOutputStream;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -50,6 +52,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
 
+    private final HandshakeSessionInStore handshakeSessionInStore;
+
     private final ReplyAttackGuard replyAttackGuard;
 
     private final ObjectMapper objectMapper;
@@ -67,7 +71,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
             validateSession(trustedInEntry);
 
-            SecretKey secretKey = getSecretKey(trustedInEntry.getValue());
+            SecretKey secretKey = getSecretKey(fingerprint, trustedInEntry.getValue());
 
             TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
             command = tunnelRequestPayload.command();
@@ -148,8 +152,12 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
     }
 
-    private SecretKey getSecretKey(HandshakeTrustedInStore.TrustedIn trustedIn) {
-        byte[] secret = trustedIn.session().sessionKey();
+    private SecretKey getSecretKey(String fingerprint, HandshakeTrustedInStore.TrustedIn trustedIn) {
+        byte[] secret = handshakeSessionInStore.get(fingerprint)
+                .map(it -> it.getValue())
+                .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
+                .map(it -> it.sessionKey())
+                .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
         return cryptoTunnel.secretKey(secret);
     }
 

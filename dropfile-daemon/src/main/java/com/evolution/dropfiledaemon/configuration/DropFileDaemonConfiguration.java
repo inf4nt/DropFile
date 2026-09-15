@@ -21,10 +21,14 @@ import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfile.store.share.ShareFileStoreCacheable;
-import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
-import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedInStoreCacheable;
 import com.evolution.dropfiledaemon.handshake.store.HandshakeTrustedOutStoreCacheable;
+import com.evolution.dropfiledaemon.handshake.store.RuntimeHandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.RuntimeHandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
@@ -214,6 +218,16 @@ public class DropFileDaemonConfiguration {
                 fileOperations,
                 serdeOperations
         );
+    }
+
+    @Bean
+    public HandshakeSessionOutStore handshakeSessionOutStore() {
+        return new RuntimeHandshakeSessionOutStore();
+    }
+
+    @Bean
+    public HandshakeSessionInStore handshakeSessionInStore() {
+        return new RuntimeHandshakeSessionInStore();
     }
 
     @Bean

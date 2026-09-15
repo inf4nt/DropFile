@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
+import com.evolution.dropfile.common.Attributes;
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfiledaemon.tunnel.command.ShareDownloadChunkStreamCommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.ShareLsCommandHandler;
@@ -47,9 +48,15 @@ public class TunnelClientGateway {
     }
 
     @SneakyThrows
-    public InputStream shareDownloadChunkStream(String fingerprint, String fileId, int size, long position) {
+    public InputStream shareDownloadChunkStream(String fingerprint,
+                                                String fileId,
+                                                int size,
+                                                long position,
+                                                Attributes attributes) {
         TunnelClient.Request tunnelRequest = TunnelClient.Request.builder(
-                        ShareDownloadChunkStreamCommandHandler.COMMAND_NAME, fingerprint
+                        ShareDownloadChunkStreamCommandHandler.COMMAND_NAME,
+                        fingerprint,
+                        attributes
                 )
                 .body(new ShareDownloadChunkStreamTunnelRequest(
                         fileId,

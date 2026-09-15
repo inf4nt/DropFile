@@ -5,32 +5,23 @@ import lombok.With;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
 
     @With
     record TrustedOut(URI addressURI,
                       HandshakeKeys handshake,
-                      SessionKeys session,
                       Instant sessionUpdatedByUser,
                       Instant sessionUpdatedBySystem,
                       Instant created,
-                      Instant updated) {
+                      Instant updated,
+                      UUID handshakeId) {
     }
 
     record HandshakeKeys(byte[] publicRSA,
                          byte[] privateRSA,
                          byte[] remoteRSA) {
-    }
-
-    record SessionKeys(byte[] publicDH,
-                       byte[] privateDH,
-                       byte[] remotePublicDH,
-                       byte[] sessionKey) {
     }
 
     default Map.Entry<String, TrustedOut> getRequiredLastUpdated() {

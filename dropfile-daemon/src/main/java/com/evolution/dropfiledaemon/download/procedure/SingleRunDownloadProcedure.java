@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.download.procedure;
 
+import com.evolution.dropfile.common.Attributes;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.io.ThroughputMeter;
@@ -182,13 +183,16 @@ public class SingleRunDownloadProcedure {
     }
 
     private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest) {
+        Attributes attributes = new Attributes();
+
         RetryExecutor
                 .call(() -> {
                     isInterrupted();
                     try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(),
                             request.fileId(),
                             chunkManifest.size(),
-                            chunkManifest.position())) {
+                            chunkManifest.position(),
+                            attributes)) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
                     return 1;

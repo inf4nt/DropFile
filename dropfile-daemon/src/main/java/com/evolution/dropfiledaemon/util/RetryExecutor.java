@@ -145,9 +145,9 @@ public class RetryExecutor<T> {
 
         private Predicate<RetryIfContainer<T>> retryIf = it -> it.result() == null || it.exception() != null;
 
-        private int attempts = 15;
+        private int attempts = 30;
 
-        private Duration delay = Duration.ofSeconds(5);
+        private Duration delay = Duration.ofSeconds(30);
 
         private Duration callTimeout;
 

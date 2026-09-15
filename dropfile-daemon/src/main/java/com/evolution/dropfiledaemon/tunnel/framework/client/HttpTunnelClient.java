@@ -7,6 +7,7 @@ import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerTunnelRestController;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
@@ -30,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -45,6 +47,8 @@ public class HttpTunnelClient implements TunnelClient {
     private final HttpClient httpClient;
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     private final TunnelTrafficMonitor tunnelTrafficMonitor;
 
@@ -70,9 +74,9 @@ public class HttpTunnelClient implements TunnelClient {
                 long timeout = httpRequest.timeout().map(Duration::toMillis).orElse(0L);
                 String message = "HTTP connect timed out during call %s %s timeout %s millis"
                         .formatted(httpRequest.method(), httpRequest.uri(), timeout);
-                throw new HttpConnectTimeoutException(message).initCause(e);
+                throw new HttpConnectTimeoutException(message);
             } catch (ConnectException e) {
-                throw new ConnectException("Target address is unreachable").initCause(e);
+                throw new ConnectException("Target address is unreachable");
             }
 
             if (httpResponse.statusCode() != 200) {
@@ -175,8 +179,12 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
-    private SecretKey getSecretKey(HandshakeTrustedOutStore.TrustedOut trustedOut) {
-        byte[] secret = trustedOut.session().sessionKey();
+    private SecretKey getSecretKey(String fingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
+        byte[] secret = handshakeSessionOutStore.get(fingerprint)
+                .map(it -> it.getValue())
+                .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
+                .map(it -> it.sessionKey())
+                .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
         return cryptoTunnel.secretKey(secret);
     }
 
@@ -197,7 +205,7 @@ public class HttpTunnelClient implements TunnelClient {
     private HttpTunnelRequestContext buildHttpTunnelRequestContext(Request request) {
         try {
             HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(request.getFingerprint());
-            SecretKey secretKey = getSecretKey(trustedOut);
+            SecretKey secretKey = getSecretKey(request.getFingerprint(), trustedOut);
 
             UUID requestId = UUID.randomUUID();
 

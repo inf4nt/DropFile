@@ -4,26 +4,21 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.With;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedInStore.TrustedIn> {
 
     @With
     record TrustedIn(HandshakeKeys handshake,
-                     SessionKeys session,
                      Instant created,
                      Instant sessionUpdated,
-                     Instant updated) {
+                     Instant updated,
+                     UUID handshakeId) {
 
     }
 
     record HandshakeKeys(byte[] publicRSA,
                          byte[] privateRSA,
                          byte[] remoteRSA) {
-    }
-
-    record SessionKeys(byte[] publicDH,
-                       byte[] privateDH,
-                       byte[] remotePublicDH,
-                       byte[] sessionKey) {
     }
 }

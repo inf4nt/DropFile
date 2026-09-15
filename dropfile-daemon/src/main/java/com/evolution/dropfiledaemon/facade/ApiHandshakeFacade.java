@@ -14,6 +14,7 @@ import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +45,8 @@ public class ApiHandshakeFacade {
     private final ObjectMapper objectMapper;
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
+
+    private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
@@ -118,7 +121,7 @@ public class ApiHandshakeFacade {
                 CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
         );
         if (!handshakeRequestId.equals(responsePayload.requestId())) {
-            throw new SecurityException("Handshake response requestId mismatch! Expected %s, got %s"
+            throw new SecurityException("Handshake response handshakeId mismatch! Expected %s, got %s"
                     .formatted(handshakeRequestId, responsePayload.requestId()));
         }
 
@@ -129,30 +132,27 @@ public class ApiHandshakeFacade {
 
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
-
             Instant now = Instant.now();
-            handshakeTrustedOutStore
-                    .save(
-                            remoteFingerprint,
-                            new HandshakeTrustedOutStore.TrustedOut(
-                                    addressURI,
-                                    new HandshakeTrustedOutStore.HandshakeKeys(
-                                            rsaKeyPair.getPublic().getEncoded(),
-                                            rsaKeyPair.getPrivate().getEncoded(),
-                                            responsePayload.publicKeyRSA()
-                                    ),
-                                    new HandshakeTrustedOutStore.SessionKeys(
-                                            dhKeyPair.getPublic().getEncoded(),
-                                            dhKeyPair.getPrivate().getEncoded(),
-                                            responsePayload.publicKeyDH(),
-                                            sessionKey
-                                    ),
-                                    now,
-                                    now,
-                                    now,
-                                    now
-                            )
-                    );
+            handshakeTrustedOutStore.save(remoteFingerprint, () -> new HandshakeTrustedOutStore.TrustedOut(
+                    addressURI,
+                    new HandshakeTrustedOutStore.HandshakeKeys(
+                            rsaKeyPair.getPublic().getEncoded(),
+                            rsaKeyPair.getPrivate().getEncoded(),
+                            responsePayload.publicKeyRSA()
+                    ),
+                    now,
+                    now,
+                    now,
+                    now,
+                    handshakeRequestId
+            ));
+            handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
+                    dhKeyPair.getPublic().getEncoded(),
+                    dhKeyPair.getPrivate().getEncoded(),
+                    responsePayload.publicKeyDH(),
+                    sessionKey,
+                    handshakeRequestId
+            ));
         });
     }
 
@@ -182,7 +182,7 @@ public class ApiHandshakeFacade {
 
             KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
-            String sessionRequestId = UUID.randomUUID().toString();
+            UUID sessionRequestId = UUID.randomUUID();
             HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
                     sessionRequestId,
                     keyPairDH.getPublic().getEncoded(),
@@ -207,7 +207,7 @@ public class ApiHandshakeFacade {
                     CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
             );
             if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
-                throw new SecurityException("Session response requestId mismatch! Expected %s, got %s"
+                throw new SecurityException("Session response handshakeId mismatch! Expected %s, got %s"
                         .formatted(sessionRequestId, sessionResponsePayload.requestId()));
             }
 
@@ -219,16 +219,18 @@ public class ApiHandshakeFacade {
             handshakeTrustedOutStore.update(remoteFingerprint, value -> {
                 Instant now = Instant.now();
                 HandshakeTrustedOutStore.TrustedOut next = value
-                        .withSession(new HandshakeTrustedOutStore.SessionKeys(
-                                keyPairDH.getPublic().getEncoded(),
-                                keyPairDH.getPrivate().getEncoded(),
-                                sessionResponsePayload.publicKeyDH(),
-                                sessionKey
-                        ))
+                        .withHandshakeId(sessionRequestId)
                         .withUpdated(now);
                 next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
                 return next;
             });
+            handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
+                    keyPairDH.getPublic().getEncoded(),
+                    keyPairDH.getPrivate().getEncoded(),
+                    sessionResponsePayload.publicKeyDH(),
+                    sessionKey,
+                    sessionRequestId
+            ));
         });
     }
 
@@ -274,13 +276,20 @@ public class ApiHandshakeFacade {
                 .toList();
     }
 
-    private HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String remoteFingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
+    private HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String remoteFingerprint,
+                                                                                 HandshakeTrustedOutStore.TrustedOut trustedOut) {
+        HandshakeSessionOutStore.SessionOut sessionOut = handshakeSessionOutStore
+                .get(remoteFingerprint)
+                .map(it -> it.getValue())
+                .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
+                .orElse(null);
+
         return new HandshakeApiTrustOutResponseDTO(
                 remoteFingerprint,
                 CommonUtils.encodeBase64(trustedOut.handshake().publicRSA()),
                 CommonUtils.encodeBase64(trustedOut.handshake().remoteRSA()),
-                CommonUtils.encodeBase64(trustedOut.session().publicDH()),
-                CommonUtils.encodeBase64(trustedOut.session().remotePublicDH()),
+                sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.publicDH()),
+                sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.remotePublicDH()),
                 trustedOut.addressURI().toString(),
                 trustedOut.created(),
                 trustedOut.updated()

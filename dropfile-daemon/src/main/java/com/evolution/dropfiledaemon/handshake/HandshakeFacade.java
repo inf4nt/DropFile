@@ -13,6 +13,7 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,7 @@ import java.security.KeyPair;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -42,6 +44,8 @@ public class HandshakeFacade {
     private final LockableOperation lockableOperationHandshakeTrustedInStore;
 
     private final HandshakeTrustedInStore handshakeTrustedInStore;
+
+    private final HandshakeSessionInStore handshakeSessionInStore;
 
     private final ReplyAttackGuard replyAttackGuard;
 
@@ -76,8 +80,9 @@ public class HandshakeFacade {
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
+        UUID requestId = requestPayload.requestId();
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                requestPayload.requestId(),
+                requestId,
                 rsaKeyPair.getPublic().getEncoded(),
                 dhKeyPair.getPublic().getEncoded()
         );
@@ -118,18 +123,22 @@ public class HandshakeFacade {
                                         rsaKeyPair.getPrivate().getEncoded(),
                                         publicKeyRSA
                                 ),
-                                new HandshakeTrustedInStore.SessionKeys(
-                                        dhKeyPair.getPublic().getEncoded(),
-                                        dhKeyPair.getPrivate().getEncoded(),
-                                        publicKeyDH,
-                                        sessionKey
-                                ),
                                 now,
                                 now,
-                                now
+                                now,
+                                requestId
                         );
                     }
             );
+
+            handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
+                    dhKeyPair.getPublic().getEncoded(),
+                    dhKeyPair.getPrivate().getEncoded(),
+                    publicKeyDH,
+                    sessionKey,
+                    requestId
+            ));
+
             return handshakeResponseDTO;
         });
     }
@@ -176,20 +185,22 @@ public class HandshakeFacade {
                     signature
             );
 
+            UUID requestId = sessionPayloadRequest.requestId();
+
             handshakeTrustedInStore.update(fingerprint, value -> {
                 Instant now = Instant.now();
                 return value
-                        .withSession(
-                                new HandshakeTrustedInStore.SessionKeys(
-                                        keyPairDH.getPublic().getEncoded(),
-                                        keyPairDH.getPrivate().getEncoded(),
-                                        sessionPayloadRequest.publicKeyDH(),
-                                        sessionKey
-                                )
-                        )
                         .withSessionUpdated(now)
-                        .withUpdated(now);
+                        .withUpdated(now)
+                        .withHandshakeId(requestId);
             });
+            handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
+                    keyPairDH.getPublic().getEncoded(),
+                    keyPairDH.getPrivate().getEncoded(),
+                    sessionPayloadRequest.publicKeyDH(),
+                    sessionKey,
+                    requestId
+            ));
 
             return sessionResponse;
         });
@@ -218,14 +229,18 @@ public class HandshakeFacade {
         return trusts.entrySet().stream().map(entry -> {
             String remoteFingerprint = entry.getKey();
             HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
+            HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(remoteFingerprint)
+                    .map(it -> it.getValue())
+                    .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
+                    .orElse(null);
 
             // TODO add updated by user/system
             return new HandshakeApiTrustInResponseDTO(
                     remoteFingerprint,
                     CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
                     CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
-                    CommonUtils.encodeBase64(trustedIn.session().publicDH()),
-                    CommonUtils.encodeBase64(trustedIn.session().remotePublicDH()),
+                    sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.publicDH()),
+                    sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.remotePublicDH()),
                     trustedIn.created(),
                     trustedIn.updated()
             );
