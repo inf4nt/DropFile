@@ -38,7 +38,6 @@ import java.util.UUID;
 @Component
 public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
-    // TODO create an env var
     // 1 hour + 15 min grace period
     private static final Duration SESSION_TTL = Duration.ofHours(1).plusMinutes(15);
 
@@ -72,10 +71,9 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             validateSession(trustedInEntry);
 
             TunnelSessionKeys sessionKeys = getSessionKeys(fingerprint, trustedInEntry.getValue());
-            byte[] aadCurrentFingerprint = CommonUtils.getFingerprint(trustedInEntry.getValue().handshake().publicRSA())
-                    .getBytes(StandardCharsets.UTF_8);
+            byte[] aad = fingerprint.getBytes(StandardCharsets.UTF_8);
 
-            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, aadCurrentFingerprint, sessionKeys.clientKey());
+            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, aad, sessionKeys.clientKey());
 
             command = tunnelRequestPayload.command();
             replyAttackGuard.tunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
@@ -96,7 +94,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                     inputStream.close();
                 } catch (Throwable closeThrowable) {
                     log.error("Failed to close inputstream body during failure cleanup. Fingerprint {} command {}",
-                            Objects.requireNonNullElse(fingerprint, "None"),
+                            fingerprint,
                             Objects.requireNonNullElse(command, "None"),
                             closeThrowable
                     );
@@ -113,38 +111,33 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     @Override
     public void transfer(TunnelDispatcherContext context, OutputStream outputStreamArgument) throws IOException {
-        try {
-            InterruptibleOutputStream outputStream = InterruptibleOutputStream.stream(
+        String fingerprint = context.getFingerprint();
+        SecretKey serverSecretKey = context.getSecretKey();
+        TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
+
+        byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
+
+        try (InputStream inputStream = context.getInputStream()) {
+            InterruptibleOutputStream interruptibleOutputStream = InterruptibleOutputStream.stream(
                     CloseShieldOutputStream.stream(outputStreamArgument)
             );
 
-            String fingerprint = context.getFingerprint();
-            SecretKey serverSecretKey = context.getSecretKey();
-            TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
+            try (OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, interruptibleOutputStream);
+                 OutputStream encryptStream = cryptoTunnel.encryptWrapper(
+                         CloseShieldOutputStream.stream(monitorStream),
+                         aadRemoteFingerprint,
+                         serverSecretKey
+                 );
+                 OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream))) {
 
-            InputStream inputStream = context.getInputStream();
-            byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
-
-            OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
-            OutputStream encryptStream = cryptoTunnel.encryptWrapper(
-                    CloseShieldOutputStream.stream(monitorStream),
-                    aadRemoteFingerprint,
-                    serverSecretKey
-            );
-            OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream));
-
-            writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
-
-            inputStream.transferTo(compressOutputStream);
-
-            compressOutputStream.flush();
-            compressOutputStream.close();
-            encryptStream.close();
-            monitorStream.close();
+                writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
+                inputStream.transferTo(compressOutputStream);
+                compressOutputStream.flush();
+            }
         } catch (Throwable throwable) {
-            String message = "Failed to transfer data to tunnel outpustream. Fingerprint %s command %s".formatted(
-                    Objects.requireNonNullElse(context.getFingerprint(), "None"),
-                    Objects.requireNonNullElse(context.getRequestPayload().command(), "None")
+            String message = "Failed to transfer data to tunnel outputstream. Fingerprint %s command %s".formatted(
+                    Objects.requireNonNullElse(fingerprint, "None"),
+                    tunnelRequestPayload != null ? Objects.requireNonNullElse(tunnelRequestPayload.command(), "None") : "None"
             );
             if (throwable instanceof IOException ioException) {
                 throw new IOException(message, ioException);
