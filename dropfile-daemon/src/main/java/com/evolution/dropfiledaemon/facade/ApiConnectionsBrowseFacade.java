@@ -12,7 +12,6 @@ import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareLsTunnelResponse;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -37,7 +36,6 @@ public class ApiConnectionsBrowseFacade {
         return ls(fingerprintConnection, requestDTO);
     }
 
-    @SneakyThrows
     private List<ApiConnectionsBrowseLsResponseDTO> ls(String fingerprint,
                                                        ApiConnectionsBrowseLsRequestDTO requestDTO) {
         List<ShareLsTunnelResponse> files = tunnelClientGateway.shareLs(fingerprint, requestDTO.criteriaEnvelopes());

@@ -69,20 +69,20 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
 
             int failuresCount = failuresCounter.incrementAndGet();
 
-            if (failuresCount % 2 == 0) {
-                lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                    if (isSessionExpired(fingerprint, firstFailureTime)) {
-                        log.info("Force session refreshing for fingerprint {} after {} failed tunnel attempts",
-                                fingerprint, failuresCount);
-                        apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
-                    } else {
-                        log.info("Session for fingerprint {} was already updated after first failure time ({})",
-                                fingerprint, firstFailureTime);
-                    }
-                });
-            } else {
+            if (failuresCount % 2 != 0) {
                 throw e;
             }
+
+            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
+                if (isSessionExpired(fingerprint, firstFailureTime)) {
+                    log.info("Force session refreshing for fingerprint {} after {} failed tunnel attempts",
+                            fingerprint, failuresCount);
+                    apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
+                } else {
+                    log.info("Session for fingerprint {} was already updated after first failure time ({})",
+                            fingerprint, firstFailureTime);
+                }
+            });
         }
 
         return tunnelClient.stream(request);
