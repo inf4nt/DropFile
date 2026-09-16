@@ -1,0 +1,101 @@
+package com.evolution.dropfile.common.crypto;
+
+import com.evolution.dropfile.common.CommonUtils;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.Objects;
+
+public class CryptoTunnelV2Impl implements CryptoTunnelV2 {
+
+    private static final String CIPHER_ALGORITHM = "ChaCha20-Poly1305";
+
+    private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
+
+    private static final int NONCE_LENGTH = 12;
+
+    private static final int SECRET_KEY_LENGTH = 32;
+
+    @Override
+    public String getAlgorithm() {
+        return CIPHER_ALGORITHM;
+    }
+
+    @Override
+    public SecretKey secretKey(byte[] rawSecret,
+                               String info,
+                               byte[] salt) throws GeneralSecurityException {
+        Objects.requireNonNull(info, "Info label must not be null");
+
+        byte[] prk = Hkdf.extract(salt, rawSecret);
+        byte[] derivedKey = Hkdf.expand(prk, info.getBytes(StandardCharsets.UTF_8), SECRET_KEY_LENGTH);
+
+        return new SecretKeySpec(derivedKey, SECRET_KEY_ALGORITHM);
+    }
+
+    @Override
+    public SecureEnvelope encrypt(byte[] payload, byte[] aad, SecretKey secretKey) throws GeneralSecurityException {
+        Objects.requireNonNull(payload, "Payload must not be null");
+        Objects.requireNonNull(aad, "AAD must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+
+        validateAad(aad);
+
+        byte[] nonce = CommonUtils.nonce12();
+        validateNonce(nonce);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+
+        cipher.updateAAD(aad);
+
+        byte[] encrypted = cipher.doFinal(payload);
+        return new SecureEnvelope(encrypted, nonce);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] payload, byte[] nonce, byte[] aad, SecretKey secretKey) throws GeneralSecurityException {
+        Objects.requireNonNull(payload, "Payload must not be null");
+        Objects.requireNonNull(aad, "AAD must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+
+        validateAad(aad);
+
+        validateNonce(nonce);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+
+        cipher.updateAAD(aad);
+
+        return cipher.doFinal(payload);
+    }
+
+    @Override
+    public byte[] decrypt(InputStream inputStream,
+                          byte[] aad,
+                          SecretKey secretKey) throws GeneralSecurityException, IOException {
+        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+        byte[] payload = inputStream.readAllBytes();
+        return decrypt(payload, nonce, aad, secretKey);
+    }
+
+    private void validateNonce(byte[] nonce) {
+        Objects.requireNonNull(nonce, "Nonce must not be null");
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IllegalArgumentException("Invalid nonce length: " + nonce.length + " (expected " + NONCE_LENGTH + ")");
+        }
+    }
+
+    private void validateAad(byte[] aad) {
+        if (aad.length == 0) {
+            throw new IllegalArgumentException("AAD must not be empty");
+        }
+    }
+}

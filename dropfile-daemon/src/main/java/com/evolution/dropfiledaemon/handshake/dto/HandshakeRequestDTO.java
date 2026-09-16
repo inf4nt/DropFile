@@ -7,6 +7,7 @@ public record HandshakeRequestDTO(String accessKeyId,
                                   byte[] nonce,
                                   byte[] signature) {
 
+    // TODO byte[] clientNonce
     public record Payload(UUID requestId,
                           byte[] publicKeyRSA,
                           byte[] publicKeyDH,
