@@ -88,17 +88,17 @@ public class DropFileCliConfiguration {
     }
 
     @Bean
-    public FileProvider daemonSecretsFileProvider(CliApplicationProperties cliApplicationProperties) {
+    public FileProvider daemonSecretsFileProvider(CliApplicationProperties applicationProperties) {
         return new FileProviderImpl(
-                new DirectoryProviderImpl(cliApplicationProperties.daemonSecretsDirectory),
+                new DirectoryProviderImpl(applicationProperties.daemonSecretsDirectory),
                 Paths.get(".daemon.bin")
         );
     }
 
     @Bean
-    public FileProvider installationSeedFileProvider(CliApplicationProperties cliApplicationProperties) {
+    public FileProvider installationSeedFileProvider(CliApplicationProperties applicationProperties) {
         return new FileProviderImpl(
-                new DirectoryProviderImpl(cliApplicationProperties.daemonInstallationSeedDirectory),
+                new DirectoryProviderImpl(applicationProperties.daemonInstallationSeedDirectory),
                 Paths.get(".installation.json")
         );
     }

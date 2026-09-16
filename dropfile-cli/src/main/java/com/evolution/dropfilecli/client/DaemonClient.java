@@ -30,7 +30,7 @@ public class DaemonClient {
 
     private final HttpClient httpClient;
 
-    private final CliApplicationProperties cliApplicationProperties;
+    private final CliApplicationProperties applicationProperties;
 
     private final DaemonSecretStore daemonSecretStore;
 
@@ -260,9 +260,9 @@ public class DaemonClient {
     private HttpRequest.Builder HttpRequestBuilder(String method,
                                                    String path,
                                                    HttpRequest.BodyPublisher bodyPublisher) {
-        URI uri = CommonUtils.toURI(cliApplicationProperties.daemonHost, cliApplicationProperties.daemonPort)
+        URI uri = CommonUtils.toURI(applicationProperties.daemonHost, applicationProperties.daemonPort)
                 .resolve(path);
-        Duration timeoutDuration = Duration.ofMillis(cliApplicationProperties.daemonClientHttpRequestTimeoutMillis);
+        Duration timeoutDuration = Duration.ofMillis(applicationProperties.daemonClientHttpRequestTimeoutMillis);
         if (timeoutDuration.isZero() || timeoutDuration.isNegative()) {
             throw new IllegalArgumentException("Invalid timeout %s. Timeout must be greater than zero".formatted(
                     timeoutDuration.toMillis()

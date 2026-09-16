@@ -28,7 +28,7 @@ public class RootCommand implements Runnable {
     @CommandLine.Spec
     private CommandLine.Model.CommandSpec spec;
 
-    private final CliApplicationProperties cliApplicationProperties;
+    private final CliApplicationProperties applicationProperties;
 
     private final SystemInfoProvider systemInfoProvider;
 
@@ -59,7 +59,7 @@ public class RootCommand implements Runnable {
                 ░██        ░██░██  ░███████              \s
                 """);
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(systemInfoProvider.getSystemInfo()));
-        System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(cliApplicationProperties));
+        System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(applicationProperties));
         spec.commandLine().usage(System.out);
     }
 }
