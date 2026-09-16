@@ -137,7 +137,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             }
         } catch (Throwable throwable) {
             String message = "Failed to transfer data to tunnel outputstream. Fingerprint %s command %s".formatted(
-                    Objects.requireNonNullElse(fingerprint, "None"),
+                    fingerprint,
                     tunnelRequestPayload != null ? Objects.requireNonNullElse(tunnelRequestPayload.command(), "None") : "None"
             );
             if (throwable instanceof IOException ioException) {
