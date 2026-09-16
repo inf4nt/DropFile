@@ -112,13 +112,13 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     @Override
     public void transfer(TunnelDispatcherContext context, OutputStream outputStreamArgument) throws IOException {
-        String fingerprint = context.getFingerprint();
-        SecretKey serverSecretKey = context.getSecretKey();
-        TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
+        String fingerprint = context.fingerprint();
+        SecretKey serverSecretKey = context.secretKey();
+        TunnelRequestDTO.Payload tunnelRequestPayload = context.requestPayload();
 
         byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
 
-        try (InputStream inputStream = context.getInputStream()) {
+        try (InputStream inputStream = context.inputStream()) {
             InterruptibleOutputStream interruptibleOutputStream = InterruptibleOutputStream.stream(
                     CloseShieldOutputStream.stream(outputStreamArgument)
             );

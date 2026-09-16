@@ -89,9 +89,9 @@ public class ServerTunnelRestController {
         if (context == null) {
             return "";
         }
-        String command = context.getRequestPayload().command();
-        UUID requestId = context.getRequestPayload().requestId();
-        long timestamp = context.getRequestPayload().timestamp();
+        String command = context.requestPayload().command();
+        UUID requestId = context.requestPayload().requestId();
+        long timestamp = context.requestPayload().timestamp();
         return "command '%s' handshakeId '%s' timestamp '%s' instant '%s'".formatted(
                 command,
                 requestId,
