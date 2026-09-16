@@ -71,9 +71,10 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             validateSession(trustedInEntry);
 
             TunnelSessionKeys sessionKeys = getSessionKeys(fingerprint, trustedInEntry.getValue());
-            byte[] aad = fingerprint.getBytes(StandardCharsets.UTF_8);
+            byte[] aadCurrentFingerprint = CommonUtils.getFingerprint(trustedInEntry.getValue().handshake().publicRSA())
+                    .getBytes(StandardCharsets.UTF_8);
 
-            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, aad, sessionKeys.clientKey());
+            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, aadCurrentFingerprint, sessionKeys.clientKey());
 
             command = tunnelRequestPayload.command();
             replyAttackGuard.tunnelDispatcherRequest(fingerprint, tunnelRequestPayload);

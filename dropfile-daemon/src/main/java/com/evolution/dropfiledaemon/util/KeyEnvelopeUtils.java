@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import java.nio.charset.StandardCharsets;
 
 public class KeyEnvelopeUtils {
-    
+
     public static KeyEnvelope generate() {
         String key = CommonUtils.generateRawSecretNonce12();
         String id = getId(key);
@@ -13,8 +13,7 @@ public class KeyEnvelopeUtils {
     }
 
     public static String getId(String key) {
-        // TODO substring(0, 12)
-        return CommonUtils.getFingerprint(key.getBytes(StandardCharsets.UTF_8)).substring(0, 10);
+        return CommonUtils.getFingerprint(key.getBytes(StandardCharsets.UTF_8)).substring(0, 15);
     }
 
     public record KeyEnvelope(String id, String key) {

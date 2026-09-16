@@ -63,7 +63,7 @@ public class CommonUtils {
 
     public static String random() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        return uuid.substring(0, 12);
+        return uuid.substring(0, 15);
     }
 
     public static String generateRawSecretNonce12() {
