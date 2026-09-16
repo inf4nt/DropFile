@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
@@ -10,9 +10,9 @@ import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
+import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandlerExecutor;
-import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final CommandHandlerExecutor commandHandlerExecutor;
 
-    private final CryptoTunnel cryptoTunnel;
+    private final CryptoTunnelV2 cryptoTunnel;
 
     private final CompressTunnelService compressTunnelService;
 
@@ -71,18 +71,22 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
             validateSession(trustedInEntry);
 
-            SecretKey secretKey = getSecretKey(fingerprint, trustedInEntry.getValue());
+            TunnelSessionKeys sessionKeys = getSessionKeys(fingerprint, trustedInEntry.getValue());
+            byte[] aadCurrentFingerprint = CommonUtils.getFingerprint(trustedInEntry.getValue().handshake().publicRSA())
+                    .getBytes(StandardCharsets.UTF_8);
 
-            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, secretKey);
+            TunnelRequestDTO.Payload tunnelRequestPayload = decrypt(requestDTO, aadCurrentFingerprint, sessionKeys.clientKey());
+
             command = tunnelRequestPayload.command();
             replyAttackGuard.tunnelDispatcherRequest(fingerprint, tunnelRequestPayload);
 
             Object handlerResult = commandHandlerExecutor.handle(tunnelRequestPayload);
 
             inputStream = handlerResultToInputStream(handlerResult);
+
             return new TunnelDispatcherContext(
                     fingerprint,
-                    secretKey,
+                    sessionKeys.serverKey(),
                     tunnelRequestPayload,
                     inputStream
             );
@@ -115,13 +119,18 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
             );
 
             String fingerprint = context.getFingerprint();
-            SecretKey secretKey = context.getSecretKey();
+            SecretKey serverSecretKey = context.getSecretKey();
             TunnelRequestDTO.Payload tunnelRequestPayload = context.getRequestPayload();
 
             InputStream inputStream = context.getInputStream();
+            byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
 
             OutputStream monitorStream = tunnelTrafficMonitor.outputStreamWrapper(fingerprint, outputStream);
-            OutputStream encryptStream = cryptoTunnel.encryptWrapper(CloseShieldOutputStream.stream(monitorStream), secretKey);
+            OutputStream encryptStream = cryptoTunnel.encryptWrapper(
+                    CloseShieldOutputStream.stream(monitorStream),
+                    aadRemoteFingerprint,
+                    serverSecretKey
+            );
             OutputStream compressOutputStream = compress(tunnelRequestPayload.configuration(), CloseShieldOutputStream.stream(encryptStream));
 
             writeMarkersToOutputStream(tunnelRequestPayload.requestId(), compressOutputStream);
@@ -152,21 +161,25 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         }
     }
 
-    private SecretKey getSecretKey(String fingerprint, HandshakeTrustedInStore.TrustedIn trustedIn) {
-        byte[] secret = handshakeSessionInStore.get(fingerprint)
-                .map(it -> it.getValue())
+    private TunnelSessionKeys getSessionKeys(String fingerprint, HandshakeTrustedInStore.TrustedIn trustedIn) {
+        HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(fingerprint)
+                .map(Map.Entry::getValue)
                 .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
-                .map(it -> it.sessionKey())
                 .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
-        return cryptoTunnel.secretKey(secret);
+
+        SecretKey clientKey = cryptoTunnel.secretKey(sessionIn.clientKey());
+        SecretKey serverKey = cryptoTunnel.secretKey(sessionIn.serverKey());
+
+        return new TunnelSessionKeys(clientKey, serverKey);
     }
 
     @SneakyThrows
-    private TunnelRequestDTO.Payload decrypt(TunnelRequestDTO requestDTO, SecretKey secretKey) {
+    private TunnelRequestDTO.Payload decrypt(TunnelRequestDTO requestDTO, byte[] aad, SecretKey clientSecretKey) {
         byte[] decrypt = cryptoTunnel.decrypt(
                 requestDTO.payload(),
                 requestDTO.nonce(),
-                secretKey
+                aad,
+                clientSecretKey
         );
         return objectMapper.readValue(decrypt, TunnelRequestDTO.Payload.class);
     }
@@ -203,5 +216,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private void writeMarkersToOutputStream(UUID requestId, OutputStream outputStream) throws IOException {
         outputStream.write(requestId.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private record TunnelSessionKeys(SecretKey clientKey, SecretKey serverKey) {
     }
 }

@@ -3,10 +3,7 @@ package com.evolution.dropfiledaemon.handshake;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
-import com.evolution.dropfile.common.crypto.CryptoECDH;
-import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.SecureEnvelope;
+import com.evolution.dropfile.common.crypto.*;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
@@ -35,7 +32,15 @@ import java.util.UUID;
 @Component
 public class HandshakeFacade {
 
-    private final CryptoTunnel cryptoTunnel;
+    private static final String HANDSHAKE_SECRET_CLIENT_INFO = "dropfile-handshake-client-v1";
+
+    private static final String HANDSHAKE_SECRET_SERVER_INFO = "dropfile-handshake-server-v1";
+
+    private static final String TUNNEL_SECRET_CLIENT_INFO = "dropfile-tunnel-client-v1";
+
+    private static final String TUNNEL_SECRET_SERVER_INFO = "dropfile-tunnel-server-v1";
+
+    private final CryptoTunnelV2 cryptoTunnel;
 
     private final ObjectMapper objectMapper;
 
@@ -53,20 +58,25 @@ public class HandshakeFacade {
     public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
         String accessKeyId = requestDTO.accessKeyId();
 
-        AccessKey accessKey = accessKeyStore
-                .remove(accessKeyId);
+        AccessKey accessKey = accessKeyStore.remove(accessKeyId);
         if (accessKey == null) {
             throw new SecurityException("Access key %s not found or already consumed".formatted(accessKeyId));
         }
 
         String rawSecret = accessKey.key();
-        SecretKey secretKey = cryptoTunnel.secretKey(rawSecret.getBytes(StandardCharsets.UTF_8));
+        byte[] rawSecretBytes = rawSecret.getBytes(StandardCharsets.UTF_8);
+        byte[] aad = accessKeyId.getBytes(StandardCharsets.UTF_8);
+
+        SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(rawSecretBytes, HANDSHAKE_SECRET_CLIENT_INFO);
+        SecretKey secretHandshakeServerKey = cryptoTunnel.deriveSecretKey(rawSecretBytes, HANDSHAKE_SECRET_SERVER_INFO);
 
         byte[] decryptMessage = cryptoTunnel.decrypt(
                 requestDTO.payload(),
                 requestDTO.nonce(),
-                secretKey
+                aad,
+                secretHandshakeClientKey
         );
+
         HandshakeRequestDTO.Payload requestPayload = objectMapper
                 .readValue(decryptMessage, HandshakeRequestDTO.Payload.class);
 
@@ -80,9 +90,12 @@ public class HandshakeFacade {
         KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
+        byte[] serverSalt = CommonUtils.nonce16();
         UUID requestId = requestPayload.requestId();
+
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
                 requestId,
+                serverSalt,
                 rsaKeyPair.getPublic().getEncoded(),
                 dhKeyPair.getPublic().getEncoded()
         );
@@ -92,10 +105,13 @@ public class HandshakeFacade {
                 responsePayloadByteArray,
                 CryptoRSA.getPrivateKey(rsaKeyPair.getPrivate().getEncoded())
         );
+
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 responsePayloadByteArray,
-                secretKey
+                aad,
+                secretHandshakeServerKey
         );
+
         HandshakeResponseDTO handshakeResponseDTO = new HandshakeResponseDTO(
                 secureEnvelope.payload(),
                 secureEnvelope.nonce(),
@@ -104,14 +120,18 @@ public class HandshakeFacade {
 
         byte[] publicKeyRSA = requestPayload.publicKeyRSA();
         String remoteFingerprint = CommonUtils.getFingerprint(publicKeyRSA);
-        return lockableOperationHandshakeTrustedInStore.executeWithKeyLock(remoteFingerprint, () -> {
 
+        return lockableOperationHandshakeTrustedInStore.executeWithKeyLock(remoteFingerprint, () -> {
             byte[] publicKeyDH = requestPayload.publicKeyDH();
 
-            byte[] sessionKey = CryptoECDH.getSecretKey(
+            byte[] sessionRawKey = CryptoECDH.getSecretKey(
                     CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
                     CryptoECDH.getPublicKey(publicKeyDH)
             );
+
+            byte[] salt = CommonUtils.salt(requestPayload.clientSalt(), serverSalt);
+            SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_CLIENT_INFO, salt);
+            SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_SERVER_INFO, salt);
 
             handshakeTrustedInStore.save(
                     remoteFingerprint,
@@ -135,7 +155,8 @@ public class HandshakeFacade {
                     dhKeyPair.getPublic().getEncoded(),
                     dhKeyPair.getPrivate().getEncoded(),
                     publicKeyDH,
-                    sessionKey,
+                    secretTunnelClientKey.getEncoded(),
+                    secretTunnelServerKey.getEncoded(),
                     requestId
             ));
 
@@ -164,8 +185,11 @@ public class HandshakeFacade {
 
             KeyPair keyPairDH = CryptoECDH.generateKeyPair();
 
+            byte[] serverSalt = CommonUtils.nonce16();
+
             HandshakeSessionDTO.SessionResponsePayload sessionPayloadResponse = new HandshakeSessionDTO.SessionResponsePayload(
                     sessionPayloadRequest.requestId(),
+                    serverSalt,
                     keyPairDH.getPublic().getEncoded()
             );
             byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
@@ -174,10 +198,14 @@ public class HandshakeFacade {
                     CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA())
             );
 
-            byte[] sessionKey = CryptoECDH.getSecretKey(
+            byte[] sessionRawKey = CryptoECDH.getSecretKey(
                     CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
                     CryptoECDH.getPublicKey(sessionPayloadRequest.publicKeyDH())
             );
+
+            byte[] salt = CommonUtils.salt(sessionPayloadRequest.clientSalt(), serverSalt);
+            SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_CLIENT_INFO, salt);
+            SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_SERVER_INFO, salt);
 
             HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
                     CommonUtils.getFingerprint(trustedIn.handshake().publicRSA()),
@@ -194,18 +222,19 @@ public class HandshakeFacade {
                         .withUpdated(now)
                         .withHandshakeId(requestId);
             });
+
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     keyPairDH.getPublic().getEncoded(),
                     keyPairDH.getPrivate().getEncoded(),
                     sessionPayloadRequest.publicKeyDH(),
-                    sessionKey,
+                    secretTunnelClientKey.getEncoded(),
+                    secretTunnelServerKey.getEncoded(),
                     requestId
             ));
 
             return sessionResponse;
         });
     }
-
     public void revoke(CriteriaEnvelope fingerprintCriteria) {
         String fingerprint = handshakeTrustedInStore.getRequiredByCriteria(fingerprintCriteria)
                 .getKey();

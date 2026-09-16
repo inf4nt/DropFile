@@ -13,6 +13,7 @@ public class KeyEnvelopeUtils {
     }
 
     public static String getId(String key) {
+        // TODO substring(0, 12)
         return CommonUtils.getFingerprint(key.getBytes(StandardCharsets.UTF_8)).substring(0, 10);
     }
 

@@ -10,11 +10,13 @@ public class HandshakeSessionDTO {
     }
 
     public record SessionRequestPayload(UUID requestId,
+                                        byte[] clientSalt,
                                         byte[] publicKeyDH,
                                         long timestamp) {
     }
 
     public record SessionResponsePayload(UUID requestId,
+                                         byte[] serverSalt,
                                          byte[] publicKeyDH) {
     }
 }

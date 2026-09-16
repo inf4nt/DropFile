@@ -1,8 +1,8 @@
 package com.evolution.dropfilecli.config;
 
 import com.evolution.dropfile.common.SystemInfoProvider;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2Impl;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.*;
@@ -61,8 +61,8 @@ public class DropFileCliConfiguration {
     }
 
     @Bean
-    public CryptoTunnel cryptoTunnel() {
-        return new CryptoTunnelChaCha20Poly1305();
+    public CryptoTunnelV2 cryptoTunnel() {
+        return new CryptoTunnelV2Impl();
     }
 
     @Bean
@@ -78,7 +78,7 @@ public class DropFileCliConfiguration {
 
     @Bean
     public CryptoFileOperations cryptoFileOperations(FileOperations fileOperations,
-                                                     CryptoTunnel cryptoTunnel,
+                                                     CryptoTunnelV2 cryptoTunnel,
                                                      InstallationSeedBootstrapStore installationSeedBootstrapStore) {
         return new CryptoFileOperations(
                 fileOperations,

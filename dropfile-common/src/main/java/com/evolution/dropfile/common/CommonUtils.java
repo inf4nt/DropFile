@@ -36,6 +36,31 @@ public class CommonUtils {
         return nonce(12);
     }
 
+    public static byte[] nonce16() {
+        return nonce(16);
+    }
+
+    public static byte[] salt(byte[] a, byte[] b) {
+        Objects.requireNonNull(a, "First salt array (clientNonce) must not be null");
+        Objects.requireNonNull(b, "Second salt array (serverNonce) must not be null");
+
+        if (a.length != 16) {
+            throw new IllegalArgumentException(
+                    "First salt component must be exactly 16 bytes, got: " + a.length
+            );
+        }
+        if (b.length != 16) {
+            throw new IllegalArgumentException(
+                    "Second salt component must be exactly 16 bytes, got: " + b.length
+            );
+        }
+
+        byte[] result = new byte[32];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
+    }
+
     public static String random() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         return uuid.substring(0, 12);

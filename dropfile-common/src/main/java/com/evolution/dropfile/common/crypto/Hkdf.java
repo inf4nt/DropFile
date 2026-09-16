@@ -1,5 +1,7 @@
 package com.evolution.dropfile.common.crypto;
 
+import jakarta.annotation.Nullable;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
@@ -16,6 +18,8 @@ import java.util.Objects;
  * @see <a href="https://tools.ietf.org/html/rfc5869">RFC 5869</a>
  */
 public final class Hkdf {
+
+    private static final byte[] DEFAULT_SALT = new byte[32];
 
     private static final String HMAC_SHA256 = "HmacSHA256";
 
@@ -35,24 +39,25 @@ public final class Hkdf {
      * @throws NoSuchAlgorithmException if HMAC-SHA256 is not supported by the environment.
      * @throws InvalidKeyException      if the salt cannot initialize the Mac instance.
      */
-    public static byte[] extract(byte[] salt, byte[] rawSecret)
+    public static byte[] extract(byte[] rawSecret, @Nullable byte[] salt)
             throws NoSuchAlgorithmException, InvalidKeyException {
 
-        Objects.requireNonNull(salt, "Salt must not be null");
         Objects.requireNonNull(rawSecret, "Input Raw Secret (IKM) must not be null");
-
-        if (salt.length != 32) {
-            throw new IllegalArgumentException(
-                    "Salt length must be exactly 32 bytes (clientNonce + serverNonce), got: " + salt.length
-            );
-        }
 
         if (rawSecret.length == 0) {
             throw new IllegalArgumentException("Raw Secret (IKM) must not be empty");
         }
 
+        byte[] effectiveSalt = (salt == null || salt.length == 0) ? DEFAULT_SALT : salt;
+
+        if (effectiveSalt.length != 32) {
+            throw new IllegalArgumentException(
+                    "Salt length must be exactly 32 bytes, got: " + effectiveSalt.length
+            );
+        }
+
         Mac mac = Mac.getInstance(HMAC_SHA256);
-        mac.init(new SecretKeySpec(salt, HMAC_SHA256));
+        mac.init(new SecretKeySpec(effectiveSalt, HMAC_SHA256));
         return mac.doFinal(rawSecret);
     }
 

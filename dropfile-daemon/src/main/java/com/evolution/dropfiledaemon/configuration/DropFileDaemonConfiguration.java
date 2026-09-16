@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.configuration;
 
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.SystemInfoProvider;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
-import com.evolution.dropfile.common.crypto.CryptoTunnelChaCha20Poly1305;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2Impl;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfile.store.access.RuntimeAccessKeyStore;
@@ -60,8 +60,8 @@ public class DropFileDaemonConfiguration {
     }
 
     @Bean
-    public CryptoTunnel cryptoTunnel() {
-        return new CryptoTunnelChaCha20Poly1305();
+    public CryptoTunnelV2 cryptoTunnel() {
+        return new CryptoTunnelV2Impl();
     }
 
     @Bean
@@ -146,7 +146,7 @@ public class DropFileDaemonConfiguration {
 
     @Bean
     public CryptoFileOperations cryptoFileOperations(FileOperations fileOperations,
-                                                     CryptoTunnel cryptoTunnel,
+                                                     CryptoTunnelV2 cryptoTunnel,
                                                      InstallationSeedBootstrapStore installationSeedBootstrapStore) {
         return new CryptoFileOperations(
                 fileOperations,

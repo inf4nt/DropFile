@@ -6,8 +6,8 @@ public record HandshakeResponseDTO(byte[] payload,
                                    byte[] nonce,
                                    byte[] signature) {
 
-//    byte[] serverNonce
     public record Payload(UUID requestId,
+                          byte[] serverSalt,
                           byte[] publicKeyRSA,
                           byte[] publicKeyDH) {
 

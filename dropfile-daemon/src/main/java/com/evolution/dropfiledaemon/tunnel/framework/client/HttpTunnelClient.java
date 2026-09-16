@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnel;
+import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
@@ -29,8 +29,10 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
@@ -42,7 +44,7 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final CryptoTunnel cryptoTunnel;
+    private final CryptoTunnelV2 cryptoTunnel;
 
     private final HttpClient httpClient;
 
@@ -85,9 +87,15 @@ public class HttpTunnelClient implements TunnelClient {
                 ));
             }
 
-            InputStream inputStreamResponse = getInputStreamResponse(httpResponse.body(),
+            byte[] aadCurrentFingerprint = CommonUtils
+                    .getFingerprint(httpTunnelRequestContext.trustedOut().handshake().publicRSA())
+                    .getBytes(StandardCharsets.UTF_8);
+
+            InputStream inputStreamResponse = getInputStreamResponse(
+                    httpResponse.body(),
                     httpTunnelRequestContext.fingerprint(),
-                    httpTunnelRequestContext.secretKey()
+                    aadCurrentFingerprint,
+                    httpTunnelRequestContext.serverSecretKey()
             );
             validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
             return inputStreamResponse;
@@ -112,7 +120,7 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.getMessage(),
                     httpRequest.method(),
                     httpRequest.uri(),
-                    httpRequest.timeout().map(it -> it.toMillis()).orElse(0L)
+                    httpRequest.timeout().map(Duration::toMillis).orElse(0L)
             );
 
             if (throwable instanceof IOException ioException) {
@@ -129,7 +137,8 @@ public class HttpTunnelClient implements TunnelClient {
 
     private InputStream getInputStreamResponse(InputStream inputStream,
                                                String fingerprint,
-                                               SecretKey secretKey) {
+                                               byte[] aad,
+                                               SecretKey serverSecretKey) {
         return InputStreamPipeline
                 .from(inputStream)
                 .add(in -> new WatchdogInputStream(
@@ -139,7 +148,7 @@ public class HttpTunnelClient implements TunnelClient {
                 ))
                 .add(in -> tunnelTrafficMonitor.inputStreamWrapper(fingerprint, in))
                 .add(in -> {
-                    byte[] decrypt = cryptoTunnel.decrypt(in, secretKey);
+                    byte[] decrypt = cryptoTunnel.decrypt(in, aad, serverSecretKey);
                     return new ByteArrayInputStream(decrypt);
                 })
                 .add(in -> {
@@ -155,7 +164,7 @@ public class HttpTunnelClient implements TunnelClient {
                 .get();
     }
 
-    private SecureEnvelope encrypt(UUID requestId, Request request, SecretKey secretKey) throws IOException {
+    private SecureEnvelope encrypt(UUID requestId, Request request, byte[] aad, SecretKey clientSecretKey) throws IOException, GeneralSecurityException {
         byte[] payload = switch (request.getBody()) {
             case null -> null;
             case String string -> string.getBytes(StandardCharsets.UTF_8);
@@ -163,29 +172,34 @@ public class HttpTunnelClient implements TunnelClient {
             default -> objectMapper.writeValueAsBytes(request.getBody());
         };
 
+        byte[] payloadAsBytes = objectMapper.writeValueAsBytes(
+                new TunnelRequestDTO.Payload(
+                        requestId,
+                        request.getCommand(),
+                        payload,
+                        new TunnelRequestDTO.Configuration(
+                                daemonApplicationProperties.daemonTunnelClientCompressEnabled
+                        ),
+                        System.currentTimeMillis()
+                )
+        );
         return cryptoTunnel.encrypt(
-                objectMapper.writeValueAsBytes(
-                        new TunnelRequestDTO.Payload(
-                                requestId,
-                                request.getCommand(),
-                                payload,
-                                new TunnelRequestDTO.Configuration(
-                                        daemonApplicationProperties.daemonTunnelClientCompressEnabled
-                                ),
-                                System.currentTimeMillis()
-                        )
-                ),
-                secretKey
+                payloadAsBytes,
+                aad,
+                clientSecretKey
         );
     }
 
-    private SecretKey getSecretKey(String fingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
-        byte[] secret = handshakeSessionOutStore.get(fingerprint)
-                .map(it -> it.getValue())
+    private TunnelSessionKeys getSessionKeys(String fingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
+        HandshakeSessionOutStore.SessionOut sessionOut = handshakeSessionOutStore.get(fingerprint)
+                .map(Map.Entry::getValue)
                 .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
-                .map(it -> it.sessionKey())
                 .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
-        return cryptoTunnel.secretKey(secret);
+
+        SecretKey clientKey = cryptoTunnel.secretKey(sessionOut.sessionClientKey());
+        SecretKey serverKey = cryptoTunnel.secretKey(sessionOut.sessionServerKey());
+
+        return new TunnelSessionKeys(clientKey, serverKey);
     }
 
     private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
@@ -204,13 +218,14 @@ public class HttpTunnelClient implements TunnelClient {
 
     private HttpTunnelRequestContext buildHttpTunnelRequestContext(Request request) {
         try {
-            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(request.getFingerprint());
-            SecretKey secretKey = getSecretKey(request.getFingerprint(), trustedOut);
+            String fingerprint = request.getFingerprint();
+            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
+            TunnelSessionKeys sessionKeys = getSessionKeys(fingerprint, trustedOut);
 
             UUID requestId = UUID.randomUUID();
+            byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
 
-            SecureEnvelope secureEnvelope = encrypt(requestId, request, secretKey);
-
+            SecureEnvelope secureEnvelope = encrypt(requestId, request, aadRemoteFingerprint, sessionKeys.clientKey());
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
                     CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
                     secureEnvelope.payload(),
@@ -231,16 +246,28 @@ public class HttpTunnelClient implements TunnelClient {
                     .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
                     .build();
 
-            return new HttpTunnelRequestContext(request.getFingerprint(), requestId, httpRequest, secretKey);
+            return new HttpTunnelRequestContext(
+                    fingerprint,
+                    requestId,
+                    httpRequest,
+                    trustedOut,
+                    sessionKeys.clientKey(),
+                    sessionKeys.serverKey()
+            );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to build tunnel request. Fingerprint %s command %s".formatted(request.getFingerprint(), request.getCommand()));
+            throw new RuntimeException("Failed to build tunnel request. Fingerprint %s command %s".formatted(request.getFingerprint(), request.getCommand()), e);
         }
+    }
+
+    private record TunnelSessionKeys(SecretKey clientKey, SecretKey serverKey) {
     }
 
     private record HttpTunnelRequestContext(String fingerprint,
                                             UUID requestId,
                                             HttpRequest request,
-                                            SecretKey secretKey) {
+                                            HandshakeTrustedOutStore.TrustedOut trustedOut,
+                                            SecretKey clientSecretKey,
+                                            SecretKey serverSecretKey) {
 
     }
 }
