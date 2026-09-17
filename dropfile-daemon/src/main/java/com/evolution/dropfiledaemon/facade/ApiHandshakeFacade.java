@@ -10,6 +10,7 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
+import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
@@ -37,14 +38,6 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class ApiHandshakeFacade {
-
-    private static final String HANDSHAKE_SECRET_CLIENT_INFO = "dropfile-handshake-client-v1";
-
-    private static final String HANDSHAKE_SECRET_SERVER_INFO = "dropfile-handshake-server-v1";
-
-    private static final String TUNNEL_SECRET_CLIENT_INFO = "dropfile-tunnel-client-v1";
-
-    private static final String TUNNEL_SECRET_SERVER_INFO = "dropfile-tunnel-server-v1";
 
     private final HandshakeClient handshakeClient;
 
@@ -94,7 +87,10 @@ public class ApiHandshakeFacade {
         String rawSecret = requestDTO.key();
         String accessSecretKeyId = KeyEnvelopeUtils.getId(rawSecret);
 
-        SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(rawSecret.getBytes(StandardCharsets.UTF_8), HANDSHAKE_SECRET_CLIENT_INFO);
+        SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
+                rawSecret.getBytes(StandardCharsets.UTF_8),
+                CryptoConstants.HANDSHAKE_SECRET_CLIENT_INFO
+        );
         SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
                 requestPayloadByteArray,
                 accessSecretKeyId.getBytes(StandardCharsets.UTF_8),
@@ -116,7 +112,10 @@ public class ApiHandshakeFacade {
         HandshakeResponseDTO handshakeResponseDTO = handshakeClient
                 .handshake(addressURI, handshakeRequestDTO);
 
-        SecretKey secretHandshakeServerKey = cryptoTunnel.deriveSecretKey(rawSecret.getBytes(StandardCharsets.UTF_8), HANDSHAKE_SECRET_SERVER_INFO);
+        SecretKey secretHandshakeServerKey = cryptoTunnel.deriveSecretKey(
+                rawSecret.getBytes(StandardCharsets.UTF_8),
+                CryptoConstants.HANDSHAKE_SECRET_SERVER_INFO
+        );
         byte[] decryptResponsePayload = cryptoTunnel.decrypt(
                 handshakeResponseDTO.payload(),
                 handshakeResponseDTO.nonce(),
@@ -145,8 +144,16 @@ public class ApiHandshakeFacade {
         );
 
         byte[] salt = CommonUtils.salt(clientSalt, responsePayload.serverSalt());
-        SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_CLIENT_INFO, salt);
-        SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_SERVER_INFO, salt);
+        SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(
+                sessionRawKey,
+                CryptoConstants.TUNNEL_SECRET_CLIENT_INFO,
+                salt
+        );
+        SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(
+                sessionRawKey,
+                CryptoConstants.TUNNEL_SECRET_SERVER_INFO,
+                salt
+        );
 
         String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
         lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
@@ -231,8 +238,16 @@ public class ApiHandshakeFacade {
 
             byte[] salt = CommonUtils.salt(clientSalt, sessionResponsePayload.serverSalt());
 
-            SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_CLIENT_INFO, salt);
-            SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(sessionRawKey, TUNNEL_SECRET_SERVER_INFO, salt);
+            SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(
+                    sessionRawKey,
+                    CryptoConstants.TUNNEL_SECRET_CLIENT_INFO,
+                    salt
+            );
+            SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(
+                    sessionRawKey,
+                    CryptoConstants.TUNNEL_SECRET_SERVER_INFO,
+                    salt
+            );
 
             handshakeTrustedOutStore.update(remoteFingerprint, value -> {
                 Instant now = Instant.now();
