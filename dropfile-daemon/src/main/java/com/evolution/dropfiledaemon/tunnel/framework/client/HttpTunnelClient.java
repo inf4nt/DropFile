@@ -93,7 +93,7 @@ public class HttpTunnelClient implements TunnelClient {
 
             InputStream inputStreamResponse = getInputStreamResponse(
                     httpResponse.body(),
-                    httpTunnelRequestContext.fingerprint(),
+                    httpTunnelRequestContext.remoteFingerprint(),
                     aadCurrentFingerprint,
                     httpTunnelRequestContext.sessionKeys().serverKey()
             );
@@ -218,12 +218,12 @@ public class HttpTunnelClient implements TunnelClient {
 
     private HttpTunnelRequestContext buildHttpTunnelRequestContext(Request request) {
         try {
-            String fingerprint = request.getFingerprint();
-            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(fingerprint);
-            TunnelSessionKeys sessionKeys = getSessionKeys(fingerprint, trustedOut);
+            String remoteFingerprint = request.getFingerprint();
+            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(remoteFingerprint);
+            TunnelSessionKeys sessionKeys = getSessionKeys(remoteFingerprint, trustedOut);
 
             UUID requestId = UUID.randomUUID();
-            byte[] aadRemoteFingerprint = fingerprint.getBytes(StandardCharsets.UTF_8);
+            byte[] aadRemoteFingerprint = remoteFingerprint.getBytes(StandardCharsets.UTF_8);
 
             SecureEnvelope secureEnvelope = encrypt(requestId, request, aadRemoteFingerprint, sessionKeys.clientKey());
             TunnelRequestDTO tunnelRequestDTO = new TunnelRequestDTO(
@@ -247,7 +247,7 @@ public class HttpTunnelClient implements TunnelClient {
                     .build();
 
             return new HttpTunnelRequestContext(
-                    fingerprint,
+                    remoteFingerprint,
                     requestId,
                     httpRequest,
                     trustedOut,
@@ -261,7 +261,7 @@ public class HttpTunnelClient implements TunnelClient {
     private record TunnelSessionKeys(SecretKey clientKey, SecretKey serverKey) {
     }
 
-    private record HttpTunnelRequestContext(String fingerprint,
+    private record HttpTunnelRequestContext(String remoteFingerprint,
                                             UUID requestId,
                                             HttpRequest httpRequest,
                                             HandshakeTrustedOutStore.TrustedOut trustedOut,
