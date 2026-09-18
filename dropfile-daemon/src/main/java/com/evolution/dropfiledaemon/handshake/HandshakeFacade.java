@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
@@ -36,7 +36,7 @@ import java.util.UUID;
 @Component
 public class HandshakeFacade {
 
-    private final CryptoTunnelV2 cryptoTunnel;
+    private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
 

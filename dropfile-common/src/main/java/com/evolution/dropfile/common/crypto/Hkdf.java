@@ -42,10 +42,10 @@ public final class Hkdf {
     public static byte[] extract(byte[] rawSecret, @Nullable byte[] salt)
             throws NoSuchAlgorithmException, InvalidKeyException {
 
-        Objects.requireNonNull(rawSecret, "Input Raw Secret (IKM) must not be null");
+        Objects.requireNonNull(rawSecret, "Input Raw Secret (IKM(Input Keying Material) must not be null");
 
         if (rawSecret.length == 0) {
-            throw new IllegalArgumentException("Raw Secret (IKM) must not be empty");
+            throw new IllegalArgumentException("Raw Secret (IKM(Input Keying Material) must not be empty");
         }
 
         byte[] effectiveSalt = (salt == null || salt.length == 0) ? DEFAULT_SALT : salt;

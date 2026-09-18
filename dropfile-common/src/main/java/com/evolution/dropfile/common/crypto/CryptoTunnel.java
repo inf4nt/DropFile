@@ -1,22 +1,37 @@
 package com.evolution.dropfile.common.crypto;
 
+import jakarta.annotation.Nullable;
+
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.GeneralSecurityException;
 
 public interface CryptoTunnel {
 
     String getAlgorithm();
 
-    SecretKey secretKey(byte[] rawSecret);
+    SecretKey secretKey(byte[] keyBytes);
 
-    SecureEnvelope encrypt(byte[] data, SecretKey key);
+    byte[] deriveKeyHkdf(byte[] rawSecret, String info, @Nullable byte[] salt) throws GeneralSecurityException;
 
-    byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key);
+    default SecretKey deriveSecretKey(byte[] rawSecret, String info, @Nullable byte[] salt) throws GeneralSecurityException {
+        byte[] bytes = deriveKeyHkdf(rawSecret, info, salt);
+        return secretKey(bytes);
+    }
 
-    OutputStream encryptWrapper(OutputStream outputStream, SecretKey key);
+    default SecretKey deriveSecretKey(byte[] rawSecret, String info) throws GeneralSecurityException {
+        return deriveSecretKey(rawSecret, info, null);
+    }
 
-    byte[] decrypt(InputStream inputStream, SecretKey key);
+    SecureEnvelope encrypt(byte[] payload, byte[] aad, SecretKey secretKey) throws GeneralSecurityException;
 
-    InputStream decryptStreaming(InputStream inputStream, SecretKey key);
+    byte[] decrypt(byte[] payload, byte[] nonce, byte[] aad, SecretKey secretKey) throws GeneralSecurityException;
+
+    byte[] decrypt(InputStream inputStream, byte[] aad, SecretKey secretKey) throws GeneralSecurityException, IOException;
+
+    OutputStream encryptWrapper(OutputStream outputStream, byte[] aad, SecretKey secretKey) throws GeneralSecurityException, IOException;
+
+    InputStream decryptStreaming(InputStream inputStream, byte[] aad, SecretKey secretKey) throws IOException, GeneralSecurityException;
 }

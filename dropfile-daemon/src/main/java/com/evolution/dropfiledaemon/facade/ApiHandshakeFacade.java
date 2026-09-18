@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
-import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
@@ -41,7 +41,7 @@ public class ApiHandshakeFacade {
 
     private final HandshakeClient handshakeClient;
 
-    private final CryptoTunnelV2 cryptoTunnel;
+    private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
 

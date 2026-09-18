@@ -1,7 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.function.OutputStreamConsumer;
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
@@ -26,7 +26,7 @@ public class CryptoFileOperations implements FileOperations {
 
     private final FileOperations delegate;
 
-    private final CryptoTunnelV2 cryptoTunnel;
+    private final CryptoTunnel cryptoTunnel;
 
     private final InstallationSeedBootstrapStore installationSeedBootstrapStore;
 

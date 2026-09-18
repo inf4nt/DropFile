@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.server;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import com.evolution.dropfile.common.io.InterruptibleOutputStream;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
@@ -43,7 +43,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
 
     private final CommandHandlerExecutor commandHandlerExecutor;
 
-    private final CryptoTunnelV2 cryptoTunnel;
+    private final CryptoTunnel cryptoTunnel;
 
     private final CompressTunnelService compressTunnelService;
 

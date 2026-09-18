@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.CommonUtils;
-import com.evolution.dropfile.common.crypto.CryptoTunnelV2;
+import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
@@ -44,7 +44,7 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
-    private final CryptoTunnelV2 cryptoTunnel;
+    private final CryptoTunnel cryptoTunnel;
 
     private final HttpClient httpClient;
 

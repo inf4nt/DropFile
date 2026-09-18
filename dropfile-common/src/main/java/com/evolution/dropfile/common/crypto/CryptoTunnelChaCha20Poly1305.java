@@ -1,7 +1,7 @@
 package com.evolution.dropfile.common.crypto;
 
 import com.evolution.dropfile.common.CommonUtils;
-import lombok.SneakyThrows;
+import jakarta.annotation.Nullable;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -12,106 +12,128 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.Objects;
 
 public class CryptoTunnelChaCha20Poly1305 implements CryptoTunnel {
 
-    private static final int POLY1305_TAG_LENGTH = 16;
-
     private static final String CIPHER_ALGORITHM = "ChaCha20-Poly1305";
-
-    private static final String SHA256_ALGORITHM = "SHA-256";
 
     private static final String SECRET_KEY_ALGORITHM = "ChaCha20";
 
     private static final int NONCE_LENGTH = 12;
+
+    private static final int SECRET_KEY_LENGTH = 32;
 
     @Override
     public String getAlgorithm() {
         return CIPHER_ALGORITHM;
     }
 
-    // TODO add HKDF
-    @SneakyThrows
     @Override
-    public SecretKey secretKey(byte[] secret) {
-        byte[] digest = MessageDigest
-                .getInstance(SHA256_ALGORITHM)
-                .digest(secret);
-        return new SecretKeySpec(digest, SECRET_KEY_ALGORITHM);
+    public SecretKey secretKey(byte[] derivedKey) {
+        Objects.requireNonNull(derivedKey, "Derived key must not be null");
+        return new SecretKeySpec(derivedKey, SECRET_KEY_ALGORITHM);
     }
 
-    @SneakyThrows
     @Override
-    public SecureEnvelope encrypt(byte[] data, SecretKey key) {
+    public byte[] deriveKeyHkdf(byte[] rawSecret, String info, @Nullable byte[] salt) throws GeneralSecurityException {
+        Objects.requireNonNull(rawSecret, "Raw secret must not be null");
+        Objects.requireNonNull(info, "Info label must not be null");
+
+        byte[] prk = Hkdf.extract(rawSecret, salt);
+        return Hkdf.expand(prk, info.getBytes(StandardCharsets.UTF_8), SECRET_KEY_LENGTH);
+    }
+
+    @Override
+    public SecureEnvelope encrypt(byte[] payload, byte[] aad, SecretKey secretKey) throws GeneralSecurityException {
+        Objects.requireNonNull(payload, "Payload must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+        validateAad(aad);
+
         byte[] nonce = CommonUtils.nonce12();
         validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+        cipher.updateAAD(aad);
 
-        byte[] encrypted = cipher.doFinal(data);
+        byte[] encrypted = cipher.doFinal(payload);
         return new SecureEnvelope(encrypted, nonce);
     }
 
-    @SneakyThrows
     @Override
-    public byte[] decrypt(byte[] payload, byte[] nonce, SecretKey key) {
+    public byte[] decrypt(byte[] payload, byte[] nonce, byte[] aad, SecretKey secretKey) throws GeneralSecurityException {
+        Objects.requireNonNull(payload, "Payload must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+        validateAad(aad);
         validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+        cipher.updateAAD(aad);
 
         return cipher.doFinal(payload);
     }
 
-    @SneakyThrows
     @Override
-    public byte[] decrypt(InputStream inputStream, SecretKey key) {
-        byte[] nonce = readNonce(inputStream);
+    public byte[] decrypt(InputStream inputStream, byte[] aad, SecretKey secretKey) throws GeneralSecurityException, IOException {
+        Objects.requireNonNull(inputStream, "InputStream must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+        validateAad(aad);
 
-        byte[] encryptedPayload = inputStream.readAllBytes();
+        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+        validateNonce(nonce);
 
-        if (encryptedPayload.length < POLY1305_TAG_LENGTH) {
-            throw new IOException("Premature EOF: stream too short for Poly1305 MAC tag");
-        }
-
-        return decrypt(encryptedPayload, nonce, key);
+        byte[] payload = inputStream.readAllBytes();
+        return decrypt(payload, nonce, aad, secretKey);
     }
 
-    @SneakyThrows
     @Override
-    public CipherOutputStream encryptWrapper(OutputStream outputStream, SecretKey key) {
+    public OutputStream encryptWrapper(OutputStream outputStream, byte[] aad, SecretKey secretKey) throws GeneralSecurityException, IOException {
+        Objects.requireNonNull(outputStream, "OutputStream must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+        validateAad(aad);
+
         byte[] nonce = CommonUtils.nonce12();
         validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(nonce));
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+        cipher.updateAAD(aad);
 
         outputStream.write(nonce);
         return new CipherOutputStream(outputStream, cipher);
     }
 
-    @SneakyThrows
     @Override
-    public InputStream decryptStreaming(InputStream inputStream, SecretKey key) {
-        byte[] nonce = readNonce(inputStream);
+    public InputStream decryptStreaming(InputStream inputStream, byte[] aad, SecretKey secretKey) throws GeneralSecurityException, IOException {
+        Objects.requireNonNull(inputStream, "InputStream must not be null");
+        Objects.requireNonNull(secretKey, "SecretKey must not be null");
+        validateAad(aad);
+
+        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
+        validateNonce(nonce);
 
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(nonce));
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(nonce));
+        cipher.updateAAD(aad);
 
         return new CipherInputStream(inputStream, cipher);
     }
 
-    private byte[] readNonce(InputStream inputStream) throws IOException {
-        byte[] nonce = inputStream.readNBytes(NONCE_LENGTH);
-        validateNonce(nonce);
-        return nonce;
+    private void validateNonce(byte[] nonce) {
+        Objects.requireNonNull(nonce, "Nonce must not be null");
+        if (nonce.length != NONCE_LENGTH) {
+            throw new IllegalArgumentException("Invalid nonce length: " + nonce.length + " (expected " + NONCE_LENGTH + ")");
+        }
     }
 
-    private void validateNonce(byte[] nonce) throws IOException {
-        if (nonce.length != NONCE_LENGTH) {
-            throw new IOException("Invalid nonce length " + nonce.length);
+    private void validateAad(byte[] aad) {
+        Objects.requireNonNull(aad, "AAD must not be null");
+        if (aad.length == 0) {
+            throw new IllegalArgumentException("AAD must not be empty");
         }
     }
 }
