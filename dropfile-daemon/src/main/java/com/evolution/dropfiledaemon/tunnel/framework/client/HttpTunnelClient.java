@@ -67,12 +67,12 @@ public class HttpTunnelClient implements TunnelClient {
         HttpResponse<InputStream> httpResponse = null;
         try {
             try {
-                httpResponse = httpClient.send(httpTunnelRequestContext.request(), HttpResponse.BodyHandlers.ofInputStream());
+                httpResponse = httpClient.send(httpTunnelRequestContext.httpRequest(), HttpResponse.BodyHandlers.ofInputStream());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Call interrupted", e);
             } catch (HttpConnectTimeoutException e) {
-                HttpRequest httpRequest = httpTunnelRequestContext.request();
+                HttpRequest httpRequest = httpTunnelRequestContext.httpRequest();
                 long timeout = httpRequest.timeout().map(Duration::toMillis).orElse(0L);
                 String message = "HTTP connect timed out during call %s %s timeout %s millis"
                         .formatted(httpRequest.method(), httpRequest.uri(), timeout);
@@ -95,7 +95,7 @@ public class HttpTunnelClient implements TunnelClient {
                     httpResponse.body(),
                     httpTunnelRequestContext.fingerprint(),
                     aadCurrentFingerprint,
-                    httpTunnelRequestContext.serverSecretKey()
+                    httpTunnelRequestContext.sessionKeys().serverKey()
             );
             validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
             return inputStreamResponse;
@@ -113,7 +113,7 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            HttpRequest httpRequest = httpTunnelRequestContext.request();
+            HttpRequest httpRequest = httpTunnelRequestContext.httpRequest();
             String message = "Tunnel call failed. Fingerprint %s command %s'. Reason '%s'. Method %s uri %s timeout %s".formatted(
                     request.getFingerprint(),
                     request.getCommand(),
@@ -251,8 +251,7 @@ public class HttpTunnelClient implements TunnelClient {
                     requestId,
                     httpRequest,
                     trustedOut,
-                    sessionKeys.clientKey(),
-                    sessionKeys.serverKey()
+                    sessionKeys
             );
         } catch (Exception e) {
             throw new RuntimeException("Failed to build tunnel request. Fingerprint %s command %s".formatted(request.getFingerprint(), request.getCommand()), e);
@@ -264,10 +263,8 @@ public class HttpTunnelClient implements TunnelClient {
 
     private record HttpTunnelRequestContext(String fingerprint,
                                             UUID requestId,
-                                            HttpRequest request,
+                                            HttpRequest httpRequest,
                                             HandshakeTrustedOutStore.TrustedOut trustedOut,
-                                            SecretKey clientSecretKey,
-                                            SecretKey serverSecretKey) {
-
+                                            TunnelSessionKeys sessionKeys) {
     }
 }
