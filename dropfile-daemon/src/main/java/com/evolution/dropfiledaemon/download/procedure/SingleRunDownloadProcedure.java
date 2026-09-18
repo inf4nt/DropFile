@@ -88,7 +88,7 @@ public class SingleRunDownloadProcedure {
 
     private void runProcedure() {
         ExecutionProfiling.run(
-                String.format("file-download-prodecure operation: %s fingerprint %s fileId: %s",
+                String.format("file-download-procedure operation: %s fingerprint %s fileId: %s",
                         request.operation(), request.fingerprint(), request.fileId()),
                 () -> {
                     ExecutionProfiling.run(
