@@ -1,7 +1,5 @@
 package com.evolution.dropfile.common.crypto;
 
-import lombok.SneakyThrows;
-
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -12,35 +10,30 @@ public class CryptoRSA {
 
     private static final String RSA_ALGORITHM = "RSA";
 
-    @SneakyThrows
-    public static KeyPair generateKeyPair() {
+    public static KeyPair generateKeyPair() throws GeneralSecurityException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
         generator.initialize(2048);
         return generator.generateKeyPair();
     }
 
-    @SneakyThrows
-    public static PublicKey getPublicKey(byte[] publicKey) {
+    public static PublicKey getPublicKey(byte[] publicKey) throws GeneralSecurityException {
         return KeyFactory.getInstance(RSA_ALGORITHM)
                 .generatePublic(new X509EncodedKeySpec(publicKey));
     }
 
-    @SneakyThrows
-    public static PrivateKey getPrivateKey(byte[] privateKey) {
+    public static PrivateKey getPrivateKey(byte[] privateKey) throws GeneralSecurityException {
         return KeyFactory.getInstance(RSA_ALGORITHM)
                 .generatePrivate(new PKCS8EncodedKeySpec(privateKey));
     }
 
-    @SneakyThrows
-    public static byte[] sign(byte[] data, PrivateKey privateKey) {
+    public static byte[] sign(byte[] data, PrivateKey privateKey) throws GeneralSecurityException {
         Signature signature = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         signature.initSign(privateKey);
         signature.update(data);
         return signature.sign();
     }
 
-    @SneakyThrows
-    public static void verify(byte[] data, byte[] signature, PublicKey publicKey) {
+    public static void verify(byte[] data, byte[] signature, PublicKey publicKey) throws GeneralSecurityException {
         Signature sig = Signature.getInstance(SHA256_WITH_RSA_ALGORITHM);
         sig.initVerify(publicKey);
         sig.update(data);
