@@ -20,7 +20,6 @@ import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore
 import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -51,193 +50,99 @@ public class ApiHandshakeFacade {
 
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
-    @SneakyThrows
     public void handshake(ApiHandshakeRequestDTO requestDTO) {
-        URI addressURI = CommonUtils.toURI(requestDTO.address());
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
-                .getByAddressURI(addressURI)
-                .orElse(null);
-        if (existingAddressURI != null) {
-            String existingFingerprint = existingAddressURI.getKey();
+        try {
+            URI addressURI = CommonUtils.toURI(requestDTO.address());
+            Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
+                    .getByAddressURI(addressURI)
+                    .orElse(null);
+            if (existingAddressURI != null) {
+                String existingFingerprint = existingAddressURI.getKey();
 
-            if (!requestDTO.force()) {
-                throw new IllegalStateException(("Unable to process handshake request." +
-                        " Duplicate address URI %s (fingerprint: %s)." +
-                        " Try to perform disconnect or use --force option")
-                        .formatted(addressURI, existingFingerprint));
+                if (!requestDTO.force()) {
+                    throw new IllegalStateException(("Unable to process handshake request." +
+                            " Duplicate address URI %s (fingerprint: %s)." +
+                            " Try to perform disconnect or use --force option")
+                            .formatted(addressURI, existingFingerprint));
+                }
+
+                disconnectByFingerprint(existingFingerprint);
             }
 
-            disconnectByFingerprint(existingFingerprint);
-        }
+            KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
+            KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
-        KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
-        KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
-
-        UUID handshakeRequestId = UUID.randomUUID();
-        byte[] clientSalt = CommonUtils.nonce16();
-        HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
-                handshakeRequestId,
-                clientSalt,
-                rsaKeyPair.getPublic().getEncoded(),
-                dhKeyPair.getPublic().getEncoded(),
-                System.currentTimeMillis()
-        );
-        byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
-
-        String rawSecret = requestDTO.key();
-        String accessSecretKeyId = KeyEnvelopeUtils.getId(rawSecret);
-
-        SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
-                rawSecret.getBytes(StandardCharsets.UTF_8),
-                CryptoConstants.HANDSHAKE_SECRET_CLIENT_INFO
-        );
-        SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
-                requestPayloadByteArray,
-                accessSecretKeyId.getBytes(StandardCharsets.UTF_8),
-                secretHandshakeClientKey
-        );
-
-        byte[] signature = CryptoRSA.sign(
-                requestPayloadByteArray,
-                rsaKeyPair.getPrivate()
-        );
-
-        HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
-                accessSecretKeyId,
-                secureEnvelope.payload(),
-                secureEnvelope.nonce(),
-                signature
-        );
-
-        HandshakeResponseDTO handshakeResponseDTO = handshakeClient
-                .handshake(addressURI, handshakeRequestDTO);
-
-        SecretKey secretHandshakeServerKey = cryptoTunnel.deriveSecretKey(
-                rawSecret.getBytes(StandardCharsets.UTF_8),
-                CryptoConstants.HANDSHAKE_SECRET_SERVER_INFO
-        );
-        byte[] decryptResponsePayload = cryptoTunnel.decrypt(
-                handshakeResponseDTO.payload(),
-                handshakeResponseDTO.nonce(),
-                accessSecretKeyId.getBytes(StandardCharsets.UTF_8),
-                secretHandshakeServerKey
-        );
-
-        HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
-                decryptResponsePayload,
-                HandshakeResponseDTO.Payload.class
-        );
-
-        CryptoRSA.verify(
-                decryptResponsePayload,
-                handshakeResponseDTO.signature(),
-                CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
-        );
-        if (!handshakeRequestId.equals(responsePayload.requestId())) {
-            throw new SecurityException("Handshake response handshakeId mismatch! Expected %s, got %s"
-                    .formatted(handshakeRequestId, responsePayload.requestId()));
-        }
-
-        byte[] sessionRawKey = CryptoECDH.getSecretKey(
-                CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
-                CryptoECDH.getPublicKey(responsePayload.publicKeyDH())
-        );
-
-        byte[] salt = CommonUtils.salt(clientSalt, responsePayload.serverSalt());
-        SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(
-                sessionRawKey,
-                CryptoConstants.TUNNEL_SECRET_CLIENT_INFO,
-                salt
-        );
-        SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(
-                sessionRawKey,
-                CryptoConstants.TUNNEL_SECRET_SERVER_INFO,
-                salt
-        );
-
-        String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
-        lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
-            Instant now = Instant.now();
-            handshakeTrustedOutStore.save(remoteFingerprint, () -> new HandshakeTrustedOutStore.TrustedOut(
-                    addressURI,
-                    new HandshakeTrustedOutStore.HandshakeKeys(
-                            rsaKeyPair.getPublic().getEncoded(),
-                            rsaKeyPair.getPrivate().getEncoded(),
-                            responsePayload.publicKeyRSA()
-                    ),
-                    now,
-                    now,
-                    now,
-                    now,
-                    handshakeRequestId
-            ));
-            handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                    dhKeyPair.getPublic().getEncoded(),
-                    dhKeyPair.getPrivate().getEncoded(),
-                    responsePayload.publicKeyDH(),
-                    secretTunnelClientKey.getEncoded(),
-                    secretTunnelServerKey.getEncoded(),
-                    handshakeRequestId
-            ));
-        });
-    }
-
-    @SneakyThrows
-    private void handshakeReconnect(String fingerprint, boolean byUser) {
-        lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-            HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
-
-            URI addressURI = trustedOut.addressURI();
-
-            KeyPair keyPairDH = CryptoECDH.generateKeyPair();
-
-            UUID sessionRequestId = UUID.randomUUID();
+            UUID handshakeRequestId = UUID.randomUUID();
             byte[] clientSalt = CommonUtils.nonce16();
-
-            HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
-                    sessionRequestId,
+            HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
+                    handshakeRequestId,
                     clientSalt,
-                    keyPairDH.getPublic().getEncoded(),
+                    rsaKeyPair.getPublic().getEncoded(),
+                    dhKeyPair.getPublic().getEncoded(),
                     System.currentTimeMillis()
             );
-            byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
-            byte[] signature = CryptoRSA.sign(
-                    sessionPayloadRequestBytes,
-                    CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA())
+            byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
+
+            String rawSecret = requestDTO.key();
+            String accessSecretKeyId = KeyEnvelopeUtils.getId(rawSecret);
+
+            SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
+                    rawSecret.getBytes(StandardCharsets.UTF_8),
+                    CryptoConstants.HANDSHAKE_SECRET_CLIENT_INFO
+            );
+            SecureEnvelope secureEnvelope = cryptoTunnel.encrypt(
+                    requestPayloadByteArray,
+                    accessSecretKeyId.getBytes(StandardCharsets.UTF_8),
+                    secretHandshakeClientKey
             );
 
-            HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
-                    CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
-                    sessionPayloadRequestBytes,
+            byte[] signature = CryptoRSA.sign(
+                    requestPayloadByteArray,
+                    rsaKeyPair.getPrivate()
+            );
+
+            HandshakeRequestDTO handshakeRequestDTO = new HandshakeRequestDTO(
+                    accessSecretKeyId,
+                    secureEnvelope.payload(),
+                    secureEnvelope.nonce(),
                     signature
             );
-            HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
 
-            HandshakeSessionDTO.SessionResponsePayload sessionResponsePayload = objectMapper.readValue(
-                    sessionResponse.payload(),
-                    HandshakeSessionDTO.SessionResponsePayload.class
+            HandshakeResponseDTO handshakeResponseDTO = handshakeClient
+                    .handshake(addressURI, handshakeRequestDTO);
+
+            SecretKey secretHandshakeServerKey = cryptoTunnel.deriveSecretKey(
+                    rawSecret.getBytes(StandardCharsets.UTF_8),
+                    CryptoConstants.HANDSHAKE_SECRET_SERVER_INFO
+            );
+            byte[] decryptResponsePayload = cryptoTunnel.decrypt(
+                    handshakeResponseDTO.payload(),
+                    handshakeResponseDTO.nonce(),
+                    accessSecretKeyId.getBytes(StandardCharsets.UTF_8),
+                    secretHandshakeServerKey
             );
 
-            String remoteFingerprint = sessionResponse.fingerprint();
-            matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
+            HandshakeResponseDTO.Payload responsePayload = objectMapper.readValue(
+                    decryptResponsePayload,
+                    HandshakeResponseDTO.Payload.class
+            );
+
             CryptoRSA.verify(
-                    sessionResponse.payload(),
-                    sessionResponse.signature(),
-                    CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
+                    decryptResponsePayload,
+                    handshakeResponseDTO.signature(),
+                    CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
             );
-
-            if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
-                throw new SecurityException("Session response handshakeId mismatch! Expected %s, got %s"
-                        .formatted(sessionRequestId, sessionResponsePayload.requestId()));
+            if (!handshakeRequestId.equals(responsePayload.requestId())) {
+                throw new SecurityException("Handshake response handshakeId mismatch! Expected %s, got %s"
+                        .formatted(handshakeRequestId, responsePayload.requestId()));
             }
 
             byte[] sessionRawKey = CryptoECDH.getSecretKey(
-                    CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
-                    CryptoECDH.getPublicKey(sessionResponsePayload.publicKeyDH())
+                    CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
+                    CryptoECDH.getPublicKey(responsePayload.publicKeyDH())
             );
 
-            byte[] salt = CommonUtils.salt(clientSalt, sessionResponsePayload.serverSalt());
-
+            byte[] salt = CommonUtils.salt(clientSalt, responsePayload.serverSalt());
             SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(
                     sessionRawKey,
                     CryptoConstants.TUNNEL_SECRET_CLIENT_INFO,
@@ -249,26 +154,126 @@ public class ApiHandshakeFacade {
                     salt
             );
 
-            handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+            String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
+            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
                 Instant now = Instant.now();
-                HandshakeTrustedOutStore.TrustedOut next = value
-                        .withHandshakeId(sessionRequestId)
-                        .withUpdated(now);
-                next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
-                return next;
+                handshakeTrustedOutStore.save(remoteFingerprint, () -> new HandshakeTrustedOutStore.TrustedOut(
+                        addressURI,
+                        new HandshakeTrustedOutStore.HandshakeKeys(
+                                rsaKeyPair.getPublic().getEncoded(),
+                                rsaKeyPair.getPrivate().getEncoded(),
+                                responsePayload.publicKeyRSA()
+                        ),
+                        now,
+                        now,
+                        now,
+                        now,
+                        handshakeRequestId
+                ));
+                handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
+                        dhKeyPair.getPublic().getEncoded(),
+                        dhKeyPair.getPrivate().getEncoded(),
+                        responsePayload.publicKeyDH(),
+                        secretTunnelClientKey.getEncoded(),
+                        secretTunnelServerKey.getEncoded(),
+                        handshakeRequestId
+                ));
             });
-
-            handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                    keyPairDH.getPublic().getEncoded(),
-                    keyPairDH.getPrivate().getEncoded(),
-                    sessionResponsePayload.publicKeyDH(),
-                    secretTunnelClientKey.getEncoded(),
-                    secretTunnelServerKey.getEncoded(),
-                    sessionRequestId
-            ));
-        });
+        } catch (Exception e) {
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+        }
     }
-    @SneakyThrows
+
+    private void handshakeReconnect(String fingerprint, boolean byUser) {
+        try {
+            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
+                HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
+
+                URI addressURI = trustedOut.addressURI();
+
+                KeyPair keyPairDH = CryptoECDH.generateKeyPair();
+
+                UUID sessionRequestId = UUID.randomUUID();
+                byte[] clientSalt = CommonUtils.nonce16();
+
+                HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
+                        sessionRequestId,
+                        clientSalt,
+                        keyPairDH.getPublic().getEncoded(),
+                        System.currentTimeMillis()
+                );
+                byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
+                byte[] signature = CryptoRSA.sign(
+                        sessionPayloadRequestBytes,
+                        CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA())
+                );
+
+                HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
+                        CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
+                        sessionPayloadRequestBytes,
+                        signature
+                );
+                HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
+
+                HandshakeSessionDTO.SessionResponsePayload sessionResponsePayload = objectMapper.readValue(
+                        sessionResponse.payload(),
+                        HandshakeSessionDTO.SessionResponsePayload.class
+                );
+
+                String remoteFingerprint = sessionResponse.fingerprint();
+                matchFingerprint(remoteFingerprint, CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
+                CryptoRSA.verify(
+                        sessionResponse.payload(),
+                        sessionResponse.signature(),
+                        CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
+                );
+
+                if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
+                    throw new SecurityException("Session response handshakeId mismatch! Expected %s, got %s"
+                            .formatted(sessionRequestId, sessionResponsePayload.requestId()));
+                }
+
+                byte[] sessionRawKey = CryptoECDH.getSecretKey(
+                        CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                        CryptoECDH.getPublicKey(sessionResponsePayload.publicKeyDH())
+                );
+
+                byte[] salt = CommonUtils.salt(clientSalt, sessionResponsePayload.serverSalt());
+
+                SecretKey secretTunnelClientKey = cryptoTunnel.deriveSecretKey(
+                        sessionRawKey,
+                        CryptoConstants.TUNNEL_SECRET_CLIENT_INFO,
+                        salt
+                );
+                SecretKey secretTunnelServerKey = cryptoTunnel.deriveSecretKey(
+                        sessionRawKey,
+                        CryptoConstants.TUNNEL_SECRET_SERVER_INFO,
+                        salt
+                );
+
+                handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+                    Instant now = Instant.now();
+                    HandshakeTrustedOutStore.TrustedOut next = value
+                            .withHandshakeId(sessionRequestId)
+                            .withUpdated(now);
+                    next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
+                    return next;
+                });
+
+                handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
+                        keyPairDH.getPublic().getEncoded(),
+                        keyPairDH.getPrivate().getEncoded(),
+                        sessionResponsePayload.publicKeyDH(),
+                        secretTunnelClientKey.getEncoded(),
+                        secretTunnelServerKey.getEncoded(),
+                        sessionRequestId
+                ));
+            });
+        } catch (Exception e) {
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+        }
+    }
+
     public void handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
         String fingerprint = handshakeTrustedOutStore
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
