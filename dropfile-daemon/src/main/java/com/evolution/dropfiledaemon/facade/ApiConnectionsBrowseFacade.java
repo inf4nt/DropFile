@@ -76,22 +76,22 @@ public class ApiConnectionsBrowseFacade {
 
         FileDownloadRequest fileDownloadRequest = getRequestForDownloadRequest(fingerprintConnection, requestDTO);
 
-        // TODO remove it
-        if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {
-            int index = requestDTO.filename().indexOf("big");
-            Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
-            for (int i = 0; i < iterations; i++) {
-                String filename = i + "-" + fileDownloadRequest.filename();
-                fileDownloadOrchestrator.start(
-                        new FileDownloadRequest(fileDownloadRequest.fingerprint(),
-                                fileDownloadRequest.fileId(),
-                                filename,
-                                fileDownloadRequest.size(),
-                                fileDownloadRequest.hash())
-                );
-            }
-            return null;
-        }
+//        // TODO remove it
+//        if (requestDTO.filename() != null && requestDTO.filename().contains("big")) {
+//            int index = requestDTO.filename().indexOf("big");
+//            Integer iterations = Integer.valueOf(requestDTO.filename().substring(0, index));
+//            for (int i = 0; i < iterations; i++) {
+//                String filename = i + "-" + fileDownloadRequest.filename();
+//                fileDownloadOrchestrator.start(
+//                        new FileDownloadRequest(fileDownloadRequest.fingerprint(),
+//                                fileDownloadRequest.fileId(),
+//                                filename,
+//                                fileDownloadRequest.size(),
+//                                fileDownloadRequest.hash())
+//                );
+//            }
+//            return null;
+//        }
 
         FileDownloadResponse fileDownloadResponse = fileDownloadOrchestrator.start(fileDownloadRequest);
 
