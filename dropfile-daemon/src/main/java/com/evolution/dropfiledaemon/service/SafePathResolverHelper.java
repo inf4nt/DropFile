@@ -1,6 +1,9 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfiledaemon.service;
 
+import com.evolution.dropfile.store.framework.file.DirectoryProvider;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
@@ -10,10 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
-public class SafePathResolver {
+@RequiredArgsConstructor
+@Component
+public class SafePathResolverHelper {
 
-    public static String sanitizeFilename(String rawFilename) {
+    private final DirectoryProvider daemonConfigDirectoryProvider;
+
+    public String sanitizeFilename(String rawFilename) {
         if (!StringUtils.hasText(rawFilename)) {
             throw new IllegalArgumentException("Unable to sanitize. Argument rawFilename is empty");
         }
@@ -45,7 +53,23 @@ public class SafePathResolver {
         return name;
     }
 
-    public static Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {
+    public void validateSensitiveDaemonPath(Path path) {
+        Objects.requireNonNull(path, "path must not be null");
+
+        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath()
+                .toAbsolutePath()
+                .normalize();
+
+        Path target = path.toAbsolutePath().normalize();
+
+        if (target.equals(configDir) || target.startsWith(configDir)) {
+            throw new SecurityException(
+                    "Access to daemon configuration directory is forbidden: " + target
+            );
+        }
+    }
+
+    public Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {
         if (!StringUtils.hasText(resourcePath)) {
             throw new IllegalArgumentException("Resource path cannot be null or empty");
         }

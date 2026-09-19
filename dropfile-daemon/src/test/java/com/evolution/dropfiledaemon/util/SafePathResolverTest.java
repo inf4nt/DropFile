@@ -1,22 +1,38 @@
 package com.evolution.dropfiledaemon.util;
 
+import com.evolution.dropfile.store.framework.file.DirectoryProvider;
+import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SafePathResolverTest {
+
+    private SafePathResolverHelper underTest;
+
+    private DirectoryProvider directoryProvider;
+
+    @BeforeEach
+    public void before() {
+        directoryProvider = mock(DirectoryProvider.class);
+        underTest = new SafePathResolverHelper(directoryProvider);
+    }
 
     @ParameterizedTest
     @MethodSource("provideSanitizationCases")
     void shouldSanitizeFilenameCorrectly(String input, String expected) {
-        assertEquals(expected, SafePathResolver.sanitizeFilename(input));
+        assertEquals(expected, underTest.sanitizeFilename(input));
     }
 
     private static Stream<Arguments> provideSanitizationCases() {
@@ -81,6 +97,81 @@ class SafePathResolverTest {
             "\\", ".", "..", "...", "....", "///", "\\\\\\", "./", ".\\", "../", "..\\", "\u0001\u0002\u0003",
             "///\\\\\\", "../../..//..\\", "file\u0000name.txt", "file.txt\u0000", "\u0000file.txt", ". . ."})
     void shouldThrowException(String input) {
-        assertThrows(IllegalArgumentException.class, () -> SafePathResolver.sanitizeFilename(input));
+        assertThrows(IllegalArgumentException.class, () -> underTest.sanitizeFilename(input));
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowNullPointerException_WhenPathIsNull() {
+        assertThrows(
+                NullPointerException.class,
+                () -> underTest.validateSensitiveDaemonPath(null)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsExactConfigDirectory() {
+        Path configDir = Path.of("daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(configDir)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsNestedInsideConfigDirectory() {
+        Path configDir = Path.of("daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path nestedPath = Path.of("daemon-config", "subfolder", "settings.json");
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(nestedPath)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsUnnormalizedTraversalIntoConfigDir() {
+        Path configDir = Path.of("daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path traversalPath = Path.of("other-dir", "..", "daemon-config", "secret.key");
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(traversalPath)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsOutsideConfigDirectory() {
+        Path configDir = Path.of("daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path safePath = Path.of("user-downloads", "document.pdf");
+
+        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(safePath));
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathSharesPrefixNameButIsSiblingDirectory() {
+        Path configDir = Path.of("daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path siblingPath = Path.of("daemon-config-public", "file.txt");
+
+        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(siblingPath));
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsParentOfConfigDirectory() {
+        Path configDir = Path.of("parent-dir", "daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path parentDir = Path.of("parent-dir");
+
+        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(parentDir));
     }
 }

@@ -10,8 +10,8 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.SafePathResolver;
 import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,14 +39,18 @@ public class ApiConnectionsShareFacade {
 
     private final ShareFileStore shareFileStore;
 
+    private final SafePathResolverHelper safePathResolverHelper;
+
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
-        Path realPath = SafePathResolver.safeExistingRealPathRegularFileResolver(requestDTO.resourcePath());
+        Path realPath = safePathResolverHelper.safeExistingRealPathRegularFileResolver(requestDTO.resourcePath());
+
+        safePathResolverHelper.validateSensitiveDaemonPath(realPath);
 
         String rawFileName = StringUtils.hasText(requestDTO.alias())
                 ? Paths.get(requestDTO.alias()).getFileName().toString()
                 : realPath.getFileName().toString();
 
-        String alias = SafePathResolver.sanitizeFilename(rawFileName);
+        String alias = safePathResolverHelper.sanitizeFilename(rawFileName);
 
         String key = CommonUtils.random();
         ShareFile shareFile = shareFileStore.save(key,

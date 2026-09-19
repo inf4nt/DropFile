@@ -11,7 +11,7 @@ import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerQuickShareRestController;
 import com.evolution.dropfiledaemon.service.InetLocalAddressService;
-import com.evolution.dropfiledaemon.util.SafePathResolver;
+import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -41,6 +41,8 @@ public class ApiQuickShareFacade {
 
     private final DaemonApplicationProperties applicationProperties;
 
+    private final SafePathResolverHelper safePathResolverHelper;
+
     @SneakyThrows
     public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
         if (!StringUtils.hasText(requestDTO.resourcePath())) {
@@ -65,6 +67,8 @@ public class ApiQuickShareFacade {
         }
 
         Path realPath = resourceAbsolutePath.toRealPath(LinkOption.NOFOLLOW_LINKS);
+
+        safePathResolverHelper.validateSensitiveDaemonPath(realPath);
 
         String id = CommonUtils.random();
 

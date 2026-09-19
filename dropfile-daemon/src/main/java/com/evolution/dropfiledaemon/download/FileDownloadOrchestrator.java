@@ -12,7 +12,7 @@ import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
 import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifestService;
-import com.evolution.dropfiledaemon.util.SafePathResolver;
+import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -58,9 +58,11 @@ public class FileDownloadOrchestrator {
 
     private final FileManifestService fileManifestService;
 
+    private final SafePathResolverHelper safePathResolverHelper;
+
     @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
-        String filename = SafePathResolver.sanitizeFilename(request.filename());
+        String filename = safePathResolverHelper.sanitizeFilename(request.filename());
         request = request.withFilename(filename);
 
         return doStart(request);
