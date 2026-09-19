@@ -60,7 +60,12 @@ public class SafePathResolverHelper {
                 .toAbsolutePath()
                 .normalize();
 
-        Path target = path.toAbsolutePath().normalize();
+        Path target;
+        try {
+            target = path.toRealPath();
+        } catch (IOException e) {
+            target = path.toAbsolutePath().normalize();
+        }
 
         if (target.equals(configDir) || target.startsWith(configDir)) {
             throw new SecurityException(
@@ -84,7 +89,12 @@ public class SafePathResolverHelper {
                 .toAbsolutePath()
                 .normalize();
 
-        Path target = path.toAbsolutePath().normalize();
+        Path target;
+        try {
+            target = path.toRealPath();
+        } catch (IOException e) {
+            target = path.toAbsolutePath().normalize();
+        }
 
         return target.equals(configDir) || target.startsWith(configDir);
     }
@@ -100,16 +110,26 @@ public class SafePathResolverHelper {
             throw new FileNotFoundException("No file found: " + resourcePath);
         }
 
-        if (Files.isSymbolicLink(path)) {
-            throw new IllegalArgumentException("Symbolic links are not allowed: " + resourcePath);
-        }
+        ensureNoSymlinksInPathHierarchy(path);
 
         if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
             throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
         }
 
-        validateSensitiveDaemonPath(path);
+        Path realPath = path.toRealPath();
 
-        return path.toRealPath(LinkOption.NOFOLLOW_LINKS);
+        validateSensitiveDaemonPath(realPath);
+
+        return realPath;
+    }
+
+    private void ensureNoSymlinksInPathHierarchy(Path path) {
+        Path current = path;
+        while (current != null) {
+            if (Files.isSymbolicLink(current)) {
+                throw new IllegalArgumentException("Symbolic links are not allowed in path hierarchy: " + current);
+            }
+            current = current.getParent();
+        }
     }
 }
