@@ -85,6 +85,10 @@ public class DaemonApplicationProperties {
 
     public final int daemonServerServletRateRequestQuickshareLimitMax;
 
+    public final int daemonSecurityReplyTtlSeconds;
+
+    public final int daemonSecurityReplyMaxFutureDriftSeconds;
+
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
@@ -119,7 +123,9 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.server.servlet.output.stream.timeout-millis}") int daemonServerServletOutputStreamTimeoutMillis,
             @Value("${dropfile.daemon.server.servlet.rate-request.handshake.limit.max}") int daemonServerServletRateRequestHandshakeLimitMax,
             @Value("${dropfile.daemon.server.servlet.rate-request.tunnel.limit.max}") int daemonServerServletRateRequestTunnelLimitMax,
-            @Value("${dropfile.daemon.server.servlet.rate-request.quickshare.limit.max}") int daemonServerServletRateRequestQuickshareLimitMax) {
+            @Value("${dropfile.daemon.server.servlet.rate-request.quickshare.limit.max}") int daemonServerServletRateRequestQuickshareLimitMax,
+            @Value("${dropfile.daemon.security.replay.ttl-seconds}") int daemonSecurityReplyTtlSeconds,
+            @Value("${dropfile.daemon.security.replay.max-future-drift-seconds}") int daemonSecurityReplyMaxFutureDriftSeconds) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.daemonExternalHost = daemonExternalHost;
@@ -154,6 +160,8 @@ public class DaemonApplicationProperties {
         this.daemonServerServletRateRequestHandshakeLimitMax = daemonServerServletRateRequestHandshakeLimitMax;
         this.daemonServerServletRateRequestTunnelLimitMax = daemonServerServletRateRequestTunnelLimitMax;
         this.daemonServerServletRateRequestQuickshareLimitMax = daemonServerServletRateRequestQuickshareLimitMax;
+        this.daemonSecurityReplyTtlSeconds = daemonSecurityReplyTtlSeconds;
+        this.daemonSecurityReplyMaxFutureDriftSeconds = daemonSecurityReplyMaxFutureDriftSeconds;
     }
 
     private int validateDaemonTunnelClientManifestChunkSize(int daemonTunnelClientManifestChunkSize) {

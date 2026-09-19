@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.download.procedure.manifest;
 
-import com.evolution.dropfile.common.io.CloseShieldOutputStream;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
