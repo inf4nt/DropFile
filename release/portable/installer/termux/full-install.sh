@@ -28,7 +28,23 @@ echo "Downloading and installing Java $REQUIRED_JAVA_VERSION..."
 pkg update -y
 pkg install -y "openjdk-$REQUIRED_JAVA_VERSION"
 
-echo "✅ System packages installed."
+JAVA_BIN_PATH=$(dpkg -L "openjdk-$REQUIRED_JAVA_VERSION" 2>/dev/null | grep '/bin/java$' | head -n 1)
+
+if [ -n "$JAVA_BIN_PATH" ] && [ -x "$JAVA_BIN_PATH" ]; then
+    JAVA_25_BIN_DIR=$(dirname "$JAVA_BIN_PATH")
+    JAVA_25_HOME=$(dirname "$JAVA_25_BIN_DIR")
+
+    export JAVA_HOME="$JAVA_25_HOME"
+    export PATH="$JAVA_25_BIN_DIR:$PATH"
+
+    PREFIX_PATH=${PREFIX:-"/data/data/com.termux/files/usr"}
+    ln -sf "$JAVA_BIN_PATH" "$PREFIX_PATH/bin/java"
+    if [ -x "$JAVA_25_BIN_DIR/javac" ]; then
+        ln -sf "$JAVA_25_BIN_DIR/javac" "$PREFIX_PATH/bin/javac"
+    fi
+fi
+
+echo "✅ System packages installed and environment updated."
 echo "Proceeding to environment configuration..."
 echo ""
 
