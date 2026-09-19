@@ -33,8 +33,13 @@ public class StreamingArchiveService {
 
     private final int daemonQuickShareInsecureCompressLevel;
 
-    public StreamingArchiveService(FileHelper fileHelper, DaemonApplicationProperties applicationProperties) {
+    private final SafePathResolverHelper safePathResolverHelper;
+
+    public StreamingArchiveService(FileHelper fileHelper,
+                                   DaemonApplicationProperties applicationProperties,
+                                   SafePathResolverHelper safePathResolverHelper) {
         this.fileHelper = fileHelper;
+        this.safePathResolverHelper = safePathResolverHelper;
         int compressLevel = getCompressLevel(applicationProperties.daemonQuickShareSecureCompressLevel);
         this.secureZipCompressionLevel = Arrays.stream(CompressionLevel.values())
                 .filter(it -> it.getLevel() == compressLevel)
@@ -193,7 +198,9 @@ public class StreamingArchiveService {
     private void writeDirectoryToZip4j(Path sourceDir, ZipOutputStream zos) throws IOException {
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
         try (Stream<Path> paths = Files.walk(sourceDir)) {
-            paths.filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+            paths
+                    .filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+                    .filter(file -> !safePathResolverHelper.isSensitiveDaemonPath(file))
                     .forEach(file -> {
                         try {
                             String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
@@ -213,7 +220,9 @@ public class StreamingArchiveService {
     private void writeDirectoryToStandardZip(Path sourceDir, java.util.zip.ZipOutputStream zos) throws IOException {
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
         try (Stream<Path> paths = Files.walk(sourceDir)) {
-            paths.filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+            paths
+                    .filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+                    .filter(file -> !safePathResolverHelper.isSensitiveDaemonPath(file))
                     .forEach(file -> {
                         try {
                             String relativePath = rootDir.relativize(file).toString().replace('\\', '/');

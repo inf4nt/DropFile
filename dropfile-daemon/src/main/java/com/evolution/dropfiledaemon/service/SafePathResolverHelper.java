@@ -67,6 +67,26 @@ public class SafePathResolverHelper {
                     "Access to daemon configuration directory is forbidden: " + target
             );
         }
+
+        if (configDir.startsWith(target)) {
+            throw new SecurityException(
+                    "Sharing parent directory of daemon configuration is forbidden: " + target
+            );
+        }
+    }
+
+    public boolean isSensitiveDaemonPath(Path path) {
+        if (path == null) {
+            return false;
+        }
+
+        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath()
+                .toAbsolutePath()
+                .normalize();
+
+        Path target = path.toAbsolutePath().normalize();
+
+        return target.equals(configDir) || target.startsWith(configDir);
     }
 
     public Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {
@@ -87,6 +107,8 @@ public class SafePathResolverHelper {
         if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
             throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
         }
+
+        validateSensitiveDaemonPath(path);
 
         return path.toRealPath(LinkOption.NOFOLLOW_LINKS);
     }

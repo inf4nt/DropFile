@@ -146,6 +146,19 @@ class SafePathResolverTest {
     }
 
     @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsParentOfConfigDirectory() {
+        Path configDir = Path.of("parent-dir", "daemon-config");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path parentDir = Path.of("parent-dir");
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(parentDir)
+        );
+    }
+
+    @Test
     void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsOutsideConfigDirectory() {
         Path configDir = Path.of("daemon-config");
         when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
@@ -166,12 +179,22 @@ class SafePathResolverTest {
     }
 
     @Test
-    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsParentOfConfigDirectory() {
-        Path configDir = Path.of("parent-dir", "daemon-config");
+    void isSensitiveDaemonPath_ShouldReturnTrue_WhenFileIsConfigDirectoryOrInsideIt() {
+        Path configDir = Path.of("app", "conf");
         when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
 
-        Path parentDir = Path.of("parent-dir");
+        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf")));
+        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf", "application.yml")));
+        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf", "keys", "private.key")));
+    }
 
-        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(parentDir));
+    @Test
+    void isSensitiveDaemonPath_ShouldReturnFalse_WhenFileIsOutsideConfigDirectory() {
+        Path configDir = Path.of("app", "conf");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        assertFalse(underTest.isSensitiveDaemonPath(null));
+        assertFalse(underTest.isSensitiveDaemonPath(Path.of("app", "public", "image.png")));
+        assertFalse(underTest.isSensitiveDaemonPath(Path.of("app", "conf-public", "file.txt")));
     }
 }
