@@ -6,7 +6,6 @@ import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -72,20 +71,12 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
     }
 
     private boolean isSessionExpired(String fingerprint) {
-        return isSessionExpired(fingerprint, null);
-    }
-
-    private boolean isSessionExpired(String fingerprint, @Nullable Instant firstFailureTime) {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequired(fingerprint).getValue();
 
         Instant sessionLastUpdated = Stream.of(trustedOut.sessionUpdatedBySystem(), trustedOut.sessionUpdatedByUser())
                 .max(Instant::compareTo)
                 .orElseThrow();
-
-        if (firstFailureTime != null && !sessionLastUpdated.isAfter(firstFailureTime)) {
-            return true;
-        }
 
         if (Instant.now().isAfter(sessionLastUpdated.plus(SESSION_TTL))) {
             return true;
