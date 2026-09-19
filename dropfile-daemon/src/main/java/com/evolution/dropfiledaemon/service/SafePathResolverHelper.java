@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -80,21 +81,11 @@ public class SafePathResolverHelper {
         }
     }
 
+    @SneakyThrows
     public boolean isSensitiveDaemonPath(Path path) {
-        if (path == null) {
-            return false;
-        }
+        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath().toRealPath();
 
-        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath()
-                .toAbsolutePath()
-                .normalize();
-
-        Path target;
-        try {
-            target = path.toRealPath();
-        } catch (IOException e) {
-            target = path.toAbsolutePath().normalize();
-        }
+        Path target = path.toRealPath();
 
         return target.equals(configDir) || target.startsWith(configDir);
     }

@@ -4,12 +4,14 @@ import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -179,22 +181,33 @@ class SafePathResolverTest {
     }
 
     @Test
-    void isSensitiveDaemonPath_ShouldReturnTrue_WhenFileIsConfigDirectoryOrInsideIt() {
-        Path configDir = Path.of("app", "conf");
+    void isSensitiveDaemonPath_ShouldReturnTrue_WhenFileIsConfigDirectoryOrInsideIt(@TempDir Path tempDir) throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("conf"));
+        Path appYml = Files.createFile(configDir.resolve("application.yml"));
+
+        Path keysDir = Files.createDirectory(configDir.resolve("keys"));
+        Path privateKey = Files.createFile(keysDir.resolve("private.key"));
+
         when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
 
-        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf")));
-        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf", "application.yml")));
-        assertTrue(underTest.isSensitiveDaemonPath(Path.of("app", "conf", "keys", "private.key")));
+        assertTrue(underTest.isSensitiveDaemonPath(configDir));
+        assertTrue(underTest.isSensitiveDaemonPath(appYml));
+        assertTrue(underTest.isSensitiveDaemonPath(privateKey));
     }
 
     @Test
-    void isSensitiveDaemonPath_ShouldReturnFalse_WhenFileIsOutsideConfigDirectory() {
-        Path configDir = Path.of("app", "conf");
+    void isSensitiveDaemonPath_ShouldReturnFalse_WhenFileIsOutsideConfigDirectory(@TempDir Path tempDir) throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("conf"));
+
+        Path publicDir = Files.createDirectory(tempDir.resolve("public"));
+        Path imagePng = Files.createFile(publicDir.resolve("image.png"));
+
+        Path confPublicDir = Files.createDirectory(tempDir.resolve("conf-public"));
+        Path fileTxt = Files.createFile(confPublicDir.resolve("file.txt"));
+
         when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
 
-        assertFalse(underTest.isSensitiveDaemonPath(null));
-        assertFalse(underTest.isSensitiveDaemonPath(Path.of("app", "public", "image.png")));
-        assertFalse(underTest.isSensitiveDaemonPath(Path.of("app", "conf-public", "file.txt")));
+        assertFalse(underTest.isSensitiveDaemonPath(imagePng));
+        assertFalse(underTest.isSensitiveDaemonPath(fileTxt));
     }
 }
