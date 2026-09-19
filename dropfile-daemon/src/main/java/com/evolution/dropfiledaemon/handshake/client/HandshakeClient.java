@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
@@ -12,6 +13,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -23,6 +25,11 @@ import java.time.Duration;
 @RequiredArgsConstructor
 @Component
 public class HandshakeClient {
+
+    // TODO add env vars
+    private static final int HANDSHAKE_WATCHDOG_RESPONSE_LIMIT = 8_192;
+
+    private static final Duration HANDSHAKE_WATCHDOG_RESPONSE_TIMEOUT = Duration.ofSeconds(30);
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
@@ -63,42 +70,61 @@ public class HandshakeClient {
                 .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
                 .build();
 
-        HttpResponse<byte[]> httpResponse = execute(httpRequest);
-        return objectMapper.readValue(httpResponse.body(), responseClass);
+        byte[] payload = execute(httpRequest);
+        return objectMapper.readValue(payload, responseClass);
     }
 
-    private HttpResponse<byte[]> execute(HttpRequest httpRequest) throws IOException {
-        HttpResponse<byte[]> httpResponse;
+    private byte[] execute(HttpRequest httpRequest) throws IOException {
+        try (InputStream inputStream = doExecute(httpRequest)) {
+            byte[] payload = inputStream.readAllBytes();
+            if (payload.length == 0) {
+                throw new IllegalStateException("Handshake server returned 200 OK but empty body %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri()));
+            }
+            return payload;
+        }
+    }
+
+    @SneakyThrows
+    private InputStream doExecute(HttpRequest httpRequest) {
+        HttpResponse<InputStream> httpResponse = null;
         try {
-            httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-        } catch (ConnectException e) {
-            throw new ConnectException("Handshake client failed. Target address is unreachable %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()));
-        } catch (HttpConnectTimeoutException e) {
-            throw new HttpConnectTimeoutException("HTTP connect timed out during handshake client call %s %s timeout %s millis"
-                    .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Handshake client interrupted: %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), e);
-        } catch (IOException e) {
-            throw new IOException("I/O error during handshake %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()), e);
+            try {
+                httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            } catch (ConnectException e) {
+                throw new ConnectException("Handshake client failed. Target address is unreachable %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri()));
+            } catch (HttpConnectTimeoutException e) {
+                throw new HttpConnectTimeoutException("HTTP connect timed out during handshake client call %s %s timeout %s millis"
+                        .formatted(httpRequest.method(), httpRequest.uri(), httpRequest.timeout().orElseThrow().toMillis()));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Handshake client interrupted: %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri()), e);
+            } catch (IOException e) {
+                throw new IOException("I/O error during handshake %s %s"
+                        .formatted(httpRequest.method(), httpRequest.uri()), e);
+            }
+
+            int statusCode = httpResponse.statusCode();
+            if (statusCode != 200) {
+                throw new IllegalStateException("Handshake %s %s failed with status code %s. Expected 200"
+                        .formatted(httpRequest.method(), httpRequest.uri(), statusCode));
+            }
+            return new WatchdogInputStream(
+                    httpResponse.body(),
+                    HANDSHAKE_WATCHDOG_RESPONSE_LIMIT,
+                    HANDSHAKE_WATCHDOG_RESPONSE_TIMEOUT
+            );
+        } catch (Throwable throwable) {
+            if (httpResponse != null) {
+                try {
+                    httpResponse.body().close();
+                } catch (Throwable closeThrowable) {
+                    throwable.addSuppressed(closeThrowable);
+                }
+            }
+            throw throwable;
         }
-
-        int statusCode = httpResponse.statusCode();
-        byte[] body = httpResponse.body();
-
-        if (statusCode != 200) {
-            throw new IllegalStateException("Handshake %s %s failed with status code %s. Expected 200"
-                    .formatted(httpRequest.method(), httpRequest.uri(), statusCode));
-        }
-
-        if (body == null || body.length == 0) {
-            throw new IllegalStateException("Handshake server returned 200 OK but empty body %s %s"
-                    .formatted(httpRequest.method(), httpRequest.uri()));
-        }
-
-        return httpResponse;
     }
 }
