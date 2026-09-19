@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -192,17 +193,18 @@ public class StreamingArchiveService {
     private void writeDirectoryToZip4j(Path sourceDir, ZipOutputStream zos) throws IOException {
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
         try (Stream<Path> paths = Files.walk(sourceDir)) {
-            paths.filter(Files::isRegularFile).forEach(file -> {
-                try {
-                    String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
-                    ZipParameters params = createZip4jInnerParams(relativePath, Files.size(file));
-                    zos.putNextEntry(params);
-                    fileHelper.transferTo(file, zos);
-                    zos.closeEntry();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
+            paths.filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+                    .forEach(file -> {
+                        try {
+                            String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
+                            ZipParameters params = createZip4jInnerParams(relativePath, Files.size(file));
+                            zos.putNextEntry(params);
+                            fileHelper.transferTo(file, zos);
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
@@ -211,17 +213,18 @@ public class StreamingArchiveService {
     private void writeDirectoryToStandardZip(Path sourceDir, java.util.zip.ZipOutputStream zos) throws IOException {
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
         try (Stream<Path> paths = Files.walk(sourceDir)) {
-            paths.filter(Files::isRegularFile).forEach(file -> {
-                try {
-                    String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
-                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(relativePath);
-                    zos.putNextEntry(entry);
-                    fileHelper.transferTo(file, zos);
-                    zos.closeEntry();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
+            paths.filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
+                    .forEach(file -> {
+                        try {
+                            String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
+                            java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(relativePath);
+                            zos.putNextEntry(entry);
+                            fileHelper.transferTo(file, zos);
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
