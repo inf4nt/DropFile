@@ -6,6 +6,7 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
@@ -27,7 +28,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private final Lock readLock = lock.readLock();
+    protected final Lock readLock = lock.readLock();
 
     private final Lock writeLock = lock.writeLock();
 
@@ -247,14 +248,18 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
     public Map<String, V> getAll() {
         acquireReadLock();
         try {
-            Path filePath = fileProvider.getFilePath();
-            try (InputStream inputStream = fileOperations.read(filePath)) {
-                return serdeOperations.deserialize(inputStream);
-            } catch (NoContentFoundException e) {
-                return Collections.emptyMap();
-            }
+            return doGetAll();
         } finally {
             readLock.unlock();
+        }
+    }
+
+    protected Map<String, V> doGetAll() throws IOException {
+        Path filePath = fileProvider.getFilePath();
+        try (InputStream inputStream = fileOperations.read(filePath)) {
+            return serdeOperations.deserialize(inputStream);
+        } catch (NoContentFoundException e) {
+            return Collections.emptyMap();
         }
     }
 
@@ -265,7 +270,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         }
     }
 
-    private void acquireReadLock() throws TimeoutException, InterruptedException {
+    public void acquireReadLock() throws TimeoutException, InterruptedException {
         if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             throw new TimeoutException("Could not acquire read lock for %s within %d seconds"
                     .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
