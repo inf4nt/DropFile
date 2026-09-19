@@ -39,53 +39,36 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
     @Override
     public InputStream stream(Request request) throws IOException {
         String fingerprint = request.getFingerprint();
+        Attributes attributes = request.getAttributes();
 
-        if (isSessionExpired(fingerprint)) {
+        String failuresKey = getAttributeFailuresKey(fingerprint);
+        AtomicInteger failuresCounter = attributes.computeIfAbsent(failuresKey, _ -> new AtomicInteger(0));
+        int failures = failuresCounter.get();
+
+        boolean shouldRefresh = isSessionExpired(fingerprint)
+                || failures >= 2;
+
+        if (shouldRefresh) {
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
                 if (isSessionExpired(fingerprint)) {
-                    log.info("Session fingerprint {} has expired locally. Refreshing before request", fingerprint);
+                    log.info("Refreshing session for fingerprint {} (failures={}, proactiveOrAfterErrors=true)",
+                            fingerprint, failures);
                     apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
+                } else {
+                    log.debug("Session for fingerprint {} was already refreshed by another thread (failures={})",
+                            fingerprint, failures);
                 }
             });
         }
 
         try {
-            return tunnelClient.stream(request);
+            InputStream result = tunnelClient.stream(request);
+            failuresCounter.set(0);
+            return result;
         } catch (Throwable e) {
-            Attributes attributes = request.getAttributes();
-
-            String failuresKey = getAttributeFailuresKey(fingerprint);
-            String firstFailureTimeKey = getAttributeFirstFailTime(fingerprint);
-
-            Instant firstFailureTime = attributes.computeIfAbsent(
-                    firstFailureTimeKey,
-                    _ -> Instant.now()
-            );
-
-            AtomicInteger failuresCounter = attributes.computeIfAbsent(
-                    failuresKey,
-                    _ -> new AtomicInteger()
-            );
-
-            int failuresCount = failuresCounter.incrementAndGet();
-
-            if (failuresCount % 2 != 0) {
-                throw e;
-            }
-
-            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                if (isSessionExpired(fingerprint, firstFailureTime)) {
-                    log.info("Force session refreshing for fingerprint {} after {} failed tunnel attempts",
-                            fingerprint, failuresCount);
-                    apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
-                } else {
-                    log.info("Session for fingerprint {} was already updated after first failure time ({})",
-                            fingerprint, firstFailureTime);
-                }
-            });
+            failuresCounter.incrementAndGet();
+            throw e;
         }
-
-        return tunnelClient.stream(request);
     }
 
     private boolean isSessionExpired(String fingerprint) {
@@ -118,9 +101,5 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
 
     private String getAttributeFailuresKey(String fingerprint) {
         return "FAIL:" + fingerprint;
-    }
-
-    private String getAttributeFirstFailTime(String fingerprint) {
-        return "FIRST_FAIL_TIME:" + fingerprint;
     }
 }
