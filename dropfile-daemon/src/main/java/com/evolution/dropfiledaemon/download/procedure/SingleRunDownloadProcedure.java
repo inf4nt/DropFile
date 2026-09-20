@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -106,12 +107,16 @@ public class SingleRunDownloadProcedure {
 
                     isInterrupted();
 
-                    Files.move(
-                            request.temporaryFilePath(),
-                            request.destinationFilePath(),
-                            StandardCopyOption.ATOMIC_MOVE,
-                            StandardCopyOption.REPLACE_EXISTING
-                    );
+                    try {
+                        Files.move(
+                                request.temporaryFilePath(),
+                                request.destinationFilePath(),
+                                StandardCopyOption.ATOMIC_MOVE
+                        );
+                    } catch (FileAlreadyExistsException e) {
+                        throw new IOException("Unable to execute atomic_move. Destination file already exists %s"
+                                .formatted(request.destinationFilePath()), e);
+                    }
                 }
         );
     }
@@ -138,11 +143,7 @@ public class SingleRunDownloadProcedure {
     private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
-        try (FileChannel fileChannel = FileChannel.open(
-                request.temporaryFilePath(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(), StandardOpenOption.WRITE)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
             Iterator<ChunkManifest> iterator = request.fileManifest().chunks().iterator();
             while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
