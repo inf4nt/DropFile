@@ -3,6 +3,7 @@ package com.evolution.dropfile.store.framework.file;
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -31,6 +32,7 @@ public class CacheableFileKeyValueStore<V>
             } catch (TimeoutException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
+
             try {
                 result = cache;
                 if (result == null) {
@@ -39,7 +41,7 @@ public class CacheableFileKeyValueStore<V>
                     cache = result;
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e.getMessage(), e);
+                throw new UncheckedIOException(e.getMessage(), e);
             } finally {
                 readLock.unlock();
             }
