@@ -436,6 +436,8 @@ public class FileDownloadOrchestrator {
             throw new FileAlreadyExistsException("File already exists: %s".formatted(temporaryFile));
         }
 
+        Files.createFile(temporaryFile);
+
         return temporaryFile;
     }
 
