@@ -20,11 +20,32 @@ import java.util.stream.Collectors;
 
 public class CommonUtils {
 
+    private static final String CROCKFORD_BASE32 = "0123456789abcdefghjkmnpqrstvwxyz";
+
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private static final HexFormat HEX_FORMAT = HexFormat.of();
 
     private static final String SHA256_ALGORITHM = "SHA-256";
+
+    public static String generate(int length) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Length must be positive: " + length);
+        }
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(CROCKFORD_BASE32.charAt(SECURE_RANDOM.nextInt(32)));
+        }
+        return sb.toString();
+    }
+
+    public static String generateId() {
+        return generate(12);
+    }
+
+    public static String generateFormattedId() {
+        return generate(4) + "-" + generate(4) + "-" + generate(4);
+    }
 
     public static byte[] nonce(int length) {
         byte[] bytes = new byte[length];

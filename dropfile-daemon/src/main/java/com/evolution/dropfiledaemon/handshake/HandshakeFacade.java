@@ -16,6 +16,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
+import com.evolution.dropfiledaemon.service.AccessKeyService;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,8 @@ public class HandshakeFacade {
 
     private final ObjectMapper objectMapper;
 
+    private final AccessKeyService accessKeyService;
+
     private final AccessKeyStore accessKeyStore;
 
     private final LockableOperation lockableOperationHandshakeTrustedInStore;
@@ -57,6 +60,9 @@ public class HandshakeFacade {
         AccessKey accessKey = accessKeyStore.remove(accessKeyId);
         if (accessKey == null) {
             throw new SecurityException("Access key %s not found or already consumed".formatted(accessKeyId));
+        }
+        if (accessKeyService.isAccessKeyExpired(accessKey)) {
+            throw new SecurityException("Access key %s already expired".formatted(accessKeyId));
         }
 
         String rawSecret = accessKey.key();

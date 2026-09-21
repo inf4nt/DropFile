@@ -17,7 +17,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
-import com.evolution.dropfiledaemon.util.KeyEnvelopeUtils;
+import com.evolution.dropfiledaemon.service.AccessKeyService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +43,8 @@ public class ApiHandshakeFacade {
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
+
+    private final AccessKeyService accessKeyService;
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
@@ -84,7 +86,7 @@ public class ApiHandshakeFacade {
             byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
 
             String rawSecret = requestDTO.key();
-            String accessSecretKeyId = KeyEnvelopeUtils.getId(rawSecret);
+            String accessSecretKeyId = accessKeyService.getId(rawSecret);
 
             SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
                     rawSecret.getBytes(StandardCharsets.UTF_8),

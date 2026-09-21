@@ -86,7 +86,7 @@ public class FileDownloadOrchestrator {
             Path temporaryFilePath = getTemporaryFilePath(destinationFilePath);
             Path manifestFilePath = getManifestFilePath(destinationFilePath);
 
-            String operationId = CommonUtils.random();
+            String operationId = CommonUtils.generateId();
             FileManifest fileManifest = fileManifestService.build(request.hash(), request.size());
             downloadProcedure = downloadProcedureFactory.get(
                     operationId,

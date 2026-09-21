@@ -52,7 +52,7 @@ public class ApiConnectionsShareFacade {
 
         String alias = safePathResolverHelper.sanitizeFilename(rawFileName);
 
-        String key = CommonUtils.random();
+        String key = CommonUtils.generateId();
         ShareFile shareFile = shareFileStore.save(key,
                 () -> {
                     Instant fileLastModified = Files.getLastModifiedTime(realPath).toInstant();

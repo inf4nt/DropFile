@@ -70,7 +70,7 @@ public class ApiQuickShareFacade {
 
         safePathResolverHelper.validateSensitiveDaemonPath(realPath);
 
-        String id = CommonUtils.random();
+        String id = CommonUtils.generateId();
 
         QuickShare quickShare = quickShareStore.save(
                 id,
