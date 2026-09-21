@@ -2,11 +2,8 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.store.framework.CacheableKeyValueStore;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 public class CacheableFileKeyValueStore<V>
         extends FileKeyValueStore<V>
@@ -24,15 +21,7 @@ public class CacheableFileKeyValueStore<V>
     public Map<String, V> getAll() {
         Map<String, V> result = cache;
         if (result == null) {
-            try {
-                acquireReadLock();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e.getMessage(), e);
-            } catch (TimeoutException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-
+            acquireReadLock();
             try {
                 result = cache;
                 if (result == null) {
@@ -40,8 +29,6 @@ public class CacheableFileKeyValueStore<V>
                     result = Collections.unmodifiableMap(all);
                     cache = result;
                 }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e.getMessage(), e);
             } finally {
                 readLock.unlock();
             }
@@ -56,6 +43,11 @@ public class CacheableFileKeyValueStore<V>
 
     @Override
     public void reset() {
-        cache = null;
+        acquireWriteLock();
+        try {
+            cache = null;
+        } finally {
+            writeLock.unlock();
+        }
     }
 }

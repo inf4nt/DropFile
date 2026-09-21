@@ -2,7 +2,6 @@ package com.evolution.dropfile.store.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
-import lombok.SneakyThrows;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
-    private static final long READ_LOCK_TIMEOUT_SECONDS = 60;
+    private static final long READ_LOCK_TIMEOUT_SECONDS = 120;
 
     private static final long WRITE_LOCK_TIMEOUT_SECONDS = 120;
 
@@ -28,21 +27,32 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
     private final Lock writeLock = lock.writeLock();
 
-    private void acquireWriteLock() throws TimeoutException, InterruptedException {
-        if (!writeLock.tryLock(WRITE_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            throw new TimeoutException("Could not acquire write lock for %s within %d seconds"
-                    .formatted(getClass().getSimpleName(), WRITE_LOCK_TIMEOUT_SECONDS));
+    private void acquireWriteLock() {
+        try {
+            if (!writeLock.tryLock(WRITE_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                TimeoutException timeoutException = new TimeoutException("Could not acquire write lock for %s within %d seconds"
+                        .formatted(getClass().getSimpleName(), WRITE_LOCK_TIMEOUT_SECONDS));
+                throw new IllegalStateException(timeoutException.getMessage(), timeoutException);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while acquiring write lock", e);
         }
     }
 
-    private void acquireReadLock() throws TimeoutException, InterruptedException {
-        if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            throw new TimeoutException("Could not acquire read lock for %s within %d seconds"
-                    .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
+    private void acquireReadLock() {
+        try {
+            if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                TimeoutException timeoutException = new TimeoutException("Could not acquire read lock for %s within %d seconds"
+                        .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
+                throw new IllegalStateException(timeoutException.getMessage(), timeoutException);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while acquiring read lock", e);
         }
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> save(Callable<? extends Map<String, V>> callable,
                                UnaryOperator<Map<String, V>> preCommit,
@@ -88,6 +98,11 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
             store.putAll(toSave);
 
             return Collections.unmodifiableMap(toSave);
+        } catch (Exception e) {
+            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
         } finally {
             writeLock.unlock();
         }
@@ -121,7 +136,6 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
         return validEntries;
     }
 
-    @SneakyThrows
     @Override
     public RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
         if (criteriaEnvelopes == null || criteriaEnvelopes.isEmpty()) {
@@ -176,7 +190,6 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
         }
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> remove(Collection<String> keys) {
         if (keys == null || keys.isEmpty()) {
@@ -199,13 +212,12 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
                 }
             }
 
-            return removed;
+            return Collections.unmodifiableMap(removed);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @SneakyThrows
     @Override
     public void removeAll() {
         acquireWriteLock();
@@ -216,7 +228,6 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
         }
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> getAll() {
         acquireReadLock();

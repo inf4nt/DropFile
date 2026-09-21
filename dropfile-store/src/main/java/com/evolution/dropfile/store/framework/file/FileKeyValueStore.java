@@ -4,9 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
@@ -22,7 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
-    private static final long READ_LOCK_TIMEOUT_SECONDS = 60;
+    private static final long READ_LOCK_TIMEOUT_SECONDS = 120;
 
     private static final long WRITE_LOCK_TIMEOUT_SECONDS = 120;
 
@@ -30,7 +28,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
     protected final Lock readLock = lock.readLock();
 
-    private final Lock writeLock = lock.writeLock();
+    protected final Lock writeLock = lock.writeLock();
 
     private final FileProvider fileProvider;
 
@@ -41,7 +39,6 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
     protected void doAfterMutation() {
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> save(Callable<? extends Map<String, V>> callable,
                                UnaryOperator<Map<String, V>> preCommit,
@@ -92,11 +89,18 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
                 serdeOperations.serialize(all, outputStream);
             });
 
-            afterMutation();
-
             return Collections.unmodifiableMap(toSave);
+        } catch (Exception e) {
+            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
         } finally {
-            writeLock.unlock();
+            try {
+                doAfterMutation();
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
@@ -128,7 +132,6 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         return validEntries;
     }
 
-    @SneakyThrows
     @Override
     public RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
         if (criteriaEnvelopes == null || criteriaEnvelopes.isEmpty()) {
@@ -173,19 +176,20 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
                 }
             });
 
-            afterMutation();
-
             return new RemoveResult(
                     confirmedFound,
                     matchResult.notFound(),
                     ambiguous
             );
         } finally {
-            writeLock.unlock();
+            try {
+                afterMutation();
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> remove(Collection<String> keys) {
         if (keys == null || keys.isEmpty()) {
@@ -221,59 +225,88 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
                 serdeOperations.serialize(toUpdate, outputStream);
             });
 
-            afterMutation();
-
             return removed;
+        } catch (Exception e) {
+            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
         } finally {
-            writeLock.unlock();
+            try {
+                afterMutation();
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
-    @SneakyThrows
     @Override
     public void removeAll() {
         acquireWriteLock();
         try {
             Path filePath = fileProvider.getFilePath();
             fileOperations.removeAll(filePath);
-
-            afterMutation();
+        } catch (Exception e) {
+            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
         } finally {
-            writeLock.unlock();
+            try {
+                afterMutation();
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
-    @SneakyThrows
     @Override
     public Map<String, V> getAll() {
         acquireReadLock();
         try {
-            return doGetAll();
+            return Collections.unmodifiableMap(doGetAll());
         } finally {
             readLock.unlock();
         }
     }
 
-    protected Map<String, V> doGetAll() throws IOException {
+    protected Map<String, V> doGetAll() {
         Path filePath = fileProvider.getFilePath();
         try (InputStream inputStream = fileOperations.read(filePath)) {
             return serdeOperations.deserialize(inputStream);
         } catch (NoContentFoundException e) {
             return Collections.emptyMap();
+        } catch (Exception e) {
+            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw CommonUtils.toRuntimeException(e.getMessage(), e);
         }
     }
 
-    private void acquireWriteLock() throws TimeoutException, InterruptedException {
-        if (!writeLock.tryLock(WRITE_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            throw new TimeoutException("Could not acquire write lock for %s within %d seconds"
-                    .formatted(getClass().getSimpleName(), WRITE_LOCK_TIMEOUT_SECONDS));
+    protected void acquireWriteLock() {
+        try {
+            if (!writeLock.tryLock(WRITE_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                TimeoutException timeoutException = new TimeoutException("Could not acquire write lock for %s within %d seconds"
+                        .formatted(getClass().getSimpleName(), WRITE_LOCK_TIMEOUT_SECONDS));
+                throw new IllegalStateException(timeoutException.getMessage(), timeoutException);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while acquiring write lock", e);
         }
     }
 
-    public void acquireReadLock() throws TimeoutException, InterruptedException {
-        if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            throw new TimeoutException("Could not acquire read lock for %s within %d seconds"
-                    .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
+    protected void acquireReadLock() {
+        try {
+            if (!readLock.tryLock(READ_LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                TimeoutException timeoutException = new TimeoutException("Could not acquire read lock for %s within %d seconds"
+                        .formatted(getClass().getSimpleName(), READ_LOCK_TIMEOUT_SECONDS));
+                throw new IllegalStateException(timeoutException.getMessage(), timeoutException);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while acquiring read lock", e);
         }
     }
 
