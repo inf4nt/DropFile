@@ -8,16 +8,16 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "cache-reset",
-        description = "Daemon cache reset",
-        customSynopsis = "dropf daemon cache-reset",
+        name = "gc",
+        description = "Triggers internal garbage collection and cleanup of stale state",
+        customSynopsis = "dropf daemon gc",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class CacheResetCommand extends AbstractCommandHttpHandler<Void> {
+public class DaemonSystemGarbageCollectorCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.daemonCacheReset();
+        return daemonClient.daemonGarbageCollector();
     }
 }

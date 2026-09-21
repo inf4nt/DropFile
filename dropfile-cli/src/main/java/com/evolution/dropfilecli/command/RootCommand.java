@@ -3,6 +3,9 @@ package com.evolution.dropfilecli.command;
 import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfilecli.command.connections.ConnectionsCommand;
 import com.evolution.dropfilecli.command.daemon.DaemonCommand;
+import com.evolution.dropfilecli.command.daemon.DaemonShutdownCommand;
+import com.evolution.dropfilecli.command.daemon.DaemonStartCommand;
+import com.evolution.dropfilecli.command.daemon.DaemonStatusCommand;
 import com.evolution.dropfilecli.command.quickshare.QuickShareCommand;
 import com.evolution.dropfilecli.config.CliApplicationProperties;
 import com.evolution.dropfilecli.util.Spinner;
@@ -20,7 +23,10 @@ import picocli.CommandLine;
         subcommands = {
                 ConnectionsCommand.class,
                 DaemonCommand.class,
-                QuickShareCommand.class
+                QuickShareCommand.class,
+                DaemonStatusCommand.class,
+                DaemonStartCommand.class,
+                DaemonShutdownCommand.class
         }
 )
 public class RootCommand implements Runnable {

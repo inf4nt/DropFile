@@ -23,7 +23,7 @@ import java.time.Duration;
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class StartCommand extends AbstractCommandHandler {
+public class DaemonStartCommand extends AbstractCommandHandler {
 
     private final DaemonClient daemonClient;
 

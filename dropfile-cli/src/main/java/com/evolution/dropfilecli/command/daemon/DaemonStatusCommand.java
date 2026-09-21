@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class RetrieveInfoCommand extends AbstractCommandHttpHandler<DaemonInfoResponseDTO> {
+public class DaemonStatusCommand extends AbstractCommandHttpHandler<DaemonInfoResponseDTO> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {

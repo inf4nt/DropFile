@@ -8,16 +8,16 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "gc",
-        description = "Triggers internal garbage collection and cleanup of stale state",
-        customSynopsis = "dropf daemon gc",
+        name = "shutdown",
+        description = "Daemon shutdown",
+        customSynopsis = "dropf daemon shutdown",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class SystemGarbageCollectorCommand extends AbstractCommandHttpHandler<Void> {
+public class DaemonShutdownCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.daemonGarbageCollector();
+        return daemonClient.daemonShutdown();
     }
 }

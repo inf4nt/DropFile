@@ -8,16 +8,16 @@ import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
-        name = "shutdown",
-        description = "Daemon shutdown",
-        customSynopsis = "dropf daemon shutdown",
+        name = "cache-reset",
+        description = "Daemon cache reset",
+        customSynopsis = "dropf daemon cache-reset",
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
 )
-public class ShutdownCommand extends AbstractCommandHttpHandler<Void> {
+public class DaemonCacheResetCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.daemonShutdown();
+        return daemonClient.daemonCacheReset();
     }
 }

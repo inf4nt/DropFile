@@ -10,11 +10,11 @@ import picocli.CommandLine;
         aliases = {"d"},
         description = "Daemon commands",
         subcommands = {
-                ShutdownCommand.class,
-                RetrieveInfoCommand.class,
-                StartCommand.class,
-                CacheResetCommand.class,
-                SystemGarbageCollectorCommand.class
+                DaemonShutdownCommand.class,
+                DaemonStatusCommand.class,
+                DaemonStartCommand.class,
+                DaemonCacheResetCommand.class,
+                DaemonSystemGarbageCollectorCommand.class
         }
 )
 public class DaemonCommand extends AbstractCommandHandler {
