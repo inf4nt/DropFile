@@ -51,14 +51,15 @@ public class ServerQuickShareRestController {
             throw new IllegalStateException("Quickshare file already expired %s".formatted(id));
         }
 
-        if (quickShare.singleUse()) {
-            quickShare = quickShareStore.update(id, value -> value
+        if (quickShareService.isTtlExpired(quickShare)) {
+            quickShareStore.update(id, value -> value
                     .withExpired(true)
                     .withUpdated(Instant.now())
             );
+            throw new IllegalStateException("Quickshare file already expired TTL %s".formatted(id));
         }
 
-        if (!quickShare.expired() && quickShareService.isTtlExpired(quickShare)) {
+        if (quickShare.singleUse()) {
             quickShare = quickShareStore.update(id, value -> value
                     .withExpired(true)
                     .withUpdated(Instant.now())
