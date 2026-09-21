@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.quickshare;
 
 import lombok.With;
 
+import java.time.Duration;
 import java.time.Instant;
 
 @With
@@ -11,6 +12,7 @@ public record QuickShare(String resourcePath,
                          boolean singleUse,
                          boolean secure,
                          boolean expired,
+                         Duration ttl,
                          Instant updated,
                          Instant created) {
 }

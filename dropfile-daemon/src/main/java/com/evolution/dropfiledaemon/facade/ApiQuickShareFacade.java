@@ -26,12 +26,15 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
 @RequiredArgsConstructor
 @Component
 public class ApiQuickShareFacade {
+
+    private final Duration QUICKSHARE_TTL = Duration.ofMinutes(10);
 
     private final Environment environment;
 
@@ -90,6 +93,7 @@ public class ApiQuickShareFacade {
                                 requestDTO.singleUse(),
                                 true,
                                 false,
+                                QUICKSHARE_TTL,
                                 createInstantTime,
                                 createInstantTime
                         );
@@ -101,6 +105,7 @@ public class ApiQuickShareFacade {
                             requestDTO.singleUse(),
                             false,
                             false,
+                            QUICKSHARE_TTL,
                             createInstantTime,
                             createInstantTime
                     );
@@ -159,6 +164,8 @@ public class ApiQuickShareFacade {
                 entry.secure(),
                 entry.singleUse(),
                 entry.expired(),
+                entry.ttl().toMillis(),
+                entry.created().plus(entry.ttl()),
                 entry.updated(),
                 entry.created()
         );

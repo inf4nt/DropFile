@@ -54,7 +54,7 @@ public class AccessKeyService implements Purgeable {
                 .collect(Collectors.toSet());
 
         if (!ObjectUtils.isEmpty(expiredKeys)) {
-            log.info("Found expired keys {}. Removing", expiredKeys.size());
+            log.info("Removing expired TTL access keys size: {}", expiredKeys.size());
             accessKeyStore.remove(expiredKeys);
         }
     }

@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.controller.server;
 import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.service.ApiQuickShareService;
 import com.evolution.dropfiledaemon.service.StreamingArchiveService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,8 @@ public class ServerQuickShareRestController {
 
     private final QuickShareStore quickShareStore;
 
+    private final ApiQuickShareService quickShareService;
+
     private final StreamingArchiveService streamingArchiveService;
 
     @GetMapping("/{id}")
@@ -49,7 +52,14 @@ public class ServerQuickShareRestController {
         }
 
         if (quickShare.singleUse()) {
-            quickShareStore.update(id, value -> value
+            quickShare = quickShareStore.update(id, value -> value
+                    .withExpired(true)
+                    .withUpdated(Instant.now())
+            );
+        }
+
+        if (!quickShare.expired() && quickShareService.isTtlExpired(quickShare)) {
+            quickShare = quickShareStore.update(id, value -> value
                     .withExpired(true)
                     .withUpdated(Instant.now())
             );

@@ -15,6 +15,8 @@ public record ApiQuickShareLsResponseDTO(String id,
                                          boolean secure,
                                          boolean singleUse,
                                          boolean expired,
+                                         long ttlMillis,
+                                         Instant expiredAt,
                                          Instant updated,
                                          Instant created) {
 }
