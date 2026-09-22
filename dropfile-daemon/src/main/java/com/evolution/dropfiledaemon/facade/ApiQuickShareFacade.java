@@ -152,7 +152,7 @@ public class ApiQuickShareFacade {
                 linkId,
                 entry.resourcePath(),
                 entry.resourceRealPath(),
-                CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourcePath()))),
+                CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourceRealPath()))),
                 entry.secret(),
                 relativeDownloadLink,
                 externalLink,
