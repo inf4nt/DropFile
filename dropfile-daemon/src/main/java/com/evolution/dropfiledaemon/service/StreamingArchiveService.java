@@ -235,8 +235,6 @@ public class StreamingArchiveService {
                         }
                     });
         } catch (UncheckedIOException e) {
-            // Если будет зацикливание симлинков, Files.walk выбросит FileSystemLoopException,
-            // и он будет корректно пойман здесь и проброшен выше.
             throw e.getCause();
         }
     }
