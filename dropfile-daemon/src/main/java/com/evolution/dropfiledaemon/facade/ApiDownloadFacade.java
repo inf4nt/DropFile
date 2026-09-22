@@ -6,10 +6,12 @@ import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
-import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -42,6 +44,8 @@ public class ApiDownloadFacade {
                     .map(it -> CommonUtils.toDisplaySize(it.speedBytesPerSec()))
                     .orElse(null);
 
+            boolean accessible = isAccessible(downloadFile);
+
             responseMap.put(operationId, new ApiDownloadLsDTO.Response(
                     operationId,
                     downloadFile.fingerprint(),
@@ -49,7 +53,7 @@ public class ApiDownloadFacade {
                     downloadFile.destinationFile(),
                     progress,
                     speedPerSecond,
-                    Utils.isAccessible(downloadFile),
+                    accessible,
                     status,
                     downloadFile.created(),
                     downloadFile.updated()
@@ -130,5 +134,11 @@ public class ApiDownloadFacade {
         }
         return responseStream
                 .toList();
+    }
+
+    private boolean isAccessible(DownloadFile downloadFile) {
+        String destinationFileString = downloadFile.destinationFile();
+        Path destinationFilePath = Paths.get(destinationFileString);
+        return Files.exists(destinationFilePath);
     }
 }

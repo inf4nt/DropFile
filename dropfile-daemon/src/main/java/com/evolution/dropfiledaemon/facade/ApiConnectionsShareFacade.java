@@ -10,9 +10,9 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.service.ApiShareFileHelper;
 import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
-import com.evolution.dropfiledaemon.util.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -40,6 +40,8 @@ public class ApiConnectionsShareFacade {
     private final ShareFileStore shareFileStore;
 
     private final SafePathResolverHelper safePathResolverHelper;
+
+    private final ApiShareFileHelper apiShareFileHelper;
 
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
         Path source = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
@@ -109,7 +111,7 @@ public class ApiConnectionsShareFacade {
     }
 
     private ApiConnectionsShareLsResponseDTO map(String id, ShareFile shareFile) {
-        boolean accessible = Utils.isAccessible(shareFile);
+        boolean accessible = apiShareFileHelper.isAccessible(shareFile);
 
         return new ApiConnectionsShareLsResponseDTO(
                 id,

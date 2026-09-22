@@ -1,7 +1,7 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfiledaemon.service;
 
-import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.share.ShareFile;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,14 +9,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 
-public class Utils {
+@Component
+public class ApiShareFileHelper {
 
-    public static boolean isAccessible(ShareFile shareFile) {
+    public boolean isAccessible(ShareFile shareFile) {
         if (!shareFile.accessible()) {
             return false;
         }
 
-        Path path = Paths.get(shareFile.resourcePath());
+        Path path = Paths.get(shareFile.resourceRealPath());
 
         if (Files.notExists(path)) {
             return false;
@@ -30,11 +31,5 @@ public class Utils {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    public static boolean isAccessible(DownloadFile downloadFile) {
-        String destinationFileString = downloadFile.destinationFile();
-        Path destinationFilePath = Paths.get(destinationFileString);
-        return Files.exists(destinationFilePath);
     }
 }
