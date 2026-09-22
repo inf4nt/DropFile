@@ -107,17 +107,24 @@ public class SingleRunDownloadProcedure {
 
                     isInterrupted();
 
-                    try {
-                        Files.move(
-                                request.temporaryFilePath(),
-                                request.destinationFilePath(),
-                                StandardCopyOption.ATOMIC_MOVE
-                        );
-                    } catch (FileAlreadyExistsException e) {
-                        throw new IOException("Unable to execute atomic_move. Destination file already exists %s"
-                                .formatted(request.destinationFilePath()), e);
-                    }
+                    atomicMove();
                 }
+        );
+    }
+
+
+    private void atomicMove() throws Exception {
+        // Best-effort no-replace check.
+        // Java NIO does not provide an atomic "rename if absent" operation across all platforms.
+        // A race with external processes is still possible between exists() and ATOMIC_MOVE.
+        if (Files.exists(request.destinationFilePath())) {
+            throw new FileAlreadyExistsException("Unable to execute atomic_move. Destination file already exists %s"
+                    .formatted(request.destinationFilePath()));
+        }
+        Files.move(
+                request.temporaryFilePath(),
+                request.destinationFilePath(),
+                StandardCopyOption.ATOMIC_MOVE
         );
     }
 
