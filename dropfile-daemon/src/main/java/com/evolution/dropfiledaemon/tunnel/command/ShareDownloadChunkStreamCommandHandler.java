@@ -4,15 +4,12 @@ import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.store.share.ShareFile;
 import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
-import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import com.evolution.dropfiledaemon.tunnel.command.dto.ShareDownloadChunkStreamTunnelRequest;
+import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandler;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -45,7 +42,7 @@ public class ShareDownloadChunkStreamCommandHandler
                 .getRequired(request.id())
                 .getValue();
 
-        Path path = Paths.get(shareFile.resourcePath()).toRealPath(LinkOption.NOFOLLOW_LINKS);
+        Path path = Paths.get(shareFile.resourceRealPath());
         long fileSize = shareFile.size();
         long skip = request.position();
         int take = request.size();
