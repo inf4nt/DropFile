@@ -42,7 +42,9 @@ public class ApiConnectionsShareFacade {
     private final SafePathResolverHelper safePathResolverHelper;
 
     public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
-        Path realPath = safePathResolverHelper.safeExistingRealPathRegularFileResolver(requestDTO.resourcePath());
+        Path source = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
+
+        Path realPath = safePathResolverHelper.safeExistingRealPathRegularFileResolver(source);
 
         safePathResolverHelper.validateSensitiveDaemonPath(realPath);
 
@@ -58,6 +60,7 @@ public class ApiConnectionsShareFacade {
                     Instant fileLastModified = Files.getLastModifiedTime(realPath).toInstant();
                     return new ShareFile(
                             alias,
+                            source.toString(),
                             realPath.toString(),
                             null,
                             Files.size(realPath),
@@ -112,6 +115,7 @@ public class ApiConnectionsShareFacade {
                 id,
                 shareFile.alias(),
                 shareFile.resourcePath(),
+                shareFile.resourceRealPath(),
                 shareFile.hash(),
                 CommonUtils.toDisplaySize(shareFile.size()),
                 accessible,

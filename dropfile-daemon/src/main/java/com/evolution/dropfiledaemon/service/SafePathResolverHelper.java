@@ -90,22 +90,16 @@ public class SafePathResolverHelper {
         }
     }
 
-    public Path safeExistingRealPathRegularFileResolver(String resourcePath) {
+    public Path safeExistingRealPathRegularFileResolver(Path source) {
         try {
-            if (!StringUtils.hasText(resourcePath)) {
-                throw new IllegalArgumentException("Resource path cannot be null or empty");
+            if (!Files.exists(source)) {
+                throw new FileNotFoundException("No file found: " + source);
             }
 
-            Path path = Paths.get(resourcePath).toAbsolutePath().normalize();
-
-            if (!Files.exists(path)) {
-                throw new FileNotFoundException("No file found: " + resourcePath);
-            }
-
-            Path realPath = path.toRealPath();
+            Path realPath = source.toRealPath();
 
             if (!Files.isRegularFile(realPath)) {
-                throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
+                throw new IllegalArgumentException("File path is not a regular file: " + source);
             }
 
             validateSensitiveDaemonPath(realPath);

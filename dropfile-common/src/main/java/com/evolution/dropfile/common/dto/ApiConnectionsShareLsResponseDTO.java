@@ -5,6 +5,7 @@ import java.time.Instant;
 public record ApiConnectionsShareLsResponseDTO(String id,
                                                String alias,
                                                String resourcePath,
+                                               String resourceRealPath,
                                                String hash,
                                                String size,
                                                boolean accessible,

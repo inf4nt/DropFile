@@ -15,10 +15,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -64,7 +66,7 @@ public class StreamingArchiveService {
         CloseShieldOutputStream closeShieldOuterZos = CloseShieldOutputStream.stream(outerZos);
         ZipOutputStream innerZos = new ZipOutputStream(closeShieldOuterZos);
 
-        ZipParameters innerParams = createZip4jInnerParams(innerZipName, Files.size(source));
+        ZipParameters innerParams = createZip4jInnerParams(innerZipName, Files.size(source), secureZipCompressionLevel);
         innerZos.putNextEntry(innerParams);
         fileHelper.transferTo(source, innerZos);
 
@@ -90,7 +92,7 @@ public class StreamingArchiveService {
         CloseShieldOutputStream closeShieldOuterZos = CloseShieldOutputStream.stream(outerZos);
         ZipOutputStream innerZos = new ZipOutputStream(closeShieldOuterZos);
 
-        writeDirectoryToZip4j(source, innerZos);
+        writeDirectoryToZip4j(source, innerZos, secureZipCompressionLevel);
 
         // INTENTIONAL DESIGN: No try-with-resources
         innerZos.close();
@@ -124,13 +126,11 @@ public class StreamingArchiveService {
         );
 
         GZIPOutputStream gzipOut = createConfiguredGzipStream(stream, daemonQuickShareInsecureCompressLevel);
+        ZipOutputStream zos = new ZipOutputStream(gzipOut);
 
-        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(gzipOut);
-        zos.setLevel(java.util.zip.Deflater.NO_COMPRESSION);
+        writeDirectoryToZip4j(source, zos, CompressionLevel.NO_COMPRESSION);
 
-        writeDirectoryToStandardZip(source, zos);
-
-        zos.finish();
+        zos.close();
         gzipOut.close();
     }
 
@@ -156,12 +156,10 @@ public class StreamingArchiveService {
                 CloseShieldOutputStream.stream(outputStreamArgument)
         );
 
-        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(stream);
-        zos.setLevel(java.util.zip.Deflater.NO_COMPRESSION);
+        ZipOutputStream zos = new ZipOutputStream(stream);
 
-        writeDirectoryToStandardZip(source, zos);
+        writeDirectoryToZip4j(source, zos, CompressionLevel.NO_COMPRESSION);
 
-        zos.finish();
         zos.close();
     }
 
@@ -179,107 +177,20 @@ public class StreamingArchiveService {
         return outerZos;
     }
 
-    private ZipParameters createZip4jInnerParams(String entryName, long size) {
+    private ZipParameters createZip4jInnerParams(String entryName, long size, CompressionLevel compressionLevel) {
         ZipParameters innerParams = new ZipParameters();
         innerParams.setFileNameInZip(entryName);
-        if (secureZipCompressionLevel.getLevel() == 0) {
+        if (compressionLevel == CompressionLevel.NO_COMPRESSION) {
             innerParams.setCompressionMethod(CompressionMethod.STORE);
             innerParams.setCompressionLevel(CompressionLevel.NO_COMPRESSION);
         } else {
             innerParams.setCompressionMethod(CompressionMethod.DEFLATE);
-            innerParams.setCompressionLevel(secureZipCompressionLevel);
+            innerParams.setCompressionLevel(compressionLevel);
         }
         if (size >= 0) {
             innerParams.setEntrySize(size);
         }
         return innerParams;
-    }
-
-    private void writeDirectoryToZip4j(Path sourceDir, ZipOutputStream zos) throws IOException {
-        Path realSourceDir = sourceDir.toRealPath();
-        Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
-
-        try (Stream<Path> paths = Files.walk(sourceDir, FileVisitOption.FOLLOW_LINKS)) {
-            paths
-                    .filter(file -> {
-                        try {
-                            Path realFile = file.toRealPath();
-
-                            if (!Files.isRegularFile(realFile)) {
-                                return false;
-                            }
-
-                            if (!realFile.startsWith(realSourceDir)) {
-                                return false;
-                            }
-
-                            if (safePathResolverHelper.isSensitiveDaemonPath(realFile)) {
-                                return false;
-                            }
-
-                            return true;
-                        } catch (IOException e) {
-                            return false;
-                        }
-                    })
-                    .forEach(file -> {
-                        try {
-                            Path realFile = file.toRealPath();
-                            String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
-                            ZipParameters params = createZip4jInnerParams(relativePath, Files.size(realFile));
-                            zos.putNextEntry(params);
-                            fileHelper.transferTo(realFile, zos);
-                            zos.closeEntry();
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
-        }
-    }
-
-    private void writeDirectoryToStandardZip(Path sourceDir, java.util.zip.ZipOutputStream zos) throws IOException {
-        Path realSourceDir = sourceDir.toRealPath();
-        Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
-
-        try (Stream<Path> paths = Files.walk(sourceDir, FileVisitOption.FOLLOW_LINKS)) {
-            paths
-                    .filter(file -> {
-                        try {
-                            Path realFile = file.toRealPath();
-
-                            if (!Files.isRegularFile(realFile)) {
-                                return false;
-                            }
-
-                            if (!realFile.startsWith(realSourceDir)) {
-                                return false;
-                            }
-
-                            if (safePathResolverHelper.isSensitiveDaemonPath(realFile)) {
-                                return false;
-                            }
-
-                            return true;
-                        } catch (IOException e) {
-                            return false;
-                        }
-                    })
-                    .forEach(file -> {
-                        try {
-                            String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
-                            java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(relativePath);
-                            zos.putNextEntry(entry);
-                            fileHelper.transferTo(file, zos);
-                            zos.closeEntry();
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
-        }
     }
 
     private int getCompressLevel(Integer compressLevel) {
@@ -298,5 +209,93 @@ public class StreamingArchiveService {
                 this.def.setLevel(level);
             }
         };
+    }
+
+    private Path validateFileBeforeTransfer(Path file, Path realSourceDir) throws IOException {
+        Path realFile = file.toRealPath();
+
+        if (!realFile.startsWith(realSourceDir)) {
+            throw new SecurityException(
+                    "File escaped published directory (possible TOCTOU attack): " + file
+            );
+        }
+
+        if (safePathResolverHelper.isSensitiveDaemonPath(realFile)) {
+            throw new SecurityException(
+                    "Publishing sensitive daemon path is restricted: " + realFile
+            );
+        }
+
+        return realFile;
+    }
+
+    private List<PathWithAttributes> getPublishableFiles(Path realSourceDir) throws IOException {
+        if (safePathResolverHelper.isSensitiveDaemonPath(realSourceDir)) {
+            throw new SecurityException(
+                    "Publishing sensitive daemon path is restricted: " + realSourceDir
+            );
+        }
+
+        try (Stream<Path> stream = Files.walk(realSourceDir)) {
+            return stream
+                    .map(file -> {
+                        try {
+                            BasicFileAttributes attributes = Files.readAttributes(
+                                    file,
+                                    BasicFileAttributes.class,
+                                    LinkOption.NOFOLLOW_LINKS
+                            );
+                            return new PathWithAttributes(file, attributes);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    })
+                    .filter(item -> item.attributes().isRegularFile())
+                    .filter(item -> !safePathResolverHelper.isSensitiveDaemonPath(item.path()))
+                    .toList();
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
+    }
+
+    private void writeDirectoryToZip4j(Path sourceDir, ZipOutputStream zos, CompressionLevel compressionLevel) throws IOException {
+        Path realSourceDir = sourceDir.toRealPath();
+
+        List<PathWithAttributes> publishableFiles = getPublishableFiles(realSourceDir);
+
+        String rootDirName = realSourceDir.getFileName().toString() + "/";
+
+        ZipParameters dirParams = new ZipParameters();
+        dirParams.setFileNameInZip(rootDirName);
+        zos.putNextEntry(dirParams);
+        zos.closeEntry();
+
+        for (PathWithAttributes item : publishableFiles) {
+            Path file = item.path();
+            Path realFile = validateFileBeforeTransfer(file, realSourceDir);
+
+            String relativeSubPath = realSourceDir
+                    .relativize(realFile)
+                    .toString()
+                    .replace('\\', '/');
+
+            String zipEntryPath = rootDirName + relativeSubPath;
+
+            ZipParameters params = createZip4jInnerParams(
+                    zipEntryPath,
+                    item.attributes().size(),
+                    compressionLevel
+            );
+
+            zos.putNextEntry(params);
+            try {
+                fileHelper.transferTo(realFile, zos);
+            } finally {
+                zos.closeEntry();
+            }
+        }
+    }
+
+    private record PathWithAttributes(Path path, BasicFileAttributes attributes) {
     }
 }

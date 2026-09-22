@@ -7,6 +7,7 @@ import java.time.Instant;
 
 @With
 public record QuickShare(String resourcePath,
+                         String resourceRealPath,
                          String secret,
                          boolean directory,
                          boolean singleUse,

@@ -7,6 +7,7 @@ import java.time.Instant;
 @With
 public record ShareFile(String alias,
                         String resourcePath,
+                        String resourceRealPath,
                         String hash,
                         long size,
                         boolean accessible,

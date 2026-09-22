@@ -19,7 +19,7 @@ public class ApiQuickShareRestController {
     private final ApiQuickShareFacade facade;
 
     @PostMapping("/add")
-    public ApiQuickShareLsResponseDTO add(@RequestBody ApiQuickShareAddRequestDTO requestDTO) {
+    public ApiQuickShareLsResponseDTO add(@RequestBody ApiQuickShareAddRequestDTO requestDTO) throws Exception {
         return facade.add(requestDTO);
     }
 

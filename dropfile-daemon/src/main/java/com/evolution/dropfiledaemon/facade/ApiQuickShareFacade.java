@@ -21,6 +21,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,8 +46,7 @@ public class ApiQuickShareFacade {
 
     private final SafePathResolverHelper safePathResolverHelper;
 
-    @SneakyThrows
-    public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) {
+    public ApiQuickShareLsResponseDTO add(ApiQuickShareAddRequestDTO requestDTO) throws IOException {
         if (!StringUtils.hasText(requestDTO.resourcePath())) {
             throw new IllegalArgumentException("Resource path cannot be empty");
         }
@@ -82,6 +82,7 @@ public class ApiQuickShareFacade {
                         );
 
                         return new QuickShare(
+                                resourceAbsolutePath.toString(),
                                 realPath.toString(),
                                 secret,
                                 isDirectory,
@@ -94,6 +95,7 @@ public class ApiQuickShareFacade {
                         );
                     }
                     return new QuickShare(
+                            resourceAbsolutePath.toString(),
                             realPath.toString(),
                             null,
                             isDirectory,
@@ -149,6 +151,7 @@ public class ApiQuickShareFacade {
         return new ApiQuickShareLsResponseDTO(
                 linkId,
                 entry.resourcePath(),
+                entry.resourceRealPath(),
                 CommonUtils.toDisplaySize(CommonUtils.getSize(Paths.get(entry.resourcePath()))),
                 entry.secret(),
                 relativeDownloadLink,
