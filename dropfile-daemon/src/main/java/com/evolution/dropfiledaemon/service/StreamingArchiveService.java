@@ -125,13 +125,16 @@ public class StreamingArchiveService {
                 CloseShieldOutputStream.stream(outputStreamArgument)
         );
 
-        GZIPOutputStream gzipOut = createConfiguredGzipStream(stream, daemonQuickShareInsecureCompressLevel);
-        ZipOutputStream zos = new ZipOutputStream(gzipOut);
+        CompressionLevel compressionLevel = Arrays.stream(CompressionLevel.values())
+                .filter(it -> it.getLevel() == daemonQuickShareInsecureCompressLevel)
+                .findAny()
+                .orElseThrow();
+        ZipOutputStream zos = new ZipOutputStream(stream);
 
-        writeDirectoryToZip4j(source, zos, CompressionLevel.NO_COMPRESSION);
+        writeDirectoryToZip4j(source, zos, compressionLevel);
 
+        zos.flush();
         zos.close();
-        gzipOut.close();
     }
 
     public void insecureFile(Path source, OutputStream outputStreamArgument) throws IOException {

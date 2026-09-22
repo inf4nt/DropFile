@@ -176,8 +176,7 @@ public class ServerQuickShareRestController {
             Path resourcePath = Paths.get(quickShare.resourcePath());
             String filenameContentDisposition = resourcePath.getFileName().toString() + ".zip";
 
-            response.setHeader("Content-Encoding", "gzip");
-            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setContentType("application/zip");
             response.setHeader(
                     HttpHeaders.CONTENT_DISPOSITION,
                     ContentDisposition.attachment()
