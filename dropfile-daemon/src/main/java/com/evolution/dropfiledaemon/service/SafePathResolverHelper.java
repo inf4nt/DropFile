@@ -2,16 +2,15 @@ package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -81,46 +80,39 @@ public class SafePathResolverHelper {
         }
     }
 
-    @SneakyThrows
     public boolean isSensitiveDaemonPath(Path path) {
-        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath().toRealPath();
-
-        Path target = path.toRealPath();
-
-        return target.equals(configDir) || target.startsWith(configDir);
+        try {
+            Path configDir = daemonConfigDirectoryProvider.getDirectoryPath().toRealPath();
+            Path target = path.toRealPath();
+            return target.equals(configDir) || target.startsWith(configDir);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e.getMessage(), e);
+        }
     }
 
-    public Path safeExistingRealPathRegularFileResolver(String resourcePath) throws IOException {
-        if (!StringUtils.hasText(resourcePath)) {
-            throw new IllegalArgumentException("Resource path cannot be null or empty");
-        }
-
-        Path path = Paths.get(resourcePath).toAbsolutePath().normalize();
-
-        if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
-            throw new FileNotFoundException("No file found: " + resourcePath);
-        }
-
-        ensureNoSymlinksInPathHierarchy(path);
-
-        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
-        }
-
-        Path realPath = path.toRealPath();
-
-        validateSensitiveDaemonPath(realPath);
-
-        return realPath;
-    }
-
-    private void ensureNoSymlinksInPathHierarchy(Path path) {
-        Path current = path;
-        while (current != null) {
-            if (Files.isSymbolicLink(current)) {
-                throw new IllegalArgumentException("Symbolic links are not allowed in path hierarchy: " + current);
+    public Path safeExistingRealPathRegularFileResolver(String resourcePath) {
+        try {
+            if (!StringUtils.hasText(resourcePath)) {
+                throw new IllegalArgumentException("Resource path cannot be null or empty");
             }
-            current = current.getParent();
+
+            Path path = Paths.get(resourcePath).toAbsolutePath().normalize();
+
+            if (!Files.exists(path)) {
+                throw new FileNotFoundException("No file found: " + resourcePath);
+            }
+
+            Path realPath = path.toRealPath();
+
+            if (!Files.isRegularFile(realPath)) {
+                throw new IllegalArgumentException("File path is not a regular file: " + resourcePath);
+            }
+
+            validateSensitiveDaemonPath(realPath);
+
+            return realPath;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e.getMessage(), e);
         }
     }
 }

@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -196,33 +196,78 @@ public class StreamingArchiveService {
     }
 
     private void writeDirectoryToZip4j(Path sourceDir, ZipOutputStream zos) throws IOException {
+        Path realSourceDir = sourceDir.toRealPath();
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
-        try (Stream<Path> paths = Files.walk(sourceDir)) {
+
+        try (Stream<Path> paths = Files.walk(sourceDir, FileVisitOption.FOLLOW_LINKS)) {
             paths
-                    .filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
-                    .filter(file -> !safePathResolverHelper.isSensitiveDaemonPath(file))
+                    .filter(file -> {
+                        try {
+                            Path realFile = file.toRealPath();
+
+                            if (!Files.isRegularFile(realFile)) {
+                                return false;
+                            }
+
+                            if (!realFile.startsWith(realSourceDir)) {
+                                return false;
+                            }
+
+                            if (safePathResolverHelper.isSensitiveDaemonPath(realFile)) {
+                                return false;
+                            }
+
+                            return true;
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    })
                     .forEach(file -> {
                         try {
+                            Path realFile = file.toRealPath();
                             String relativePath = rootDir.relativize(file).toString().replace('\\', '/');
-                            ZipParameters params = createZip4jInnerParams(relativePath, Files.size(file));
+                            ZipParameters params = createZip4jInnerParams(relativePath, Files.size(realFile));
                             zos.putNextEntry(params);
-                            fileHelper.transferTo(file, zos);
+                            fileHelper.transferTo(realFile, zos);
                             zos.closeEntry();
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
                     });
         } catch (UncheckedIOException e) {
+            // Если будет зацикливание симлинков, Files.walk выбросит FileSystemLoopException,
+            // и он будет корректно пойман здесь и проброшен выше.
             throw e.getCause();
         }
     }
 
     private void writeDirectoryToStandardZip(Path sourceDir, java.util.zip.ZipOutputStream zos) throws IOException {
+        Path realSourceDir = sourceDir.toRealPath();
         Path rootDir = sourceDir.getParent() != null ? sourceDir.getParent() : sourceDir.getFileSystem().getPath("");
-        try (Stream<Path> paths = Files.walk(sourceDir)) {
+
+        try (Stream<Path> paths = Files.walk(sourceDir, FileVisitOption.FOLLOW_LINKS)) {
             paths
-                    .filter(file -> !Files.isSymbolicLink(file) && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
-                    .filter(file -> !safePathResolverHelper.isSensitiveDaemonPath(file))
+                    .filter(file -> {
+                        try {
+                            Path realFile = file.toRealPath();
+
+                            if (!Files.isRegularFile(realFile)) {
+                                return false;
+                            }
+
+                            if (!realFile.startsWith(realSourceDir)) {
+                                return false;
+                            }
+
+                            if (safePathResolverHelper.isSensitiveDaemonPath(realFile)) {
+                                return false;
+                            }
+
+                            return true;
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    })
                     .forEach(file -> {
                         try {
                             String relativePath = rootDir.relativize(file).toString().replace('\\', '/');

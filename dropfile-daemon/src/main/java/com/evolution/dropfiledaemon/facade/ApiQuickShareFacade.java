@@ -23,7 +23,6 @@ import org.springframework.util.StringUtils;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -54,22 +53,18 @@ public class ApiQuickShareFacade {
 
         Path resourceAbsolutePath = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
-        if (Files.notExists(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS)) {
+        if (!Files.exists(resourceAbsolutePath)) {
             throw new FileNotFoundException("No file or directory found: %s".formatted(resourceAbsolutePath));
         }
 
-        if (Files.isSymbolicLink(resourceAbsolutePath)) {
-            throw new IllegalArgumentException("Symbolic links are not allowed: " + resourceAbsolutePath);
-        }
+        Path realPath = resourceAbsolutePath.toRealPath();
 
-        boolean isDirectory = Files.isDirectory(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS);
-        boolean isRegularFile = Files.isRegularFile(resourceAbsolutePath, LinkOption.NOFOLLOW_LINKS);
+        boolean isDirectory = Files.isDirectory(realPath);
+        boolean isRegularFile = Files.isRegularFile(realPath);
 
         if (!isDirectory && !isRegularFile) {
-            throw new IllegalArgumentException("Target must be a regular file or directory: " + resourceAbsolutePath);
+            throw new IllegalArgumentException("Target must be a regular file or directory: " + requestDTO.resourcePath());
         }
-
-        Path realPath = resourceAbsolutePath.toRealPath(LinkOption.NOFOLLOW_LINKS);
 
         safePathResolverHelper.validateSensitiveDaemonPath(realPath);
 
