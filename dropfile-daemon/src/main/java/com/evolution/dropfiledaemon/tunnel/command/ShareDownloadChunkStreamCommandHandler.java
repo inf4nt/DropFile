@@ -39,9 +39,8 @@ public class ShareDownloadChunkStreamCommandHandler
         return ShareDownloadChunkStreamTunnelRequest.class;
     }
 
-    @SneakyThrows
     @Override
-    public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) {
+    public InputStream handle(ShareDownloadChunkStreamTunnelRequest request) throws Exception {
         ShareFile shareFile = shareFileStore
                 .getRequired(request.id())
                 .getValue();

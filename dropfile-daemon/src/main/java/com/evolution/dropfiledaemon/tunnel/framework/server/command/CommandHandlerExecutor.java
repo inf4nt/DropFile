@@ -32,7 +32,7 @@ public class CommandHandlerExecutor {
     }
 
     @Nullable
-    public Object handle(TunnelRequestDTO.Payload payload) {
+    public Object handle(TunnelRequestDTO.Payload payload) throws Exception {
         CommandHandler commandHandler = getHandler(payload.command());
 
         @Nullable

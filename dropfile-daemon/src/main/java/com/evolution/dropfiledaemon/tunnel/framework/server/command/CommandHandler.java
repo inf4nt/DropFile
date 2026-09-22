@@ -6,5 +6,5 @@ public interface CommandHandler<T, R> {
 
     Class<T> getPayloadType();
 
-    R handle(T t);
+    R handle(T t) throws Exception;
 }

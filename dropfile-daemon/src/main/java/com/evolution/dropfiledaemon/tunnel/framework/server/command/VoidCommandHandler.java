@@ -8,12 +8,12 @@ public interface VoidCommandHandler extends CommandHandler<Void, Void> {
     }
 
     @Override
-    default Void handle(Void unused) {
+    default Void handle(Void unused) throws Exception {
         handle();
         return null;
     }
 
     String getCommandName();
 
-    void handle();
+    void handle() throws Exception;
 }
