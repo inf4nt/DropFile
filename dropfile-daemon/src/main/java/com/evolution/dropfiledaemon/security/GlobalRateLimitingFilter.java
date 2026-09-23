@@ -19,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -64,16 +63,7 @@ public class GlobalRateLimitingFilter extends OncePerRequestFilter {
             return;
         }
 
-        boolean acquired;
-        try {
-            acquired = semaphore.tryAcquire(200, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            return;
-        }
-
-        if (!acquired) {
+        if (!semaphore.tryAcquire()) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             return;
         }
@@ -100,12 +90,10 @@ public class GlobalRateLimitingFilter extends OncePerRequestFilter {
 
                         @Override
                         public void onTimeout(AsyncEvent event) {
-                            releaseOnce.run();
                         }
 
                         @Override
                         public void onError(AsyncEvent event) {
-                            releaseOnce.run();
                         }
 
                         @Override
