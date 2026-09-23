@@ -432,11 +432,13 @@ public class FileDownloadOrchestrator {
 
         Path temporaryFile = downloadDirectoryPath.resolve(temporaryFileName);
 
+        if (!temporaryFile.startsWith(downloadDirectoryPath)) {
+            throw new SecurityException("Path traversal attempt detected: " + temporaryFile);
+        }
+
         if (Files.exists(temporaryFile)) {
             throw new FileAlreadyExistsException("File already exists: %s".formatted(temporaryFile));
         }
-
-        Files.createFile(temporaryFile);
 
         return temporaryFile;
     }

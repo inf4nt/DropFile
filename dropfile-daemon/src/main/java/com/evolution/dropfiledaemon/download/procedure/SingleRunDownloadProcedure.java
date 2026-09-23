@@ -150,7 +150,9 @@ public class SingleRunDownloadProcedure {
     private void chunksHandler() throws Exception {
         AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
 
-        try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(), StandardOpenOption.WRITE)) {
+        try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(),
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE)) {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
             Iterator<ChunkManifest> iterator = request.fileManifest().chunks().iterator();
             while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
