@@ -45,12 +45,11 @@ public class ServerQuickShareRestController {
     @GetMapping("/{id}")
     public WebAsyncTask<Void> download(@PathVariable String id, HttpServletResponse response) throws IOException {
         QuickShare activeQuickShare = quickShareStore.update(id, current -> {
-            Instant now = Instant.now();
-
             if (current.expired()) {
                 throw new IllegalStateException("QuickShare link already expired: " + id);
             }
 
+            Instant now = Instant.now();
             if (quickShareService.isTtlExpired(now, current)) {
                 throw new IllegalStateException("QuickShare link expired by TTL: " + id);
             }
