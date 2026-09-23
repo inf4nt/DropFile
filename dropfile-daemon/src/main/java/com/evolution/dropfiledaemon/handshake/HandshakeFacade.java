@@ -169,7 +169,6 @@ public class HandshakeFacade {
 
             handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     dhKeyPair.getPublic().getEncoded(),
-                    dhKeyPair.getPrivate().getEncoded(),
                     publicKeyDH,
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
@@ -251,7 +250,6 @@ public class HandshakeFacade {
 
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     keyPairDH.getPublic().getEncoded(),
-                    keyPairDH.getPrivate().getEncoded(),
                     sessionPayloadRequest.publicKeyDH(),
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
