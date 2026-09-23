@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.io.InputStreamPipeline;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
+import com.evolution.dropfiledaemon.activity.ActivityTracker;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerTunnelRestController;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
@@ -56,11 +57,15 @@ public class HttpTunnelClient implements TunnelClient {
 
     private final CompressTunnelService compressTunnelService;
 
+    private final ActivityTracker activityTracker;
+
     private final ObjectMapper objectMapper;
 
     @Override
     public InputStream stream(Request request) throws IOException {
         Objects.requireNonNull(request, "Request must not be null");
+
+        activityTracker.recordActivity();
 
         HttpTunnelRequestContext httpTunnelRequestContext = buildHttpTunnelRequestContext(request);
 
