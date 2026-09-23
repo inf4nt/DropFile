@@ -183,24 +183,26 @@ public class HandshakeFacade {
     @SneakyThrows
     public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
         String fingerprint = sessionDTO.fingerprint();
+
+        HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
+
+        byte[] sessionPayloadDTOBytes = sessionDTO.payload();
+        HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = objectMapper.readValue(
+                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionRequestPayload.class
+        );
+
+        CryptoRSA.verify(
+                sessionPayloadDTOBytes,
+                sessionDTO.signature(),
+                CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
+        );
+
+        replyAttackGuard.sessionRequest(sessionPayloadRequest);
+
         return lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
-            HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
-
-            byte[] sessionPayloadDTOBytes = sessionDTO.payload();
-            HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = objectMapper.readValue(
-                    sessionPayloadDTOBytes, HandshakeSessionDTO.SessionRequestPayload.class
-            );
-
-            CryptoRSA.verify(
-                    sessionPayloadDTOBytes,
-                    sessionDTO.signature(),
-                    CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
-            );
-
-            replyAttackGuard.sessionRequest(sessionPayloadRequest);
+            HandshakeTrustedInStore.TrustedIn currentTrustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
 
             KeyPair keyPairDH = CryptoECDH.generateKeyPair();
-
             byte[] serverSalt = CommonUtils.nonce16();
 
             HandshakeSessionDTO.SessionResponsePayload sessionPayloadResponse = new HandshakeSessionDTO.SessionResponsePayload(
@@ -211,7 +213,7 @@ public class HandshakeFacade {
             byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
             byte[] signature = CryptoRSA.sign(
                     sessionPayloadResponseBytes,
-                    CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA())
+                    CryptoRSA.getPrivateKey(currentTrustedIn.handshake().privateRSA())
             );
 
             byte[] sessionRawKey = CryptoECDH.getSecretKey(
@@ -232,7 +234,7 @@ public class HandshakeFacade {
             );
 
             HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
-                    CommonUtils.getFingerprint(trustedIn.handshake().publicRSA()),
+                    CommonUtils.getFingerprint(currentTrustedIn.handshake().publicRSA()),
                     sessionPayloadResponseBytes,
                     signature
             );
