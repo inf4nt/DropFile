@@ -25,6 +25,9 @@ class SafePathResolverTest {
 
     private DirectoryProvider directoryProvider;
 
+    @TempDir
+    private Path tempDir;
+
     @BeforeEach
     public void before() {
         directoryProvider = mock(DirectoryProvider.class);
@@ -111,8 +114,8 @@ class SafePathResolverTest {
     }
 
     @Test
-    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsExactConfigDirectory() {
-        Path configDir = Path.of("daemon-config");
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsExactConfigDirectory() throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
         when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertThrows(
@@ -122,62 +125,17 @@ class SafePathResolverTest {
     }
 
     @Test
-    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsNestedInsideConfigDirectory() {
-        Path configDir = Path.of("daemon-config");
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsNestedInsideConfigDirectory() throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
+        Path subfolder = Files.createDirectory(configDir.resolve("subfolder"));
+        Path nestedPath = Files.createFile(subfolder.resolve("settings.json"));
 
-        Path nestedPath = Path.of("daemon-config", "subfolder", "settings.json");
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertThrows(
                 SecurityException.class,
                 () -> underTest.validateSensitiveDaemonPath(nestedPath)
         );
-    }
-
-    @Test
-    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsUnnormalizedTraversalIntoConfigDir() {
-        Path configDir = Path.of("daemon-config");
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
-
-        Path traversalPath = Path.of("other-dir", "..", "daemon-config", "secret.key");
-
-        assertThrows(
-                SecurityException.class,
-                () -> underTest.validateSensitiveDaemonPath(traversalPath)
-        );
-    }
-
-    @Test
-    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsParentOfConfigDirectory() {
-        Path configDir = Path.of("parent-dir", "daemon-config");
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
-
-        Path parentDir = Path.of("parent-dir");
-
-        assertThrows(
-                SecurityException.class,
-                () -> underTest.validateSensitiveDaemonPath(parentDir)
-        );
-    }
-
-    @Test
-    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsOutsideConfigDirectory() {
-        Path configDir = Path.of("daemon-config");
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
-
-        Path safePath = Path.of("user-downloads", "document.pdf");
-
-        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(safePath));
-    }
-
-    @Test
-    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathSharesPrefixNameButIsSiblingDirectory() {
-        Path configDir = Path.of("daemon-config");
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
-
-        Path siblingPath = Path.of("daemon-config-public", "file.txt");
-
-        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(siblingPath));
     }
 
     @Test
@@ -209,5 +167,56 @@ class SafePathResolverTest {
 
         assertFalse(underTest.isSensitiveDaemonPath(imagePng));
         assertFalse(underTest.isSensitiveDaemonPath(fileTxt));
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsUnnormalizedTraversalIntoConfigDir() throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
+        Path secretFile = Files.createFile(configDir.resolve("secret.key"));
+        Path otherDir = Files.createDirectory(tempDir.resolve("other-dir"));
+
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        Path traversalPath = otherDir.resolve("..").resolve("daemon-config").resolve("secret.key");
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(traversalPath)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsParentOfConfigDirectory() throws Exception {
+        Path parentDir = Files.createDirectory(tempDir.resolve("parent-dir"));
+        Path configDir = Files.createDirectory(parentDir.resolve("daemon-config"));
+
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        assertThrows(
+                SecurityException.class,
+                () -> underTest.validateSensitiveDaemonPath(parentDir)
+        );
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathIsOutsideConfigDirectory() throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
+        Path userDownloads = Files.createDirectory(tempDir.resolve("user-downloads"));
+        Path safeFile = Files.createFile(userDownloads.resolve("document.pdf"));
+
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(safeFile));
+    }
+
+    @Test
+    void validateSensitiveDaemonPath_ShouldAllowAccess_WhenPathSharesPrefixNameButIsSiblingDirectory() throws Exception {
+        Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
+        Path siblingDir = Files.createDirectory(tempDir.resolve("daemon-config-public"));
+        Path siblingFile = Files.createFile(siblingDir.resolve("file.txt"));
+
+        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+
+        assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(siblingFile));
     }
 }

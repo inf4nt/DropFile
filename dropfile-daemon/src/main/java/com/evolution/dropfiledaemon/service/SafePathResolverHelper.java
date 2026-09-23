@@ -12,7 +12,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -54,37 +54,48 @@ public class SafePathResolverHelper {
     }
 
     public void validateSensitiveDaemonPath(Path path) {
-        Objects.requireNonNull(path, "path must not be null");
-
-        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath()
-                .toAbsolutePath()
-                .normalize();
-
-        Path target;
-        try {
-            target = path.toRealPath();
-        } catch (IOException e) {
-            target = path.toAbsolutePath().normalize();
-        }
-
-        if (target.equals(configDir) || target.startsWith(configDir)) {
+        if (isSensitiveDaemonPath(path)) {
             throw new SecurityException(
-                    "Access to daemon configuration directory is forbidden: " + target
-            );
-        }
-
-        if (configDir.startsWith(target)) {
-            throw new SecurityException(
-                    "Sharing parent directory of daemon configuration is forbidden: " + target
+                    "Access to daemon configuration or its parent directory is forbidden: " + path
             );
         }
     }
 
     public boolean isSensitiveDaemonPath(Path path) {
+        Objects.requireNonNull(path, "path must not be null");
+
+        List<Path> sensitiveRoots = getCanonicalSensitiveRoots();
+
+        Path targetReal = toRealPath(path);
+
+        for (Path sensitiveRoot : sensitiveRoots) {
+            if (targetReal.equals(sensitiveRoot) || targetReal.startsWith(sensitiveRoot)) {
+                return true;
+            }
+
+            if (sensitiveRoot.startsWith(targetReal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<Path> getCanonicalSensitiveRoots() {
+        Path configDir = daemonConfigDirectoryProvider.getDirectoryPath();
+
+        Path realConfigDir = toRealPath(configDir);
+
+        return List.of(realConfigDir);
+    }
+
+    private Path toRealPath(Path path) {
         try {
-            Path configDir = daemonConfigDirectoryProvider.getDirectoryPath().toRealPath();
-            Path target = path.toRealPath();
-            return target.equals(configDir) || target.startsWith(configDir);
+            if (Files.notExists(path)) {
+                throw new FileNotFoundException("Path does not exist: " + path);
+            }
+
+            return path.toAbsolutePath().normalize().toRealPath();
         } catch (IOException e) {
             throw new UncheckedIOException(e.getMessage(), e);
         }
