@@ -192,7 +192,7 @@ public class ApiHandshakeFacade {
 
                 URI addressURI = trustedOut.addressURI();
 
-                KeyPair keyPairDH = CryptoECDH.generateKeyPair();
+                KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
                 UUID sessionRequestId = UUID.randomUUID();
                 byte[] clientSalt = CommonUtils.nonce16();
@@ -200,7 +200,7 @@ public class ApiHandshakeFacade {
                 HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
                         sessionRequestId,
                         clientSalt,
-                        keyPairDH.getPublic().getEncoded(),
+                        dhKeyPair.getPublic().getEncoded(),
                         System.currentTimeMillis()
                 );
                 byte[] sessionPayloadRequestBytes = objectMapper.writeValueAsBytes(sessionPayloadRequest);
@@ -235,7 +235,7 @@ public class ApiHandshakeFacade {
                 }
 
                 byte[] sessionRawKey = CryptoECDH.getSecretKey(
-                        CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                        CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
                         CryptoECDH.getPublicKey(sessionResponsePayload.publicKeyDH())
                 );
 
@@ -262,7 +262,7 @@ public class ApiHandshakeFacade {
                 });
 
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                        keyPairDH.getPublic().getEncoded(),
+                        dhKeyPair.getPublic().getEncoded(),
                         sessionResponsePayload.publicKeyDH(),
                         secretTunnelClientKey.getEncoded(),
                         secretTunnelServerKey.getEncoded(),

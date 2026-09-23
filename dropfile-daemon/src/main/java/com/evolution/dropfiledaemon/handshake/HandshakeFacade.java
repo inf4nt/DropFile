@@ -201,13 +201,13 @@ public class HandshakeFacade {
         return lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
             HandshakeTrustedInStore.TrustedIn currentTrustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
 
-            KeyPair keyPairDH = CryptoECDH.generateKeyPair();
+            KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
             byte[] serverSalt = CommonUtils.nonce16();
 
             HandshakeSessionDTO.SessionResponsePayload sessionPayloadResponse = new HandshakeSessionDTO.SessionResponsePayload(
                     sessionPayloadRequest.requestId(),
                     serverSalt,
-                    keyPairDH.getPublic().getEncoded()
+                    dhKeyPair.getPublic().getEncoded()
             );
             byte[] sessionPayloadResponseBytes = objectMapper.writeValueAsBytes(sessionPayloadResponse);
             byte[] signature = CryptoRSA.sign(
@@ -216,7 +216,7 @@ public class HandshakeFacade {
             );
 
             byte[] sessionRawKey = CryptoECDH.getSecretKey(
-                    CryptoECDH.getPrivateKey(keyPairDH.getPrivate().getEncoded()),
+                    CryptoECDH.getPrivateKey(dhKeyPair.getPrivate().getEncoded()),
                     CryptoECDH.getPublicKey(sessionPayloadRequest.publicKeyDH())
             );
 
@@ -249,7 +249,7 @@ public class HandshakeFacade {
             });
 
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
-                    keyPairDH.getPublic().getEncoded(),
+                    dhKeyPair.getPublic().getEncoded(),
                     sessionPayloadRequest.publicKeyDH(),
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
