@@ -18,7 +18,7 @@ public class IdleShutdownMonitor {
 
     private final TaskScheduler taskScheduler;
 
-    private final long daemonIdleRateMillis;
+    private final Duration daemonIdleRateInterval;
 
     private final long softDaemonIdleTimeoutMillis;
 
@@ -29,19 +29,19 @@ public class IdleShutdownMonitor {
                                DaemonApplicationProperties applicationProperties) {
         this.activityTracker = activityTracker;
         this.taskScheduler = taskScheduler;
-        this.daemonIdleRateMillis = applicationProperties.daemonIdleRateMillis;
+        this.daemonIdleRateInterval = applicationProperties.daemonIdleRateInterval;
         this.softDaemonIdleTimeoutMillis = applicationProperties.daemonIdleTimeoutMillis;
         this.hardDaemonIdleTimeoutMillis = 2 * applicationProperties.daemonIdleTimeoutMillis;
     }
 
     @EventListener(DropFileDaemonApplicationReadyEvent.class)
     public void listener() {
-        log.info("Application is ready. Initializing idle shutdown monitor (rate: {}ms)", daemonIdleRateMillis);
+        log.info("Application is ready. Initializing idle shutdown monitor (rate: {}ms)", daemonIdleRateInterval.toMillis());
         log.info("Application is ready. Initializing idle shutdown monitor (soft timeout: {}ms)", softDaemonIdleTimeoutMillis);
         log.info("Application is ready. Initializing idle shutdown monitor (hard timeout: {}ms)", hardDaemonIdleTimeoutMillis);
 
-        if (daemonIdleRateMillis <= 0) {
-            log.info("Idle shutdown monitor is not running. Rate is negative");
+        if (!daemonIdleRateInterval.isPositive()) {
+            log.info("Idle shutdown monitor is not running. Rate is negative or zero");
             return;
         }
 
@@ -52,7 +52,7 @@ public class IdleShutdownMonitor {
 
         taskScheduler.scheduleWithFixedDelay(
                 this::scheduler,
-                Duration.ofMillis(daemonIdleRateMillis)
+                daemonIdleRateInterval
         );
     }
 

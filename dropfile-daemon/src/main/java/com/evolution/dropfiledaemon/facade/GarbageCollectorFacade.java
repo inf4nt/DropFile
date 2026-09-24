@@ -32,16 +32,16 @@ public class GarbageCollectorFacade {
 
     @EventListener(DropFileDaemonApplicationReadyEvent.class)
     public void readyListener() {
-        long rateMillis = applicationProperties.daemonGcRateMillis;
+        Duration rateInterval = applicationProperties.daemonGcRateInterval;
 
-        log.info("Application is ready. Initializing GC task scheduler (rate: {}ms)", rateMillis);
+        log.info("Application is ready. Initializing GC task scheduler (rate: {}ms)", rateInterval.toMillis());
 
-        Instant firstRunTime = Instant.now().plusMillis(rateMillis);
+        Instant firstRunTime = Instant.now().plus(rateInterval);
 
         taskScheduler.scheduleWithFixedDelay(
                 this::purgeScheduler,
                 firstRunTime,
-                Duration.ofMillis(rateMillis)
+                rateInterval
         );
     }
 
@@ -72,12 +72,12 @@ public class GarbageCollectorFacade {
     }
 
     private void purgeScheduler() {
-        long rate = applicationProperties.daemonGcRateMillis;
+        long rateIntervalMillis = applicationProperties.daemonGcRateInterval.toMillis();
         long elapsedSinceLastRun = System.currentTimeMillis() - lastRunTimestamp;
 
-        if (lastRunTimestamp != 0 && elapsedSinceLastRun < rate) {
-            log.debug("Skipping scheduled GC. UI or manual purge was executed {}ms ago (rate is {}ms)",
-                    elapsedSinceLastRun, rate);
+        if (lastRunTimestamp != 0 && elapsedSinceLastRun < rateIntervalMillis) {
+            log.debug("Skipping scheduled GC. UI or manual purge was executed {}ms ago (rateIntervalMillis is {}ms)",
+                    elapsedSinceLastRun, rateIntervalMillis);
             return;
         }
 
