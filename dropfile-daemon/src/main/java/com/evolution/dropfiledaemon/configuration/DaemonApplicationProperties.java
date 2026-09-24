@@ -47,8 +47,6 @@ public class DaemonApplicationProperties {
 
     public final int daemonTunnelServerCompressLevel;
 
-    public final long daemonTunnelServerAsyncRequestTimeout;
-
     public final int daemonTunnelServerChunkLimitMax;
 
     public final int daemonTunnelServerChunkLimitMin;
@@ -107,7 +105,6 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.client.http.request-timeout-millis}") int daemonTunnelClientHttpRequestTimeoutMillis,
             @Value("${dropfile.daemon.tunnel.server.compress.level}") int daemonTunnelServerCompressLevel,
-            @Value("${dropfile.daemon.tunnel.server.async.request-timeout}") int daemonTunnelServerAsyncRequestTimeout,
             @Value("${dropfile.daemon.tunnel.server.chunk.limit.max}") int daemonTunnelServerChunkLimitMax,
             @Value("${dropfile.daemon.tunnel.server.chunk.limit.min}") int daemonTunnelServerChunkLimitMin,
             @Value("${dropfile.daemon.tunnel.client.manifest.chunk-size}") int daemonTunnelClientManifestChunkSize,
@@ -142,7 +139,6 @@ public class DaemonApplicationProperties {
         this.daemonHandshakeClientHttpRequestTimeoutMillis = daemonHandshakeClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
-        this.daemonTunnelServerAsyncRequestTimeout = daemonTunnelServerAsyncRequestTimeout;
         this.daemonTunnelServerChunkLimitMax = daemonTunnelServerChunkLimitMax;
         this.daemonTunnelServerChunkLimitMin = daemonTunnelServerChunkLimitMin;
         this.daemonTunnelClientManifestChunkSize = validateDaemonTunnelClientManifestChunkSize(daemonTunnelClientManifestChunkSize);

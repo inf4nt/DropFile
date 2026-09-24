@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.WebAsyncTask;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,12 +23,12 @@ public class ServerHandshakeRestController {
     private final HandshakeFacade handshakeFacade;
 
     @PostMapping(ServerHandshakeRestController.HANDSHAKE_ENDPOINT)
-    public HandshakeResponseDTO handshake(@RequestBody HandshakeRequestDTO requestDTO) {
-        return handshakeFacade.handshake(requestDTO);
+    public WebAsyncTask<HandshakeResponseDTO> handshake(@RequestBody HandshakeRequestDTO requestDTO) {
+        return new WebAsyncTask<>(() -> handshakeFacade.handshake(requestDTO));
     }
 
     @PostMapping(ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)
-    public HandshakeSessionDTO.Session sessionHandshake(@RequestBody HandshakeSessionDTO.Session sessionDTO) {
-        return handshakeFacade.handshakeSession(sessionDTO);
+    public WebAsyncTask<HandshakeSessionDTO.Session> sessionHandshake(@RequestBody HandshakeSessionDTO.Session sessionDTO) {
+        return new WebAsyncTask<>(() -> handshakeFacade.handshakeSession(sessionDTO));
     }
 }

@@ -1,7 +1,6 @@
 package com.evolution.dropfiledaemon.controller.server;
 
 import com.evolution.dropfile.common.io.CloseShieldOutputStream;
-import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcher;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelDispatcherContext;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
@@ -31,15 +30,13 @@ public class ServerTunnelRestController {
 
     private final TunnelDispatcher tunnelDispatcher;
 
-    private final DaemonApplicationProperties applicationProperties;
-
     @PostMapping(ServerTunnelRestController.TUNNEL_ENDPOINT)
     public WebAsyncTask<Void> stream(@RequestBody TunnelRequestDTO requestDTO,
                                      HttpServletResponse response) {
 
         AtomicReference<TunnelDispatcherContext> contextAtomicReference = new AtomicReference<>();
 
-        WebAsyncTask<Void> webAsyncTask = new WebAsyncTask<>(applicationProperties.daemonTunnelServerAsyncRequestTimeout, () -> {
+        WebAsyncTask<Void> webAsyncTask = new WebAsyncTask<>(() -> {
             try (TunnelDispatcherContext tunnelDispatcherContext = contextAtomicReference.updateAndGet(
                     _ -> tunnelDispatcher.dispatch(requestDTO)
             )) {
@@ -66,8 +63,7 @@ public class ServerTunnelRestController {
 
         webAsyncTask.onTimeout(() -> {
             String message = extractMessage(contextAtomicReference.get());
-            log.error("Tunnel dispatcher failed due to timeout. Timeout '{}' fingerprint '{}' {}",
-                    applicationProperties.daemonTunnelServerAsyncRequestTimeout,
+            log.error("Tunnel dispatcher failed due to timeout. Fingerprint '{}' {}",
                     requestDTO.fingerprint(),
                     message
             );
