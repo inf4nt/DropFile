@@ -90,7 +90,7 @@ public class DaemonApplicationProperties {
 
     public final Duration daemonSecurityReplyTtl;
 
-    public final Duration daemonSecurityReplyMaxFutureDrift;
+    public final Duration daemonSecurityReplyMaxFutureDriftTimeout;
 
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
@@ -128,7 +128,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.server.servlet.rate-request.tunnel.limit.max}") int daemonServerServletRateRequestTunnelLimitMax,
             @Value("${dropfile.daemon.server.servlet.rate-request.quickshare.limit.max}") int daemonServerServletRateRequestQuickshareLimitMax,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.security.replay.ttl}") Duration daemonSecurityReplyTtl,
-            @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.security.replay.max-future-drift}") Duration daemonSecurityReplyMaxFutureDrift) {
+            @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.security.replay.max-future-drift-timeout}") Duration daemonSecurityReplyMaxFutureDriftTimeout) {
         this.userDir = userDir;
         this.serverPort = serverPort;
         this.serverTomcatMaxConnections = serverTomcatMaxConnections;
@@ -164,7 +164,7 @@ public class DaemonApplicationProperties {
         this.daemonServerServletRateRequestTunnelLimitMax = daemonServerServletRateRequestTunnelLimitMax;
         this.daemonServerServletRateRequestQuickshareLimitMax = daemonServerServletRateRequestQuickshareLimitMax;
         this.daemonSecurityReplyTtl = daemonSecurityReplyTtl;
-        this.daemonSecurityReplyMaxFutureDrift = daemonSecurityReplyMaxFutureDrift;
+        this.daemonSecurityReplyMaxFutureDriftTimeout = daemonSecurityReplyMaxFutureDriftTimeout;
     }
 
     private int validateDaemonTunnelClientManifestChunkSize(int daemonTunnelClientManifestChunkSize) {

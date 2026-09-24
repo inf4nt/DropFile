@@ -40,7 +40,7 @@ public class ReplyAttackGuard implements Purgeable {
     public ReplyAttackGuard(DaemonApplicationProperties applicationProperties) {
         this(
                 applicationProperties.daemonSecurityReplyTtl,
-                applicationProperties.daemonSecurityReplyMaxFutureDrift,
+                applicationProperties.daemonSecurityReplyMaxFutureDriftTimeout,
                 Clock.systemUTC()
         );
     }
