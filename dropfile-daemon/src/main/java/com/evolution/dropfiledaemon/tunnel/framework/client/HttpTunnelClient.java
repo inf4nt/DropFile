@@ -149,7 +149,7 @@ public class HttpTunnelClient implements TunnelClient {
                 .add(in -> new WatchdogInputStream(
                         in,
                         daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
-                        Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeoutMillis)
+                        daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeout
                 ))
                 .add(in -> tunnelTrafficMonitor.inputStreamWrapper(fingerprint, in))
                 .add(in -> {
@@ -248,7 +248,7 @@ public class HttpTunnelClient implements TunnelClient {
                             objectMapper.writeValueAsBytes(tunnelRequestDTO))
                     )
                     .header("Content-Type", "application/json")
-                    .timeout(Duration.ofMillis(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeoutMillis))
+                    .timeout(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeout)
                     .build();
 
             return new HttpTunnelRequestContext(

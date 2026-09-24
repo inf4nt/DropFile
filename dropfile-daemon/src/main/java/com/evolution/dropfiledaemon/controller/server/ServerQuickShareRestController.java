@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -90,7 +89,7 @@ public class ServerQuickShareRestController {
     private WebAsyncTask<Void> getSecureDirectory(String quickShareId,
                                                   QuickShare quickShare,
                                                   HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = String.format("%s-%s.zip", "secure", quickShareId);
 
@@ -118,7 +117,7 @@ public class ServerQuickShareRestController {
     private WebAsyncTask<Void> getSecureFile(String quickShareId,
                                              QuickShare quickShare,
                                              HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = String.format("%s-%s.zip", "secure", quickShareId);
 
@@ -146,7 +145,7 @@ public class ServerQuickShareRestController {
 
     private WebAsyncTask<Void> getCompressedInsecureFile(QuickShare quickShare,
                                                          HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = resourcePath.getFileName().toString();
 
@@ -170,7 +169,7 @@ public class ServerQuickShareRestController {
 
     private WebAsyncTask<Void> getCompressedInsecureDirectory(QuickShare quickShare,
                                                               HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = resourcePath.getFileName().toString() + ".zip";
 
@@ -193,7 +192,7 @@ public class ServerQuickShareRestController {
 
     private WebAsyncTask<Void> getInsecureFile(QuickShare quickShare,
                                                HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = resourcePath.getFileName().toString();
 
@@ -217,7 +216,7 @@ public class ServerQuickShareRestController {
 
     private WebAsyncTask<Void> getInsecureDirectory(QuickShare quickShare,
                                                     HttpServletResponse response) {
-        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout, () -> {
+        return new WebAsyncTask<>(daemonApplicationProperties.daemonQuickShareSecureAsyncRequestTimeout.toMillis(), () -> {
             Path resourcePath = Paths.get(quickShare.resourceRealPath());
             String filenameContentDisposition = resourcePath.getFileName().toString() + ".zip";
 
