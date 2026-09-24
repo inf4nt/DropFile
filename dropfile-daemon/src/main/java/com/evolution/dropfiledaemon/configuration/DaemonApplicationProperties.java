@@ -56,7 +56,7 @@ public class DaemonApplicationProperties {
 
     public final int daemonTunnelClientManifestChunkSize;
 
-    public final int daemonHandshakeClientHttpRequestTimeoutMillis;
+    public final Duration daemonHandshakeClientHttpRequestTimeout;
 
     public final long daemonQuickShareSecureAsyncRequestTimeout;
 
@@ -102,7 +102,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
-            @Value("${dropfile.daemon.handshake.client.http.request-timeout-millis}") int daemonHandshakeClientHttpRequestTimeoutMillis,
+            @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.handshake.client.http.request-timeout}") Duration daemonHandshakeClientHttpRequestTimeout,
             @Value("${dropfile.daemon.tunnel.client.compress.enabled}") boolean daemonTunnelClientCompressEnabled,
             @Value("${dropfile.daemon.tunnel.client.stream.max-size}") int daemonTunnelClientStreamMaxSize,
             @Value("${dropfile.daemon.tunnel.client.stream.deadline-timeout-millis}") int daemonTunnelClientStreamDeadlineTimeoutMillis,
@@ -139,7 +139,7 @@ public class DaemonApplicationProperties {
         this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;
-        this.daemonHandshakeClientHttpRequestTimeoutMillis = daemonHandshakeClientHttpRequestTimeoutMillis;
+        this.daemonHandshakeClientHttpRequestTimeout = daemonHandshakeClientHttpRequestTimeout;
         this.daemonTunnelClientCompressEnabled = daemonTunnelClientCompressEnabled;
         this.daemonTunnelServerCompressLevel = daemonTunnelServerCompressLevel;
         this.daemonTunnelServerChunkLimitMax = daemonTunnelServerChunkLimitMax;

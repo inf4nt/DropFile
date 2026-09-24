@@ -67,7 +67,7 @@ public class HandshakeClient {
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(requestBody)))
                 .header("Content-Type", "application/json")
-                .timeout(Duration.ofMillis(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeoutMillis))
+                .timeout(daemonApplicationProperties.daemonHandshakeClientHttpRequestTimeout)
                 .build();
 
         byte[] payload = execute(httpRequest);
