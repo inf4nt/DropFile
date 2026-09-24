@@ -23,6 +23,12 @@ public class DaemonApplicationProperties {
 
     public final int serverPort;
 
+    public final int serverTomcatMaxConnections;
+
+    public final int serverTomcatAcceptCount;
+
+    public final String springMvcAsyncRequestTimeout;
+
     @Nullable
     public final String daemonExternalHost;
 
@@ -93,6 +99,9 @@ public class DaemonApplicationProperties {
     public DaemonApplicationProperties(
             @Value("${user.dir}") Path userDir,
             @Value("${server.port}") int serverPort,
+            @Value("${server.tomcat.max-connections}") int serverTomcatMaxConnections,
+            @Value("${server.tomcat.accept-count}") int serverTomcatAcceptCount,
+            @Value("${spring.mvc.async.request-timeout}") String springMvcAsyncRequestTimeout,
             @Value("${dropfile.daemon.external-host:#{null}}") String daemonExternalHost,
             @Value("${dropfile.daemon.application-home.directory}") Path daemonApplicationHomeDirectory,
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
@@ -128,6 +137,9 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.security.replay.max-future-drift-seconds}") int daemonSecurityReplyMaxFutureDriftSeconds) {
         this.userDir = userDir;
         this.serverPort = serverPort;
+        this.serverTomcatMaxConnections = serverTomcatMaxConnections;
+        this.serverTomcatAcceptCount = serverTomcatAcceptCount;
+        this.springMvcAsyncRequestTimeout = springMvcAsyncRequestTimeout;
         this.daemonExternalHost = daemonExternalHost;
         this.daemonApplicationHomeDirectory = daemonApplicationHomeDirectory;
         this.daemonSecretsDirectory = daemonSecretsDirectory;
