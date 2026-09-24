@@ -74,7 +74,7 @@ public class DaemonApplicationProperties {
 
     public final Duration daemonGcRateInterval;
 
-    public final long daemonIdleTimeoutMillis;
+    public final Duration daemonIdleShutdownTimeout;
 
     public final Duration daemonIdleRateInterval;
 
@@ -125,7 +125,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.quickshare.insecure.compress.enabled}") boolean daemonQuickShareInsecureCompressEnabled,
             @Value("${dropfile.daemon.quickshare.insecure.compress.level}") int daemonQuickShareInsecureCompressLevel,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.gc.rate.interval}") Duration daemonGcRateInterval,
-            @Value("${dropfile.daemon.idle.timeout-millis}") long daemonIdleTimeoutMillis,
+            @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.idle.shutdown-timeout}") Duration daemonIdleShutdownTimeout,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.idle.rate.interval}") Duration daemonIdleRateInterval,
             @Value("${dropfile.daemon.server.servlet.input.stream.timeout-millis}") int daemonServerServletInputStreamTimeoutMillis,
             @Value("${dropfile.daemon.server.servlet.input.stream.limit.max}") int daemonServerServletInputStreamLimitMax,
@@ -163,7 +163,7 @@ public class DaemonApplicationProperties {
         this.daemonQuickShareInsecureCompressEnabled = daemonQuickShareInsecureCompressEnabled;
         this.daemonQuickShareInsecureCompressLevel = daemonQuickShareInsecureCompressLevel;
         this.daemonGcRateInterval = daemonGcRateInterval;
-        this.daemonIdleTimeoutMillis = daemonIdleTimeoutMillis;
+        this.daemonIdleShutdownTimeout = daemonIdleShutdownTimeout;
         this.daemonIdleRateInterval = daemonIdleRateInterval;
         this.daemonServerServletInputStreamTimeoutMillis = daemonServerServletInputStreamTimeoutMillis;
         this.daemonServerServletInputStreamLimitMax = daemonServerServletInputStreamLimitMax;

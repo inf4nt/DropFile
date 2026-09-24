@@ -23,10 +23,8 @@ public class ApplicationReadyListenerSystemInfoPrinter {
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    @EventListener(DropFileDaemonApplicationReadyEvent.class)
+    @EventListener(DropFileDaemonBeforeApplicationReadyEvent.class)
     public void onApplicationEvent() {
-        log.info("DropFile daemon initialization completed and ready to go");
-
         Map<String, String> systemInfo = systemInfoProvider.getSystemInfo();
         System.out.println("================================");
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(

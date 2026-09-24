@@ -20,9 +20,9 @@ public class IdleShutdownMonitor {
 
     private final Duration daemonIdleRateInterval;
 
-    private final long softDaemonIdleTimeoutMillis;
+    private final Duration softDaemonIdleShutdownTimeout;
 
-    private final long hardDaemonIdleTimeoutMillis;
+    private final Duration hardDaemonIdleShutdownTimeout;
 
     public IdleShutdownMonitor(ActivityTracker activityTracker,
                                TaskScheduler taskScheduler,
@@ -30,23 +30,23 @@ public class IdleShutdownMonitor {
         this.activityTracker = activityTracker;
         this.taskScheduler = taskScheduler;
         this.daemonIdleRateInterval = applicationProperties.daemonIdleRateInterval;
-        this.softDaemonIdleTimeoutMillis = applicationProperties.daemonIdleTimeoutMillis;
-        this.hardDaemonIdleTimeoutMillis = 2 * applicationProperties.daemonIdleTimeoutMillis;
+        this.softDaemonIdleShutdownTimeout = applicationProperties.daemonIdleShutdownTimeout;
+        this.hardDaemonIdleShutdownTimeout = this.softDaemonIdleShutdownTimeout.multipliedBy(2);
     }
 
     @EventListener(DropFileDaemonApplicationReadyEvent.class)
     public void listener() {
         log.info("Application is ready. Initializing idle shutdown monitor (rate: {}ms)", daemonIdleRateInterval.toMillis());
-        log.info("Application is ready. Initializing idle shutdown monitor (soft timeout: {}ms)", softDaemonIdleTimeoutMillis);
-        log.info("Application is ready. Initializing idle shutdown monitor (hard timeout: {}ms)", hardDaemonIdleTimeoutMillis);
+        log.info("Application is ready. Initializing idle shutdown monitor (soft timeout: {}ms)", softDaemonIdleShutdownTimeout.toMillis());
+        log.info("Application is ready. Initializing idle shutdown monitor (hard timeout: {}ms)", hardDaemonIdleShutdownTimeout.toMillis());
 
         if (!daemonIdleRateInterval.isPositive()) {
             log.info("Idle shutdown monitor is not running. Rate is negative or zero");
             return;
         }
 
-        if (softDaemonIdleTimeoutMillis <= 0) {
-            log.info("Idle shutdown monitor is not running. Idle timeout millis is negative");
+        if (!softDaemonIdleShutdownTimeout.isPositive()) {
+            log.info("Idle shutdown monitor is not running. Idle timeout millis is negative or zero");
             return;
         }
 
@@ -57,9 +57,11 @@ public class IdleShutdownMonitor {
     }
 
     private void scheduler() {
-        if (activityTracker.isIdle(softDaemonIdleTimeoutMillis, hardDaemonIdleTimeoutMillis)) {
+        long softDaemonIdleShutdownTimeoutMillis = softDaemonIdleShutdownTimeout.toMillis();
+        long hardDaemonIdleShutdownTimeoutMillis = hardDaemonIdleShutdownTimeout.toMillis();
+        if (activityTracker.isIdle(softDaemonIdleShutdownTimeoutMillis, hardDaemonIdleShutdownTimeoutMillis)) {
             log.info("No activity detected for soft {} ms hard {} ms. Shutting down server to save resources...",
-                    softDaemonIdleTimeoutMillis, hardDaemonIdleTimeoutMillis
+                    softDaemonIdleShutdownTimeoutMillis, hardDaemonIdleShutdownTimeoutMillis
             );
             DropFileDaemonApplication.exit();
         }

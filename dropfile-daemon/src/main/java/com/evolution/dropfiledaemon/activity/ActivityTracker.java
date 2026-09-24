@@ -30,26 +30,38 @@ public class ActivityTracker {
 
     /**
      * Evaluates whether the application is considered idle and should trigger a daemon shutdown.
-     *
+     * <p>
      * Timeout Definitions:
-     *
+     * <p>
      * 1. Soft Idle Timeout:
-     *    Graceful shutdown condition. Triggers ONLY when there are zero active HTTP requests
-     *    (activeRequests == 0) AND the time since the last recorded activity exceeds the
-     *    configured soft threshold. This guarantees active transfers (e.g., file downloads)
-     *    are never interrupted.
-     *
+     * Graceful shutdown condition. Triggers ONLY when there are zero active HTTP requests
+     * (activeRequests == 0) AND the time since the last recorded activity exceeds the
+     * configured soft threshold. This guarantees active transfers (e.g., file downloads)
+     * are never interrupted.
+     * <p>
      * 2. Hard Idle Timeout:
-     *    Safety-net fallback condition. Forces daemon shutdown once inactivity exceeds
-     *    the hard threshold regardless of active requests (activeRequests > 0).
-     *    This prevents zombie processes caused by leaked connections, unclosed IO streams,
-     *    or abnormal client disconnects.
+     * Safety-net fallback condition. Forces daemon shutdown once inactivity exceeds
+     * the hard threshold regardless of active requests (activeRequests > 0).
+     * This prevents zombie processes caused by leaked connections, unclosed IO streams,
+     * or abnormal client disconnects.
      *
-     * @param idleTimeoutMillis  The soft idle threshold in milliseconds.
-     * @param hardTimeoutMillis  The hard idle threshold in milliseconds (absolute safety limit).
+     * @param idleTimeoutMillis The soft idle threshold in milliseconds.
+     * @param hardTimeoutMillis The hard idle threshold in milliseconds (absolute safety limit).
      * @return true if the system meets either soft or hard idle criteria; false otherwise.
      */
     public boolean isIdle(long idleTimeoutMillis, long hardTimeoutMillis) {
+        if (idleTimeoutMillis <= 0) {
+            throw new IllegalArgumentException("idleTimeoutMillis %d must be greater than zero".formatted(idleTimeoutMillis));
+        }
+        if (hardTimeoutMillis <= 0) {
+            throw new IllegalArgumentException("hardTimeoutMillis %d must be greater than zero".formatted(hardTimeoutMillis));
+        }
+        if (hardTimeoutMillis < idleTimeoutMillis) {
+            throw new IllegalArgumentException("hardTimeoutMillis %d is less than idleTimeoutMillis %d".formatted(
+                    hardTimeoutMillis, idleTimeoutMillis
+            ));
+        }
+
         long now = System.currentTimeMillis();
         long timeSinceLastActivity = now - lastActivityTime.get();
 
