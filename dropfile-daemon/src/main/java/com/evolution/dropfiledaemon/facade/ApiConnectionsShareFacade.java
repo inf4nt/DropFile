@@ -13,6 +13,7 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.service.ApiShareFileHelper;
 import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class ApiConnectionsShareFacade {
 
     private final ApiShareFileHelper apiShareFileHelper;
 
-    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, Long timeout) throws IOException, NoSuchAlgorithmException {
+    public ApiConnectionsShareLsResponseDTO add(ApiConnectionsShareAddRequestDTO requestDTO, @Nullable Long timeout) throws IOException, NoSuchAlgorithmException {
         Path source = Paths.get(requestDTO.resourcePath()).toAbsolutePath().normalize();
 
         Path realPath = safePathResolverHelper.safeExistingRealPathRegularFileResolver(source);
@@ -72,9 +73,9 @@ public class ApiConnectionsShareFacade {
                     );
                 },
                 value -> {
-                    long timeoutMillis = getTimeout(timeout);
-                    log.info("Calculating sha256 file {} alias {} timeout {}", realPath, alias, timeoutMillis);
-                    String sha256 = calculateSha256(realPath, timeoutMillis);
+                    Duration timeoutDuration = getTimeout(timeout);
+                    log.info("Calculating sha256 file {} alias {} timeout {}", realPath, alias, timeoutDuration.toMillis());
+                    String sha256 = calculateSha256(realPath, timeoutDuration);
                     log.info("Calculating sha256 file {} alias {} finished {}", realPath, alias, sha256);
                     return value.withHash(sha256).withAccessible(true);
                 }
@@ -83,11 +84,11 @@ public class ApiConnectionsShareFacade {
         return map(key, shareFile);
     }
 
-    private String calculateSha256(Path source, long timeout) {
+    private String calculateSha256(Path source, Duration timeout) {
         return RetryExecutor
                 .call(() -> fileHelper.sha256(source))
                 .attempts(1)
-                .callTimeout(Duration.ofMillis(timeout))
+                .callTimeout(timeout)
                 .run();
     }
 
@@ -127,7 +128,7 @@ public class ApiConnectionsShareFacade {
         );
     }
 
-    public long getTimeout(Long timeout) {
-        return timeout != null && timeout > 0 ? timeout : applicationProperties.daemonShareAddHashExecutionTimeoutMillis;
+    public Duration getTimeout(@Nullable Long timeout) {
+        return timeout != null && timeout > 0 ? Duration.ofMillis(timeout) : applicationProperties.daemonShareAddHashExecutionTimeout;
     }
 }

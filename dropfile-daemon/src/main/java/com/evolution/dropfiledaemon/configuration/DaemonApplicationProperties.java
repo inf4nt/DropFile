@@ -2,9 +2,12 @@ package com.evolution.dropfiledaemon.configuration;
 
 import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.convert.DurationUnit;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 // TODO
 // @ConfigurationProperties(prefix = "dropfile.daemon")
@@ -69,7 +72,7 @@ public class DaemonApplicationProperties {
 
     public final long daemonIdleRateMillis;
 
-    public final int daemonShareAddHashExecutionTimeoutMillis;
+    public final Duration daemonShareAddHashExecutionTimeout;
 
     public final int daemonServerServletInputStreamTimeoutMillis;
 
@@ -95,7 +98,7 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.daemon-secrets.directory}") Path daemonSecretsDirectory,
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
             @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
-            @Value("${dropfile.daemon.share.add.hash.execution-timeout-millis}") int daemonShareAddHashExecutionTimeoutMillis,
+            @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.share.add.hash.execution-timeout}") Duration daemonShareAddHashExecutionTimeout,
             @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
@@ -132,7 +135,7 @@ public class DaemonApplicationProperties {
         this.daemonDownloadsDirectory = daemonDownloadsDirectory;
         this.daemonTunnelClientHttpRequestTimeoutMillis = daemonTunnelClientHttpRequestTimeoutMillis;
         this.daemonTunnelClientStreamDeadlineTimeoutMillis = daemonTunnelClientStreamDeadlineTimeoutMillis;
-        this.daemonShareAddHashExecutionTimeoutMillis = daemonShareAddHashExecutionTimeoutMillis;
+        this.daemonShareAddHashExecutionTimeout = daemonShareAddHashExecutionTimeout;
         this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;

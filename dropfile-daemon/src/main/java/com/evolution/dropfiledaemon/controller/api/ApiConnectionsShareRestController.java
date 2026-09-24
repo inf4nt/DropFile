@@ -5,6 +5,7 @@ import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
 import com.evolution.dropfiledaemon.facade.ApiConnectionsShareFacade;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class ApiConnectionsShareRestController {
     private final ApiConnectionsShareFacade apiFacade;
 
     @PostMapping("/add")
-    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO, @RequestHeader(value = HEADER_TIMEOUT, required = false) Long timeout) throws Exception {
+    public ApiConnectionsShareLsResponseDTO add(@RequestBody ApiConnectionsShareAddRequestDTO requestDTO, @Nullable @RequestHeader(value = HEADER_TIMEOUT, required = false) Long timeout) throws Exception {
         return apiFacade.add(requestDTO, timeout);
     }
 
