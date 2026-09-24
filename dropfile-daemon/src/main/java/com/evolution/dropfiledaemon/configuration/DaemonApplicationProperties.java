@@ -80,11 +80,7 @@ public class DaemonApplicationProperties {
 
     public final Duration daemonShareAddHashExecutionTimeout;
 
-    public final int daemonServerServletInputStreamTimeoutMillis;
-
     public final int daemonServerServletInputStreamLimitMax;
-
-    public final int daemonServerServletOutputStreamTimeoutMillis;
 
     public final int daemonServerServletRateRequestHandshakeLimitMax;
 
@@ -127,9 +123,7 @@ public class DaemonApplicationProperties {
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.gc.rate.interval}") Duration daemonGcRateInterval,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.idle.shutdown-timeout}") Duration daemonIdleShutdownTimeout,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.idle.rate.interval}") Duration daemonIdleRateInterval,
-            @Value("${dropfile.daemon.server.servlet.input.stream.timeout-millis}") int daemonServerServletInputStreamTimeoutMillis,
             @Value("${dropfile.daemon.server.servlet.input.stream.limit.max}") int daemonServerServletInputStreamLimitMax,
-            @Value("${dropfile.daemon.server.servlet.output.stream.timeout-millis}") int daemonServerServletOutputStreamTimeoutMillis,
             @Value("${dropfile.daemon.server.servlet.rate-request.handshake.limit.max}") int daemonServerServletRateRequestHandshakeLimitMax,
             @Value("${dropfile.daemon.server.servlet.rate-request.tunnel.limit.max}") int daemonServerServletRateRequestTunnelLimitMax,
             @Value("${dropfile.daemon.server.servlet.rate-request.quickshare.limit.max}") int daemonServerServletRateRequestQuickshareLimitMax,
@@ -165,9 +159,7 @@ public class DaemonApplicationProperties {
         this.daemonGcRateInterval = daemonGcRateInterval;
         this.daemonIdleShutdownTimeout = daemonIdleShutdownTimeout;
         this.daemonIdleRateInterval = daemonIdleRateInterval;
-        this.daemonServerServletInputStreamTimeoutMillis = daemonServerServletInputStreamTimeoutMillis;
         this.daemonServerServletInputStreamLimitMax = daemonServerServletInputStreamLimitMax;
-        this.daemonServerServletOutputStreamTimeoutMillis = daemonServerServletOutputStreamTimeoutMillis;
         this.daemonServerServletRateRequestHandshakeLimitMax = daemonServerServletRateRequestHandshakeLimitMax;
         this.daemonServerServletRateRequestTunnelLimitMax = daemonServerServletRateRequestTunnelLimitMax;
         this.daemonServerServletRateRequestQuickshareLimitMax = daemonServerServletRateRequestQuickshareLimitMax;
