@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.evolution</groupId>
     <artifactId>dropfile-cli</artifactId>
-    <version>1.28.0</version>
+    <version>1.29.0</version>
     <name>dropfile-cli</name>
     <description>dropfile-cli</description>
     <properties>
