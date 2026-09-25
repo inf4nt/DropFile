@@ -44,12 +44,12 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
         AtomicInteger failuresCounter = attributes.computeIfAbsent(failuresKey, _ -> new AtomicInteger(0));
         int failures = failuresCounter.get();
 
-        boolean shouldRefresh = isSessionExpired(fingerprint)
+        boolean shouldRefresh = isSessionOrInvalidExpired(fingerprint)
                 || failures >= 2;
 
         if (shouldRefresh) {
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                if (isSessionExpired(fingerprint)) {
+                if (isSessionOrInvalidExpired(fingerprint)) {
                     log.info("Refreshing session for fingerprint {} (failures={}, proactiveOrAfterErrors=true)",
                             fingerprint, failures);
                     apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
@@ -70,7 +70,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
         }
     }
 
-    private boolean isSessionExpired(String fingerprint) {
+    private boolean isSessionOrInvalidExpired(String fingerprint) {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequired(fingerprint).getValue();
 

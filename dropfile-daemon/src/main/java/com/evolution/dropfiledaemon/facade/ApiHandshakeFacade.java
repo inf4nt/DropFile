@@ -16,10 +16,10 @@ import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
-import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -180,21 +180,7 @@ public class ApiHandshakeFacade {
 
             String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
-                Instant now = Instant.now();
-                handshakeTrustedOutStore.save(remoteFingerprint, () -> new HandshakeTrustedOutStore.TrustedOut(
-                        addressURI,
-                        StringUtils.hasText(requestDTO.alias()) ? requestDTO.alias() : null,
-                        new HandshakeTrustedOutStore.HandshakeKeys(
-                                rsaKeyPair.getPublic().getEncoded(),
-                                rsaKeyPair.getPrivate().getEncoded(),
-                                responsePayload.publicKeyRSA()
-                        ),
-                        now,
-                        now,
-                        now,
-                        now,
-                        handshakeRequestId
-                ));
+
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                         dhKeyPair.getPublic().getEncoded(),
                         responsePayload.publicKeyDH(),
@@ -202,6 +188,24 @@ public class ApiHandshakeFacade {
                         secretTunnelServerKey.getEncoded(),
                         handshakeRequestId
                 ));
+
+                handshakeTrustedOutStore.save(remoteFingerprint, () -> {
+                    Instant now = Instant.now();
+                    return new HandshakeTrustedOutStore.TrustedOut(
+                            addressURI,
+                            StringUtils.hasText(requestDTO.alias()) ? requestDTO.alias() : null,
+                            new HandshakeTrustedOutStore.HandshakeKeys(
+                                    rsaKeyPair.getPublic().getEncoded(),
+                                    rsaKeyPair.getPrivate().getEncoded(),
+                                    responsePayload.publicKeyRSA()
+                            ),
+                            now,
+                            now,
+                            now,
+                            now,
+                            handshakeRequestId
+                    );
+                });
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -275,27 +279,23 @@ public class ApiHandshakeFacade {
                         salt
                 );
 
-                handshakeTrustedOutStore.update(remoteFingerprint, value -> {
-                    CommonUtils.validateInterrupted();
+                CommonUtils.validateInterrupted();
 
+                handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
+                        dhKeyPair.getPublic().getEncoded(),
+                        sessionResponsePayload.publicKeyDH(),
+                        secretTunnelClientKey.getEncoded(),
+                        secretTunnelServerKey.getEncoded(),
+                        sessionRequestId
+                ));
+
+                handshakeTrustedOutStore.update(remoteFingerprint, value -> {
                     Instant now = Instant.now();
                     HandshakeTrustedOutStore.TrustedOut next = value
                             .withHandshakeId(sessionRequestId)
                             .withUpdated(now);
                     next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
                     return next;
-                });
-
-                handshakeSessionOutStore.save(remoteFingerprint, () -> {
-                    CommonUtils.validateInterrupted();
-
-                    return new HandshakeSessionOutStore.SessionOut(
-                            dhKeyPair.getPublic().getEncoded(),
-                            sessionResponsePayload.publicKeyDH(),
-                            secretTunnelClientKey.getEncoded(),
-                            secretTunnelServerKey.getEncoded(),
-                            sessionRequestId
-                    );
                 });
             });
         } catch (Exception e) {

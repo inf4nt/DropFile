@@ -149,6 +149,14 @@ public class HandshakeFacade {
                     salt
             );
 
+            handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
+                    dhKeyPair.getPublic().getEncoded(),
+                    publicKeyDH,
+                    secretTunnelClientKey.getEncoded(),
+                    secretTunnelServerKey.getEncoded(),
+                    requestId
+            ));
+
             handshakeTrustedInStore.save(
                     remoteFingerprint,
                     () -> {
@@ -166,14 +174,6 @@ public class HandshakeFacade {
                         );
                     }
             );
-
-            handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
-                    dhKeyPair.getPublic().getEncoded(),
-                    publicKeyDH,
-                    secretTunnelClientKey.getEncoded(),
-                    secretTunnelServerKey.getEncoded(),
-                    requestId
-            ));
 
             return handshakeResponseDTO;
         });
@@ -240,14 +240,6 @@ public class HandshakeFacade {
 
             UUID requestId = sessionPayloadRequest.requestId();
 
-            handshakeTrustedInStore.update(fingerprint, value -> {
-                Instant now = Instant.now();
-                return value
-                        .withSessionUpdated(now)
-                        .withUpdated(now)
-                        .withHandshakeId(requestId);
-            });
-
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     dhKeyPair.getPublic().getEncoded(),
                     sessionPayloadRequest.publicKeyDH(),
@@ -255,6 +247,14 @@ public class HandshakeFacade {
                     secretTunnelServerKey.getEncoded(),
                     requestId
             ));
+
+            handshakeTrustedInStore.update(fingerprint, value -> {
+                Instant now = Instant.now();
+                return value
+                        .withSessionUpdated(now)
+                        .withUpdated(now)
+                        .withHandshakeId(requestId);
+            });
 
             return sessionResponse;
         });
