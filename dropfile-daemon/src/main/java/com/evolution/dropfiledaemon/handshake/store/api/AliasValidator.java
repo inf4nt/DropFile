@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.util;
+package com.evolution.dropfiledaemon.handshake.store.api;
 
 import java.util.regex.Pattern;
 

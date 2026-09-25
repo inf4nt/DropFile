@@ -8,6 +8,7 @@ import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAddressRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAliasRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
@@ -18,7 +19,7 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
-import com.evolution.dropfiledaemon.util.AliasValidator;
+import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -323,11 +324,13 @@ public class ApiHandshakeFacade {
         handshakeReconnectFingerprint(fingerprint, true);
     }
 
-    public void handshakeReconnectAlias(CriteriaEnvelope criteriaEnvelopeAlias) throws InterruptedException {
-        AliasValidator.validateOrThrow(criteriaEnvelopeAlias.value());
+    public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) throws InterruptedException {
+        String alias = requestDTO.alias();
+
+        AliasValidator.validateOrThrow(alias);
 
         Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
-                .getRequiredByCriteriaAlias(criteriaEnvelopeAlias);
+                .getRequiredByAlias(alias);
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
         AtomicInteger remaining = new AtomicInteger(listOfHandshakes.size());

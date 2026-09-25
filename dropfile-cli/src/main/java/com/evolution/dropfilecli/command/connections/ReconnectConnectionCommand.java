@@ -59,7 +59,7 @@ public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<Void>
         }
 
         if (StringUtils.hasText(arguments.alias)) {
-            return daemonClient.handshakeReconnectAlias(new CriteriaEnvelope(arguments.alias));
+            return daemonClient.handshakeReconnectAlias(arguments.alias);
         }
 
         if (StringUtils.hasText(arguments.address)) {

@@ -54,8 +54,8 @@ public class DaemonClient {
         return sendPost("/api/handshake/reconnect/fingerprint", criteriaEnvelope);
     }
 
-    public HttpResponse<byte[]> handshakeReconnectAlias(CriteriaEnvelope criteriaEnvelopeAlias) throws IOException {
-        return sendPost("/api/handshake/reconnect/alias", criteriaEnvelopeAlias);
+    public HttpResponse<byte[]> handshakeReconnectAlias(String alias) throws IOException {
+        return sendPost("/api/handshake/reconnect/alias", new ApiHandshakeReconnectAliasRequestDTO(alias));
     }
 
     public HttpResponse<byte[]> handshakeDisconnect(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {
