@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -37,7 +38,8 @@ public class DaemonClient {
     private final ObjectMapper objectMapper;
 
     public HttpResponse<byte[]> handshake(URI address, String secretAccessKey, String alias, boolean force) throws IOException {
-        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), secretAccessKey, alias, force));
+        String aliasArgument = StringUtils.hasText(alias) ? alias : null;
+        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), secretAccessKey, aliasArgument, force));
     }
 
     public HttpResponse<byte[]> handshakeReconnectAddress(URI address) throws IOException {
@@ -46,6 +48,14 @@ public class DaemonClient {
 
     public HttpResponse<byte[]> handshakeReconnectCurrent() throws IOException {
         return sendPost("/api/handshake/reconnect/current");
+    }
+
+    public HttpResponse<byte[]> handshakeReconnectFingerprint(CriteriaEnvelope criteriaEnvelope) throws IOException {
+        return sendPost("/api/handshake/reconnect/fingerprint", criteriaEnvelope);
+    }
+
+    public HttpResponse<byte[]> handshakeReconnectAlias(CriteriaEnvelope criteriaEnvelopeAlias) throws IOException {
+        return sendPost("/api/handshake/reconnect/alias", criteriaEnvelopeAlias);
     }
 
     public HttpResponse<byte[]> handshakeDisconnect(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {

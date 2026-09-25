@@ -27,7 +27,7 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
 
-    @CommandLine.Parameters(index = "1", description = "Access secret key", defaultValue = "")
+    @CommandLine.Parameters(index = "1", description = "Access secret key")
     private String accessSecretKey;
 
     @CommandLine.Parameters(index = "2", description = "Alias", defaultValue = "")
@@ -38,9 +38,6 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (StringUtils.hasText(accessSecretKey)) {
-            return daemonClient.handshake(CommonUtils.toURI(address), accessSecretKey, alias, force);
-        }
-        return daemonClient.handshakeReconnectAddress(CommonUtils.toURI(address));
+        return daemonClient.handshake(CommonUtils.toURI(address), accessSecretKey, alias, force);
     }
 }

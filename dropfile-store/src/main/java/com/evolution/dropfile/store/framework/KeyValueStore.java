@@ -87,6 +87,7 @@ public interface KeyValueStore<V> {
                 )));
     }
 
+    // TODO rename searchKeysByCriteria
     default Map.Entry<String, V> getRequiredByCriteria(CriteriaEnvelope criteriaEnvelope) {
         CommonUtils.MatchResult<Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
                 getAll().entrySet(),

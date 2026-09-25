@@ -36,6 +36,16 @@ public class ApiHandshakeRestController {
         apiHandshakeFacade.handshakeReconnectCurrent();
     }
 
+    @PostMapping("/reconnect/fingerprint")
+    public void handshakeReconnectFingerprint(@RequestBody CriteriaEnvelope criteriaEnvelope) {
+        apiHandshakeFacade.handshakeReconnectFingerprint(criteriaEnvelope);
+    }
+
+    @PostMapping("/reconnect/alias")
+    public void handshakeReconnectAlias(@RequestBody CriteriaEnvelope criteriaEnvelopeAlias) throws Exception {
+        apiHandshakeFacade.handshakeReconnectAlias(criteriaEnvelopeAlias);
+    }
+
     @GetMapping("/trust/in")
     public List<HandshakeApiTrustInResponseDTO> getTrustIn() {
         return handshakeFacade.getTrustIt();

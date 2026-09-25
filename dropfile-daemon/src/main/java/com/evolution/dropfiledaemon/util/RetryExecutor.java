@@ -38,7 +38,7 @@ public class RetryExecutor<T> {
         int currentAttempt = 1;
         while (currentAttempt <= attempts) {
             try {
-                CommonUtils.isInterrupted();
+                CommonUtils.validateInterrupted();
 
                 T call = callWithTimeoutIfPresent();
 

@@ -1,7 +1,9 @@
 package com.evolution.dropfile.common.dto;
 
+import jakarta.annotation.Nullable;
+
 public record ApiHandshakeRequestDTO(String address,
                                      String secretAccessKey,
-                                     String alias,
+                                     @Nullable String alias,
                                      boolean force) {
 }

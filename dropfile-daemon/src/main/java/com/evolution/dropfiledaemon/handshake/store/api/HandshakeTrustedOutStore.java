@@ -1,5 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.store.api;
 
+import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import jakarta.annotation.Nullable;
 import lombok.With;
@@ -7,6 +9,7 @@ import lombok.With;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
 
@@ -42,6 +45,39 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
     default Map.Entry<String, TrustedOut> getRequiredByAddressURI(URI addressURI) {
         return getByAddressURI(addressURI)
                 .orElseThrow(() -> new NoSuchElementException("No trusted out value found for address: " + addressURI));
+    }
+
+    default Map<String, TrustedOut> getRequiredByCriteriaAlias(CriteriaEnvelope criteriaEnvelopeAlias) {
+        CommonUtils.MatchResult<Map.Entry<String, TrustedOut>> matchResult = CommonUtils.matchBy(
+                getAll().entrySet(),
+                List.of(criteriaEnvelopeAlias),
+                (criteriaEnvelope, entry) -> entry.getValue().alias() != null
+                        && entry.getValue().alias().startsWith(criteriaEnvelope.value())
+        );
+
+        if (!matchResult.notFound().isEmpty()) {
+            throw new NoSuchElementException(
+                    "Store %s. No aliases found for criteria: %s".formatted(getClass().getSimpleName(), criteriaEnvelopeAlias.value())
+            );
+        }
+
+        if (!matchResult.found().isEmpty() && matchResult.ambiguous().isEmpty()) {
+            return matchResult.found().values()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            it -> it.getKey(),
+                            it -> it.getValue()
+                    ));
+        }
+
+        List<Map.Entry<String, TrustedOut>> matches = matchResult.ambiguous().get(criteriaEnvelopeAlias);
+        int matchesCount = (matches != null) ? matches.size() : 0;
+
+        throw new IllegalStateException(
+                "Store %s. Ambiguous aliases criteria '%s'. Found %d matches".formatted(
+                        getClass().getSimpleName(), criteriaEnvelopeAlias.value(), matchesCount
+                )
+        );
     }
 
     @Override

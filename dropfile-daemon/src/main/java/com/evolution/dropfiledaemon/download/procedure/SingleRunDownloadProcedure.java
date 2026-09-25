@@ -105,7 +105,7 @@ public class SingleRunDownloadProcedure {
                             () -> totalDigestHandler()
                     );
 
-                    isInterrupted();
+                    validateInterrupted();
 
                     atomicMove();
                 }
@@ -156,7 +156,7 @@ public class SingleRunDownloadProcedure {
             List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
             Iterator<ChunkManifest> iterator = request.fileManifest().chunks().iterator();
             while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
-                isInterrupted();
+                validateInterrupted();
                 ChunkManifest chunkManifest = iterator.next();
                 CompletableFuture<Void> future = CompletableFuture.runAsync(
                         () -> {
@@ -197,7 +197,7 @@ public class SingleRunDownloadProcedure {
 
         RetryExecutor
                 .call(() -> {
-                    isInterrupted();
+                    validateInterrupted();
                     try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(),
                             request.fileId(),
                             chunkManifest.size(),
@@ -230,7 +230,7 @@ public class SingleRunDownloadProcedure {
     }
 
     @SneakyThrows
-    private void isInterrupted() {
-        CommonUtils.isInterrupted("Downloading process has been interrupted: " + request.operation());
+    private void validateInterrupted() {
+        CommonUtils.validateInterrupted("Downloading process has been interrupted: " + request.operation());
     }
 }

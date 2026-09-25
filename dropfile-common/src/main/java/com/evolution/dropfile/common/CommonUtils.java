@@ -132,14 +132,14 @@ public class CommonUtils {
     }
 
     @SneakyThrows
-    public static void isInterrupted() {
+    public static void validateInterrupted() {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
     }
 
     @SneakyThrows
-    public static void isInterrupted(String message) {
+    public static void validateInterrupted(String message) {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException(message);
         }

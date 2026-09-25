@@ -22,6 +22,8 @@ import com.evolution.dropfiledaemon.util.AliasValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -30,15 +32,23 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 @Slf4j
 @Component
 public class ApiHandshakeFacade {
+
+    private static final Duration RECONNECT_BY_ALIAS_TIMEOUT = Duration.ofSeconds(30);
+
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final HandshakeClient handshakeClient;
 
@@ -53,6 +63,11 @@ public class ApiHandshakeFacade {
     private final HandshakeSessionOutStore handshakeSessionOutStore;
 
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
+
+    @EventListener(ContextClosedEvent.class)
+    public void close() {
+        executorService.shutdownNow();
+    }
 
     public void handshake(ApiHandshakeRequestDTO requestDTO) {
         if (StringUtils.hasText(requestDTO.alias())) {
@@ -192,11 +207,11 @@ public class ApiHandshakeFacade {
         }
     }
 
-    private void handshakeReconnectAddress(String fingerprint, boolean byUser) {
+    private void handshakeReconnectFingerprint(String fingerprint, boolean byUser) {
         try {
-            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
+            HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
 
+            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
                 URI addressURI = trustedOut.addressURI();
 
                 KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -260,6 +275,8 @@ public class ApiHandshakeFacade {
                 );
 
                 handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+                    CommonUtils.validateInterrupted();
+
                     Instant now = Instant.now();
                     HandshakeTrustedOutStore.TrustedOut next = value
                             .withHandshakeId(sessionRequestId)
@@ -268,13 +285,17 @@ public class ApiHandshakeFacade {
                     return next;
                 });
 
-                handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                        dhKeyPair.getPublic().getEncoded(),
-                        sessionResponsePayload.publicKeyDH(),
-                        secretTunnelClientKey.getEncoded(),
-                        secretTunnelServerKey.getEncoded(),
-                        sessionRequestId
-                ));
+                handshakeSessionOutStore.save(remoteFingerprint, () -> {
+                    CommonUtils.validateInterrupted();
+
+                    return new HandshakeSessionOutStore.SessionOut(
+                            dhKeyPair.getPublic().getEncoded(),
+                            sessionResponsePayload.publicKeyDH(),
+                            secretTunnelClientKey.getEncoded(),
+                            secretTunnelServerKey.getEncoded(),
+                            sessionRequestId
+                    );
+                });
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -284,16 +305,58 @@ public class ApiHandshakeFacade {
     public void handshakeReconnectAddress(ApiHandshakeReconnectAddressRequestDTO requestDTO) {
         String fingerprint = handshakeTrustedOutStore
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
-        handshakeReconnectAddress(fingerprint, true);
+        handshakeReconnectFingerprint(fingerprint, true);
     }
 
     public void systemHandshakeReconnect(String fingerprint) {
-        handshakeReconnectAddress(fingerprint, false);
+        handshakeReconnectFingerprint(fingerprint, false);
     }
 
     public void handshakeReconnectCurrent() {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
-        handshakeReconnectAddress(fingerprint, true);
+        handshakeReconnectFingerprint(fingerprint, true);
+    }
+
+    public void handshakeReconnectFingerprint(CriteriaEnvelope criteriaEnvelope) {
+        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteria(criteriaEnvelope)
+                .getKey();
+        handshakeReconnectFingerprint(fingerprint, true);
+    }
+
+    public void handshakeReconnectAlias(CriteriaEnvelope criteriaEnvelopeAlias) throws InterruptedException {
+        AliasValidator.validateOrThrow(criteriaEnvelopeAlias.value());
+
+        Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
+                .getRequiredByCriteriaAlias(criteriaEnvelopeAlias);
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicInteger remaining = new AtomicInteger(listOfHandshakes.size());
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+
+        List<Future<String>> futures = listOfHandshakes.keySet().stream()
+                .map(fingerprint -> executorService.submit(() -> {
+                    try {
+                        handshakeReconnectFingerprint(fingerprint, true);
+                        isSuccess.set(true);
+                        countDownLatch.countDown();
+                    } catch (Exception e) {
+                        if (remaining.decrementAndGet() == 0) {
+                            countDownLatch.countDown();
+                        }
+                    }
+                    return fingerprint;
+                }))
+                .toList();
+
+        boolean completed = countDownLatch.await(RECONNECT_BY_ALIAS_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        futures.forEach(it -> it.cancel(true));
+
+        if (!completed) {
+            throw new IllegalStateException("Reconnect by alias failed due to timeout %d ms".formatted(RECONNECT_BY_ALIAS_TIMEOUT.toMillis()));
+        }
+        if (!isSuccess.get()) {
+            throw new IllegalStateException("Reconnect by alias failed: all endpoints unreachable");
+        }
     }
 
     public void disconnect(CriteriaEnvelope fingerprintCriteria) {
