@@ -40,12 +40,12 @@ public class DaemonClient {
         return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), key, force));
     }
 
-    public HttpResponse<byte[]> handshakeReconnect(URI address) throws IOException {
-        return sendPost("/api/handshake/reconnect", new ApiHandshakeReconnectRequestDTO(address.toString()));
+    public HttpResponse<byte[]> handshakeReconnectAddress(URI address) throws IOException {
+        return sendPost("/api/handshake/reconnect/address", new ApiHandshakeReconnectAddressRequestDTO(address.toString()));
     }
 
-    public HttpResponse<byte[]> handshakeCurrentReconnect() throws IOException {
-        return sendPost("/api/handshake/current/reconnect");
+    public HttpResponse<byte[]> handshakeReconnectCurrent() throws IOException {
+        return sendPost("/api/handshake/reconnect/current");
     }
 
     public HttpResponse<byte[]> handshakeDisconnect(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {

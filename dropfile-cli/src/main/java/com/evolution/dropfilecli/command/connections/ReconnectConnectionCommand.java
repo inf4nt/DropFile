@@ -18,6 +18,6 @@ public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<Void>
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.handshakeCurrentReconnect();
+        return daemonClient.handshakeReconnectCurrent();
     }
 }

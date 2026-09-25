@@ -1,7 +1,7 @@
 package com.evolution.dropfiledaemon.controller.api;
 
 import com.evolution.dropfile.common.CriteriaEnvelope;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAddressRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
@@ -26,14 +26,14 @@ public class ApiHandshakeRestController {
         apiHandshakeFacade.handshake(requestDTO);
     }
 
-    @PostMapping("/reconnect")
-    public void handshakeReconnect(@RequestBody ApiHandshakeReconnectRequestDTO requestDTO) {
-        apiHandshakeFacade.handshakeReconnect(requestDTO);
+    @PostMapping("/reconnect/address")
+    public void handshakeReconnectAddress(@RequestBody ApiHandshakeReconnectAddressRequestDTO requestDTO) {
+        apiHandshakeFacade.handshakeReconnectAddress(requestDTO);
     }
 
-    @PostMapping("/current/reconnect")
-    public void handshakeCurrentReconnect() {
-        apiHandshakeFacade.handshakeCurrentReconnect();
+    @PostMapping("/reconnect/current")
+    public void handshakeReconnectCurrent() {
+        apiHandshakeFacade.handshakeReconnectCurrent();
     }
 
     @GetMapping("/trust/in")

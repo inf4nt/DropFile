@@ -7,7 +7,7 @@ import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAddressRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
@@ -185,7 +185,7 @@ public class ApiHandshakeFacade {
         }
     }
 
-    private void handshakeReconnect(String fingerprint, boolean byUser) {
+    private void handshakeReconnectAddress(String fingerprint, boolean byUser) {
         try {
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
                 HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
@@ -274,19 +274,19 @@ public class ApiHandshakeFacade {
         }
     }
 
-    public void handshakeReconnect(ApiHandshakeReconnectRequestDTO requestDTO) {
+    public void handshakeReconnectAddress(ApiHandshakeReconnectAddressRequestDTO requestDTO) {
         String fingerprint = handshakeTrustedOutStore
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
-        handshakeReconnect(fingerprint, true);
+        handshakeReconnectAddress(fingerprint, true);
     }
 
     public void systemHandshakeReconnect(String fingerprint) {
-        handshakeReconnect(fingerprint, false);
+        handshakeReconnectAddress(fingerprint, false);
     }
 
-    public void handshakeCurrentReconnect() {
+    public void handshakeReconnectCurrent() {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
-        handshakeReconnect(fingerprint, true);
+        handshakeReconnectAddress(fingerprint, true);
     }
 
     public void disconnect(CriteriaEnvelope fingerprintCriteria) {
