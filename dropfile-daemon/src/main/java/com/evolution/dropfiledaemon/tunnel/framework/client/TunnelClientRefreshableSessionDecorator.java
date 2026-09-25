@@ -74,9 +74,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
         HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
                 .getRequired(fingerprint).getValue();
 
-        Instant sessionLastUpdated = Stream.of(trustedOut.sessionUpdatedBySystem(), trustedOut.sessionUpdatedByUser())
-                .max(Instant::compareTo)
-                .orElseThrow();
+        Instant sessionLastUpdated = trustedOut.updated();
 
         if (Instant.now().isAfter(sessionLastUpdated.plus(SESSION_TTL))) {
             return true;

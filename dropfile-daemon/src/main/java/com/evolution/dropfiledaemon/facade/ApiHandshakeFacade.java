@@ -201,8 +201,6 @@ public class ApiHandshakeFacade {
                             ),
                             now,
                             now,
-                            now,
-                            now,
                             handshakeRequestId
                     );
                 });
@@ -212,7 +210,7 @@ public class ApiHandshakeFacade {
         }
     }
 
-    private void handshakeReconnectFingerprint(String fingerprint, boolean byUser) {
+    private void handshakeReconnectFingerprint(String fingerprint) {
         try {
             HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
 
@@ -289,14 +287,10 @@ public class ApiHandshakeFacade {
                         sessionRequestId
                 ));
 
-                handshakeTrustedOutStore.update(remoteFingerprint, value -> {
-                    Instant now = Instant.now();
-                    HandshakeTrustedOutStore.TrustedOut next = value
-                            .withHandshakeId(sessionRequestId)
-                            .withUpdated(now);
-                    next = byUser ? next.withSessionUpdatedByUser(now) : next.withSessionUpdatedBySystem(now);
-                    return next;
-                });
+                handshakeTrustedOutStore.update(remoteFingerprint, value -> value
+                        .withHandshakeId(sessionRequestId)
+                        .withUpdated(Instant.now())
+                );
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -306,22 +300,22 @@ public class ApiHandshakeFacade {
     public void handshakeReconnectAddress(ApiHandshakeReconnectAddressRequestDTO requestDTO) {
         String fingerprint = handshakeTrustedOutStore
                 .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
-        handshakeReconnectFingerprint(fingerprint, true);
+        handshakeReconnectFingerprint(fingerprint);
     }
 
     public void systemHandshakeReconnect(String fingerprint) {
-        handshakeReconnectFingerprint(fingerprint, false);
+        handshakeReconnectFingerprint(fingerprint);
     }
 
     public void handshakeReconnectCurrent() {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
-        handshakeReconnectFingerprint(fingerprint, true);
+        handshakeReconnectFingerprint(fingerprint);
     }
 
     public void handshakeReconnectFingerprint(CriteriaEnvelope criteriaEnvelope) {
         String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(criteriaEnvelope)
                 .getKey();
-        handshakeReconnectFingerprint(fingerprint, true);
+        handshakeReconnectFingerprint(fingerprint);
     }
 
     public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) throws InterruptedException {
@@ -339,7 +333,7 @@ public class ApiHandshakeFacade {
         List<Future<String>> futures = listOfHandshakes.keySet().stream()
                 .map(fingerprint -> executorService.submit(() -> {
                     try {
-                        handshakeReconnectFingerprint(fingerprint, true);
+                        handshakeReconnectFingerprint(fingerprint);
                         isSuccess.set(true);
                         countDownLatch.countDown();
                     } catch (Exception e) {

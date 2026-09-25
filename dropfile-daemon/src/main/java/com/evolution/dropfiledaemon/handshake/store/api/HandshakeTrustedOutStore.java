@@ -4,7 +4,6 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import jakarta.annotation.Nullable;
 import lombok.With;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.net.URI;
@@ -18,8 +17,6 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
     record TrustedOut(URI addressURI,
                       @Nullable String alias,
                       HandshakeKeys handshake,
-                      Instant sessionUpdatedByUser,
-                      Instant sessionUpdatedBySystem,
                       Instant created,
                       Instant updated,
                       UUID handshakeId) {
