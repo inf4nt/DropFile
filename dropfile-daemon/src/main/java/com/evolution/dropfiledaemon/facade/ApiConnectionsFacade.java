@@ -37,7 +37,7 @@ public class ApiConnectionsFacade {
 
     public void tunnelPing(@Nullable CriteriaEnvelope fingerprintCriteria) {
         String fingerprint = fingerprintCriteria != null
-                ? handshakeTrustedOutStore.getRequiredByCriteria(fingerprintCriteria).getKey()
+                ? handshakeTrustedOutStore.getRequiredByCriteriaKey(fingerprintCriteria).getKey()
                 : handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
         tunnelClientGateway.ping(fingerprint);
     }

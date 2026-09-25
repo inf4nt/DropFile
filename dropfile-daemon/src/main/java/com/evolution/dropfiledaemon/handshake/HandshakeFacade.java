@@ -261,7 +261,7 @@ public class HandshakeFacade {
     }
 
     public void revoke(CriteriaEnvelope fingerprintCriteria) {
-        String fingerprint = handshakeTrustedInStore.getRequiredByCriteria(fingerprintCriteria)
+        String fingerprint = handshakeTrustedInStore.getRequiredByCriteriaKey(fingerprintCriteria)
                 .getKey();
         lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedInStore.remove(fingerprint);

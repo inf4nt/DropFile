@@ -318,7 +318,7 @@ public class ApiHandshakeFacade {
     }
 
     public void handshakeReconnectFingerprint(CriteriaEnvelope criteriaEnvelope) {
-        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteria(criteriaEnvelope)
+        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(criteriaEnvelope)
                 .getKey();
         handshakeReconnectFingerprint(fingerprint, true);
     }
@@ -360,7 +360,7 @@ public class ApiHandshakeFacade {
     }
 
     public void disconnect(CriteriaEnvelope fingerprintCriteria) {
-        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteria(fingerprintCriteria).getKey();
+        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(fingerprintCriteria).getKey();
         disconnectByFingerprint(fingerprint);
     }
 

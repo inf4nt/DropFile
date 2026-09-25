@@ -131,7 +131,7 @@ public class ApiQuickShareFacade {
     }
 
     public ApiQuickShareLsResponseDTO show(CriteriaEnvelope quickshareIdCriteriaEnvelope) {
-        String key = quickShareStore.getRequiredByCriteria(quickshareIdCriteriaEnvelope).getKey();
+        String key = quickShareStore.getRequiredByCriteriaKey(quickshareIdCriteriaEnvelope).getKey();
         Map.Entry<String, QuickShare> entry = quickShareStore.getRequired(key);
         return map(entry.getKey(), entry.getValue());
     }

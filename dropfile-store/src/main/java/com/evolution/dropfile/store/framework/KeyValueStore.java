@@ -87,30 +87,29 @@ public interface KeyValueStore<V> {
                 )));
     }
 
-    // TODO rename searchKeysByCriteria
-    default Map.Entry<String, V> getRequiredByCriteria(CriteriaEnvelope criteriaEnvelope) {
+    default Map.Entry<String, V> getRequiredByCriteriaKey(CriteriaEnvelope criteriaEnvelopeKey) {
         CommonUtils.MatchResult<Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
                 getAll().entrySet(),
-                List.of(criteriaEnvelope),
+                List.of(criteriaEnvelopeKey),
                 (criteria, entry) -> entry.getKey().startsWith(criteria.value())
         );
 
         if (!matchResult.notFound().isEmpty()) {
             throw new NoSuchElementException(
-                    "Store %s. No items found for criteria: %s".formatted(getClass().getSimpleName(), criteriaEnvelope.value())
+                    "Store %s. No items found for criteria: %s".formatted(getClass().getSimpleName(), criteriaEnvelopeKey.value())
             );
         }
 
-        if (matchResult.found().containsKey(criteriaEnvelope) && matchResult.ambiguous().isEmpty()) {
-            return matchResult.found().get(criteriaEnvelope);
+        if (matchResult.found().containsKey(criteriaEnvelopeKey) && matchResult.ambiguous().isEmpty()) {
+            return matchResult.found().get(criteriaEnvelopeKey);
         }
 
-        List<Map.Entry<String, V>> matches = matchResult.ambiguous().get(criteriaEnvelope);
+        List<Map.Entry<String, V>> matches = matchResult.ambiguous().get(criteriaEnvelopeKey);
         int matchesCount = (matches != null) ? matches.size() : 0;
 
         throw new IllegalStateException(
                 "Store %s. Ambiguous key criteria '%s'. Found %d matches".formatted(
-                        getClass().getSimpleName(), criteriaEnvelope.value(), matchesCount
+                        getClass().getSimpleName(), criteriaEnvelopeKey.value(), matchesCount
                 )
         );
     }
