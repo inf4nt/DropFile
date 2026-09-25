@@ -15,7 +15,9 @@ import java.net.http.HttpResponse;
         description = "Perform connection to the given address",
         customSynopsis = {
                 "dropf connections connect <address> <access-key> [options]",
-                "dropf connections connect 192.168.1.3:28282 top_secret"
+                "dropf connections connect 192.168.1.3:28282 top_secret",
+                "dropf connections connect https://drorpfile.test top_secret",
+                "dropf connections connect https://drorpfile.test top_secret my_phone"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
@@ -25,16 +27,19 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
 
-    @CommandLine.Parameters(index = "1", description = "Secret connection key", defaultValue = "")
-    private String key;
+    @CommandLine.Parameters(index = "1", description = "Access secret key", defaultValue = "")
+    private String accessSecretKey;
+
+    @CommandLine.Parameters(index = "2", description = "Alias", defaultValue = "")
+    private String alias;
 
     @CommandLine.Option(names = {"--force"}, defaultValue = "false")
     private boolean force;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        if (StringUtils.hasText(key)) {
-            return daemonClient.handshake(CommonUtils.toURI(address), key, force);
+        if (StringUtils.hasText(accessSecretKey)) {
+            return daemonClient.handshake(CommonUtils.toURI(address), accessSecretKey, alias, force);
         }
         return daemonClient.handshakeReconnectAddress(CommonUtils.toURI(address));
     }

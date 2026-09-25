@@ -36,8 +36,8 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    public HttpResponse<byte[]> handshake(URI address, String key, boolean force) throws IOException {
-        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), key, force));
+    public HttpResponse<byte[]> handshake(URI address, String secretAccessKey, String alias, boolean force) throws IOException {
+        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), secretAccessKey, alias, force));
     }
 
     public HttpResponse<byte[]> handshakeReconnectAddress(URI address) throws IOException {

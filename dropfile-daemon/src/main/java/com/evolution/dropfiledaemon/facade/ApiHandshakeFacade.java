@@ -18,10 +18,12 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
+import com.evolution.dropfiledaemon.util.AliasValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -53,6 +55,10 @@ public class ApiHandshakeFacade {
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
     public void handshake(ApiHandshakeRequestDTO requestDTO) {
+        if (StringUtils.hasText(requestDTO.alias())) {
+            AliasValidator.validateOrThrow(requestDTO.alias());
+        }
+
         try {
             URI addressURI = CommonUtils.toURI(requestDTO.address());
             Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
@@ -85,7 +91,7 @@ public class ApiHandshakeFacade {
             );
             byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
 
-            String rawSecret = requestDTO.key();
+            String rawSecret = requestDTO.secretAccessKey();
             String accessSecretKeyId = accessKeyService.getId(rawSecret);
 
             SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
@@ -161,6 +167,7 @@ public class ApiHandshakeFacade {
                 Instant now = Instant.now();
                 handshakeTrustedOutStore.save(remoteFingerprint, () -> new HandshakeTrustedOutStore.TrustedOut(
                         addressURI,
+                        StringUtils.hasText(requestDTO.alias()) ? requestDTO.alias() : null,
                         new HandshakeTrustedOutStore.HandshakeKeys(
                                 rsaKeyPair.getPublic().getEncoded(),
                                 rsaKeyPair.getPrivate().getEncoded(),
@@ -346,6 +353,7 @@ public class ApiHandshakeFacade {
                 sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.publicDH()),
                 sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.remotePublicDH()),
                 trustedOut.addressURI().toString(),
+                trustedOut.alias(),
                 trustedOut.created(),
                 trustedOut.updated()
         );

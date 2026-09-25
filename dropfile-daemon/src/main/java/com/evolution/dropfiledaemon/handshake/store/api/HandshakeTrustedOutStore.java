@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.store.api;
 
 import com.evolution.dropfile.store.framework.KeyValueStore;
+import jakarta.annotation.Nullable;
 import lombok.With;
 
 import java.net.URI;
@@ -11,6 +12,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
 
     @With
     record TrustedOut(URI addressURI,
+                      @Nullable String alias,
                       HandshakeKeys handshake,
                       Instant sessionUpdatedByUser,
                       Instant sessionUpdatedBySystem,
