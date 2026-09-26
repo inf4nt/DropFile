@@ -7,6 +7,7 @@ import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.procedure.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
+import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
@@ -22,14 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,6 +38,8 @@ public class SingleRunDownloadProcedure {
     private final AtomicBoolean running = new AtomicBoolean();
 
     private final AtomicBoolean stopped = new AtomicBoolean();
+
+    private final ConcurrentTaskService concurrentTaskService;
 
     private final TunnelClientGateway tunnelClientGateway;
 
@@ -148,47 +146,23 @@ public class SingleRunDownloadProcedure {
     }
 
     private void chunksHandler() throws Exception {
-        AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
-
         try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(),
                 StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE)) {
-            List<CompletableFuture<Void>> activeFutures = new ArrayList<>();
-            Iterator<ChunkManifest> iterator = request.fileManifest().chunks().iterator();
-            while (iterator.hasNext() && exceptionAtomicReference.get() == null) {
-                validateInterrupted();
-                ChunkManifest chunkManifest = iterator.next();
-                CompletableFuture<Void> future = CompletableFuture.runAsync(
-                        () -> {
-                            if (exceptionAtomicReference.get() != null) {
-                                return;
-                            }
-                            try {
-                                handleSingleChunk(fileChannel, chunkManifest);
-                                throughputMeter.add(chunkManifest.size());
-                            } catch (Exception exception) {
-                                exceptionAtomicReference.compareAndSet(null, exception);
-                            }
-                        },
-                        executorService
-                );
-                activeFutures.add(future);
-
-                if (!iterator.hasNext()) {
-                    CompletableFuture.allOf(activeFutures.toArray(new CompletableFuture[0])).join();
-                } else if (activeFutures.size() >= configuration.maxThreadSize()) {
-                    CompletableFuture.anyOf(activeFutures.toArray(new CompletableFuture[0])).join();
-                    activeFutures.removeIf(it -> it.isDone());
-                }
+            List<Callable<Void>> tasks = request.fileManifest().chunks()
+                    .stream()
+                    .map(chunkManifest -> (Callable<Void>) () -> {
+                        handleSingleChunk(fileChannel, chunkManifest);
+                        throughputMeter.add(chunkManifest.size());
+                        return null;
+                    })
+                    .toList();
+            concurrentTaskService.executeFailFast(tasks, configuration.maxThreadSize(), executorService);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof Error error) {
+                throw error;
             }
-
-            if (!activeFutures.isEmpty()) {
-                CompletableFuture.allOf(activeFutures.toArray(new CompletableFuture[0])).join();
-            }
-
-            if (exceptionAtomicReference.get() != null) {
-                throw exceptionAtomicReference.get();
-            }
+            throw (Exception) e.getCause();
         }
     }
 

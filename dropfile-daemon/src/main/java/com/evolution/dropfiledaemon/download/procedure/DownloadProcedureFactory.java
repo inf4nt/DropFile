@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.download.procedure;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
+import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,8 @@ public class DownloadProcedureFactory {
 
     private final DaemonApplicationProperties daemonApplicationProperties;
 
+    private final ConcurrentTaskService concurrentTaskService;
+
     public SingleRunDownloadProcedure get(String operation,
                                           String fingerprint,
                                           String fileId,
@@ -31,6 +34,7 @@ public class DownloadProcedureFactory {
         int manifestChunkMaxSize = daemonApplicationProperties.daemonTunnelClientManifestChunkSize;
 
         return new SingleRunDownloadProcedure(
+                concurrentTaskService,
                 tunnelClientGateway,
                 fileHelper,
                 new DownloadProcedureConfiguration(
