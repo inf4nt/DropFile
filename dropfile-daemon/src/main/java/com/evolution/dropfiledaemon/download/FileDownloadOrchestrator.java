@@ -180,7 +180,6 @@ public class FileDownloadOrchestrator {
                                     .withStatus(DownloadFile.DownloadFileEntryStatus.ERROR)
                                     .withUpdated(Instant.now())
                     );
-                    throw exception;
                 } finally {
                     synchronized (this) {
                         CommonUtils.executeSafety(() -> downloadProcedures.remove(operationId));
@@ -336,7 +335,7 @@ public class FileDownloadOrchestrator {
             return;
         }
 
-        operations.values().forEach(SingleRunDownloadProcedure::stop);
+        operations.values().forEach(it -> CommonUtils.executeSafety(() -> it.stop()));
 
         fileDownloadStore.save(
                 () -> {

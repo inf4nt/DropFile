@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @RequiredArgsConstructor
 public class SingleRunDownloadProcedure {
+
+    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(10);
 
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -57,31 +60,52 @@ public class SingleRunDownloadProcedure {
         return stopped.get();
     }
 
-    public void stop() {
+    public void stop() throws InterruptedException {
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
+            try {
+                if (!executorService.awaitTermination(SHUTDOWN_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+                    log.info(
+                            "Download procedure was not terminated within {} ms. Operation: {}",
+                            SHUTDOWN_TIMEOUT.toMillis(),
+                            request.operation()
+                    );
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw e;
+            }
         }
     }
 
     public void run(Runnable beforeProcedureCallback,
-                    Runnable successCallback) {
-        if (stopped.get()) {
-            throw new IllegalStateException("Download procedure was forcibly stopped: " + request.operation());
-        }
+                    Runnable successCallback) throws ExecutionException, InterruptedException {
+
         if (!running.compareAndSet(false, true)) {
-            throw new IllegalStateException("Download procedure is running: " + request.operation());
+            throw new IllegalStateException(
+                    "Download procedure is running: " + request.operation()
+            );
+        }
+
+        if (stopped.get()) {
+            throw new IllegalStateException(
+                    "Download procedure was forcibly stopped: " + request.operation()
+            );
         }
 
         try (ExecutorService service = executorService) {
-            CompletableFuture.runAsync(
-                            () -> {
-                                beforeProcedureCallback.run();
-                                runProcedure();
-                                successCallback.run();
-                            },
-                            service
-                    )
-                    .join();
+            Future<?> future = service.submit(() -> {
+                beforeProcedureCallback.run();
+                runProcedure();
+                successCallback.run();
+            });
+
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw e;
+            }
         }
     }
 
