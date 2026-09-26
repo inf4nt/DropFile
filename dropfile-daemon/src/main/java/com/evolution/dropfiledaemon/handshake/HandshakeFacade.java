@@ -149,6 +149,18 @@ public class HandshakeFacade {
                     salt
             );
 
+            // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+            //
+            // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+            // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
+            // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+            // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
+            // look like the latest connection.
+            //
+            // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
+            // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+            // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+            // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     dhKeyPair.getPublic().getEncoded(),
                     publicKeyDH,
@@ -240,6 +252,18 @@ public class HandshakeFacade {
 
             UUID requestId = sessionPayloadRequest.requestId();
 
+            // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+            //
+            // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+            // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
+            // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+            // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
+            // look like the latest connection.
+            //
+            // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
+            // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+            // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+            // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     dhKeyPair.getPublic().getEncoded(),
                     sessionPayloadRequest.publicKeyDH(),

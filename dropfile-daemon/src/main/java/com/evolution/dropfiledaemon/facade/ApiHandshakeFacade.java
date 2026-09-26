@@ -20,11 +20,10 @@ import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
+import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -38,9 +37,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutionException;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -48,8 +45,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ApiHandshakeFacade {
 
     private static final Duration RECONNECT_BY_ALIAS_TIMEOUT = Duration.ofSeconds(30);
-
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final HandshakeClient handshakeClient;
 
@@ -65,10 +60,7 @@ public class ApiHandshakeFacade {
 
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
-    @EventListener(ContextClosedEvent.class)
-    public void close() {
-        executorService.shutdownNow();
-    }
+    private final ConcurrentTaskService concurrentTaskService;
 
     public void handshake(ApiHandshakeRequestDTO requestDTO) {
         if (StringUtils.hasText(requestDTO.alias())) {
@@ -181,6 +173,18 @@ public class ApiHandshakeFacade {
             String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
 
+                // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+                //
+                // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+                // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
+                // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+                // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
+                // look like the latest connection.
+                //
+                // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
+                // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+                // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+                // Do not invert this order without an atomic dual-write or compensating rollback.
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                         dhKeyPair.getPublic().getEncoded(),
                         responsePayload.publicKeyDH(),
@@ -279,6 +283,18 @@ public class ApiHandshakeFacade {
 
                 CommonUtils.validateInterrupted();
 
+                // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+                //
+                // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+                // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
+                // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+                // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
+                // look like the latest connection.
+                //
+                // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
+                // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+                // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+                // Do not invert this order without an atomic dual-write or compensating rollback.
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                         dhKeyPair.getPublic().getEncoded(),
                         sessionResponsePayload.publicKeyDH(),
@@ -318,41 +334,20 @@ public class ApiHandshakeFacade {
         handshakeReconnectFingerprint(fingerprint);
     }
 
-    public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) throws InterruptedException {
+
+    public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) {
         String alias = requestDTO.alias();
-
         AliasValidator.validateOrThrow(alias);
-
         Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
                 .getRequiredByAlias(alias);
-
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        AtomicInteger remaining = new AtomicInteger(listOfHandshakes.size());
-        AtomicBoolean isSuccess = new AtomicBoolean(false);
-
-        List<Future<String>> futures = listOfHandshakes.keySet().stream()
-                .map(fingerprint -> executorService.submit(() -> {
-                    try {
-                        handshakeReconnectFingerprint(fingerprint);
-                        isSuccess.set(true);
-                        countDownLatch.countDown();
-                    } catch (Exception e) {
-                        if (remaining.decrementAndGet() == 0) {
-                            countDownLatch.countDown();
-                        }
-                    }
-                    return fingerprint;
-                }))
+        List<Runnable> tasks = listOfHandshakes.keySet()
+                .stream()
+                .map(fingerprint -> (Runnable) () -> handshakeReconnectFingerprint(fingerprint))
                 .toList();
-
-        boolean completed = countDownLatch.await(RECONNECT_BY_ALIAS_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-        futures.forEach(it -> it.cancel(true));
-
-        if (!completed) {
-            throw new IllegalStateException("Reconnect by alias failed due to timeout %d ms".formatted(RECONNECT_BY_ALIAS_TIMEOUT.toMillis()));
-        }
-        if (!isSuccess.get()) {
-            throw new IllegalStateException("Reconnect by alias failed: all endpoints unreachable");
+        try {
+            concurrentTaskService.executeAtLeastOne(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Reconnect by alias failed: " + e.getMessage(), e);
         }
     }
 

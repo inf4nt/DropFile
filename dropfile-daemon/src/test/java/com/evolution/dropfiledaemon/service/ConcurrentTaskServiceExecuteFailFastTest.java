@@ -16,15 +16,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ConcurrentTaskServiceTest {
+class ConcurrentTaskServiceExecuteFailFastTest {
 
-    private ConcurrentTaskService taskService;
+    private ConcurrentTaskService underTest;
 
     private TrackingExecutorService executorService;
 
     @BeforeEach
     void setUp() {
-        taskService = new ConcurrentTaskService();
+        underTest = new ConcurrentTaskService();
         executorService = new TrackingExecutorService(10);
     }
 
@@ -58,7 +58,7 @@ class ConcurrentTaskServiceTest {
             });
         }
 
-        taskService.executeFailFast(tasks, threadCount, executorService);
+        underTest.executeFailFast(tasks, threadCount, executorService);
 
         assertThat(peakActiveTasks.get(), is(lessThanOrEqualTo(threadCount)));
         assertThat(peakActiveTasks.get(), is(greaterThan(0)));
@@ -91,7 +91,7 @@ class ConcurrentTaskServiceTest {
             });
         }
 
-        taskService.executeFailFast(tasks, threadCount, executorService);
+        underTest.executeFailFast(tasks, threadCount, executorService);
 
         assertThat(executed.get(), is(taskCount));
         assertThat(peakActiveTasks.get(), is(1));
@@ -112,7 +112,7 @@ class ConcurrentTaskServiceTest {
             });
         }
 
-        taskService.executeFailFast(tasks, threadCount, executorService);
+        underTest.executeFailFast(tasks, threadCount, executorService);
 
         assertThat(counter.get(), is(taskCount));
     }
@@ -158,7 +158,7 @@ class ConcurrentTaskServiceTest {
 
         ExecutionException exception = assertThrows(
                 ExecutionException.class,
-                () -> taskService.executeFailFast(tasks, threadCount, executorService)
+                () -> underTest.executeFailFast(tasks, threadCount, executorService)
         );
 
         assertThat(exception.getCause(), is(instanceOf(RuntimeException.class)));
@@ -209,7 +209,7 @@ class ConcurrentTaskServiceTest {
 
         Throwable thrown = assertThrows(
                 Throwable.class,
-                () -> taskService.executeFailFast(tasks, threadCount, executorService)
+                () -> underTest.executeFailFast(tasks, threadCount, executorService)
         );
 
         assertThat(thrown, is(instanceOf(OutOfMemoryError.class)));
@@ -270,7 +270,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(tasks, threadCount, executorService);
+                underTest.executeFailFast(tasks, threadCount, executorService);
             } catch (Throwable throwable) {
                 thrownInCaller.set(throwable);
             } finally {
@@ -340,7 +340,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(tasks, threadCount, executorService);
+                underTest.executeFailFast(tasks, threadCount, executorService);
             } catch (Throwable throwable) {
                 thrownInCaller.set(throwable);
             } finally {
@@ -408,7 +408,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(
+                underTest.executeFailFast(
                         tasks,
                         threadCount,
                         executorService
@@ -444,7 +444,7 @@ class ConcurrentTaskServiceTest {
 
         ExecutionException exception = assertThrows(
                 ExecutionException.class,
-                () -> taskService.executeFailFast(
+                () -> underTest.executeFailFast(
                         tasks,
                         threadCount,
                         executorService
@@ -498,7 +498,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(
+                underTest.executeFailFast(
                         List.of(stubbornTask, failingTask),
                         threadCount,
                         executorService
@@ -580,7 +580,7 @@ class ConcurrentTaskServiceTest {
         try {
             ExecutionException exception = assertThrows(
                     ExecutionException.class,
-                    () -> taskService.executeFailFast(
+                    () -> underTest.executeFailFast(
                             List.of(runningTask, () -> null),
                             threadCount,
                             rejectingExecutor
@@ -627,7 +627,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(
+                underTest.executeFailFast(
                         List.of(blockingTask, () -> null),
                         threadCount,
                         executorService
@@ -683,7 +683,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(
+                underTest.executeFailFast(
                         List.of(blockingTask),
                         threadCount,
                         executorService
@@ -742,7 +742,7 @@ class ConcurrentTaskServiceTest {
 
         Thread callerThread = new Thread(() -> {
             try {
-                taskService.executeFailFast(
+                underTest.executeFailFast(
                         tasks,
                         threadCount,
                         executorService
@@ -786,7 +786,7 @@ class ConcurrentTaskServiceTest {
 
         ExecutionException exception = assertThrows(
                 ExecutionException.class,
-                () -> taskService.executeFailFast(
+                () -> underTest.executeFailFast(
                         List.of(taskThrowingInterrupted),
                         threadCount,
                         executorService
@@ -809,7 +809,7 @@ class ConcurrentTaskServiceTest {
     void executeFailFast_InvalidThreadCount() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> taskService.executeFailFast(
+                () -> underTest.executeFailFast(
                         List.of(() -> null),
                         0,
                         executorService
@@ -818,7 +818,7 @@ class ConcurrentTaskServiceTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> taskService.executeFailFast(
+                () -> underTest.executeFailFast(
                         List.of(() -> null),
                         -1,
                         executorService
@@ -828,7 +828,7 @@ class ConcurrentTaskServiceTest {
 
     @Test
     void executeFailFast_EmptyList() throws ExecutionException {
-        taskService.executeFailFast(
+        underTest.executeFailFast(
                 Collections.emptyList(),
                 2,
                 executorService
