@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 @RequiredArgsConstructor
@@ -340,14 +341,17 @@ public class ApiHandshakeFacade {
         AliasValidator.validateOrThrow(alias);
         Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
                 .getRequiredByAlias(alias);
-        List<Runnable> tasks = listOfHandshakes.keySet()
+        List<Callable<Void>> tasks = listOfHandshakes.keySet()
                 .stream()
-                .map(fingerprint -> (Runnable) () -> handshakeReconnectFingerprint(fingerprint))
+                .map(fingerprint -> (Callable<Void>) () -> {
+                    handshakeReconnectFingerprint(fingerprint);
+                    return null;
+                })
                 .toList();
         try {
-            concurrentTaskService.executeAtLeastOne(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
+            concurrentTaskService.invokeAny(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
         } catch (ExecutionException e) {
-            throw new IllegalStateException("Reconnect by alias failed: " + e.getMessage(), e);
+            throw new IllegalStateException("Reconnect by alias failed: " + e.getMessage(), e.getCause());
         }
     }
 
