@@ -20,10 +20,6 @@ public class ApiQuickShareService implements Purgeable {
 
     private final QuickShareStore quickShareStore;
 
-    public boolean isTtlExpired(QuickShare quickShare) {
-        return isTtlExpired(Instant.now(), quickShare);
-    }
-
     public boolean isTtlExpired(Instant now, QuickShare quickShare) {
         Instant expiredAt = quickShare.created().plus(quickShare.ttl());
         return now.isAfter(expiredAt);
