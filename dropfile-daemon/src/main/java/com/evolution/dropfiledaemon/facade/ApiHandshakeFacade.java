@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -351,7 +352,11 @@ public class ApiHandshakeFacade {
         try {
             concurrentTaskService.invokeAny(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
         } catch (ExecutionException e) {
-            throw new IllegalStateException("Reconnect by alias failed: " + e.getMessage(), e.getCause());
+            String addresses = listOfHandshakes.entrySet().stream()
+                    .map(entry -> "fingerprint %s | target %s".formatted(entry.getKey(), entry.getValue().addressURI()))
+                    .collect(Collectors.joining(","));
+            throw new IllegalStateException("Reconnect by alias '%s' [%s] failed: %s"
+                    .formatted(alias, addresses, e.getMessage()), e.getCause());
         }
     }
 
