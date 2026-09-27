@@ -91,8 +91,7 @@ public class RetryExecutor<T> {
             throw new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
         }
 
-        Exception exception = buildException(exceptions);
-        throw exception;
+        throw buildException(exceptions);
     }
 
     private Exception buildException(List<Exception> exceptions) {
@@ -116,12 +115,15 @@ public class RetryExecutor<T> {
         }
 
         Future<T> future = EXECUTOR_SERVICE.submit(callable);
-
         try {
             return future.get(callTimeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
-            if (e.getCause() instanceof Exception exceptionCause) {
-                throw exceptionCause;
+            Throwable cause = e.getCause();
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            if (cause instanceof Exception exception) {
+                throw exception;
             }
             throw e;
         } catch (Exception e) {

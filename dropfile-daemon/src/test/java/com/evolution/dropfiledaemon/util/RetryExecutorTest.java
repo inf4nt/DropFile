@@ -900,4 +900,55 @@ public class RetryExecutorTest {
         assertThat(e.getSuppressed()[0], instanceOf(IOException.class));
         assertThat(e.getSuppressed()[1], instanceOf(IllegalStateException.class));
     }
+
+    @Test
+    void shouldNotRetryAndPropagateOriginalErrorWithoutCallTimeout() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+        AtomicInteger doOnErrorCounter = new AtomicInteger(0);
+        Error original = new Error("fatal");
+
+        Error thrown = assertThrows(
+                Error.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            callCounter.incrementAndGet();
+                            throw original;
+                        })
+                        .attempts(5)
+                        .delay(Duration.ofMillis(0))
+                        .retryIf(it -> true)
+                        .doOnError((attempt, ex) -> doOnErrorCounter.incrementAndGet())
+                        .run()
+        );
+
+        assertThat(thrown, sameInstance(original));
+        assertThat(callCounter.get(), is(1));
+        assertThat(doOnErrorCounter.get(), is(0));
+    }
+
+    @Test
+    void shouldNotRetryAndPropagateOriginalErrorWithCallTimeout() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+        AtomicInteger doOnErrorCounter = new AtomicInteger(0);
+        Error original = new Error("fatal with timeout path");
+
+        Error thrown = assertThrows(
+                Error.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            callCounter.incrementAndGet();
+                            throw original;
+                        })
+                        .attempts(5)
+                        .delay(Duration.ofMillis(0))
+                        .callTimeout(Duration.ofSeconds(5))
+                        .retryIf(it -> true)
+                        .doOnError((attempt, ex) -> doOnErrorCounter.incrementAndGet())
+                        .run()
+        );
+
+        assertThat(thrown, sameInstance(original));
+        assertThat(callCounter.get(), is(1));
+        assertThat(doOnErrorCounter.get(), is(0));
+    }
 }
