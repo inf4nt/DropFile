@@ -23,6 +23,7 @@ import com.evolution.dropfiledaemon.service.AccessKeyService;
 import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -336,6 +337,17 @@ public class ApiHandshakeFacade {
         handshakeReconnectFingerprint(fingerprint);
     }
 
+    public void handshakeReconnectAliasCurrent() {
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trusted = handshakeTrustedOutStore.getRequiredLastUpdated();
+        String alias = trusted.getValue().alias();
+        if (!StringUtils.hasText(alias)) {
+            String fingerprint = trusted.getKey();
+            throw new IllegalStateException("Unable to reconnect. The latest connection fingerprint '%s' has an empty alias"
+                    .formatted(fingerprint)
+            );
+        }
+        handshakeReconnectAlias(new ApiHandshakeReconnectAliasRequestDTO(alias));
+    }
 
     public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) {
         String alias = requestDTO.alias();
@@ -351,12 +363,11 @@ public class ApiHandshakeFacade {
                 .toList();
         try {
             concurrentTaskService.invokeAny(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
-        } catch (ExecutionException e) {
-            String addresses = listOfHandshakes.entrySet().stream()
-                    .map(entry -> "fingerprint %s | target %s".formatted(entry.getKey(), entry.getValue().addressURI()))
-                    .collect(Collectors.joining(","));
-            throw new IllegalStateException("Reconnect by alias '%s' [%s] failed: %s"
-                    .formatted(alias, addresses, e.getMessage()), e.getCause());
+        } catch (ExecutionException exception) {
+            String addresses = listOfHandshakes.values().stream()
+                    .map(it -> it.addressURI().toString())
+                    .collect(Collectors.joining(", "));
+            throw new IllegalStateException("Reconnect by alias '%s' to [%s] failed".formatted(alias, addresses));
         }
     }
 

@@ -18,7 +18,7 @@ import java.net.http.HttpResponse;
 )
 public class ConnectionPingCommand extends AbstractCommandHttpHandler<Void> {
 
-    @CommandLine.Parameters(index = "0", description = "Revoke by fingerprint", defaultValue = "")
+    @CommandLine.Parameters(index = "0", description = "Ping by fingerprint", defaultValue = "")
     private String fingerprintCriteria;
 
     @Override

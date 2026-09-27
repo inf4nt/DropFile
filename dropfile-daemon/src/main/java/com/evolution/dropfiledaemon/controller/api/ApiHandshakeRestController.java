@@ -39,8 +39,13 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping("/reconnect/alias")
-    public void handshakeReconnectAlias(@RequestBody ApiHandshakeReconnectAliasRequestDTO requestDTO) throws Exception {
+    public void handshakeReconnectAlias(@RequestBody ApiHandshakeReconnectAliasRequestDTO requestDTO) {
         apiHandshakeFacade.handshakeReconnectAlias(requestDTO);
+    }
+
+    @PostMapping("/reconnect/alias/current")
+    public void handshakeReconnectAliasCurrent() {
+        apiHandshakeFacade.handshakeReconnectAliasCurrent();
     }
 
     @GetMapping("/trust/in")

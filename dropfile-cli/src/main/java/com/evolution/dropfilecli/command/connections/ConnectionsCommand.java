@@ -4,6 +4,7 @@ import com.evolution.dropfilecli.command.AbstractCommandHandler;
 import com.evolution.dropfilecli.command.connections.access.AccessCommand;
 import com.evolution.dropfilecli.command.connections.browse.BrowseCommand;
 import com.evolution.dropfilecli.command.connections.download.DownloadCommand;
+import com.evolution.dropfilecli.command.connections.reconnect.ReconnectConnectionCommand;
 import com.evolution.dropfilecli.command.connections.share.ShareCommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
