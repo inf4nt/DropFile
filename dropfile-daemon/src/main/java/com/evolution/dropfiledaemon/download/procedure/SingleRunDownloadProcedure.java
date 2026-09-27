@@ -68,7 +68,7 @@ public class SingleRunDownloadProcedure {
                     log.info(
                             "Download procedure was not terminated within {} ms. Operation: {}",
                             SHUTDOWN_TIMEOUT.toMillis(),
-                            request.operation()
+                            request.operationId()
                     );
                 }
             } catch (InterruptedException e) {
@@ -83,13 +83,13 @@ public class SingleRunDownloadProcedure {
 
         if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException(
-                    "Download procedure is running: " + request.operation()
+                    "Download procedure is running: " + request.operationId()
             );
         }
 
         if (stopped.get()) {
             throw new IllegalStateException(
-                    "Download procedure was forcibly stopped: " + request.operation()
+                    "Download procedure was forcibly stopped: " + request.operationId()
             );
         }
 
@@ -111,19 +111,19 @@ public class SingleRunDownloadProcedure {
 
     private void runProcedure() {
         ExecutionProfiling.run(
-                String.format("file-download-procedure operation: %s fingerprint %s fileId: %s",
-                        request.operation(), request.fingerprint(), request.fileId()),
+                String.format("file-download-procedure operationId: %s fingerprint %s fileId: %s",
+                        request.operationId(), request.fingerprint(), request.fileId()),
                 () -> {
                     ExecutionProfiling.run(
-                            String.format("download-chunks operation: %s fingerprint %s fileId: %s: chunks %s",
-                                    request.operation(), request.fingerprint(), request.fileId(), request.fileManifest().chunks().size()
+                            String.format("download-chunks operationId: %s fingerprint %s fileId: %s: chunks %s",
+                                    request.operationId(), request.fingerprint(), request.fileId(), request.fileManifest().chunks().size()
                             ),
                             () -> chunksHandler()
                     );
 
                     ExecutionProfiling.run(
-                            String.format("digest-calculation operation: %s fingerprint %s fileId: %s",
-                                    request.operation(), request.fingerprint(), request.fileId()),
+                            String.format("digest-calculation operationId: %s fingerprint %s fileId: %s",
+                                    request.operationId(), request.fingerprint(), request.fileId()),
                             () -> totalDigestHandler()
                     );
 
@@ -137,7 +137,7 @@ public class SingleRunDownloadProcedure {
 
     private void atomicMove() throws Exception {
         // Best-effort no-replace check.
-        // Java NIO does not provide an atomic "rename if absent" operation across all platforms.
+        // Java NIO does not provide an atomic "rename if absent" operationId across all platforms.
         // A race with external processes is still possible between exists() and ATOMIC_MOVE.
         if (Files.exists(request.destinationFilePath())) {
             throw new FileAlreadyExistsException("Unable to execute atomic_move. Destination file already exists %s"
@@ -157,7 +157,7 @@ public class SingleRunDownloadProcedure {
         String percent = CommonUtils.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
-                request.operation(),
+                request.operationId(),
                 request.fingerprint(),
                 request.fileId(),
                 request.destinationFilePath().toAbsolutePath().toString(),
@@ -207,7 +207,7 @@ public class SingleRunDownloadProcedure {
                 })
                 .doOnError((attempt, exception) -> {
                     log.error("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
-                            request.operation(), request.fingerprint(), request.fileId(), request.filename(), attempt,
+                            request.operationId(), request.fingerprint(), request.fileId(), request.filename(), attempt,
                             chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
                     );
                 })
@@ -220,7 +220,7 @@ public class SingleRunDownloadProcedure {
         if (!manifest.hash().equals(actualSha256)) {
             throw new SecurityException(String.format(
                     "Total digest mismatch. Operation: %s expected: %s actual: %s",
-                    request.operation(),
+                    request.operationId(),
                     manifest.hash(),
                     actualSha256
             ));
@@ -229,6 +229,6 @@ public class SingleRunDownloadProcedure {
 
     @SneakyThrows
     private void validateInterrupted() {
-        CommonUtils.validateInterrupted("Downloading process has been interrupted: " + request.operation());
+        CommonUtils.validateInterrupted("Downloading process has been interrupted: " + request.operationId());
     }
 }

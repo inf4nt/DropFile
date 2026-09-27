@@ -27,12 +27,12 @@ public class FileDownloadEntryStoreKeyValueStoreInitializationProcedure
             Map<String, DownloadFile> staleDownloads = currentValues
                     .entrySet().stream()
                     .filter(it -> it.getValue().status()
-                            .equals(DownloadFile.DownloadFileEntryStatus.DOWNLOADING)
+                            .equals(DownloadFile.DownloadFileStatus.DOWNLOADING)
                     )
                     .collect(Collectors.toMap(
                             it -> it.getKey(),
                             it -> it.getValue()
-                                    .withStatus(DownloadFile.DownloadFileEntryStatus.INTERRUPTED)
+                                    .withStatus(DownloadFile.DownloadFileStatus.INTERRUPTED)
                     ));
 
             if (staleDownloads.isEmpty()) {

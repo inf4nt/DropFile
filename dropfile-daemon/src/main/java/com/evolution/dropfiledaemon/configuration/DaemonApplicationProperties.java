@@ -40,8 +40,6 @@ public class DaemonApplicationProperties {
 
     public final Path daemonDownloadsDirectory;
 
-    public final int daemonDownloadOrchestratorMaxQueueSize;
-
     public final int daemonDownloadOrchestratorActiveQueueSize;
 
     public final int daemonDownloadProcedureThreadSize;
@@ -104,7 +102,6 @@ public class DaemonApplicationProperties {
             @Value("${dropfile.daemon.installation-seed.directory}") Path daemonInstallationSeedDirectory,
             @Value("${dropfile.daemon.downloads.directory}") Path daemonDownloadsDirectory,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.share.add.hash.execution-timeout}") Duration daemonShareAddHashExecutionTimeout,
-            @Value("${dropfile.daemon.download.orchestrator.max-queue-size}") int daemonDownloadOrchestratorMaxQueueSize,
             @Value("${dropfile.daemon.download.orchestrator.active-queue-size}") int daemonDownloadOrchestratorActiveQueueSize,
             @Value("${dropfile.daemon.download.procedure.thread-size}") int daemonDownloadProcedureThreadSize,
             @DurationUnit(ChronoUnit.MILLIS) @Value("${dropfile.daemon.handshake.client.http.request-timeout}") Duration daemonHandshakeClientHttpRequestTimeout,
@@ -142,7 +139,6 @@ public class DaemonApplicationProperties {
         this.daemonTunnelClientHttpRequestTimeout = daemonTunnelClientHttpRequestTimeout;
         this.daemonTunnelClientStreamDeadlineTimeout = daemonTunnelClientStreamDeadlineTimeout;
         this.daemonShareAddHashExecutionTimeout = daemonShareAddHashExecutionTimeout;
-        this.daemonDownloadOrchestratorMaxQueueSize = daemonDownloadOrchestratorMaxQueueSize;
         this.daemonDownloadOrchestratorActiveQueueSize = daemonDownloadOrchestratorActiveQueueSize;
         this.daemonDownloadProcedureThreadSize = daemonDownloadProcedureThreadSize;
         this.daemonHandshakeClientHttpRequestTimeout = daemonHandshakeClientHttpRequestTimeout;

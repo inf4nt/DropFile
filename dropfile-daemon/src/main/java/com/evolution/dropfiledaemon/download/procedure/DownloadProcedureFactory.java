@@ -28,8 +28,7 @@ public class DownloadProcedureFactory {
                                           String filename,
                                           FileManifest fileManifest,
                                           Path destinationFilePath,
-                                          Path temporaryFilePath,
-                                          Path manifestFilePath) {
+                                          Path temporaryFilePath) {
         int downloadProcedureThreadSize = daemonApplicationProperties.daemonDownloadProcedureThreadSize;
         int manifestChunkMaxSize = daemonApplicationProperties.daemonTunnelClientManifestChunkSize;
 
@@ -48,8 +47,7 @@ public class DownloadProcedureFactory {
                         filename,
                         fileManifest,
                         destinationFilePath,
-                        temporaryFilePath,
-                        manifestFilePath
+                        temporaryFilePath
                 )
         );
     }

@@ -50,7 +50,7 @@ public class CleanupFileDownloadApplicationInitializationPhase
     }
 
     private boolean isCleanupCandidate(DownloadFile downloadFile) {
-        return downloadFile.status() != DownloadFile.DownloadFileEntryStatus.COMPLETED;
+        return downloadFile.status() != DownloadFile.DownloadFileStatus.COMPLETED;
     }
 
     private boolean cleanupFilesOnDisk(DownloadFile downloadFile) {

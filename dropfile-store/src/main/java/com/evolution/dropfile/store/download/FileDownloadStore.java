@@ -13,7 +13,7 @@ public interface FileDownloadStore
         if (downloadFile == null) {
             return;
         }
-        DownloadFile.DownloadFileEntryStatus currentStatus = downloadFile.status();
+        DownloadFile.DownloadFileStatus currentStatus = downloadFile.status();
         if (!canTransitionTo(currentStatus)) {
             throw new IllegalArgumentException("FileDownloadEntryStore action failed. Status transition failed. Key %s status from %s to %s"
                     .formatted(key, currentStatus, value.status())
@@ -21,7 +21,7 @@ public interface FileDownloadStore
         }
     }
 
-    private boolean canTransitionTo(DownloadFile.DownloadFileEntryStatus current) {
+    private boolean canTransitionTo(DownloadFile.DownloadFileStatus current) {
         return switch (current) {
             case DOWNLOADING -> true;
             case COMPLETED, ERROR, INTERRUPTED, STOPPED -> false;

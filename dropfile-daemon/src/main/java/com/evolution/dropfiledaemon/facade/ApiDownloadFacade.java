@@ -27,7 +27,6 @@ public class ApiDownloadFacade {
         Map<String, ApiDownloadLsDTO.Response> responseMap = new LinkedHashMap<>();
 
         Map<String, FileDownloadOrchestrator.DownloadProgress> downloadProcedures = fileDownloadOrchestrator.getDownloadProcedures();
-        Map<String, FileDownloadOrchestrator.DownloadProgress> waitingQueue = fileDownloadOrchestrator.getWaitingQueue();
         Map<String, DownloadFile> getFileDownloadEntryStoreMap = fileDownloadStore.getAll();
 
         for (Map.Entry<String, DownloadFile> entry : getFileDownloadEntryStoreMap.entrySet()) {
@@ -57,28 +56,6 @@ public class ApiDownloadFacade {
                     status,
                     downloadFile.created(),
                     downloadFile.updated()
-            ));
-        }
-
-        for (Map.Entry<String, FileDownloadOrchestrator.DownloadProgress> entry : waitingQueue.entrySet()) {
-            String operationId = entry.getKey();
-            if (responseMap.containsKey(operationId)) {
-                continue;
-            }
-
-            FileDownloadOrchestrator.DownloadProgress downloadProgress = entry.getValue();
-
-            responseMap.put(operationId, new ApiDownloadLsDTO.Response(
-                    operationId,
-                    downloadProgress.fingerprint(),
-                    downloadProgress.fileId(),
-                    downloadProgress.filename(),
-                    null,
-                    null,
-                    null,
-                    ApiDownloadLsDTO.Status.QUEUE,
-                    null,
-                    null
             ));
         }
 
@@ -126,12 +103,6 @@ public class ApiDownloadFacade {
         Stream<ApiDownloadLsDTO.Response> responseStream = source.stream()
                 .filter(it -> it.status() == status)
                 .limit(limit);
-        if (status != ApiDownloadLsDTO.Status.QUEUE) {
-            responseStream = responseStream.
-                    sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated).reversed())
-                    .limit(limit)
-                    .sorted(Comparator.comparing(ApiDownloadLsDTO.Response::updated));
-        }
         return responseStream
                 .toList();
     }

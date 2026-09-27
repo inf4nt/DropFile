@@ -9,11 +9,10 @@ public record DownloadFile(String fingerprint,
                            String fileId,
                            String destinationFile,
                            String temporaryFile,
-                           String manifestFile,
                            String hash,
                            long total,
                            long downloaded,
-                           DownloadFileEntryStatus status,
+                           DownloadFileStatus status,
                            Instant created,
                            Instant updated) {
 
@@ -21,14 +20,13 @@ public record DownloadFile(String fingerprint,
                         String fileId,
                         String destinationFile,
                         String temporaryFile,
-                        String manifestFile,
-                        DownloadFileEntryStatus status,
+                        DownloadFileStatus status,
                         Instant created,
                         Instant updated) {
-        this(fingerprint, fileId, destinationFile, temporaryFile, manifestFile, null, 0, 0, status, created, updated);
+        this(fingerprint, fileId, destinationFile, temporaryFile, null, 0, 0, status, created, updated);
     }
 
-    public enum DownloadFileEntryStatus {
+    public enum DownloadFileStatus {
         DOWNLOADING,
         ERROR,
         STOPPED,
