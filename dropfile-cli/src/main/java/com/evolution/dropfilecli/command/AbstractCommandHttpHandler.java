@@ -114,7 +114,7 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
         return PrintModeEnum.LIST;
     }
 
-    protected void print(TR object) {
+    protected void print(TR object) throws Exception {
         if (isTable()) {
             printTable(object);
         } else if (isList()) {
@@ -129,8 +129,7 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
         }
     }
 
-    @SneakyThrows
-    protected void printList(Object object) {
+    protected void printList(Object object) throws Exception {
         if (ObjectUtils.isEmpty(object)) {
             System.out.println("No values present");
             return;

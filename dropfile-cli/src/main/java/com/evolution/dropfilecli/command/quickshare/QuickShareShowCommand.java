@@ -63,7 +63,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
     }
 
     @Override
-    protected void print(ApiQuickShareLsResponseDTO object) {
+    protected void print(ApiQuickShareLsResponseDTO object) throws Exception {
         super.print(object);
 
         if (qrCode) {

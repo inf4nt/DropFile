@@ -53,7 +53,7 @@ public class DownloadLsCommand extends AbstractCommandHttpHandler<List<ApiDownlo
     }
 
     @Override
-    protected void print(List<ApiDownloadLsDTO.Response> object) {
+    protected void print(List<ApiDownloadLsDTO.Response> object) throws Exception {
         super.print(object);
         String ids = object.stream()
                 .filter(it -> !Boolean.TRUE.equals(it.accessible()))

@@ -69,7 +69,7 @@ public class QuickShareAddCommand extends AbstractCommandHttpHandler<ApiQuickSha
     }
 
     @Override
-    protected void print(ApiQuickShareLsResponseDTO object) {
+    protected void print(ApiQuickShareLsResponseDTO object) throws Exception {
         if (qrCode) {
             spec.commandLine()
                     .getParent()

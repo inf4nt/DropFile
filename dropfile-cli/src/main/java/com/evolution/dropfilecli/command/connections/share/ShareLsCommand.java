@@ -32,7 +32,7 @@ public class ShareLsCommand extends AbstractCommandHttpHandler<List<ApiConnectio
     }
 
     @Override
-    protected void print(List<ApiConnectionsShareLsResponseDTO> object) {
+    protected void print(List<ApiConnectionsShareLsResponseDTO> object) throws Exception {
         super.print(object);
         String ids = object.stream()
                 .filter(it -> !it.accessible())
