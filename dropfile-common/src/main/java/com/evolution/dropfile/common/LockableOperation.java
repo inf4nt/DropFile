@@ -1,12 +1,9 @@
 package com.evolution.dropfile.common;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,19 +23,26 @@ public class LockableOperation implements Purgeable {
 
     @Override
     public void purge() {
-        executeWithGlobalLock(() -> {
-            keyLocks.keySet().removeIf(purgePredicate::test);
-        });
+        try {
+            executeWithGlobalLock(() -> {
+                keyLocks.keySet().removeIf(it -> purgePredicate.test(it));
+            });
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public <R, TH extends Throwable> R executeWithKeyLock(String key, SupplierThrowable<R, TH> action) throws TH {
+    public <R> R executeWithKeyLock(String key, Callable<R> callable)
+            throws InterruptedException, TimeoutException, ExecutionException {
         acquireLock(globalLock.readLock(), "global read lock");
         try {
             Lock keyLock = keyLocks.computeIfAbsent(key, _ -> new ReentrantLock());
 
             acquireLock(keyLock, "key lock [" + key + "]");
             try {
-                return action.get();
+                return call(callable);
             } finally {
                 keyLock.unlock();
             }
@@ -47,31 +51,23 @@ public class LockableOperation implements Purgeable {
         }
     }
 
-    public <TH extends Throwable> void executeWithKeyLock(String key, ProcedureThrowable<TH> action) throws TH {
-        executeWithKeyLock(key, () -> {
-            action.execute();
-            return null;
-        });
-    }
-
-    public <R, TH extends Throwable> R executeWithGlobalLock(SupplierThrowable<R, TH> action) throws TH {
+    public <R> R executeWithGlobalLock(Callable<R> callable) throws InterruptedException, TimeoutException, ExecutionException {
         acquireLock(globalLock.writeLock(), "global write lock");
         try {
-            return action.get();
+            return call(callable);
         } finally {
             globalLock.writeLock().unlock();
         }
     }
 
-    public <TH extends Throwable> void executeWithGlobalLock(ProcedureThrowable<TH> action) throws TH {
+    public void executeWithGlobalLock(Runnable runnable) throws InterruptedException, TimeoutException, ExecutionException {
         executeWithGlobalLock(() -> {
-            action.execute();
+            runnable.run();
             return null;
         });
     }
 
-    @SneakyThrows
-    private void acquireLock(Lock lock, String lockName) {
+    private void acquireLock(Lock lock, String lockName) throws InterruptedException, TimeoutException {
         boolean acquired;
         try {
             acquired = lock.tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -85,11 +81,20 @@ public class LockableOperation implements Purgeable {
         }
     }
 
-    public interface SupplierThrowable<R, TH extends Throwable> {
-        R get() throws TH;
-    }
-
-    public interface ProcedureThrowable<TH extends Throwable> {
-        void execute() throws TH;
+    private <R> R call(Callable<R> callable) throws ExecutionException, InterruptedException, TimeoutException {
+        try {
+            return callable.call();
+        } catch (RuntimeException | TimeoutException | ExecutionException e) {
+            throw e;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        } catch (Exception e) {
+            String message = e.getMessage();
+            if (message == null || message.isBlank()) {
+                throw new ExecutionException(e);
+            }
+            throw new ExecutionException(message, e);
+        }
     }
 }

@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,16 +47,23 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
                 || failures >= 2;
 
         if (shouldRefresh) {
-            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                if (isSessionOrInvalidExpired(fingerprint)) {
-                    log.info("Refreshing session for fingerprint {} (failures={}, proactiveOrAfterErrors=true)",
-                            fingerprint, failures);
-                    apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
-                } else {
-                    log.debug("Session for fingerprint {} was already refreshed by another thread (failures={})",
-                            fingerprint, failures);
-                }
-            });
+            try {
+                lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
+                    if (isSessionOrInvalidExpired(fingerprint)) {
+                        log.info("Refreshing session for fingerprint {} (failures={}, proactiveOrAfterErrors=true)",
+                                fingerprint, failures);
+                        apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
+                    } else {
+                        log.debug("Session for fingerprint {} was already refreshed by another thread (failures={})",
+                                fingerprint, failures);
+                    }
+                    return null;
+                });
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
         }
 
         try {

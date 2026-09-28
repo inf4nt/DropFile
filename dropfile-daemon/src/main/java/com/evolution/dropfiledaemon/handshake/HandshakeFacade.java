@@ -31,6 +31,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -284,18 +286,17 @@ public class HandshakeFacade {
         });
     }
 
-    public void revoke(CriteriaEnvelope fingerprintCriteria) {
+    public void revoke(CriteriaEnvelope fingerprintCriteria) throws ExecutionException, InterruptedException, TimeoutException {
         String fingerprint = handshakeTrustedInStore.getRequiredByCriteriaKey(fingerprintCriteria)
                 .getKey();
         lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedInStore.remove(fingerprint);
+            return null;
         });
     }
 
-    public void revokeAll() {
-        lockableOperationHandshakeTrustedInStore.executeWithGlobalLock(() -> {
-            handshakeTrustedInStore.removeAll();
-        });
+    public void revokeAll() throws ExecutionException, InterruptedException, TimeoutException {
+        lockableOperationHandshakeTrustedInStore.executeWithGlobalLock(() -> handshakeTrustedInStore.removeAll());
     }
 
     public List<HandshakeApiTrustInResponseDTO> getTrustIt() {

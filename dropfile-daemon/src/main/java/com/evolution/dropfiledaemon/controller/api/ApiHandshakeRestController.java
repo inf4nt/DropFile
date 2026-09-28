@@ -64,27 +64,27 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping("/revoke/fingerprint")
-    public void revoke(@RequestBody CriteriaEnvelope fingerprintCriteria) {
+    public void revoke(@RequestBody CriteriaEnvelope fingerprintCriteria) throws Exception {
         handshakeFacade.revoke(fingerprintCriteria);
     }
 
     @PostMapping("/revoke/all")
-    public void revokeAll() {
+    public void revokeAll() throws Exception {
         handshakeFacade.revokeAll();
     }
 
     @PostMapping("/disconnect/fingerprint")
-    public void disconnect(@RequestBody CriteriaEnvelope fingerprintCriteriaEnvelope) {
+    public void disconnect(@RequestBody CriteriaEnvelope fingerprintCriteriaEnvelope) throws Exception {
         apiHandshakeFacade.disconnect(fingerprintCriteriaEnvelope);
     }
 
     @PostMapping("/disconnect/current")
-    public void disconnectCurrent() {
+    public void disconnectCurrent() throws Exception {
         apiHandshakeFacade.disconnectCurrent();
     }
 
     @PostMapping("/disconnect/all")
-    public void disconnectAll() {
+    public void disconnectAll() throws Exception {
         apiHandshakeFacade.disconnectAll();
     }
 }

@@ -23,7 +23,6 @@ import com.evolution.dropfiledaemon.service.AccessKeyService;
 import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -40,6 +39,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -211,6 +211,7 @@ public class ApiHandshakeFacade {
                             handshakeRequestId
                     );
                 });
+                return null;
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -310,6 +311,7 @@ public class ApiHandshakeFacade {
                         .withHandshakeId(sessionRequestId)
                         .withUpdated(Instant.now())
                 );
+                return null;
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -371,26 +373,25 @@ public class ApiHandshakeFacade {
         }
     }
 
-    public void disconnect(CriteriaEnvelope fingerprintCriteria) {
+    public void disconnect(CriteriaEnvelope fingerprintCriteria) throws ExecutionException, InterruptedException, TimeoutException {
         String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(fingerprintCriteria).getKey();
         disconnectByFingerprint(fingerprint);
     }
 
-    private void disconnectByFingerprint(String fingerprint) {
+    private void disconnectByFingerprint(String fingerprint) throws ExecutionException, InterruptedException, TimeoutException {
         lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedOutStore.remove(fingerprint);
+            return null;
         });
     }
 
-    public void disconnectCurrent() {
+    public void disconnectCurrent() throws ExecutionException, InterruptedException, TimeoutException {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
         disconnectByFingerprint(fingerprint);
     }
 
-    public void disconnectAll() {
-        lockableOperationHandshakeTrustedOutStore.executeWithGlobalLock(() -> {
-            handshakeTrustedOutStore.removeAll();
-        });
+    public void disconnectAll() throws ExecutionException, InterruptedException, TimeoutException {
+        lockableOperationHandshakeTrustedOutStore.executeWithGlobalLock(() -> handshakeTrustedOutStore.removeAll());
     }
 
     public List<HandshakeApiTrustOutResponseDTO> getTrustOut() {
