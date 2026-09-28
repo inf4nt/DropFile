@@ -9,8 +9,8 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ public class HandshakeClient {
     private final ObjectMapper objectMapper;
 
     public HandshakeResponseDTO handshake(URI addressURI,
-                                          HandshakeRequestDTO handshakeRequestDTO) {
+                                          HandshakeRequestDTO handshakeRequestDTO) throws IOException {
         return post(
                 URI.create(CommonUtils.joinPaths(
                         addressURI.toString(),
@@ -50,7 +50,7 @@ public class HandshakeClient {
     }
 
     public HandshakeSessionDTO.Session handshakeSession(URI addressURI,
-                                                        HandshakeSessionDTO.Session session) {
+                                                        HandshakeSessionDTO.Session session) throws IOException {
         return post(
                 URI.create(CommonUtils.joinPaths(
                         addressURI.toString(),
@@ -61,8 +61,7 @@ public class HandshakeClient {
         );
     }
 
-    @SneakyThrows
-    private <T> T post(URI uri, Object requestBody, Class<T> responseClass) {
+    private <T> T post(URI uri, Object requestBody, Class<T> responseClass) throws IOException {
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(requestBody)))
@@ -85,8 +84,7 @@ public class HandshakeClient {
         }
     }
 
-    @SneakyThrows
-    private InputStream doExecute(HttpRequest httpRequest) {
+    private InputStream doExecute(HttpRequest httpRequest) throws IOException {
         HttpResponse<InputStream> httpResponse = null;
         try {
             try {
@@ -124,7 +122,19 @@ public class HandshakeClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            throw throwable;
+
+            if (throwable instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            if (throwable instanceof IOException ioException) {
+                throw ioException;
+            }
+
+            String message = throwable.getMessage();
+            if (StringUtils.hasText(message)) {
+                throw new IOException(throwable.getMessage(), throwable);
+            }
+            throw new IOException(throwable);
         }
     }
 }
