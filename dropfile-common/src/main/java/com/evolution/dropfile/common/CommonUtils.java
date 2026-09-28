@@ -1,6 +1,6 @@
 package com.evolution.dropfile.common;
 
-import com.evolution.dropfile.common.function.IORunnable;
+import com.evolution.dropfile.common.function.VoidCallable;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -182,9 +182,9 @@ public class CommonUtils {
         return String.format(Locale.US, "%.2fGB", gb);
     }
 
-    public static void executeSafety(IORunnable runnable) {
+    public static void executeSafety(VoidCallable callable) {
         try {
-            runnable.run();
+            callable.call();
         } catch (Exception _) {
         }
     }

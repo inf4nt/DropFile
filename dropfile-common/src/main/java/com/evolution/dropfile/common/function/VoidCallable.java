@@ -1,7 +1,7 @@
 package com.evolution.dropfile.common.function;
 
 @FunctionalInterface
-public interface IORunnable {
+public interface VoidCallable {
 
-    void run() throws Exception;
+    void call() throws Exception;
 }

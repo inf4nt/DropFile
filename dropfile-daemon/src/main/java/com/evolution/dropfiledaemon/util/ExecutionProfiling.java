@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
-import com.evolution.dropfile.common.function.IORunnable;
+import com.evolution.dropfile.common.function.VoidCallable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,11 +10,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ExecutionProfiling {
 
-    public static void run(String operation, IORunnable runnable) {
+    public static void run(String operation, VoidCallable callable) {
         run(
                 operation,
                 () -> {
-                    runnable.run();
+                    callable.call();
                     return null;
                 }
         );
