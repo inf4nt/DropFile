@@ -1,5 +1,6 @@
 package com.evolution.dropfile.common;
 
+import com.evolution.dropfile.common.function.VoidCallable;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
@@ -51,6 +52,14 @@ public class LockableOperation implements Purgeable {
         }
     }
 
+    public void executeWithKeyLock(String key, VoidCallable voidCallable)
+            throws InterruptedException, TimeoutException, ExecutionException {
+        executeWithKeyLock(key, () -> {
+            voidCallable.call();
+            return null;
+        });
+    }
+
     public <R> R executeWithGlobalLock(Callable<R> callable) throws InterruptedException, TimeoutException, ExecutionException {
         acquireLock(globalLock.writeLock(), "global write lock");
         try {
@@ -60,9 +69,9 @@ public class LockableOperation implements Purgeable {
         }
     }
 
-    public void executeWithGlobalLock(Runnable runnable) throws InterruptedException, TimeoutException, ExecutionException {
+    public void executeWithGlobalLock(VoidCallable callable) throws InterruptedException, TimeoutException, ExecutionException {
         executeWithGlobalLock(() -> {
-            runnable.run();
+            callable.call();
             return null;
         });
     }

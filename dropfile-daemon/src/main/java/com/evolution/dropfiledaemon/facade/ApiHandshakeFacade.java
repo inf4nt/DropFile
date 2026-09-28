@@ -211,7 +211,6 @@ public class ApiHandshakeFacade {
                             handshakeRequestId
                     );
                 });
-                return null;
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -311,7 +310,6 @@ public class ApiHandshakeFacade {
                         .withHandshakeId(sessionRequestId)
                         .withUpdated(Instant.now())
                 );
-                return null;
             });
         } catch (Exception e) {
             throw CommonUtils.toRuntimeException(e.getMessage(), e);
@@ -381,7 +379,6 @@ public class ApiHandshakeFacade {
     private void disconnectByFingerprint(String fingerprint) throws ExecutionException, InterruptedException, TimeoutException {
         lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedOutStore.remove(fingerprint);
-            return null;
         });
     }
 

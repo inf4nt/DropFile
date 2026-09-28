@@ -57,7 +57,6 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
                         log.debug("Session for fingerprint {} was already refreshed by another thread (failures={})",
                                 fingerprint, failures);
                     }
-                    return null;
                 });
             } catch (RuntimeException e) {
                 throw e;

@@ -291,7 +291,6 @@ public class HandshakeFacade {
                 .getKey();
         lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedInStore.remove(fingerprint);
-            return null;
         });
     }
 
