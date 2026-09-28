@@ -131,15 +131,13 @@ public class CommonUtils {
         return HEX_FORMAT.formatHex(hash);
     }
 
-    @SneakyThrows
-    public static void validateInterrupted() {
+    public static void validateInterrupted() throws InterruptedException {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
     }
 
-    @SneakyThrows
-    public static void validateInterrupted(String message) {
+    public static void validateInterrupted(String message) throws InterruptedException {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException(message);
         }

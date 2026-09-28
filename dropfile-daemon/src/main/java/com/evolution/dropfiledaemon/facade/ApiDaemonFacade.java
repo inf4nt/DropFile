@@ -7,9 +7,9 @@ import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -26,8 +26,7 @@ public class ApiDaemonFacade {
 
     private final ObjectMapper objectMapper;
 
-    @SneakyThrows
-    public DaemonInfoResponseDTO info() {
+    public DaemonInfoResponseDTO info() throws IOException {
         String json = objectMapper.writeValueAsString(daemonApplicationProperties);
         Map<String, String> daemonProperties = objectMapper.readValue(json, new TypeReference<>() {
         });

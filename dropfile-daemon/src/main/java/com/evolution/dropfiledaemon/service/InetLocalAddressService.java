@@ -1,11 +1,11 @@
 package com.evolution.dropfiledaemon.service;
 
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -14,8 +14,7 @@ import java.util.List;
 @Component
 public class InetLocalAddressService {
 
-    @SneakyThrows
-    public ConnectionAddress getConnectionAddress() {
+    public ConnectionAddress getConnectionAddress() throws SocketException {
         Enumeration<NetworkInterface> interfaces =
                 NetworkInterface.getNetworkInterfaces();
 

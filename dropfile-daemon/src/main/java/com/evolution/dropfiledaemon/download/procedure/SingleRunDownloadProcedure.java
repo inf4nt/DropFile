@@ -12,7 +12,6 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.util.RetryExecutor;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -227,8 +226,7 @@ public class SingleRunDownloadProcedure {
         }
     }
 
-    @SneakyThrows
-    private void validateInterrupted() {
+    private void validateInterrupted() throws InterruptedException {
         CommonUtils.validateInterrupted("Downloading process has been interrupted: " + request.operationId());
     }
 }

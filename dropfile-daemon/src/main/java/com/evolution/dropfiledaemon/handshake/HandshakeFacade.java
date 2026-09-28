@@ -20,12 +20,13 @@ import com.evolution.dropfiledaemon.service.AccessKeyService;
 import com.evolution.dropfiledaemon.service.ReplyAttackGuard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.time.Instant;
 import java.util.List;
@@ -55,8 +56,8 @@ public class HandshakeFacade {
 
     private final ReplyAttackGuard replyAttackGuard;
 
-    @SneakyThrows
-    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) {
+    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO)
+            throws GeneralSecurityException, ExecutionException, InterruptedException, TimeoutException, IOException {
         String accessKeyId = requestDTO.accessKeyId();
 
         AccessKey accessKey = accessKeyStore.remove(accessKeyId);
@@ -193,8 +194,8 @@ public class HandshakeFacade {
         });
     }
 
-    @SneakyThrows
-    public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO) {
+    public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO)
+            throws GeneralSecurityException, ExecutionException, InterruptedException, TimeoutException, IOException {
         String fingerprint = sessionDTO.fingerprint();
 
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();

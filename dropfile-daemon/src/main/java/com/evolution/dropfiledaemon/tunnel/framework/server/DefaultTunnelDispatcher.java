@@ -16,7 +16,6 @@ import com.evolution.dropfiledaemon.tunnel.framework.server.command.CommandHandl
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -167,8 +167,8 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         return new TunnelSessionKeys(clientKey, serverKey);
     }
 
-    @SneakyThrows
-    private TunnelRequestDTO.Payload decrypt(TunnelRequestDTO requestDTO, byte[] aad, SecretKey clientSecretKey) {
+    private TunnelRequestDTO.Payload decrypt(TunnelRequestDTO requestDTO, byte[] aad, SecretKey clientSecretKey)
+            throws GeneralSecurityException, IOException {
         byte[] decrypt = cryptoTunnel.decrypt(
                 requestDTO.payload(),
                 requestDTO.nonce(),
@@ -178,8 +178,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
         return objectMapper.readValue(decrypt, TunnelRequestDTO.Payload.class);
     }
 
-    @SneakyThrows
-    private InputStream handlerResultToInputStream(@Nullable Object handlerResult) {
+    private InputStream handlerResultToInputStream(@Nullable Object handlerResult) throws IOException {
         if (handlerResult == null) {
             return InputStream.nullInputStream();
         }

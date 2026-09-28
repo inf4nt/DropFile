@@ -3,9 +3,9 @@ package com.evolution.dropfiledaemon.tunnel.framework.server.command;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,7 @@ public class CommandHandlerExecutor {
     }
 
     @Nullable
-    @SneakyThrows
-    private Object deserialize(Class<?> payloadType, byte[] payload) {
+    private Object deserialize(Class<?> payloadType, byte[] payload) throws IOException {
         if (payloadType == Void.class) {
             return null;
         }

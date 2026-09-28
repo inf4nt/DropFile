@@ -4,11 +4,11 @@ import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
@@ -22,9 +22,8 @@ public class ApplicationReadyListenerSystemInfoPrinter {
 
     private final ObjectMapper objectMapper;
 
-    @SneakyThrows
     @EventListener(DropFileDaemonBeforeApplicationReadyEvent.class)
-    public void onApplicationEvent() {
+    public void onApplicationEvent() throws IOException {
         Map<String, String> systemInfo = systemInfoProvider.getSystemInfo();
         System.out.println("================================");
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(

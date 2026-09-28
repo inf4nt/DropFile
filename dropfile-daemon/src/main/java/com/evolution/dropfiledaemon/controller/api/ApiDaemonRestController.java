@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/daemon")
@@ -26,7 +28,7 @@ public class ApiDaemonRestController {
     }
 
     @GetMapping("/info")
-    public DaemonInfoResponseDTO info() {
+    public DaemonInfoResponseDTO info() throws IOException {
         return apiDaemonFacade.info();
     }
 
