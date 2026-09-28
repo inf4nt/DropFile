@@ -76,16 +76,12 @@ public class DropFileDaemonConfiguration {
 
     @Bean
     public LockableOperation lockableOperationHandshakeTrustedInStore(HandshakeTrustedInStore store) {
-        return new LockableOperation(key -> {
-            return store.get(key).isEmpty();
-        });
+        return new LockableOperation(fingerprint -> store.get(fingerprint).isEmpty());
     }
 
     @Bean
     public LockableOperation lockableOperationHandshakeTrustedOutStore(HandshakeTrustedOutStore store) {
-        return new LockableOperation(key -> {
-            return store.get(key).isEmpty();
-        });
+        return new LockableOperation(fingerprint -> store.get(fingerprint).isEmpty());
     }
 
     @Bean
