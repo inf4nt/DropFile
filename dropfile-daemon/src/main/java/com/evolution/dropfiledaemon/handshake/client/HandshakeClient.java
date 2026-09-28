@@ -122,19 +122,16 @@ public class HandshakeClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-
             if (throwable instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             }
             if (throwable instanceof IOException ioException) {
                 throw ioException;
             }
-
-            String message = throwable.getMessage();
-            if (StringUtils.hasText(message)) {
-                throw new IOException(throwable.getMessage(), throwable);
+            if (throwable instanceof Error error) {
+                throw error;
             }
-            throw new IOException(throwable);
+            throw new IOException(throwable.getMessage(), throwable);
         }
     }
 }
