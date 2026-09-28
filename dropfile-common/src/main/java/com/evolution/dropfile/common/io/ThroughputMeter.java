@@ -14,6 +14,8 @@ public class ThroughputMeter {
 
     private final LongAdder downloaded = new LongAdder();
 
+    private final LongAdder totalBytesInWindow = new LongAdder();
+
     public void add(long size) {
         if (size <= 0) {
             return;
@@ -21,16 +23,14 @@ public class ThroughputMeter {
 
         samples.add(new ChunkSample(System.currentTimeMillis(), size));
         downloaded.add(size);
+        totalBytesInWindow.add(size);
+
         cleanup();
     }
 
     public long getSpeedBytesPerSec() {
         cleanup();
-        long totalBytes = samples.stream()
-                .mapToLong(ChunkSample::size)
-                .sum();
-
-        return totalBytes / (WINDOW_MILLIS / 1_000);
+        return totalBytesInWindow.sum() / (WINDOW_MILLIS / 1_000);
     }
 
     public long getTotalThroughput() {
@@ -44,8 +44,12 @@ public class ThroughputMeter {
 
         try {
             long horizon = System.currentTimeMillis() - WINDOW_MILLIS;
+
             while (!samples.isEmpty() && samples.peek().time < horizon) {
-                samples.poll();
+                ChunkSample polled = samples.poll();
+                if (polled != null) {
+                    totalBytesInWindow.add(-polled.size());
+                }
             }
         } finally {
             cleaning.set(false);
