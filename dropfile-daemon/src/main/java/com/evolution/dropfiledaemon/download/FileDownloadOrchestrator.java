@@ -14,7 +14,6 @@ import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifestService;
 import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
@@ -23,7 +22,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,7 +58,6 @@ public class FileDownloadOrchestrator {
 
     private final SafePathResolverHelper safePathResolverHelper;
 
-    @SneakyThrows
     public FileDownloadResponse start(FileDownloadRequest request) {
         String filename = safePathResolverHelper.sanitizeFilename(request.filename());
         request = request.withFilename(filename);
@@ -68,7 +65,6 @@ public class FileDownloadOrchestrator {
         return doStart(request);
     }
 
-    @SneakyThrows
     private FileDownloadResponse doStart(FileDownloadRequest request) {
         SingleRunDownloadProcedure downloadProcedure;
 
@@ -356,7 +352,7 @@ public class FileDownloadOrchestrator {
         );
     }
 
-    private Path getDestinationFilePath(FileDownloadRequest request) throws IOException {
+    private Path getDestinationFilePath(FileDownloadRequest request) {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
         Path downloadFilePath = downloadDirectoryPath.resolve(request.filename()).normalize();
 
@@ -381,7 +377,7 @@ public class FileDownloadOrchestrator {
                 });
 
         if (Files.exists(downloadFilePath)) {
-            throw new FileAlreadyExistsException(
+            throw new IllegalStateException(
                     "File download request failed. File already exists: %s"
                             .formatted(downloadFilePath)
             );
@@ -390,7 +386,7 @@ public class FileDownloadOrchestrator {
         return downloadFilePath;
     }
 
-    private Path getTemporaryFilePath(Path destinationFilePath) throws IOException {
+    private Path getTemporaryFilePath(Path destinationFilePath) {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
 
         String safeFilename = destinationFilePath.getFileName().toString();
@@ -405,7 +401,7 @@ public class FileDownloadOrchestrator {
         }
 
         if (Files.exists(temporaryFile)) {
-            throw new FileAlreadyExistsException(
+            throw new IllegalStateException(
                     "File already exists: %s".formatted(temporaryFile)
             );
         }

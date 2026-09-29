@@ -78,7 +78,7 @@ public class SingleRunDownloadProcedure {
     }
 
     public void run(Runnable beforeProcedureCallback,
-                    Runnable successCallback) throws ExecutionException, InterruptedException {
+                    Runnable successCallback) throws ExecutionException {
 
         if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException(
@@ -103,7 +103,7 @@ public class SingleRunDownloadProcedure {
                 future.get();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw e;
+                throw new IllegalStateException("Execution was interrupted", e);
             }
         }
     }
@@ -134,7 +134,7 @@ public class SingleRunDownloadProcedure {
     }
 
 
-    private void atomicMove() throws Exception {
+    private void atomicMove() throws IOException {
         // Best-effort no-replace check.
         // Java NIO does not provide an atomic "rename if absent" operationId across all platforms.
         // A race with external processes is still possible between exists() and ATOMIC_MOVE.
