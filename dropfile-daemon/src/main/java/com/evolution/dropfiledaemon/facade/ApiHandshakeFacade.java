@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.facade;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.LockableOperation;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
@@ -212,7 +213,7 @@ public class ApiHandshakeFacade {
                 });
             });
         } catch (Exception e) {
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 
@@ -311,7 +312,7 @@ public class ApiHandshakeFacade {
                 );
             });
         } catch (Exception e) {
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 

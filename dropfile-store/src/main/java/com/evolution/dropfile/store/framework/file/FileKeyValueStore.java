@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.store.framework.KeyValueStore;
 import lombok.RequiredArgsConstructor;
 
@@ -94,7 +95,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         } finally {
             try {
                 doAfterMutation();
@@ -230,7 +231,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         } finally {
             try {
                 afterMutation();
@@ -250,7 +251,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         } finally {
             try {
                 afterMutation();
@@ -280,7 +281,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 

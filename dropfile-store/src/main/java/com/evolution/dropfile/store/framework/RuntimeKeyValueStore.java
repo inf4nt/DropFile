@@ -2,6 +2,7 @@ package com.evolution.dropfile.store.framework;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfile.common.ThrowableUtils;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -102,7 +103,7 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
             if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw CommonUtils.toRuntimeException(e.getMessage(), e);
+            throw ThrowableUtils.rethrowRuntimeException(e);
         } finally {
             writeLock.unlock();
         }

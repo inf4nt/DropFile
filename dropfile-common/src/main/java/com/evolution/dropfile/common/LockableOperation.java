@@ -31,10 +31,8 @@ public class LockableOperation implements Purgeable {
             executeWithGlobalLock(() -> {
                 keyLocks.keySet().removeIf(it -> purgePredicate.test(it));
             });
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
+        }  catch (Exception e) {
+            throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 
