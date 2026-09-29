@@ -362,11 +362,11 @@ public class ApiHandshakeFacade {
                 .toList();
         try {
             concurrentTaskService.invokeAny(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
-        } catch (ExecutionException exception) {
+        } catch (Exception e) {
             String addresses = listOfHandshakes.values().stream()
                     .map(it -> it.addressURI().toString())
                     .collect(Collectors.joining(", "));
-            throw new IllegalStateException("Reconnect by alias '%s' to [%s] failed".formatted(alias, addresses));
+            throw new IllegalStateException("Reconnect by alias '%s' to [%s] failed".formatted(alias, addresses), e);
         }
     }
 
