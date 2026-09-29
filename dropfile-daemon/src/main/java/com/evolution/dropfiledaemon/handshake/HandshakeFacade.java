@@ -56,8 +56,7 @@ public class HandshakeFacade {
 
     private final ReplyAttackGuard replyAttackGuard;
 
-    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO)
-            throws GeneralSecurityException, ExecutionException, InterruptedException, TimeoutException, IOException {
+    public HandshakeResponseDTO handshake(HandshakeRequestDTO requestDTO) throws GeneralSecurityException, IOException, ExecutionException {
         String accessKeyId = requestDTO.accessKeyId();
 
         AccessKey accessKey = accessKeyStore.remove(accessKeyId);
@@ -195,7 +194,7 @@ public class HandshakeFacade {
     }
 
     public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO)
-            throws GeneralSecurityException, ExecutionException, InterruptedException, TimeoutException, IOException {
+            throws GeneralSecurityException, ExecutionException, IOException {
         String fingerprint = sessionDTO.fingerprint();
 
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
@@ -295,7 +294,7 @@ public class HandshakeFacade {
         });
     }
 
-    public void revokeAll() throws ExecutionException, InterruptedException, TimeoutException {
+    public void revokeAll() throws ExecutionException {
         lockableOperationHandshakeTrustedInStore.executeWithGlobalLock(() -> handshakeTrustedInStore.removeAll());
     }
 

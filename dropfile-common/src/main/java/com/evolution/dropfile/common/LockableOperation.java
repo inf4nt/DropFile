@@ -4,7 +4,10 @@ import com.evolution.dropfile.common.function.VoidCallable;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,12 +34,11 @@ public class LockableOperation implements Purgeable {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public <R> R executeWithKeyLock(String key, Callable<R> callable)
-            throws InterruptedException, TimeoutException, ExecutionException {
+    public <R> R executeWithKeyLock(String key, Callable<R> callable) throws ExecutionException {
         acquireLock(globalLock.readLock(), "global read lock");
         try {
             Lock keyLock = keyLocks.computeIfAbsent(key, _ -> new ReentrantLock());
@@ -52,15 +54,14 @@ public class LockableOperation implements Purgeable {
         }
     }
 
-    public void executeWithKeyLock(String key, VoidCallable voidCallable)
-            throws InterruptedException, TimeoutException, ExecutionException {
+    public void executeWithKeyLock(String key, VoidCallable voidCallable) throws ExecutionException {
         executeWithKeyLock(key, () -> {
             voidCallable.call();
             return null;
         });
     }
 
-    public <R> R executeWithGlobalLock(Callable<R> callable) throws InterruptedException, TimeoutException, ExecutionException {
+    public <R> R executeWithGlobalLock(Callable<R> callable) throws ExecutionException {
         acquireLock(globalLock.writeLock(), "global write lock");
         try {
             return call(callable);
@@ -69,41 +70,37 @@ public class LockableOperation implements Purgeable {
         }
     }
 
-    public void executeWithGlobalLock(VoidCallable callable) throws InterruptedException, TimeoutException, ExecutionException {
+    public void executeWithGlobalLock(VoidCallable callable) throws ExecutionException {
         executeWithGlobalLock(() -> {
             callable.call();
             return null;
         });
     }
 
-    private void acquireLock(Lock lock, String lockName) throws InterruptedException, TimeoutException {
+    private void acquireLock(Lock lock, String lockName) {
         boolean acquired;
         try {
             acquired = lock.tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw e;
+            throw new IllegalStateException("AcquireLock was interrupted", e);
         }
 
         if (!acquired) {
-            throw new TimeoutException("Failed to acquire " + lockName + " within " + LOCK_TIMEOUT_SECONDS + " seconds");
+            throw new IllegalStateException("Failed to acquire " + lockName + " within " + LOCK_TIMEOUT_SECONDS + " seconds");
         }
     }
 
-    private <R> R call(Callable<R> callable) throws ExecutionException, InterruptedException, TimeoutException {
+    private <R> R call(Callable<R> callable) throws ExecutionException {
         try {
             return callable.call();
-        } catch (RuntimeException | TimeoutException | ExecutionException e) {
+        } catch (RuntimeException | ExecutionException e) {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw e;
+            throw new IllegalStateException("Call was interrupted", e);
         } catch (Exception e) {
-            String message = e.getMessage();
-            if (message == null || message.isBlank()) {
-                throw new ExecutionException(e);
-            }
-            throw new ExecutionException(message, e);
+            throw new ExecutionException(e.getMessage(), e);
         }
     }
 }

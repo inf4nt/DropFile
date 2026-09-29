@@ -61,7 +61,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
-                throw new IOException(e);
+                throw new IOException(e.getMessage(), e);
             }
         }
 
@@ -69,7 +69,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
             InputStream result = tunnelClient.stream(request);
             failuresCounter.set(0);
             return result;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             failuresCounter.incrementAndGet();
             throw e;
         }

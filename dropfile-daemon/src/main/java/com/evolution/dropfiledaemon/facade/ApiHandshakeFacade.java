@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -371,23 +370,23 @@ public class ApiHandshakeFacade {
         }
     }
 
-    public void disconnect(CriteriaEnvelope fingerprintCriteria) throws ExecutionException, InterruptedException, TimeoutException {
+    public void disconnect(CriteriaEnvelope fingerprintCriteria) throws ExecutionException {
         String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(fingerprintCriteria).getKey();
         disconnectByFingerprint(fingerprint);
     }
 
-    private void disconnectByFingerprint(String fingerprint) throws ExecutionException, InterruptedException, TimeoutException {
+    private void disconnectByFingerprint(String fingerprint) throws ExecutionException {
         lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
             handshakeTrustedOutStore.remove(fingerprint);
         });
     }
 
-    public void disconnectCurrent() throws ExecutionException, InterruptedException, TimeoutException {
+    public void disconnectCurrent() throws ExecutionException {
         String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
         disconnectByFingerprint(fingerprint);
     }
 
-    public void disconnectAll() throws ExecutionException, InterruptedException, TimeoutException {
+    public void disconnectAll() throws ExecutionException {
         lockableOperationHandshakeTrustedOutStore.executeWithGlobalLock(() -> handshakeTrustedOutStore.removeAll());
     }
 
