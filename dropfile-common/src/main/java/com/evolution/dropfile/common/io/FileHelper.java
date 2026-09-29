@@ -1,6 +1,6 @@
 package com.evolution.dropfile.common.io;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.function.OutputStreamConsumer;
 
 import java.io.EOFException;
@@ -100,11 +100,7 @@ public class FileHelper {
                     throwable.addSuppressed(fileChannelThrowable);
                 }
             }
-
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
-            throw CommonUtils.toRuntimeException(throwable);
+            throw ThrowableUtils.rethrowIOException(throwable);
         }
     }
 

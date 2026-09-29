@@ -1,7 +1,7 @@
 package com.evolution.dropfile.store.framework.file;
 
 import com.evolution.dropfile.common.CommonFileUtils;
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.function.OutputStreamConsumer;
 import com.evolution.dropfile.common.io.FileHelper;
 import lombok.RequiredArgsConstructor;
@@ -38,10 +38,7 @@ public class FileSystemOperations implements FileOperations {
                     throwable.addSuppressed(deleteThrowable);
                 }
             }
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
-            throw CommonUtils.toRuntimeException(throwable);
+            throw ThrowableUtils.rethrowIOException(throwable);
         }
     }
 
@@ -66,10 +63,7 @@ public class FileSystemOperations implements FileOperations {
                     throwable.addSuppressed(fileChannelThrowable);
                 }
             }
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
-            throw CommonUtils.toRuntimeException(throwable);
+            throw ThrowableUtils.rethrowIOException(throwable);
         }
     }
 
@@ -93,10 +87,7 @@ public class FileSystemOperations implements FileOperations {
                     throwable.addSuppressed(deleteThrowable);
                 }
             }
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
-            throw CommonUtils.toRuntimeException(throwable);
+            throw ThrowableUtils.rethrowIOException(throwable);
         }
     }
 

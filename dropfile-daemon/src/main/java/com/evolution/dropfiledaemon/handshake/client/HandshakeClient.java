@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.handshake.client;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
@@ -10,7 +11,6 @@ import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,16 +122,7 @@ public class HandshakeClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
-            if (throwable instanceof RuntimeException runtimeException) {
-                throw runtimeException;
-            }
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
-            if (throwable instanceof Error error) {
-                throw error;
-            }
-            throw new IOException(throwable.getMessage(), throwable);
+            throw ThrowableUtils.rethrowIOException(throwable);
         }
     }
 }

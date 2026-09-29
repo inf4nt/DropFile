@@ -1,6 +1,6 @@
 package com.evolution.dropfile.common.io;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ public class InputStreamPipeline implements AutoCloseable {
             } catch (Throwable closeThrowable) {
                 throwable.addSuppressed(closeThrowable);
             }
-            throw CommonUtils.toRuntimeException(throwable);
+            throw ThrowableUtils.rethrowRuntimeException(throwable);
         }
     }
 

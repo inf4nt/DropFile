@@ -106,7 +106,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                     Objects.requireNonNullElse(fingerprint, "None"),
                     Objects.requireNonNullElse(command, "None")
             );
-            throw CommonUtils.toRuntimeException(message, throwable);
+            throw new RuntimeException(message, throwable);
         }
     }
 
@@ -140,10 +140,13 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
                     fingerprint,
                     tunnelRequestPayload.command()
             );
+            if (throwable instanceof Error error) {
+                throw error;
+            }
             if (throwable instanceof IOException ioException) {
                 throw new IOException(message, ioException);
             }
-            throw CommonUtils.toRuntimeException(message, throwable);
+            throw new RuntimeException(message, throwable);
         }
     }
 

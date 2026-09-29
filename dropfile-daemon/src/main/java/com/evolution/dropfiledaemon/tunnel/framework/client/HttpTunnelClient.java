@@ -128,15 +128,13 @@ public class HttpTunnelClient implements TunnelClient {
                     httpRequest.timeout().map(Duration::toMillis).orElse(0L)
             );
 
-            if (throwable instanceof IOException ioException) {
-                throw new IOException(message, ioException);
-            }
-
             if (throwable instanceof Error error) {
                 throw error;
             }
-
-            throw new RuntimeException(message, throwable);
+            if (throwable instanceof IOException ioException) {
+                throw new IOException(message, ioException);
+            }
+            throw new RuntimeException(throwable.getMessage(), throwable);
         }
     }
 
