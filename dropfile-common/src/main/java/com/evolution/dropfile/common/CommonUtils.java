@@ -1,7 +1,6 @@
 package com.evolution.dropfile.common;
 
 import com.evolution.dropfile.common.function.VoidCallable;
-import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -121,9 +121,13 @@ public class CommonUtils {
         return Base64.getEncoder().withoutPadding().encodeToString(data);
     }
 
-    @SneakyThrows
     public static String getFingerprint(byte[]... data) {
-        MessageDigest md = MessageDigest.getInstance(SHA256_ALGORITHM);
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance(SHA256_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
         for (byte[] datum : data) {
             md.update(datum);
         }
