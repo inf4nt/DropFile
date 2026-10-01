@@ -13,7 +13,8 @@ import picocli.CommandLine;
                 AccessGenerateCommand.class,
                 AccessLsCommand.class,
                 AccessRmCommand.class,
-                AccessRmAllCommand.class
+                AccessRmAllCommand.class,
+                AccessShowCommand.class
         }
 )
 public class AccessCommand extends AbstractCommandHandler {

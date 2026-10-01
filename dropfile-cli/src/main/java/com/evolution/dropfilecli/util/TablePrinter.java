@@ -38,6 +38,7 @@ public class TablePrinter {
                 put("size", 14);
                 put("operation", "operation".length());
                 put("id", 5);
+                put("commands", 10);
             }}
     );
 

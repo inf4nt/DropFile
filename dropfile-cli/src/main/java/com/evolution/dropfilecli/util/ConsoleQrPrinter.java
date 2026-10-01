@@ -11,44 +11,50 @@ import java.util.Map;
 
 public class ConsoleQrPrinter {
 
-    public static void printUrlAsQr(String url) {
-        int size = 30;
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+    public static void printAsQr(String value) {
+        BitMatrix bitMatrix = createQr(value);
 
-        try {
-            BitMatrix bitMatrix = qrCodeWriter.encode(
-                    url, BarcodeFormat.QR_CODE, size, size,
-                    Map.of(
-                            EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L,
-                            EncodeHintType.MARGIN, 1,
-                            EncodeHintType.CHARACTER_SET, "UTF-8"
-                    )
-            );
+        System.out.println("Scan this QR code to continue: " + value);
+        System.out.println();
 
-            String whiteBlock = "\033[47m  \033[0m";
-            String blackBlock = "\033[40m  \033[0m";
+        for (int y = 0; y < bitMatrix.getHeight(); y += 2) {
+            StringBuilder line = new StringBuilder();
 
-            System.out.println("Scan this QR code to download: URL " + url);
-            System.out.println();
+            for (int x = 0; x < bitMatrix.getWidth(); x++) {
+                boolean top = bitMatrix.get(x, y);
+                boolean bottom = y + 1 < bitMatrix.getHeight() && bitMatrix.get(x, y + 1);
 
-            for (int y = 0; y < bitMatrix.getHeight(); y++) {
-                System.out.print(whiteBlock + whiteBlock);
-
-                for (int x = 0; x < bitMatrix.getWidth(); x++) {
-                    if (bitMatrix.get(x, y)) {
-                        System.out.print(blackBlock);
-                    } else {
-                        System.out.print(whiteBlock);
-                    }
+                if (top && bottom) {
+                    line.append('█');
+                } else if (top) {
+                    line.append('▀');
+                } else if (bottom) {
+                    line.append('▄');
+                } else {
+                    line.append(' ');
                 }
-
-                System.out.println(whiteBlock + whiteBlock);
             }
 
-            System.out.println();
+            System.out.println(line);
+        }
 
+        System.out.println();
+    }
+
+    private static BitMatrix createQr(String url) {
+        try {
+            return new QRCodeWriter().encode(
+                    url,
+                    BarcodeFormat.QR_CODE,
+                    0,
+                    0,
+                    Map.of(
+                            EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L,
+                            EncodeHintType.MARGIN, 1
+                    )
+            );
         } catch (WriterException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to generate QR code", e);
         }
     }
 }

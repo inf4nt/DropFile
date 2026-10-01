@@ -23,6 +23,11 @@ public class ApiConnectionsAccessRestController {
         return apiFacade.generate(requestDTO);
     }
 
+    @PostMapping("/show")
+    public ApiConnectionsAccessInfoResponseDTO show(@RequestBody CriteriaEnvelope accessKeyIdCriteriaEnvelope) {
+        return apiFacade.show(accessKeyIdCriteriaEnvelope);
+    }
+
     @GetMapping("/ls")
     public List<ApiConnectionsAccessInfoResponseDTO> ls() {
         return apiFacade.ls();

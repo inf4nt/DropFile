@@ -12,10 +12,13 @@ import java.net.http.HttpResponse;
 @CommandLine.Command(
         name = "generate",
         aliases = {"g"},
-        description = "Generate connection access key command",
+        description = "Generate access key",
         customSynopsis = "dropf connections access generate"
 )
 public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnectionsAccessInfoResponseDTO> {
+
+    @CommandLine.Spec
+    private CommandLine.Model.CommandSpec spec;
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
@@ -26,5 +29,16 @@ public class AccessGenerateCommand extends AbstractCommandHttpHandler<ApiConnect
     protected TypeReference<ApiConnectionsAccessInfoResponseDTO> getTypeReference() {
         return new TypeReference<ApiConnectionsAccessInfoResponseDTO>() {
         };
+    }
+
+    @Override
+    protected void print(ApiConnectionsAccessInfoResponseDTO object) throws Exception {
+        spec.commandLine()
+                .getParent()
+                .getSubcommands()
+                .get("show")
+                .execute(
+                        object.id()
+                );
     }
 }

@@ -130,6 +130,10 @@ public class DaemonClient {
         return sendPost("/api/connections/access/generate", new ApiConnectionsAccessGenerateRequestDTO(permanent));
     }
 
+    public HttpResponse<byte[]> connectionsAccessShow(CriteriaEnvelope accessIdCriteriaEnvelopes) throws IOException {
+        return sendPost("/api/connections/access/show", accessIdCriteriaEnvelopes);
+    }
+
     public HttpResponse<byte[]> connectionsAccessLs() throws IOException {
         return sendGet("/api/connections/access/ls");
     }

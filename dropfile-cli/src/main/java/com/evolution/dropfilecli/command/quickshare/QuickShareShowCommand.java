@@ -98,7 +98,7 @@ public class QuickShareShowCommand extends AbstractCommandHttpHandler<ApiQuickSh
 
             System.out.println();
             System.out.println("Connection type " + qrCodeType);
-            ConsoleQrPrinter.printUrlAsQr(link);
+            ConsoleQrPrinter.printAsQr(link);
         }
     }
 
