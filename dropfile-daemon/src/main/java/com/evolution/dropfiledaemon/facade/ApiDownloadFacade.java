@@ -2,114 +2,119 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
-import com.evolution.dropfile.common.dto.*;
+import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
+import com.evolution.dropfile.common.dto.ApiDownloadLsDTO;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
+import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator.DownloadProgress;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
 public class ApiDownloadFacade {
 
     private final FileDownloadOrchestrator fileDownloadOrchestrator;
-
     private final FileDownloadStore fileDownloadStore;
 
     public List<ApiDownloadLsDTO.Response> ls(ApiDownloadLsDTO.Request request) {
-        Map<String, ApiDownloadLsDTO.Response> responseMap = new LinkedHashMap<>();
+        Map<String, DownloadProgress> activeProcedures = fileDownloadOrchestrator.getDownloadProcedures();
 
-        Map<String, FileDownloadOrchestrator.DownloadProgress> downloadProcedures = fileDownloadOrchestrator.getDownloadProcedures();
-        Map<String, DownloadFile> getFileDownloadEntryStoreMap = fileDownloadStore.getAll();
-
-        for (Map.Entry<String, DownloadFile> entry : getFileDownloadEntryStoreMap.entrySet()) {
-            String operationId = entry.getKey();
-            DownloadFile downloadFile = entry.getValue();
-
-            ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFile.status().name());
-
-            FileDownloadOrchestrator.DownloadProgress downloadProgress = downloadProcedures.get(operationId);
-            String progress = Optional.ofNullable(downloadProgress)
-                    .map(it -> getProgress(it.total(), it.downloaded()))
-                    .orElse(getProgress(downloadFile.total(), downloadFile.downloaded()));
-            String speedPerSecond = Optional.ofNullable(downloadProgress)
-                    .map(it -> CommonUtils.toDisplaySize(it.speedBytesPerSec()))
-                    .orElse(null);
-
-            boolean accessible = isAccessible(downloadFile);
-
-            responseMap.put(operationId, new ApiDownloadLsDTO.Response(
-                    operationId,
-                    downloadFile.fingerprint(),
-                    downloadFile.fileId(),
-                    downloadFile.destinationFile(),
-                    progress,
-                    speedPerSecond,
-                    accessible,
-                    status,
-                    downloadFile.created(),
-                    downloadFile.updated()
-            ));
-        }
-
-        List<ApiDownloadLsDTO.Response> responses = responseMap.values().stream()
+        List<ApiDownloadLsDTO.Response> responses = fileDownloadStore.getAll().entrySet().stream()
+                .map(entry -> toResponse(entry.getKey(), entry.getValue(), activeProcedures.get(entry.getKey())))
                 .toList();
 
-        int limit = (request.limit() == null || request.limit() <= 0) ? Integer.MAX_VALUE : request.limit();
-        if (request.status() == null) {
-            return Arrays.stream(ApiDownloadLsDTO.Status.values())
-                    .map(status -> getByStatus(responses, status, limit))
-                    .flatMap(it -> it.stream())
-                    .toList();
-        }
-        ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(request.status().name());
-        return getByStatus(responses, status, limit);
+        ApiDownloadLsDTO.Status targetStatus = request.status() != null
+                ? ApiDownloadLsDTO.Status.valueOf(request.status().name())
+                : null;
+
+        return filterAndLimit(responses, targetStatus, request.limit());
     }
 
     public ApiBatchOperationResult kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
-        FileDownloadOrchestrator.FileDownloadOrchestratorKillResponse response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
-        return ApiBatchOperationResult.of(
-                response.found(),
-                response.notFound(),
-                response.ambiguous()
-        );
+        var response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
+        return ApiBatchOperationResult.of(response.found(), response.notFound(), response.ambiguous());
     }
 
     public void killAll() {
         fileDownloadOrchestrator.killAll();
     }
 
-    private String getProgress(long total, long downloaded) {
+    private ApiDownloadLsDTO.Response toResponse(
+            String operationId,
+            DownloadFile downloadFile,
+            @Nullable DownloadProgress progress) {
+
+        long total = progress != null ? progress.total() : downloadFile.total();
+        long downloaded = progress != null ? progress.downloaded() : downloadFile.downloaded();
+
+        String progressDisplay = formatProgress(total, downloaded);
+        String speedDisplay = progress != null ? CommonUtils.toDisplaySize(progress.speedBytesPerSec()) : null;
+        boolean accessible = isAccessible(downloadFile.destinationFile());
+        ApiDownloadLsDTO.Status status = ApiDownloadLsDTO.Status.valueOf(downloadFile.status().name());
+
+        return new ApiDownloadLsDTO.Response(
+                operationId,
+                downloadFile.fingerprint(),
+                downloadFile.fileId(),
+                downloadFile.destinationFile(),
+                progressDisplay,
+                speedDisplay,
+                accessible,
+                status,
+                downloadFile.created(),
+                downloadFile.updated()
+        );
+    }
+
+    private List<ApiDownloadLsDTO.Response> filterAndLimit(
+            List<ApiDownloadLsDTO.Response> responses,
+            @Nullable ApiDownloadLsDTO.Status targetStatus,
+            @Nullable Integer rawLimit) {
+
+        int limit = (rawLimit == null || rawLimit <= 0) ? Integer.MAX_VALUE : rawLimit;
+
+        if (targetStatus != null) {
+            return responses.stream()
+                    .filter(r -> r.status() == targetStatus)
+                    .limit(limit)
+                    .toList();
+        }
+
+        return Arrays.stream(ApiDownloadLsDTO.Status.values())
+                .flatMap(status -> responses.stream()
+                        .filter(r -> r.status() == status)
+                        .limit(limit))
+                .toList();
+    }
+
+    private String formatProgress(long total, long downloaded) {
         if (total == 0) {
             return "0%";
         }
         if (downloaded == 0) {
-            return String.format("%s/0 (%s)", CommonUtils.toDisplaySize(total), "0%");
+            return "%s/0 (0%%)".formatted(CommonUtils.toDisplaySize(total));
         }
         if (total == downloaded) {
-            return String.format("%s (%s)", CommonUtils.toDisplaySize(total), "100%");
+            return "%s (100%%)".formatted(CommonUtils.toDisplaySize(total));
         }
-        return String.format("%s/%s (%s)", CommonUtils.toDisplaySize(total), CommonUtils.toDisplaySize(downloaded), CommonUtils.percent(total, downloaded));
+        return "%s/%s (%s)".formatted(
+                CommonUtils.toDisplaySize(total),
+                CommonUtils.toDisplaySize(downloaded),
+                CommonUtils.percent(total, downloaded)
+        );
     }
 
-    private List<ApiDownloadLsDTO.Response> getByStatus(List<ApiDownloadLsDTO.Response> source, ApiDownloadLsDTO.Status status, int limit) {
-        Stream<ApiDownloadLsDTO.Response> responseStream = source.stream()
-                .filter(it -> it.status() == status)
-                .limit(limit);
-        return responseStream
-                .toList();
-    }
-
-    private boolean isAccessible(DownloadFile downloadFile) {
-        String destinationFileString = downloadFile.destinationFile();
-        Path destinationFilePath = Paths.get(destinationFileString);
-        return Files.exists(destinationFilePath);
+    private boolean isAccessible(String destinationFile) {
+        return Files.exists(Path.of(destinationFile));
     }
 }

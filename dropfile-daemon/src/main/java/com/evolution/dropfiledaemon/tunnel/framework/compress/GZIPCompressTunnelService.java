@@ -18,13 +18,19 @@ public class GZIPCompressTunnelService implements CompressTunnelService {
 
     @Override
     public OutputStream compressWrapper(OutputStream outputStream) throws IOException {
-        return new GZIPOutputStream(outputStream) {{
-            def.setLevel(daemonApplicationProperties.daemonTunnelServerCompressLevel);
-        }};
+        int level = daemonApplicationProperties.daemonTunnelServerCompressLevel;
+        return new CustomLevelGZIPOutputStream(outputStream, level);
     }
 
     @Override
     public InputStream decompress(InputStream inputStream) throws IOException {
         return new GZIPInputStream(inputStream);
+    }
+
+    private static class CustomLevelGZIPOutputStream extends GZIPOutputStream {
+        public CustomLevelGZIPOutputStream(OutputStream out, int level) throws IOException {
+            super(out);
+            this.def.setLevel(level);
+        }
     }
 }

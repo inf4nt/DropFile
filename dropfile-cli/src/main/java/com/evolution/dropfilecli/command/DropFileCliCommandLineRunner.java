@@ -12,7 +12,6 @@ import picocli.CommandLine;
 import picocli.spring.PicocliSpringFactory;
 
 import java.io.PrintWriter;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,21 +28,20 @@ public class DropFileCliCommandLineRunner implements CommandLineRunner {
     private final LiveExecutionStrategy liveExecutionStrategy;
 
     @Override
-    public void run(String... args) {
-        CompletableFuture.runAsync(() -> {
-            CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
-            commandLine.setCommandName("dropf");
+    public void run(String... args) throws Exception {
+        CommandLine commandLine = new CommandLine(root, new PicocliSpringFactory(applicationContext));
+        commandLine.setCommandName("dropf");
 
-            addParameterExceptionHandler(commandLine);
-            addExecutionExceptionHandler(commandLine);
+        addParameterExceptionHandler(commandLine);
+        addExecutionExceptionHandler(commandLine);
 
-            addGlobalOptions(commandLine);
+        addGlobalOptions(commandLine);
 
-            commandLine.setExecutionStrategy(liveExecutionStrategy);
+        commandLine.setExecutionStrategy(liveExecutionStrategy);
 
-            int execute = commandLine.execute(args);
-            DropFileCliApplication.exit(execute);
-        }, executorService).join();
+        int statusCode = executorService.submit(() -> commandLine.execute(args)).get();
+
+        DropFileCliApplication.exit(statusCode);
     }
 
     @EventListener(ContextClosedEvent.class)

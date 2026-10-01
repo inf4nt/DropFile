@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.UUID;
 
@@ -17,6 +19,11 @@ import java.util.UUID;
 public class GlobalControllerExceptionHandler {
 
     private final TokenService tokenService;
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Void> noHandlerFoundException() {
+        return ResponseEntity.notFound().build();
+    }
 
     /**
      * Global exception handler enforcing a strict security posture.

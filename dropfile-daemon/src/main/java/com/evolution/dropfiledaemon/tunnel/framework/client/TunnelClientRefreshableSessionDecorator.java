@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.tunnel.framework.client;
 
 import com.evolution.dropfile.common.Attributes;
 import com.evolution.dropfile.common.LockableOperation;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfiledaemon.facade.ApiHandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
@@ -61,7 +62,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient {
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
-                throw new IOException(e.getMessage(), e);
+                throw ThrowableUtils.rethrowIOException(e);
             }
         }
 

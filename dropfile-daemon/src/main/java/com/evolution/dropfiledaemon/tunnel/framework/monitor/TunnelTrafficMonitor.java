@@ -1,22 +1,20 @@
 package com.evolution.dropfiledaemon.tunnel.framework.monitor;
 
-import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfile.common.io.MonitoringInputStream;
 import com.evolution.dropfile.common.io.MonitoringOutputStream;
+import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
-import com.evolution.dropfile.common.io.ThroughputMeter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Component
@@ -30,13 +28,10 @@ public class TunnelTrafficMonitor implements Purgeable {
 
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
-    public Traffic getTraffic() {
-        return new Traffic(
-                getTraffic(inputStreams),
-                getTraffic(outputStreams),
-                getTotalTraffic(inputStreams),
-                getTotalTraffic(outputStreams)
-        );
+    public List<PeerTraffic> getTraffic() {
+        return Stream.concat(inputStreams.keySet().stream(), outputStreams.keySet().stream())
+                .map(this::buildPeerTraffic)
+                .toList();
     }
 
     public OutputStream outputStreamWrapper(String fingerprint, OutputStream outputStream) {
@@ -49,26 +44,17 @@ public class TunnelTrafficMonitor implements Purgeable {
         return new MonitoringInputStream(inputStream, throughputMeter);
     }
 
-    private Map<String, String> getTraffic(Map<String, ThroughputMeter> traffic) {
-        Map<String, String> map = traffic.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> CommonUtils.toDisplaySize(entry.getValue().getSpeedBytesPerSec()),
-                        (existing, _) -> existing,
-                        TreeMap::new
-                ));
-        return Collections.unmodifiableMap(map);
-    }
+    private PeerTraffic buildPeerTraffic(String fingerprint) {
+        ThroughputMeter inMeter = inputStreams.get(fingerprint);
+        ThroughputMeter outMeter = outputStreams.get(fingerprint);
 
-    private Map<String, String> getTotalTraffic(Map<String, ThroughputMeter> traffic) {
-        Map<String, String> map = traffic.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> CommonUtils.toDisplaySize(entry.getValue().getTotalThroughput()),
-                        (existing, _) -> existing,
-                        TreeMap::new
-                ));
-        return Collections.unmodifiableMap(map);
+        long downloadSpeed = inMeter != null ? inMeter.getSpeedBytesPerSec() : 0;
+        long totalDownloaded = inMeter != null ? inMeter.getTotalThroughput() : 0;
+
+        long uploadSpeed = outMeter != null ? outMeter.getSpeedBytesPerSec() : 0;
+        long totalUploaded = outMeter != null ? outMeter.getTotalThroughput() : 0;
+
+        return new PeerTraffic(fingerprint, downloadSpeed, uploadSpeed, totalDownloaded, totalUploaded);
     }
 
     @Override
@@ -78,9 +64,12 @@ public class TunnelTrafficMonitor implements Purgeable {
         inputStreams.keySet().removeIf(fingerprint -> handshakeTrustedOutStore.get(fingerprint).isEmpty());
     }
 
-    public record Traffic(Map<String, String> download,
-                          Map<String, String> upload,
-                          Map<String, String> totalDownload,
-                          Map<String, String> totalUpload) {
+    public record PeerTraffic(
+            String fingerprint,
+            long downloadSpeed,
+            long uploadSpeed,
+            long totalDownloaded,
+            long totalUploaded
+    ) {
     }
 }

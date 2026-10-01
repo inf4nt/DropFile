@@ -15,7 +15,6 @@ import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -35,8 +34,6 @@ import java.util.*;
 public class ApiQuickShareFacade {
 
     private final Duration QUICKSHARE_TTL = Duration.ofMinutes(10);
-
-    private final Environment environment;
 
     private final QuickShareStore quickShareStore;
 
@@ -189,11 +186,10 @@ public class ApiQuickShareFacade {
         return addresses.stream()
                 .map(address -> {
                     String hostAddress = address.inetAddress().getHostAddress();
-                    Integer serverPort = Integer.valueOf(environment.getRequiredProperty("server.port"));
+                    int serverPort = applicationProperties.serverPort;
                     URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
                     return buildLink(daemonRootURI, linkId);
                 })
-                .filter(it -> StringUtils.hasText(it))
                 .toList();
     }
 

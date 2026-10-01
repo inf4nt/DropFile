@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.facade;
 
+import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfile.common.dto.TunnelTrafficResponseDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
@@ -9,8 +10,8 @@ import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Component
@@ -23,16 +24,20 @@ public class ApiConnectionsFacade {
     private final HandshakeTrustedOutStore handshakeTrustedOutStore;
 
     public List<TunnelTrafficResponseDTO> getTraffic() {
-        TunnelTrafficMonitor.Traffic traffic = tunnelTrafficMonitor.getTraffic();
-        return Stream.concat(traffic.download().keySet().stream(), traffic.upload().keySet().stream())
-                .map(fingerprint -> {
-                    String download = traffic.download().get(fingerprint);
-                    String upload = traffic.upload().get(fingerprint);
-                    String totalDownload = traffic.totalDownload().get(fingerprint);
-                    String totalUpload = traffic.totalUpload().get(fingerprint);
-                    return new TunnelTrafficResponseDTO(fingerprint, download, upload, totalDownload, totalUpload);
-                })
+        return tunnelTrafficMonitor.getTraffic().stream()
+                .map(it -> toResponseDTO(it))
+                .sorted(Comparator.comparing(TunnelTrafficResponseDTO::fingerprint))
                 .toList();
+    }
+
+    private TunnelTrafficResponseDTO toResponseDTO(TunnelTrafficMonitor.PeerTraffic traffic) {
+        return new TunnelTrafficResponseDTO(
+                traffic.fingerprint(),
+                CommonUtils.toDisplaySize(traffic.downloadSpeed()),
+                CommonUtils.toDisplaySize(traffic.uploadSpeed()),
+                CommonUtils.toDisplaySize(traffic.totalDownloaded()),
+                CommonUtils.toDisplaySize(traffic.totalUploaded())
+        );
     }
 
     public void tunnelPing(@Nullable CriteriaEnvelope fingerprintCriteria) {

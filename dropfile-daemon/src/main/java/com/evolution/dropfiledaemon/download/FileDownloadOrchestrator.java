@@ -9,6 +9,7 @@ import com.evolution.dropfile.store.framework.KeyValueStore;
 import com.evolution.dropfile.store.framework.file.DirectoryProvider;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureFactory;
+import com.evolution.dropfiledaemon.download.procedure.DownloadProcedureRequest;
 import com.evolution.dropfiledaemon.download.procedure.SingleRunDownloadProcedure;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifestService;
@@ -108,11 +109,16 @@ public class FileDownloadOrchestrator {
     }
 
     private void runDownload(SingleRunDownloadProcedure downloadProcedure) {
-        String operationId = downloadProcedure.getRequest().operationId();
-        String fingerprint = downloadProcedure.getRequest().fingerprint();
-        String fileId = downloadProcedure.getRequest().fileId();
-        Path destinationFilePath = downloadProcedure.getRequest().destinationFilePath();
-        Path temporaryFilePath = downloadProcedure.getRequest().temporaryFilePath();
+        DownloadProcedureRequest request = downloadProcedure.getRequest();
+        String operationId = request.operationId();
+        String fingerprint = request.fingerprint();
+        String fileId = request.fileId();
+        Path destinationFilePath = request.destinationFilePath();
+        Path temporaryFilePath = request.temporaryFilePath();
+
+        // TODO
+        long fileSize = request.fileManifest().size();
+        String fileHash = request.fileManifest().hash();
 
         try {
             fileDownloadingExecutorService.execute(() -> {
@@ -165,7 +171,7 @@ public class FileDownloadOrchestrator {
 
                     fileDownloadStore.update(
                             operationId,
-                            downloadFileEntry -> downloadFileEntry
+                            downloadFile -> downloadFile
                                     .withHash(downloadProcedure.getProgress().hash())
                                     .withTotal(downloadProcedure.getProgress().total())
                                     .withDownloaded(downloadProcedure.getProgress().downloaded())
@@ -195,10 +201,8 @@ public class FileDownloadOrchestrator {
     public Map<String, DownloadProgress> getDownloadProcedures() {
         return downloadProcedures.entrySet().stream()
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        x -> x.getValue().getProgress(),
-                        (_, o2) -> o2,
-                        LinkedHashMap::new
+                        it -> it.getKey(),
+                        it -> it.getValue().getProgress()
                 ));
     }
 
@@ -318,28 +322,27 @@ public class FileDownloadOrchestrator {
 
                                 DownloadFile downloadFile = fileDownloadStore.get(operationId)
                                         .map(Map.Entry::getValue)
-                                        .orElse(null);
+                                        .map(current -> {
+                                            DownloadProgress progress = downloadProcedure.getProgress();
+                                            return current.withStatus(DownloadFile.DownloadFileStatus.STOPPED)
+                                                    .withUpdated(now)
+                                                    .withHash(progress.hash())
+                                                    .withDownloaded(progress.downloaded())
+                                                    .withTotal(progress.total());
+                                        }).orElseGet(() -> {
+                                            DownloadProcedureRequest request = downloadProcedure.getRequest();
+                                            return new DownloadFile(
+                                                    request.fingerprint(),
+                                                    request.fileId(),
+                                                    request.destinationFilePath().toAbsolutePath().toString(),
+                                                    request.temporaryFilePath().toAbsolutePath().toString(),
+                                                    DownloadFile.DownloadFileStatus.STOPPED,
+                                                    now,
+                                                    now
+                                            );
+                                        });
 
-                                if (downloadFile != null) {
-                                    DownloadFile updated = downloadFile
-                                            .withStatus(DownloadFile.DownloadFileStatus.STOPPED)
-                                            .withUpdated(now)
-                                            .withHash(downloadProcedure.getProgress().hash())
-                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
-                                            .withTotal(downloadProcedure.getProgress().total());
-                                    return Map.entry(operationId, updated);
-                                }
-
-                                DownloadFile newOne = new DownloadFile(
-                                        downloadProcedure.getRequest().fingerprint(),
-                                        downloadProcedure.getRequest().fileId(),
-                                        downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
-                                        downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
-                                        DownloadFile.DownloadFileStatus.STOPPED,
-                                        now,
-                                        now
-                                );
-                                return Map.entry(operationId, newOne);
+                                return Map.entry(operationId, downloadFile);
                             })
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
@@ -351,6 +354,59 @@ public class FileDownloadOrchestrator {
                 KeyValueStore.ValidatePolicy.GENTLE
         );
     }
+
+//    private void stopProcedures(Map<String, SingleRunDownloadProcedure> operations) {
+//        if (ObjectUtils.isEmpty(operations)) {
+//            return;
+//        }
+//
+//        operations.values().forEach(it -> CommonUtils.executeSafety(() -> it.stop()));
+//
+//        fileDownloadStore.save(
+//                () -> {
+//                    Instant now = Instant.now();
+//
+//                    return operations.entrySet()
+//                            .stream()
+//                            .map(downloadProcedureEntry -> {
+//                                String operationId = downloadProcedureEntry.getKey();
+//                                SingleRunDownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
+//
+//                                DownloadFile downloadFile = fileDownloadStore.get(operationId)
+//                                        .map(Map.Entry::getValue)
+//                                        .orElse(null);
+//
+//                                if (downloadFile != null) {
+//                                    DownloadFile updated = downloadFile
+//                                            .withStatus(DownloadFile.DownloadFileStatus.STOPPED)
+//                                            .withUpdated(now)
+//                                            .withHash(downloadProcedure.getProgress().hash())
+//                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
+//                                            .withTotal(downloadProcedure.getProgress().total());
+//                                    return Map.entry(operationId, updated);
+//                                }
+//
+//                                DownloadFile newOne = new DownloadFile(
+//                                        downloadProcedure.getRequest().fingerprint(),
+//                                        downloadProcedure.getRequest().fileId(),
+//                                        downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
+//                                        downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
+//                                        DownloadFile.DownloadFileStatus.STOPPED,
+//                                        now,
+//                                        now
+//                                );
+//                                return Map.entry(operationId, newOne);
+//                            })
+//                            .collect(Collectors.toMap(
+//                                    Map.Entry::getKey,
+//                                    Map.Entry::getValue,
+//                                    (_, v2) -> v2,
+//                                    LinkedHashMap::new
+//                            ));
+//                },
+//                KeyValueStore.ValidatePolicy.GENTLE
+//        );
+//    }
 
     private Path getDestinationFilePath(FileDownloadRequest request) {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();

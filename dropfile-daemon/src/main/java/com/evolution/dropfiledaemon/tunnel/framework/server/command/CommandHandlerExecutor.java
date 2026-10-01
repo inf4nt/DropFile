@@ -24,10 +24,7 @@ public class CommandHandlerExecutor {
         this.objectMapper = objectMapper;
         this.handlers = handlersList.stream().collect(Collectors.toUnmodifiableMap(
                 CommandHandler::getCommandName,
-                Function.identity(),
-                (existing, _) -> {
-                    throw new IllegalArgumentException("Duplicate command handler found for: " + existing.getCommandName());
-                }
+                Function.identity()
         ));
     }
 
