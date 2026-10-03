@@ -15,6 +15,7 @@ import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -168,12 +169,7 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private SecureEnvelope encrypt(UUID requestId, Request request, byte[] aad, SecretKey clientSecretKey) throws IOException, GeneralSecurityException {
-        byte[] payload = switch (request.getBody()) {
-            case null -> null;
-            case String string -> string.getBytes(StandardCharsets.UTF_8);
-            case byte[] byteArray -> byteArray;
-            default -> objectMapper.writeValueAsBytes(request.getBody());
-        };
+        byte[] payload = payloadSerialize(request.getBody());
 
         byte[] payloadAsBytes = objectMapper.writeValueAsBytes(
                 new TunnelRequestDTO.Payload(
@@ -193,20 +189,32 @@ public class HttpTunnelClient implements TunnelClient {
         );
     }
 
+    private byte[] payloadSerialize(@Nullable Object body) throws IOException {
+        return switch (body) {
+            case null -> null;
+            case String string -> string.getBytes(StandardCharsets.UTF_8);
+            case byte[] byteArray -> byteArray;
+            default -> objectMapper.writeValueAsBytes(body);
+        };
+    }
+
     private TunnelSessionKeys getSessionKeys(String fingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
         HandshakeSessionOutStore.SessionOut sessionOut = handshakeSessionOutStore.get(fingerprint)
                 .map(Map.Entry::getValue)
-                .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
                 .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
+
+        if (!sessionOut.handshakeId().equals(trustedOut.handshakeId())) {
+            throw new IllegalStateException("Session %s handshake id mismatch: expected %s, got %s".formatted(
+                    fingerprint,
+                    trustedOut.handshakeId(),
+                    sessionOut.handshakeId()
+            ));
+        }
 
         SecretKey clientKey = cryptoTunnel.secretKey(sessionOut.sessionClientKey());
         SecretKey serverKey = cryptoTunnel.secretKey(sessionOut.sessionServerKey());
 
         return new TunnelSessionKeys(clientKey, serverKey);
-    }
-
-    private HandshakeTrustedOutStore.TrustedOut getTrustedOut(String fingerprint) {
-        return handshakeTrustedOutStore.getRequired(fingerprint).getValue();
     }
 
     private void validateInputStream(UUID requestId, InputStream inputStream) throws IOException {
@@ -222,7 +230,8 @@ public class HttpTunnelClient implements TunnelClient {
     private HttpTunnelRequestContext buildHttpTunnelRequestContext(Request request) {
         try {
             String remoteFingerprint = request.getFingerprint();
-            HandshakeTrustedOutStore.TrustedOut trustedOut = getTrustedOut(remoteFingerprint);
+            HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(remoteFingerprint)
+                    .getValue();
             TunnelSessionKeys sessionKeys = getSessionKeys(remoteFingerprint, trustedOut);
 
             UUID requestId = UUID.randomUUID();
