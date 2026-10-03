@@ -20,10 +20,12 @@ public record DownloadFile(String fingerprint,
                         String fileId,
                         String destinationFile,
                         String temporaryFile,
+                        String hash,
+                        long total,
                         DownloadFileStatus status,
                         Instant created,
                         Instant updated) {
-        this(fingerprint, fileId, destinationFile, temporaryFile, null, 0, 0, status, created, updated);
+        this(fingerprint, fileId, destinationFile, temporaryFile, hash, total, 0, status, created, updated);
     }
 
     public enum DownloadFileStatus {

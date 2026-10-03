@@ -3,6 +3,7 @@ package com.evolution.dropfiledaemon.download;
 import com.evolution.dropfile.common.CommonFileUtils;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.store.download.DownloadFile;
 import com.evolution.dropfile.store.download.FileDownloadStore;
 import com.evolution.dropfile.store.framework.KeyValueStore;
@@ -110,13 +111,13 @@ public class FileDownloadOrchestrator {
 
     private void runDownload(SingleRunDownloadProcedure downloadProcedure) {
         DownloadProcedureRequest request = downloadProcedure.getRequest();
+
         String operationId = request.operationId();
         String fingerprint = request.fingerprint();
         String fileId = request.fileId();
         Path destinationFilePath = request.destinationFilePath();
         Path temporaryFilePath = request.temporaryFilePath();
 
-        // TODO
         long fileSize = request.fileManifest().size();
         String fileHash = request.fileManifest().hash();
 
@@ -135,6 +136,8 @@ public class FileDownloadOrchestrator {
                                                 fileId,
                                                 destinationFilePath.toAbsolutePath().toString(),
                                                 temporaryFilePath.toAbsolutePath().toString(),
+                                                fileHash,
+                                                fileSize,
                                                 DownloadFile.DownloadFileStatus.DOWNLOADING,
                                                 createInstantTime,
                                                 createInstantTime
@@ -144,8 +147,6 @@ public class FileDownloadOrchestrator {
                             () -> fileDownloadStore.update(
                                     operationId,
                                     downloadFileEntry -> downloadFileEntry
-                                            .withHash(downloadProcedure.getProgress().hash())
-                                            .withTotal(downloadProcedure.getProgress().total())
                                             .withDownloaded(downloadProcedure.getProgress().downloaded())
                                             .withStatus(DownloadFile.DownloadFileStatus.COMPLETED)
                                             .withUpdated(Instant.now())
@@ -172,8 +173,6 @@ public class FileDownloadOrchestrator {
                     fileDownloadStore.update(
                             operationId,
                             downloadFile -> downloadFile
-                                    .withHash(downloadProcedure.getProgress().hash())
-                                    .withTotal(downloadProcedure.getProgress().total())
                                     .withDownloaded(downloadProcedure.getProgress().downloaded())
                                     .withStatus(DownloadFile.DownloadFileStatus.ERROR)
                                     .withUpdated(Instant.now())
@@ -194,7 +193,7 @@ public class FileDownloadOrchestrator {
             downloadProcedures.remove(operationId);
             CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
 
-            throw e;
+            throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 
@@ -326,16 +325,17 @@ public class FileDownloadOrchestrator {
                                             DownloadProgress progress = downloadProcedure.getProgress();
                                             return current.withStatus(DownloadFile.DownloadFileStatus.STOPPED)
                                                     .withUpdated(now)
-                                                    .withHash(progress.hash())
-                                                    .withDownloaded(progress.downloaded())
-                                                    .withTotal(progress.total());
-                                        }).orElseGet(() -> {
+                                                    .withDownloaded(progress.downloaded());
+                                        })
+                                        .orElseGet(() -> {
                                             DownloadProcedureRequest request = downloadProcedure.getRequest();
                                             return new DownloadFile(
                                                     request.fingerprint(),
                                                     request.fileId(),
                                                     request.destinationFilePath().toAbsolutePath().toString(),
                                                     request.temporaryFilePath().toAbsolutePath().toString(),
+                                                    request.fileManifest().hash(),
+                                                    request.fileManifest().size(),
                                                     DownloadFile.DownloadFileStatus.STOPPED,
                                                     now,
                                                     now
@@ -346,67 +346,12 @@ public class FileDownloadOrchestrator {
                             })
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (_, v2) -> v2,
-                                    LinkedHashMap::new
+                                    Map.Entry::getValue
                             ));
                 },
                 KeyValueStore.ValidatePolicy.GENTLE
         );
     }
-
-//    private void stopProcedures(Map<String, SingleRunDownloadProcedure> operations) {
-//        if (ObjectUtils.isEmpty(operations)) {
-//            return;
-//        }
-//
-//        operations.values().forEach(it -> CommonUtils.executeSafety(() -> it.stop()));
-//
-//        fileDownloadStore.save(
-//                () -> {
-//                    Instant now = Instant.now();
-//
-//                    return operations.entrySet()
-//                            .stream()
-//                            .map(downloadProcedureEntry -> {
-//                                String operationId = downloadProcedureEntry.getKey();
-//                                SingleRunDownloadProcedure downloadProcedure = downloadProcedureEntry.getValue();
-//
-//                                DownloadFile downloadFile = fileDownloadStore.get(operationId)
-//                                        .map(Map.Entry::getValue)
-//                                        .orElse(null);
-//
-//                                if (downloadFile != null) {
-//                                    DownloadFile updated = downloadFile
-//                                            .withStatus(DownloadFile.DownloadFileStatus.STOPPED)
-//                                            .withUpdated(now)
-//                                            .withHash(downloadProcedure.getProgress().hash())
-//                                            .withDownloaded(downloadProcedure.getProgress().downloaded())
-//                                            .withTotal(downloadProcedure.getProgress().total());
-//                                    return Map.entry(operationId, updated);
-//                                }
-//
-//                                DownloadFile newOne = new DownloadFile(
-//                                        downloadProcedure.getRequest().fingerprint(),
-//                                        downloadProcedure.getRequest().fileId(),
-//                                        downloadProcedure.getRequest().destinationFilePath().toAbsolutePath().toString(),
-//                                        downloadProcedure.getRequest().temporaryFilePath().toAbsolutePath().toString(),
-//                                        DownloadFile.DownloadFileStatus.STOPPED,
-//                                        now,
-//                                        now
-//                                );
-//                                return Map.entry(operationId, newOne);
-//                            })
-//                            .collect(Collectors.toMap(
-//                                    Map.Entry::getKey,
-//                                    Map.Entry::getValue,
-//                                    (_, v2) -> v2,
-//                                    LinkedHashMap::new
-//                            ));
-//                },
-//                KeyValueStore.ValidatePolicy.GENTLE
-//        );
-//    }
 
     private Path getDestinationFilePath(FileDownloadRequest request) {
         Path downloadDirectoryPath = daemonDownloadsDirectoryProvider.getDirectoryPath();
