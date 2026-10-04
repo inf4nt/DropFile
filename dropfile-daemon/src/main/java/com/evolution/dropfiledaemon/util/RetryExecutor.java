@@ -116,7 +116,7 @@ public class RetryExecutor<T> {
 
         Future<T> future = EXECUTOR_SERVICE.submit(callable);
         try {
-            return future.get(callTimeout.toMillis(), TimeUnit.MILLISECONDS);
+            return future.get(callTimeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof Error error) {

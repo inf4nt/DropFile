@@ -114,7 +114,7 @@ public class ConcurrentTaskService {
         }
 
         try {
-            executorService.invokeAny(callables, timeout.toMillis(), TimeUnit.MILLISECONDS);
+            executorService.invokeAny(callables, timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ExecutionException(e.getMessage(), e);

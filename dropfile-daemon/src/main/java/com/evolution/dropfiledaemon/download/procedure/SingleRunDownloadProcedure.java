@@ -63,7 +63,7 @@ public class SingleRunDownloadProcedure {
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
             try {
-                if (!executorService.awaitTermination(SHUTDOWN_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+                if (!executorService.awaitTermination(SHUTDOWN_TIMEOUT.toNanos(), TimeUnit.NANOSECONDS)) {
                     log.info(
                             "Download procedure was not terminated within {} ms. Operation: {}",
                             SHUTDOWN_TIMEOUT.toMillis(),
