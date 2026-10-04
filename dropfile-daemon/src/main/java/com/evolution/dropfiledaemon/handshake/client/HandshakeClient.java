@@ -74,7 +74,7 @@ public class HandshakeClient {
     }
 
     private byte[] execute(HttpRequest httpRequest) throws IOException {
-        try (InputStream inputStream = doExecute(httpRequest)) {
+        try (WatchdogInputStream inputStream = doExecute(httpRequest)) {
             byte[] payload = inputStream.readAllBytes();
             if (payload.length == 0) {
                 throw new IllegalStateException("Handshake server returned 200 OK but empty body %s %s"
@@ -84,7 +84,7 @@ public class HandshakeClient {
         }
     }
 
-    private InputStream doExecute(HttpRequest httpRequest) throws IOException {
+    private WatchdogInputStream doExecute(HttpRequest httpRequest) throws IOException {
         HttpResponse<InputStream> httpResponse = null;
         try {
             try {
