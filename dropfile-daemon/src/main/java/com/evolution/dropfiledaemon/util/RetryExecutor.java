@@ -79,7 +79,7 @@ public class RetryExecutor<T> {
             currentAttempt++;
             if (currentAttempt <= attempts && delay.isPositive()) {
                 try {
-                    Thread.sleep(delay.toMillis());
+                    Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw e;

@@ -28,7 +28,7 @@ public class WatchdogOutputStream extends FilterOutputStream {
         if (duration != null && duration.isPositive()) {
             this.watchdogTask = EXECUTOR_SERVICE.submit(() -> {
                 try {
-                    Thread.sleep(duration.toMillis());
+                    Thread.sleep(duration);
                     safeClose();
                 } catch (InterruptedException _) {
                     Thread.currentThread().interrupt();

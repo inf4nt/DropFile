@@ -38,7 +38,7 @@ public class WatchdogInputStream extends FilterInputStream {
         if (timeout != null && timeout.isPositive()) {
             this.watchdogTask = EXECUTOR_SERVICE.submit(() -> {
                 try {
-                    Thread.sleep(timeout.toMillis());
+                    Thread.sleep(timeout);
                     safeClose();
                 } catch (InterruptedException _) {
                     Thread.currentThread().interrupt();
