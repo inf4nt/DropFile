@@ -205,7 +205,7 @@ public class FileDownloadOrchestrator {
                 ));
     }
 
-    public FileDownloadOrchestratorKillResponse kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+    public FileDownloadOrchestratorKillResponse kill(Set<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         if (CollectionUtils.isEmpty(operationIdCriteriaEnvelopes)) {
             return new FileDownloadOrchestratorKillResponse(Map.of(), List.of(), Map.of());
         }
@@ -227,8 +227,8 @@ public class FileDownloadOrchestrator {
                 .map(downloadProcedures::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(
-                        x -> x.getRequest().operationId(),
-                        x -> x
+                        it -> it.getRequest().operationId(),
+                        it -> it
                 ));
 
         stopProcedures(targetOperations);

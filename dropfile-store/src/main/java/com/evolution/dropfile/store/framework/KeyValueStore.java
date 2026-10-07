@@ -55,7 +55,7 @@ public interface KeyValueStore<V> {
         ).values().stream().findAny().orElseThrow();
     }
 
-    RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes);
+    RemoveResult removeByCriteria(Set<CriteriaEnvelope> criteriaEnvelopes);
 
     Map<String, V> remove(Collection<String> keys);
 
@@ -90,7 +90,7 @@ public interface KeyValueStore<V> {
     default Map.Entry<String, V> getRequiredByCriteriaKey(CriteriaEnvelope criteriaEnvelopeKey) {
         CommonUtils.MatchResult<Map.Entry<String, V>> matchResult = CommonUtils.matchBy(
                 getAll().entrySet(),
-                List.of(criteriaEnvelopeKey),
+                Set.of(criteriaEnvelopeKey),
                 (criteria, entry) -> entry.getKey().startsWith(criteria.value())
         );
 

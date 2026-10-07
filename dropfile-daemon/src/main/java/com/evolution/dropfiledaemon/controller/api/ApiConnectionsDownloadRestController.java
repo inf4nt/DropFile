@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -26,7 +26,7 @@ public class ApiConnectionsDownloadRestController {
     }
 
     @PostMapping("/kill")
-    public ApiBatchOperationResult kill(@RequestBody Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult kill(@RequestBody Set<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
         return downloadFacade.kill(operationIdCriteriaEnvelopes);
     }
 

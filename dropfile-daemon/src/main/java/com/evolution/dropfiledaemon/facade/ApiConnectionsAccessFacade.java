@@ -57,7 +57,7 @@ public class ApiConnectionsAccessFacade {
                 .toList();
     }
 
-    public ApiBatchOperationResult rm(Collection<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult rm(Set<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
         KeyValueStore.RemoveResult removeResult = accessKeyStore.removeByCriteria(accessIdCriteriaEnvelopes);
         return ApiBatchOperationResult.of(
                 removeResult.removed(),

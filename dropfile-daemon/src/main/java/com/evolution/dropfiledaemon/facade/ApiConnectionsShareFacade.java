@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -100,7 +101,7 @@ public class ApiConnectionsShareFacade {
                 .toList();
     }
 
-    public ApiBatchOperationResult rm(Collection<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult rm(Set<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) {
         KeyValueStore.RemoveResult removeResult = shareFileStore.removeByCriteria(shareFileIdCriteriaEnvelopes);
         return ApiBatchOperationResult.of(
                 removeResult.removed(),

@@ -114,7 +114,7 @@ public class ApiQuickShareFacade {
         return map(entries);
     }
 
-    public ApiBatchOperationResult removeByCriteria(Collection<CriteriaEnvelope> quickshareIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult removeByCriteria(Set<CriteriaEnvelope> quickshareIdCriteriaEnvelopes) {
         KeyValueStore.RemoveResult removeResult = quickShareStore.removeByCriteria(quickshareIdCriteriaEnvelopes);
         return ApiBatchOperationResult.of(
                 removeResult.removed(),

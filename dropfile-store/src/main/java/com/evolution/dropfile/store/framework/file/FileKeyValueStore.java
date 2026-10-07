@@ -134,7 +134,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
     }
 
     @Override
-    public RemoveResult removeByCriteria(Collection<CriteriaEnvelope> criteriaEnvelopes) {
+    public RemoveResult removeByCriteria(Set<CriteriaEnvelope> criteriaEnvelopes) {
         if (criteriaEnvelopes == null || criteriaEnvelopes.isEmpty()) {
             return RemoveResult.EMPTY;
         }

@@ -224,7 +224,7 @@ public class CommonUtils {
     }
 
     public static <T> MatchResult<T> matchBy(Collection<T> source,
-                                             Collection<CriteriaEnvelope> criteria,
+                                             Set<CriteriaEnvelope> criteria,
                                              BiPredicate<CriteriaEnvelope, T> matcher) {
         if (criteria == null || criteria.isEmpty()) {
             return new MatchResult<>(Map.of(), Set.of(), Map.of());

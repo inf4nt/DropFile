@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,7 +33,7 @@ public class ApiConnectionsShareRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult rm(@RequestBody Collection<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult rm(@RequestBody Set<CriteriaEnvelope> shareFileIdCriteriaEnvelopes) {
         return apiFacade.rm(shareFileIdCriteriaEnvelopes);
     }
 

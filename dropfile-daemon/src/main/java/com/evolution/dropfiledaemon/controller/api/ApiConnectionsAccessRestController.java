@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,7 +35,7 @@ public class ApiConnectionsAccessRestController {
     }
 
     @DeleteMapping("/rm")
-    public ApiBatchOperationResult rm(@RequestBody Collection<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
+    public ApiBatchOperationResult rm(@RequestBody Set<CriteriaEnvelope> accessIdCriteriaEnvelopes) {
         return apiFacade.rm(accessIdCriteriaEnvelopes);
     }
 

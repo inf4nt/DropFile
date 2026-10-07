@@ -14,10 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -41,8 +38,8 @@ public class ApiDownloadFacade {
         return filterAndLimit(responses, targetStatus, request.limit());
     }
 
-    public ApiBatchOperationResult kill(Collection<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
-        var response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
+    public ApiBatchOperationResult kill(Set<CriteriaEnvelope> operationIdCriteriaEnvelopes) {
+        FileDownloadOrchestrator.FileDownloadOrchestratorKillResponse response = fileDownloadOrchestrator.kill(operationIdCriteriaEnvelopes);
         return ApiBatchOperationResult.of(response.found(), response.notFound(), response.ambiguous());
     }
 
