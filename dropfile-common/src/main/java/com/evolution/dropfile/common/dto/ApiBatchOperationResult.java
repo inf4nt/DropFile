@@ -35,14 +35,18 @@ public record ApiBatchOperationResult(Map<String, String> found,
                 found.entrySet().stream().collect(Collectors.toMap(
                         x -> x.getKey().value(),
                         Map.Entry::getValue,
-                        (_, v2) -> v2,
+                        (_, _) -> {
+                            throw new IllegalStateException("Duplicate key found during Map merge");
+                        },
                         LinkedHashMap::new
                 )),
                 notFound.stream().map(CriteriaEnvelope::value).toList(),
                 ambiguous.entrySet().stream().collect(Collectors.toMap(
                         x -> x.getKey().value(),
                         Map.Entry::getValue,
-                        (_, v2) -> v2,
+                        (_, _) -> {
+                            throw new IllegalStateException("Duplicate key found during Map merge");
+                        },
                         LinkedHashMap::new
                 ))
         );
@@ -53,14 +57,18 @@ public record ApiBatchOperationResult(Map<String, String> found,
                 found.entrySet().stream().collect(Collectors.toMap(
                         x -> new CriteriaEnvelope(x.getKey()),
                         Map.Entry::getValue,
-                        (_, v2) -> v2,
+                        (_, _) -> {
+                            throw new IllegalStateException("Duplicate key found during Map merge");
+                        },
                         LinkedHashMap::new
                 )),
                 notFound.stream().map(CriteriaEnvelope::new).toList(),
                 ambiguous.entrySet().stream().collect(Collectors.toMap(
                         x -> new CriteriaEnvelope(x.getKey()),
                         Map.Entry::getValue,
-                        (_, v2) -> v2,
+                        (_, _) -> {
+                            throw new IllegalStateException("Duplicate key found during Map merge");
+                        },
                         LinkedHashMap::new
                 ))
         );

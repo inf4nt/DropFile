@@ -155,7 +155,9 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
                     .collect(Collectors.toMap(
                             Map.Entry::getKey,
                             entry -> entry.getValue().stream().map(Map.Entry::getKey).toList(),
-                            (_, newVal) -> newVal,
+                            (_, _) -> {
+                                throw new IllegalStateException("Duplicate key found during Map merge");
+                            },
                             LinkedHashMap::new
                     ));
 

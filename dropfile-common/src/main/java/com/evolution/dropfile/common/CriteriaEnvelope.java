@@ -2,6 +2,7 @@ package com.evolution.dropfile.common;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public record CriteriaEnvelope(String value) {
@@ -14,8 +15,8 @@ public record CriteriaEnvelope(String value) {
 
     public static Collection<CriteriaEnvelope> map(Iterable<String> criteriaStrings) {
         if (criteriaStrings == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
-        return StreamSupport.stream(criteriaStrings.spliterator(), false).map(CriteriaEnvelope::new).toList();
+        return StreamSupport.stream(criteriaStrings.spliterator(), false).map(CriteriaEnvelope::new).collect(Collectors.toSet());
     }
 }
