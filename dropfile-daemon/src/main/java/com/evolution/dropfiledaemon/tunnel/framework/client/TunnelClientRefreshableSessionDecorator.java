@@ -66,7 +66,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
             clearResolvedSuspect(fingerprint);
             return stream;
         } catch (TunnelClientProtocolException tunnelException) {
-            if (CommonUtils.checkThrowable(tunnelException, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(tunnelException, InterruptedException.class)) {
                 throw tunnelException;
             }
 
@@ -87,7 +87,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
             clearResolvedSuspect(fingerprint);
             return stream;
         } catch (TunnelClientProtocolException tunnelException) {
-            if (CommonUtils.checkThrowable(tunnelException, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(tunnelException, InterruptedException.class)) {
                 throw tunnelException;
             }
 

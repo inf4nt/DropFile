@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.util;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -595,7 +595,7 @@ public class RetryExecutorTest {
             assertThat("Expected exception to be thrown", caughtException.get(), is(notNullValue()));
 
             assertThat("Exception chain should contain InterruptedException",
-                    CommonUtils.checkThrowable(
+                    ThrowableUtils.checkThrowable(
                             caughtException.get(),
                             InterruptedException.class
                     ),
@@ -642,7 +642,7 @@ public class RetryExecutorTest {
 
             assertThat(
                     "Exception chain should contain InterruptedException",
-                    CommonUtils.checkThrowable(
+                    ThrowableUtils.checkThrowable(
                             caughtException.get(),
                             InterruptedException.class
                     ),
@@ -670,7 +670,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Should be or wrap InterruptedException", CommonUtils.checkThrowable(thrown, InterruptedException.class), is(true));
+        assertThat("Should be or wrap InterruptedException", ThrowableUtils.checkThrowable(thrown, InterruptedException.class), is(true));
         assertThat("Call counter should remain 0", callCounter.get(), is(0));
         assertThat("Thread interrupt flag should remain true", Thread.currentThread().isInterrupted(), is(true));
     }

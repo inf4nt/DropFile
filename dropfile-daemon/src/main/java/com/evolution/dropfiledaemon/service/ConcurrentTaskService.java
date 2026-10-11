@@ -1,6 +1,6 @@
 package com.evolution.dropfiledaemon.service;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -91,7 +91,7 @@ public class ConcurrentTaskService {
 
         Throwable throwable = firstThrowable.get();
         if (throwable != null) {
-            if (CommonUtils.checkThrowable(throwable, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(throwable, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
 

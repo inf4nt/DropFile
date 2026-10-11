@@ -92,7 +92,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
             return Collections.unmodifiableMap(toSave);
         } catch (Exception e) {
-            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
             throw ThrowableUtils.rethrowRuntimeException(e);
@@ -230,7 +230,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
 
             return removed;
         } catch (Exception e) {
-            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
             throw ThrowableUtils.rethrowRuntimeException(e);
@@ -250,7 +250,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
             Path filePath = fileProvider.getFilePath();
             fileOperations.removeAll(filePath);
         } catch (Exception e) {
-            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
             throw ThrowableUtils.rethrowRuntimeException(e);
@@ -280,7 +280,7 @@ public class FileKeyValueStore<V> implements KeyValueStore<V> {
         } catch (NoContentFoundException e) {
             return Collections.emptyMap();
         } catch (Exception e) {
-            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
             throw ThrowableUtils.rethrowRuntimeException(e);

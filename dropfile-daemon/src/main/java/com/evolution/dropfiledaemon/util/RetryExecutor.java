@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.ThrowableUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -57,11 +58,11 @@ public class RetryExecutor<T> {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Retry was interrupted", interruptedException);
             } catch (Exception e) {
-                if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+                if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                     Thread.currentThread().interrupt();
                     throw e;
                 }
-                if (CommonUtils.checkThrowable(e, ClosedChannelException.class)) {
+                if (ThrowableUtils.checkThrowable(e, ClosedChannelException.class)) {
                     throw e;
                 }
 

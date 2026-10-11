@@ -100,7 +100,7 @@ public class RuntimeKeyValueStore<V> implements KeyValueStore<V> {
 
             return Collections.unmodifiableMap(toSave);
         } catch (Exception e) {
-            if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
+            if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
             throw ThrowableUtils.rethrowRuntimeException(e);

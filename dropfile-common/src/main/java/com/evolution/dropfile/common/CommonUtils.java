@@ -191,43 +191,6 @@ public class CommonUtils {
         }
     }
 
-    @SafeVarargs
-    public static boolean checkThrowable(Throwable throwable,
-                                         Class<? extends Throwable>... lookFor) {
-        Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        Deque<Throwable> queue = new ArrayDeque<>();
-        queue.add(throwable);
-
-        while (!queue.isEmpty()) {
-            Throwable current = queue.poll();
-
-            if (current == null || !visited.add(current)) {
-                continue;
-            }
-
-            for (Class<? extends Throwable> targetClass : lookFor) {
-                if (targetClass.isInstance(current)) {
-                    return true;
-                }
-            }
-
-            if (current.getCause() != null) {
-                queue.add(current.getCause());
-            }
-
-            Throwable[] suppressed = current.getSuppressed();
-            if (suppressed != null) {
-                for (Throwable sup : suppressed) {
-                    if (sup != null) {
-                        queue.add(sup);
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
     public static <T> T requireOne(Collection<T> source,
                                    Supplier<String> emptyMessageSupplier,
                                    Supplier<String> moreThanOneMessageSupplier) {
