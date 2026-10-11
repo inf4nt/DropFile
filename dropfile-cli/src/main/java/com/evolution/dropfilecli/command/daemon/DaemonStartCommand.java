@@ -59,7 +59,7 @@ public class DaemonStartCommand extends AbstractCommandHandler {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
-    private void execute(Path executablePath) throws IOException, InterruptedException {
+    private void execute(Path executablePath) throws IOException {
         System.out.println("Executing " + executablePath);
         ProcessBuilder pb = new ProcessBuilder(executablePath.toString());
 
@@ -67,7 +67,13 @@ public class DaemonStartCommand extends AbstractCommandHandler {
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
 
         Process process = pb.start();
-        boolean exited = process.waitFor(Duration.ofSeconds(5));
+        boolean exited;
+        try {
+            exited = process.waitFor(Duration.ofSeconds(5));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for process to exit", e);
+        }
 
         if (!exited) {
             System.out.println("Command completed successfully. To get daemon execution status execute $dropf daemon status");

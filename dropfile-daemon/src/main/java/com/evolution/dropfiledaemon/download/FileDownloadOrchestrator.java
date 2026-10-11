@@ -411,7 +411,7 @@ public class FileDownloadOrchestrator {
     }
 
     @EventListener(ContextClosedEvent.class)
-    public void contextClosedEventListener() throws InterruptedException {
+    public void contextClosedEventListener() throws Exception {
         boolean set = closed.compareAndSet(false, true);
         if (!set) {
             return;
