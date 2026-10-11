@@ -1,6 +1,5 @@
 package com.evolution.dropfiledaemon.download.procedure;
 
-import com.evolution.dropfile.common.Attributes;
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.io.ThroughputMeter;
@@ -72,6 +71,7 @@ public class SingleRunDownloadProcedure {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                // TODO change it to IllegalStateException cause Thread.currentThread().interrupt()
                 throw e;
             }
         }
@@ -190,16 +190,13 @@ public class SingleRunDownloadProcedure {
     }
 
     private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest) {
-        Attributes attributes = new Attributes();
-
         RetryExecutor
                 .call(() -> {
                     validateInterrupted();
                     try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(),
                             request.fileId(),
                             chunkManifest.size(),
-                            chunkManifest.position(),
-                            attributes)) {
+                            chunkManifest.position())) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
                     return 1;

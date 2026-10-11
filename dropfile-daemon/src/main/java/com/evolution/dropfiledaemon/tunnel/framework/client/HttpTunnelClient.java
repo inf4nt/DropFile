@@ -13,11 +13,13 @@ import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.compress.CompressTunnelService;
+import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientProtocolException;
 import com.evolution.dropfiledaemon.tunnel.framework.monitor.TunnelTrafficMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -38,7 +40,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
+@Primary
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -71,6 +75,7 @@ public class HttpTunnelClient implements TunnelClient {
         HttpTunnelRequestContext httpTunnelRequestContext = buildHttpTunnelRequestContext(request);
 
         HttpResponse<InputStream> httpResponse = null;
+        InputStream inputStreamResponse = null;
         try {
             try {
                 httpResponse = httpClient.send(httpTunnelRequestContext.httpRequest(), HttpResponse.BodyHandlers.ofInputStream());
@@ -87,24 +92,28 @@ public class HttpTunnelClient implements TunnelClient {
                 throw new ConnectException("Target address is unreachable");
             }
 
-            if (httpResponse.statusCode() != 200) {
-                throw new IllegalStateException("Unexpected HTTP response status code. Expected: 200 actual: %s".formatted(
-                        httpResponse.statusCode()
-                ));
+            try {
+                if (httpResponse.statusCode() != 200) {
+                    throw new IllegalStateException("Unexpected HTTP response status code. Expected: 200 actual: %s".formatted(
+                            httpResponse.statusCode()
+                    ));
+                }
+
+                byte[] aadCurrentFingerprint = CommonUtils
+                        .getFingerprint(httpTunnelRequestContext.trustedOut().handshake().publicRSA())
+                        .getBytes(StandardCharsets.UTF_8);
+
+                inputStreamResponse = getInputStreamResponse(
+                        httpResponse.body(),
+                        httpTunnelRequestContext.remoteFingerprint(),
+                        aadCurrentFingerprint,
+                        httpTunnelRequestContext.sessionKeys().serverKey()
+                );
+                validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
+                return inputStreamResponse;
+            } catch (Exception e) {
+                throw new TunnelClientProtocolException(e.getMessage(), e);
             }
-
-            byte[] aadCurrentFingerprint = CommonUtils
-                    .getFingerprint(httpTunnelRequestContext.trustedOut().handshake().publicRSA())
-                    .getBytes(StandardCharsets.UTF_8);
-
-            InputStream inputStreamResponse = getInputStreamResponse(
-                    httpResponse.body(),
-                    httpTunnelRequestContext.remoteFingerprint(),
-                    aadCurrentFingerprint,
-                    httpTunnelRequestContext.sessionKeys().serverKey()
-            );
-            validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
-            return inputStreamResponse;
         } catch (Throwable throwable) {
             if (httpResponse != null) {
                 try {
@@ -119,6 +128,20 @@ public class HttpTunnelClient implements TunnelClient {
                     throwable.addSuppressed(closeThrowable);
                 }
             }
+            if (inputStreamResponse != null) {
+                try {
+                    inputStreamResponse.close();
+                } catch (Throwable closeThrowable) {
+                    log.error(
+                            "Failed to close tunnel response stream during failure cleanup. Fingerprint {} command {}",
+                            request.getFingerprint(),
+                            request.getCommand(),
+                            closeThrowable
+                    );
+                    throwable.addSuppressed(closeThrowable);
+                }
+            }
+
             HttpRequest httpRequest = httpTunnelRequestContext.httpRequest();
             String message = "Tunnel call failed. Fingerprint %s command %s'. Reason '%s'. Method %s uri %s timeout %s".formatted(
                     request.getFingerprint(),
@@ -129,6 +152,9 @@ public class HttpTunnelClient implements TunnelClient {
                     httpRequest.timeout().map(Duration::toMillis).orElse(0L)
             );
 
+            if (throwable instanceof TunnelClientProtocolException tunnelClientProtocolException) {
+                throw new TunnelClientProtocolException(message, tunnelClientProtocolException);
+            }
             if (throwable instanceof Error error) {
                 throw error;
             }
@@ -251,9 +277,7 @@ public class HttpTunnelClient implements TunnelClient {
                                     ServerTunnelRestController.TUNNEL_ENDPOINT
                             )
                     ))
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(
-                            objectMapper.writeValueAsBytes(tunnelRequestDTO))
-                    )
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(tunnelRequestDTO)))
                     .header("Content-Type", "application/json")
                     .timeout(daemonApplicationProperties.daemonTunnelClientHttpRequestTimeout)
                     .build();

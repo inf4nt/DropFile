@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -286,7 +285,7 @@ public class HandshakeFacade {
         });
     }
 
-    public void revoke(CriteriaEnvelope fingerprintCriteria) throws ExecutionException, InterruptedException, TimeoutException {
+    public void revoke(CriteriaEnvelope fingerprintCriteria) throws ExecutionException {
         String fingerprint = handshakeTrustedInStore.getRequiredByCriteriaKey(fingerprintCriteria)
                 .getKey();
         lockableOperationHandshakeTrustedInStore.executeWithKeyLock(fingerprint, () -> {
