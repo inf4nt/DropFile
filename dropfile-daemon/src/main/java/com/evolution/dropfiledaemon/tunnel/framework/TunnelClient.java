@@ -19,6 +19,8 @@ public interface TunnelClient {
 
         private final Object body;
 
+        private final Boolean compress;
+
         public static RequestBuilder builder(String command, String fingerprint) {
             return new RequestBuilder().command(command).fingerprint(fingerprint);
         }

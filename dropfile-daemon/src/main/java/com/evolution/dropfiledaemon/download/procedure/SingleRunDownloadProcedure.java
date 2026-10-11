@@ -168,13 +168,15 @@ public class SingleRunDownloadProcedure {
     }
 
     private void chunksHandler() throws Exception {
+        boolean compressible = FileCompressionPolicyHelper.isCompressible(request.filename());
+
         try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(),
                 StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE)) {
             List<Callable<Void>> tasks = request.fileManifest().chunks()
                     .stream()
                     .map(chunkManifest -> (Callable<Void>) () -> {
-                        handleSingleChunk(fileChannel, chunkManifest);
+                        handleSingleChunk(fileChannel, chunkManifest, compressible);
                         throughputMeter.add(chunkManifest.size());
                         return null;
                     })
@@ -188,14 +190,15 @@ public class SingleRunDownloadProcedure {
         }
     }
 
-    private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest) {
+    private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest, boolean compressible) {
         RetryExecutor
                 .call(() -> {
                     validateInterrupted();
                     try (InputStream stream = tunnelClientGateway.shareDownloadChunkStream(request.fingerprint(),
                             request.fileId(),
                             chunkManifest.size(),
-                            chunkManifest.position())) {
+                            chunkManifest.position(),
+                            compressible)) {
                         fileHelper.write(writeToFileChannel, stream, chunkManifest.position(), chunkManifest.size());
                     }
                     return 1;

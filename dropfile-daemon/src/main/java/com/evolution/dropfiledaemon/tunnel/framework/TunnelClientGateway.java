@@ -54,7 +54,8 @@ public class TunnelClientGateway {
     public InputStream shareDownloadChunkStream(String fingerprint,
                                                 String fileId,
                                                 int size,
-                                                long position) {
+                                                long position,
+                                                boolean compress) {
         TunnelClient.Request tunnelRequest = TunnelClient.Request.builder(
                         ShareDownloadChunkStreamCommandHandler.COMMAND_NAME,
                         fingerprint
@@ -64,6 +65,7 @@ public class TunnelClientGateway {
                         size,
                         position
                 ))
+                .compress(compress)
                 .build();
         try {
             return tunnelClient.stream(tunnelRequest);

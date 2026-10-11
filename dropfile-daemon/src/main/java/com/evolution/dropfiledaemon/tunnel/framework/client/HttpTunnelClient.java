@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 @Primary
 @Slf4j
@@ -99,15 +98,9 @@ public class HttpTunnelClient implements TunnelClient {
                     ));
                 }
 
-                byte[] aadCurrentFingerprint = CommonUtils
-                        .getFingerprint(httpTunnelRequestContext.trustedOut().handshake().publicRSA())
-                        .getBytes(StandardCharsets.UTF_8);
-
                 inputStreamResponse = getInputStreamResponse(
                         httpResponse.body(),
-                        httpTunnelRequestContext.remoteFingerprint(),
-                        aadCurrentFingerprint,
-                        httpTunnelRequestContext.sessionKeys().serverKey()
+                        httpTunnelRequestContext
                 );
                 validateInputStream(httpTunnelRequestContext.requestId(), inputStreamResponse);
                 return inputStreamResponse;
@@ -166,9 +159,11 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private InputStream getInputStreamResponse(InputStream inputStream,
-                                               String fingerprint,
-                                               byte[] aad,
-                                               SecretKey serverSecretKey) {
+                                               HttpTunnelRequestContext httpTunnelRequestContext) {
+        byte[] aadCurrentFingerprint = CommonUtils
+                .getFingerprint(httpTunnelRequestContext.trustedOut().handshake().publicRSA())
+                .getBytes(StandardCharsets.UTF_8);
+
         return InputStreamPipeline
                 .from(inputStream)
                 .add(in -> new WatchdogInputStream(
@@ -176,13 +171,14 @@ public class HttpTunnelClient implements TunnelClient {
                         daemonApplicationProperties.daemonTunnelClientStreamMaxSize,
                         daemonApplicationProperties.daemonTunnelClientStreamDeadlineTimeout
                 ))
-                .add(in -> tunnelTrafficMonitor.inputStreamWrapper(fingerprint, in))
+                .add(in -> tunnelTrafficMonitor.inputStreamWrapper(httpTunnelRequestContext.remoteFingerprint(), in))
                 .add(in -> {
-                    byte[] decrypt = cryptoTunnel.decrypt(in, aad, serverSecretKey);
+                    byte[] decrypt = cryptoTunnel.decrypt(in, aadCurrentFingerprint, httpTunnelRequestContext.sessionKeys().serverKey());
                     return new ByteArrayInputStream(decrypt);
                 })
                 .add(in -> {
-                    if (daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
+                    boolean compressFlag = getCompressFlag(httpTunnelRequestContext.request());
+                    if (compressFlag) {
                         return compressTunnelService.decompress(in);
                     }
                     return in;
@@ -194,6 +190,16 @@ public class HttpTunnelClient implements TunnelClient {
                 .get();
     }
 
+    private boolean getCompressFlag(Request request) {
+        if (!daemonApplicationProperties.daemonTunnelClientCompressEnabled) {
+            return false;
+        }
+        if (request.getCompress() != null) {
+            return request.getCompress();
+        }
+        return true;
+    }
+
     private SecureEnvelope encrypt(UUID requestId, Request request, byte[] aad, SecretKey clientSecretKey) throws IOException, GeneralSecurityException {
         byte[] payload = payloadSerialize(request.getBody());
 
@@ -203,7 +209,7 @@ public class HttpTunnelClient implements TunnelClient {
                         request.getCommand(),
                         payload,
                         new TunnelRequestDTO.Configuration(
-                                daemonApplicationProperties.daemonTunnelClientCompressEnabled
+                                getCompressFlag(request)
                         ),
                         System.currentTimeMillis()
                 )
@@ -284,6 +290,7 @@ public class HttpTunnelClient implements TunnelClient {
 
             return new HttpTunnelRequestContext(
                     remoteFingerprint,
+                    request,
                     requestId,
                     httpRequest,
                     trustedOut,
@@ -298,6 +305,7 @@ public class HttpTunnelClient implements TunnelClient {
     }
 
     private record HttpTunnelRequestContext(String remoteFingerprint,
+                                            Request request,
                                             UUID requestId,
                                             HttpRequest httpRequest,
                                             HandshakeTrustedOutStore.TrustedOut trustedOut,
