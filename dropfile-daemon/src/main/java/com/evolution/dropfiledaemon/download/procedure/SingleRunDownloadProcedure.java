@@ -58,7 +58,7 @@ public class SingleRunDownloadProcedure {
         return stopped.get();
     }
 
-    public void stop() throws InterruptedException {
+    public void stop() {
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
             try {
@@ -71,8 +71,7 @@ public class SingleRunDownloadProcedure {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                // TODO change it to IllegalStateException cause Thread.currentThread().interrupt()
-                throw e;
+                throw new IllegalStateException("Download procedure termination was interrupted", e);
             }
         }
     }
