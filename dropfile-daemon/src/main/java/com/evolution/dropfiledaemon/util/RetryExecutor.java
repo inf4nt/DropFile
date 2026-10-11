@@ -53,10 +53,12 @@ public class RetryExecutor<T> {
                     }
                     return call;
                 }
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Retry was interrupted", interruptedException);
             } catch (Exception e) {
                 if (CommonUtils.checkThrowable(e, InterruptedException.class)) {
                     Thread.currentThread().interrupt();
-                    // TODO: add a custom exception to indicate that the retry was interrupted
                     throw e;
                 }
                 if (CommonUtils.checkThrowable(e, ClosedChannelException.class)) {
@@ -83,8 +85,7 @@ public class RetryExecutor<T> {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    // TODO: add a custom exception to indicate that the retry was interrupted
-                    throw e;
+                    throw new IllegalStateException("Sleep retry was interrupted", e);
                 }
             }
         }

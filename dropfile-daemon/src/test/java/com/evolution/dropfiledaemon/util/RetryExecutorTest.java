@@ -437,21 +437,31 @@ public class RetryExecutorTest {
     public void doNotRetryInterruptedException() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        assertThrows(InterruptedException.class, () ->
+        AtomicReference<InterruptedException> interruptedExceptionAtomicReference = new AtomicReference<>();
+
+        IllegalStateException illegalStateException = assertThrows(IllegalStateException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
                                 callCounter.incrementAndGet();
                                 return 1;
                             }
-                            throw new InterruptedException();
+                            InterruptedException interruptedException = new InterruptedException();
+                            interruptedExceptionAtomicReference.set(interruptedException);
+                            throw interruptedException;
                         })
                         .delay(Duration.ofMillis(0))
                         .attempts(10)
-                        .retryIf(it -> true)
+                        .retryIf(_ -> true)
                         .run()
         );
 
+        assertThat(Thread.currentThread().isInterrupted(), is(true));
+        assertThat("Root cause should be InterruptedException", illegalStateException.getCause(), isA(InterruptedException.class));
+        assertThat("Root cause should be same instance of InterruptedException",
+                illegalStateException.getCause(),
+                sameInstance(interruptedExceptionAtomicReference.get())
+        );
         assertThat("Call counter should be 6 when InterruptedException stops retries", callCounter.get(), is(6));
     }
 
@@ -459,7 +469,7 @@ public class RetryExecutorTest {
     public void doNotRetryInterruptedFlag() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        assertThrows(InterruptedException.class, () ->
+        IllegalStateException illegalStateException = assertThrows(IllegalStateException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
@@ -471,10 +481,12 @@ public class RetryExecutorTest {
                         })
                         .delay(Duration.ofMillis(0))
                         .attempts(10)
-                        .retryIf(it -> true)
+                        .retryIf(_ -> true)
                         .run()
         );
 
+        assertThat(Thread.currentThread().isInterrupted(), is(true));
+        assertThat("Root cause should be InterruptedException", illegalStateException.getCause(), isA(InterruptedException.class));
         assertThat("Call counter should be 6 when interrupted status stops retries", callCounter.get(), is(6));
     }
 
@@ -517,7 +529,7 @@ public class RetryExecutorTest {
                         })
                         .delay(Duration.ofMillis(0))
                         .attempts(10)
-                        .retryIf(it -> true)
+                        .retryIf(_ -> true)
                         .run()
         );
 
