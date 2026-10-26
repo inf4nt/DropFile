@@ -2,6 +2,7 @@ package com.evolution.dropfiledaemon.facade;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.dto.ApiBatchOperationResult;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareAddRequestDTO;
 import com.evolution.dropfile.common.dto.ApiConnectionsShareLsResponseDTO;
@@ -26,7 +27,6 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -86,11 +86,15 @@ public class ApiConnectionsShareFacade {
     }
 
     private String calculateSha256(Path source, Duration timeout) {
-        return RetryExecutor
-                .call(() -> fileHelper.sha256(source))
-                .attempts(1)
-                .callTimeout(timeout)
-                .run();
+        try {
+            return RetryExecutor
+                    .call(() -> fileHelper.sha256(source))
+                    .attempts(1)
+                    .callTimeout(timeout)
+                    .run();
+        } catch (Exception e) {
+            throw ThrowableUtils.rethrowRuntimeException(e);
+        }
     }
 
     public List<ApiConnectionsShareLsResponseDTO> ls() {

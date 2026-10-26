@@ -2,8 +2,8 @@ package com.evolution.dropfiledaemon.util;
 
 import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.ThrowableUtils;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
@@ -33,8 +33,7 @@ public class RetryExecutor<T> {
 
     private final Duration callTimeout;
 
-    @SneakyThrows
-    public T run() {
+    public T run() throws ExecutionException, TimeoutException {
         List<Exception> exceptions = new ArrayList<>();
         int currentAttempt = 1;
         while (currentAttempt <= attempts) {
@@ -43,32 +42,38 @@ public class RetryExecutor<T> {
 
                 T call = callWithTimeoutIfPresent();
 
-                boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
+                boolean continueRetry = false;
+                try {
+                    continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
+                } catch (Exception _) {
+                }
+
                 if (!continueRetry) {
                     if (doOnSuccessful != null) {
                         try {
                             doOnSuccessful.accept(currentAttempt, call);
                         } catch (Exception _) {
-
                         }
                     }
                     return call;
                 }
-            } catch (InterruptedException interruptedException) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Retry was interrupted", interruptedException);
             } catch (Exception e) {
                 if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                     Thread.currentThread().interrupt();
-                    throw e;
+                    rethrowToBasicExpectedExceptions(e);
                 }
                 if (ThrowableUtils.checkThrowable(e, ClosedChannelException.class)) {
-                    throw e;
+                    rethrowToBasicExpectedExceptions(e);
                 }
 
-                boolean continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
+                boolean continueRetry = false;
+                try {
+                    continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
+                } catch (Exception _) {
+                }
+
                 if (!continueRetry) {
-                    throw e;
+                    rethrowToBasicExpectedExceptions(e);
                 }
 
                 exceptions.add(e);
@@ -76,7 +81,6 @@ public class RetryExecutor<T> {
                     try {
                         doOnError.accept(currentAttempt, e);
                     } catch (Exception _) {
-
                     }
                 }
             }
@@ -86,23 +90,28 @@ public class RetryExecutor<T> {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new IllegalStateException("Sleep retry was interrupted", e);
+                    throw ThrowableUtils.mapExceptionTo(
+                            e,
+                            it -> new IllegalStateException("Sleep retry was interrupted", it)
+                    );
                 }
             }
         }
 
-        if (exceptions.isEmpty()) {
-            throw new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
+        Exception exception = buildException(exceptions);
+        if (exception != null) {
+            rethrowToBasicExpectedExceptions(exception);
         }
-
-        throw buildException(exceptions);
+        throw new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
     }
 
+    @Nullable
     private Exception buildException(List<Exception> exceptions) {
-        Exception first = exceptions.getFirst();
-        if (exceptions.size() == 1) {
-            return first;
+        if (exceptions.isEmpty()) {
+            return null;
         }
+
+        Exception first = exceptions.getFirst();
 
         for (int i = 1; i < exceptions.size(); i++) {
             Exception nested = exceptions.get(i);
@@ -122,18 +131,52 @@ public class RetryExecutor<T> {
         try {
             return future.get(callTimeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof Error error) {
+            if (e.getCause() instanceof Error error) {
                 throw error;
-            }
-            if (cause instanceof Exception exception) {
-                throw exception;
             }
             throw e;
         } catch (Exception e) {
             future.cancel(true);
             throw e;
         }
+    }
+
+    private void rethrowToBasicExpectedExceptions(Exception exception) throws ExecutionException, TimeoutException {
+        if (exception instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+        }
+        if (exception instanceof TimeoutException timeoutException) {
+            throw timeoutException;
+        }
+        if (exception instanceof InterruptedException interruptedException) {
+            throw ThrowableUtils.mapExceptionTo(
+                    interruptedException,
+                    it -> new IllegalStateException("Call was interrupted", it)
+            );
+        }
+        if (exception instanceof ExecutionException executionException) {
+            Throwable cause = executionException.getCause();
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            if (cause instanceof TimeoutException timeoutException) {
+                throw timeoutException;
+            }
+            if (cause instanceof InterruptedException interruptedException) {
+                throw ThrowableUtils.mapExceptionTo(
+                        interruptedException,
+                        it -> new IllegalStateException("Call was interrupted", it)
+                );
+            }
+            throw executionException;
+        }
+        throw ThrowableUtils.mapExceptionTo(
+                exception,
+                it -> new ExecutionException(it.getMessage(), it)
+        );
     }
 
     public static <T> RetryExecutorBuilder<T> call(Callable<T> callable) {
@@ -167,9 +210,6 @@ public class RetryExecutor<T> {
 
         public RetryExecutorBuilder<T> delay(Duration duration) {
             Objects.requireNonNull(duration, "Delay duration must not be null");
-            if (duration.isNegative()) {
-                throw new IllegalArgumentException("Delay duration must not be a negative");
-            }
             this.delay = duration;
             return this;
         }
@@ -191,14 +231,11 @@ public class RetryExecutor<T> {
 
         public RetryExecutorBuilder<T> callTimeout(Duration duration) {
             Objects.requireNonNull(duration, "Call timeout duration must not be null");
-            if (duration.isNegative()) {
-                throw new IllegalArgumentException("Call timeout duration must not be a negative");
-            }
             this.callTimeout = duration;
             return this;
         }
 
-        public T run() {
+        public T run() throws ExecutionException, TimeoutException {
             RetryExecutor<T> retry = new RetryExecutor<>(
                     callable,
                     doOnError,
