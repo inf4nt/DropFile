@@ -136,6 +136,8 @@ public class RetryExecutor<T> {
             }
             throw e;
         } catch (Exception e) {
+            // Cancellation does not guarantee tack finished.
+            // TODO add CountdownLatch to control it
             future.cancel(true);
             throw e;
         }
