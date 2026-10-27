@@ -1125,4 +1125,220 @@ public class RetryExecutorTest {
         assertThat("TimeoutException should be propagated",
                 thrown, instanceOf(TimeoutException.class));
     }
+
+    @Test
+    void shouldWaitForCallableToFinishAfterTimeoutWhenItIgnoresInterruption() throws Exception {
+        CountDownLatch callableStarted = new CountDownLatch(1);
+        CountDownLatch interrupted = new CountDownLatch(1);
+        AtomicBoolean release = new AtomicBoolean();
+
+        ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+
+        try {
+            Future<Integer> result = executorService.submit(() ->
+                    RetryExecutor
+                            .call(() -> {
+                                callableStarted.countDown();
+                                while (!release.get()) {
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        interrupted.countDown();
+                                    }
+                                }
+                                return 1;
+                            })
+                            .attempts(1)
+                            .delay(Duration.ZERO)
+                            .callTimeout(Duration.ofMillis(50))
+                            .run()
+            );
+
+            try {
+                assertThat(
+                        "Callable should start",
+                        callableStarted.await(5, TimeUnit.SECONDS),
+                        is(true)
+                );
+
+                assertThat(
+                        "Callable should receive interruption after timeout",
+                        interrupted.await(5, TimeUnit.SECONDS),
+                        is(true)
+                );
+
+                assertThrows(
+                        TimeoutException.class,
+                        () -> result.get(200, TimeUnit.MILLISECONDS)
+                );
+            } finally {
+                release.set(true);
+            }
+
+            ExecutionException exception = assertThrows(
+                    ExecutionException.class,
+                    () -> result.get(1, TimeUnit.SECONDS)
+            );
+
+            assertThat(
+                    "Original TimeoutException should be propagated",
+                    exception.getCause(),
+                    instanceOf(TimeoutException.class)
+            );
+        } finally {
+            release.set(true);
+            executorService.shutdownNow();
+        }
+    }
+
+
+    @Test
+    void shouldContinueWaitingWhenWaitingThreadIsInterrupted() throws Exception {
+        CountDownLatch callableStarted = new CountDownLatch(1);
+        CountDownLatch callableInterrupted = new CountDownLatch(1);
+        CountDownLatch releaseCallable = new CountDownLatch(1);
+
+        AtomicReference<Thread> retryThread = new AtomicReference<>();
+        ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+
+        try {
+            Future<Boolean> result = executorService.submit(() -> {
+                Thread currentThread = Thread.currentThread();
+                retryThread.set(currentThread);
+                try {
+                    RetryExecutor
+                            .call(() -> {
+                                callableStarted.countDown();
+
+                                while (releaseCallable.getCount() > 0) {
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        callableInterrupted.countDown();
+                                    }
+                                }
+
+                                return 1;
+                            })
+                            .attempts(1)
+                            .delay(Duration.ZERO)
+                            .callTimeout(Duration.ofMillis(100))
+                            .run();
+                    throw new AssertionError("Expected TimeoutException");
+                } catch (TimeoutException e) {
+                    return currentThread.isInterrupted();
+                }
+            });
+
+            assertThat(
+                    "Callable should start",
+                    callableStarted.await(1, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(
+                    "Callable should receive interruption after timeout",
+                    callableInterrupted.await(1, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            retryThread.get().interrupt();
+
+            assertThrows(
+                    TimeoutException.class,
+                    () -> result.get(100, TimeUnit.MILLISECONDS)
+            );
+
+            releaseCallable.countDown();
+
+            assertThat(
+                    "Interrupt status should be restored after waiting",
+                    result.get(1, TimeUnit.SECONDS),
+                    is(true)
+            );
+        } finally {
+            releaseCallable.countDown();
+            executorService.shutdownNow();
+        }
+    }
+
+
+    @Test
+    void shouldAddInterruptedExceptionAsSuppressedWhenWaitingForCallableToFinish() throws Exception {
+        CountDownLatch callableStarted = new CountDownLatch(1);
+        CountDownLatch callableInterrupted = new CountDownLatch(1);
+        CountDownLatch releaseCallable = new CountDownLatch(1);
+
+        AtomicReference<Thread> retryThread = new AtomicReference<>();
+        ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+
+        try {
+            Future<?> result = executorService.submit(() -> {
+                retryThread.set(Thread.currentThread());
+                RetryExecutor
+                        .call(() -> {
+                            callableStarted.countDown();
+
+                            while (releaseCallable.getCount() > 0) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    callableInterrupted.countDown();
+                                }
+                                Thread.onSpinWait();
+                            }
+
+                            return 1;
+                        })
+                        .attempts(1)
+                        .delay(Duration.ZERO)
+                        .callTimeout(Duration.ofMillis(100))
+                        .run();
+                return null;
+            });
+
+            assertThat(
+                    "Callable should start",
+                    callableStarted.await(1, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(
+                    "Callable should receive interruption after timeout",
+                    callableInterrupted.await(1, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            retryThread.get().interrupt();
+
+            assertThrows(
+                    TimeoutException.class,
+                    () -> result.get(100, TimeUnit.MILLISECONDS)
+            );
+
+            releaseCallable.countDown();
+
+            ExecutionException thrown = assertThrows(
+                    ExecutionException.class,
+                    () -> result.get(1, TimeUnit.SECONDS)
+            );
+
+            Throwable cause = thrown.getCause();
+
+            assertThat(
+                    "Original TimeoutException should be propagated",
+                    cause,
+                    instanceOf(TimeoutException.class)
+            );
+
+            assertThat(
+                    "InterruptedException should be added as suppressed",
+                    cause.getSuppressed().length,
+                    is(1)
+            );
+
+            assertThat(
+                    "Suppressed exception should be InterruptedException",
+                    cause.getSuppressed()[0],
+                    instanceOf(InterruptedException.class)
+            );
+        } finally {
+            releaseCallable.countDown();
+            executorService.shutdownNow();
+        }
+    }
 }

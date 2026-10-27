@@ -127,7 +127,13 @@ public class RetryExecutor<T> {
             return callable.call();
         }
 
-        Future<T> future = EXECUTOR_SERVICE.submit(callable);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CallableCancelable<T> callableCancelable = new CallableCancelable<>(
+                callable,
+                new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(countDownLatch)
+        );
+        Future<T> future = EXECUTOR_SERVICE.submit(callableCancelable);
+
         try {
             return future.get(callTimeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (ExecutionException e) {
@@ -136,10 +142,33 @@ public class RetryExecutor<T> {
             }
             throw e;
         } catch (Exception e) {
-            // Cancellation does not guarantee tack finished.
-            // TODO add CountdownLatch to control it
             future.cancel(true);
+            callableCancelable.cancel();
+            awaitUninterruptibly(countDownLatch, e);
             throw e;
+        }
+    }
+
+    private static void awaitUninterruptibly(
+            CountDownLatch latch,
+            Throwable primaryException
+    ) {
+        boolean interrupted = false;
+
+        try {
+            while (true) {
+                try {
+                    latch.await();
+                    return;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                    primaryException.addSuppressed(e);
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
