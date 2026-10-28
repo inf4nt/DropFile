@@ -1,12 +1,17 @@
 package com.evolution.dropfiledaemon.service;
 
-import com.evolution.dropfile.common.ThrowableUtils;
+import com.evolution.dropfile.common.function.VoidCallable;
+import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.util.CallableCancelable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -15,91 +20,110 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class ConcurrentTaskService {
 
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService executorService;
+
+    private final ExecutorService downloadProcedureExecutorService;
+
+    @Autowired
+    public ConcurrentTaskService(DaemonApplicationProperties daemonApplicationProperties) {
+        this(daemonApplicationProperties.daemonDownloadProcedureThreadSize);
+    }
+
+    public ConcurrentTaskService(int downloadProcedureThreadSize) {
+        this.executorService = Executors.newVirtualThreadPerTaskExecutor();
+        this.downloadProcedureExecutorService = Executors.newFixedThreadPool(downloadProcedureThreadSize, Thread.ofVirtual().factory());
+    }
 
     @EventListener(ContextClosedEvent.class)
     public void close() {
         executorService.shutdownNow();
+        downloadProcedureExecutorService.shutdownNow();
     }
 
-    public void executeFailFast(List<Callable<Void>> callables,
-                                int threadCount,
-                                ExecutorService executorService) throws ExecutionException {
-        if (threadCount <= 0) {
-            throw new IllegalArgumentException("Thread count must be greater than zero");
-        }
+    public void executeFailFastDownloadProcedure(Collection<VoidCallable> callables) throws ExecutionException {
         if (CollectionUtils.isEmpty(callables)) {
             return;
         }
 
-        AtomicReference<Throwable> firstThrowable = new AtomicReference<>();
-        List<Future<?>> activeFutures = new CopyOnWriteArrayList<>();
-        Semaphore semaphore = new Semaphore(threadCount);
+        CountDownLatch countDownLatch = new CountDownLatch(callables.size());
 
-        for (Callable<Void> callable : callables) {
-            if (firstThrowable.get() != null) {
-                break;
-            }
-
-            try {
-                semaphore.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                firstThrowable.compareAndSet(null, e);
-                break;
-            }
-
-            Future<?> future;
-            try {
-                future = executorService.submit(() -> {
-                    try {
-                        if (firstThrowable.get() != null) {
-                            return;
-                        }
-                        callable.call();
-                    } catch (Throwable t) {
-                        if (firstThrowable.compareAndSet(null, t)) {
-                            activeFutures.forEach(it -> it.cancel(true));
-                        }
-                    } finally {
-                        semaphore.release();
+        List<CallableCancelable<Void>> callableCancelableList = callables.stream()
+                .map(it -> new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        it.call();
+                        return null;
                     }
-                });
-            } catch (Throwable t) {
-                semaphore.release();
-                if (firstThrowable.compareAndSet(null, t)) {
-                    activeFutures.forEach(it -> it.cancel(true));
-                }
+                })
+                .map(it -> new CallableCancelable<>(
+                        it,
+                        new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
+                                countDownLatch
+                        )
+                ))
+                .toList();
+
+        CompletionService<Void> completionService = new ExecutorCompletionService<>(downloadProcedureExecutorService);
+
+        List<Future<Void>> futures = new ArrayList<>(callables.size());
+        AtomicReference<Throwable> throwableAtomicReference = new AtomicReference<>();
+
+        for (CallableCancelable<Void> callable : callableCancelableList) {
+            Future<Void> future;
+            try {
+                future = completionService.submit(callable);
+            } catch (RuntimeException e) {
+                throwableAtomicReference.compareAndSet(null, e);
                 break;
             }
-
-            activeFutures.add(future);
+            futures.add(future);
         }
 
-        for (Future<?> future : activeFutures) {
-            try {
-                future.get();
-            } catch (CancellationException _) {
+        if (throwableAtomicReference.get() == null) {
+            for (int i = 0; i < futures.size(); i++) {
+                try {
+                    completionService.take().get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throwableAtomicReference.compareAndSet(null, e);
+                    break;
+                } catch (CancellationException _) {
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                firstThrowable.compareAndSet(null, e);
-            } catch (ExecutionException e) {
-                firstThrowable.compareAndSet(null, e.getCause());
+                } catch (ExecutionException e) {
+                    throwableAtomicReference.compareAndSet(null, e);
+                    break;
+                }
             }
         }
 
-        Throwable throwable = firstThrowable.get();
-        if (throwable != null) {
-            if (ThrowableUtils.checkThrowable(throwable, InterruptedException.class)) {
-                Thread.currentThread().interrupt();
-            }
+        try {
+            Throwable throwable = throwableAtomicReference.get();
+            if (throwable != null) {
+                futures.forEach(it -> it.cancel(true));
+                callableCancelableList.forEach(it -> it.cancel());
 
-            if (throwable instanceof Error error) {
-                throw error;
+                if (throwable instanceof ExecutionException executionException) {
+                    Throwable cause = executionException.getCause();
+                    if (cause instanceof Error error) {
+                        throwableAtomicReference.set(error);
+                        throw error;
+                    }
+                    if (cause instanceof RuntimeException runtimeException) {
+                        throwableAtomicReference.set(runtimeException);
+                        throw runtimeException;
+                    }
+                    throw executionException;
+                }
+                if (throwable instanceof RuntimeException runtimeException) {
+                    throwableAtomicReference.set(runtimeException);
+                    throw runtimeException;
+                }
+                ExecutionException executionException = new ExecutionException(throwable.getMessage(), throwable);
+                throwableAtomicReference.set(executionException);
+                throw executionException;
             }
-
-            throw new ExecutionException(throwable.getMessage(), throwable);
+        } finally {
+            awaitUninterruptibly(countDownLatch, throwableAtomicReference.get());
         }
     }
 
@@ -113,6 +137,7 @@ public class ConcurrentTaskService {
             return;
         }
 
+        // TODO and await
         try {
             executorService.invokeAny(callables, timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
@@ -120,6 +145,29 @@ public class ConcurrentTaskService {
             throw new ExecutionException(e.getMessage(), e);
         } catch (TimeoutException e) {
             throw new ExecutionException(e.getMessage(), e);
+        }
+    }
+
+    private static void awaitUninterruptibly(
+            CountDownLatch latch,
+            Throwable primaryThrowable
+    ) {
+        boolean interrupted = false;
+
+        try {
+            while (true) {
+                try {
+                    latch.await();
+                    return;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                    primaryThrowable.addSuppressed(e);
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

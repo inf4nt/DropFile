@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.function.VoidCallable;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
@@ -46,8 +47,6 @@ public class SingleRunDownloadProcedure {
 
     private final FileHelper fileHelper;
 
-    private final DownloadProcedureConfiguration configuration;
-
     private final DownloadProcedureRequest request;
 
     public DownloadProcedureRequest getRequest() {
@@ -62,6 +61,7 @@ public class SingleRunDownloadProcedure {
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
             try {
+                // TODO get rid of SHUTDOWN_TIMEOUT
                 if (!executorService.awaitTermination(SHUTDOWN_TIMEOUT.toNanos(), TimeUnit.NANOSECONDS)) {
                     log.info(
                             "Download procedure was not terminated within {} ms. Operation: {}",
@@ -173,20 +173,14 @@ public class SingleRunDownloadProcedure {
         try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(),
                 StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE)) {
-            List<Callable<Void>> tasks = request.fileManifest().chunks()
+            List<VoidCallable> tasks = request.fileManifest().chunks()
                     .stream()
-                    .map(chunkManifest -> (Callable<Void>) () -> {
+                    .map(chunkManifest -> (VoidCallable) () -> {
                         handleSingleChunk(fileChannel, chunkManifest, compressible);
                         throughputMeter.add(chunkManifest.size());
-                        return null;
                     })
                     .toList();
-            concurrentTaskService.executeFailFast(tasks, configuration.maxThreadSize(), executorService);
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof Error error) {
-                throw error;
-            }
-            throw (Exception) e.getCause();
+            concurrentTaskService.executeFailFastDownloadProcedure(tasks);
         }
     }
 

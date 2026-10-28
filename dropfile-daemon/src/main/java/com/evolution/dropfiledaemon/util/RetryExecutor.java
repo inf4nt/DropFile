@@ -149,7 +149,7 @@ public class RetryExecutor<T> {
         }
     }
 
-    private static void awaitUninterruptibly(
+    private void awaitUninterruptibly(
             CountDownLatch latch,
             Throwable primaryException
     ) {

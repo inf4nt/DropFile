@@ -36,10 +36,6 @@ public class DownloadProcedureFactory {
                 concurrentTaskService,
                 tunnelClientGateway,
                 fileHelper,
-                new DownloadProcedureConfiguration(
-                        downloadProcedureThreadSize,
-                        manifestChunkMaxSize
-                ),
                 new DownloadProcedureRequest(
                         operation,
                         fingerprint,
