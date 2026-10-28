@@ -127,7 +127,7 @@ public class ConcurrentTaskService {
         }
     }
 
-    public void invokeAny(List<Callable<Void>> callables, Duration timeout) throws ExecutionException {
+    public void invokeAny(List<Callable<Void>> callables, Duration timeout) throws ExecutionException, TimeoutException {
         Objects.requireNonNull(timeout, "timeout must not be null");
         if (!timeout.isPositive()) {
             throw new IllegalArgumentException("timeout must be positive");
@@ -142,9 +142,7 @@ public class ConcurrentTaskService {
             executorService.invokeAny(callables, timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ExecutionException(e.getMessage(), e);
-        } catch (TimeoutException e) {
-            throw new ExecutionException(e.getMessage(), e);
+            throw new IllegalStateException("Call was interrupted", e);
         }
     }
 
