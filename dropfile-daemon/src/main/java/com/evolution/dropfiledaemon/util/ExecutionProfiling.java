@@ -10,13 +10,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ExecutionProfiling {
 
-    public static void run(String operation, VoidCallable callable) {
+    public static void run(String operation, VoidCallable voidCallable) {
         run(
                 operation,
-                () -> {
-                    callable.call();
-                    return null;
-                }
+                () -> voidCallable.toCallable()
         );
     }
 
@@ -35,7 +32,7 @@ public class ExecutionProfiling {
             long end = System.currentTimeMillis();
             long duration = end - start;
             long seconds = TimeUnit.MILLISECONDS.toSeconds(duration);
-            log.error("[{}] finished with error. Millis {} seconds {}", operation, duration, seconds);
+            log.error("[{}] finished with error [{}]. Millis {} seconds {}", operation, e.getMessage(), duration, seconds);
             throw e;
         }
     }

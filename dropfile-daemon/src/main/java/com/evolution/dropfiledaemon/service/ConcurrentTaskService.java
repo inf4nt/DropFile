@@ -48,13 +48,7 @@ public class ConcurrentTaskService {
         CountDownLatch countDownLatch = new CountDownLatch(callables.size());
 
         List<CallableCancelable<Void>> callableCancelableList = callables.stream()
-                .map(it -> new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        it.call();
-                        return null;
-                    }
-                })
+                .map(it -> it.toCallable())
                 .map(it -> new CallableCancelable<>(
                         it,
                         new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
@@ -127,7 +121,7 @@ public class ConcurrentTaskService {
         }
     }
 
-    public void invokeAny(List<Callable<Void>> callables, Duration timeout) throws ExecutionException, TimeoutException {
+    public void invokeAny(List<VoidCallable> callables, Duration timeout) throws ExecutionException, TimeoutException {
         Objects.requireNonNull(timeout, "timeout must not be null");
         if (!timeout.isPositive()) {
             throw new IllegalArgumentException("timeout must be positive");
@@ -137,9 +131,11 @@ public class ConcurrentTaskService {
             return;
         }
 
+        List<Callable<Void>> callablesVoidList = callables.stream().map(it -> it.toCallable()).toList();
+
         // TODO and await
         try {
-            executorService.invokeAny(callables, timeout.toNanos(), TimeUnit.NANOSECONDS);
+            executorService.invokeAny(callablesVoidList, timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Call was interrupted", e);

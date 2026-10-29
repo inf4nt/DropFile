@@ -53,10 +53,7 @@ public class LockableOperation implements Purgeable {
     }
 
     public void executeWithKeyLock(String key, VoidCallable voidCallable) throws ExecutionException {
-        executeWithKeyLock(key, () -> {
-            voidCallable.call();
-            return null;
-        });
+        executeWithKeyLock(key, () -> voidCallable.toCallable());
     }
 
     public <R> R executeWithGlobalLock(Callable<R> callable) throws ExecutionException {
@@ -69,10 +66,7 @@ public class LockableOperation implements Purgeable {
     }
 
     public void executeWithGlobalLock(VoidCallable callable) throws ExecutionException {
-        executeWithGlobalLock(() -> {
-            callable.call();
-            return null;
-        });
+        executeWithGlobalLock(() -> callable.toCallable());
     }
 
     private void acquireLock(Lock lock, String lockName) {

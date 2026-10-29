@@ -12,6 +12,7 @@ import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAddressRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAliasRequestDTO;
 import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
+import com.evolution.dropfile.common.function.VoidCallable;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
@@ -354,11 +355,10 @@ public class ApiHandshakeFacade {
         AliasValidator.validateOrThrow(alias);
         Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
                 .getRequiredByAlias(alias);
-        List<Callable<Void>> tasks = listOfHandshakes.keySet()
+        List<VoidCallable> tasks = listOfHandshakes.keySet()
                 .stream()
-                .map(fingerprint -> (Callable<Void>) () -> {
+                .map(fingerprint -> (VoidCallable) () -> {
                     handshakeReconnectFingerprint(fingerprint);
-                    return null;
                 })
                 .toList();
         try {
