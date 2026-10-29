@@ -18,19 +18,24 @@ public class CallableCancelable<V> implements Callable<V> {
 
     @Override
     public V call() throws Exception {
-        try {
-            CallableCancelableState exchange = state.compareAndExchange(CallableCancelableState.PENDING, CallableCancelableState.RUNNING);
-            if (exchange == CallableCancelableState.PENDING) {
-                V call = delegate.call();
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException();
-                }
-                return call;
-            }
+        CallableCancelableState exchange = state.compareAndExchange(
+                CallableCancelableState.PENDING,
+                CallableCancelableState.RUNNING
+        );
+
+        if (exchange != CallableCancelableState.PENDING) {
             if (exchange == CallableCancelableState.RUNNING) {
                 throw new IllegalStateException("Already running");
             }
             throw new CancellationException();
+        }
+
+        try {
+            V result = delegate.call();
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
+            return result;
         } finally {
             if (state.compareAndSet(CallableCancelableState.RUNNING, CallableCancelableState.CANCELED_FINISHED)) {
                 callableCancelableMiddleware.doOnFinally();
@@ -51,7 +56,6 @@ public class CallableCancelable<V> implements Callable<V> {
     }
 
     public interface CallableCancelableMiddleware {
-
         void doOnCancel();
 
         void doOnFinally();

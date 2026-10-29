@@ -23,7 +23,6 @@ public class RetryExecutor<T> {
 
     private final BiConsumer<Integer, Exception> doOnError;
 
-    // TODO get rid of it. No one uses it
     private final BiConsumer<Integer, T> doOnSuccessful;
 
     private final Predicate<RetryIfContainer<T>> retryIf;
@@ -46,7 +45,7 @@ public class RetryExecutor<T> {
                 boolean continueRetry = false;
                 try {
                     continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, call, null));
-                } catch (Exception _) {
+                } catch (Throwable _) {
                 }
 
                 if (!continueRetry) {
@@ -73,7 +72,7 @@ public class RetryExecutor<T> {
                 boolean continueRetry = false;
                 try {
                     continueRetry = retryIf.test(new RetryIfContainer<>(currentAttempt, null, e));
-                } catch (Exception _) {
+                } catch (Throwable _) {
                 }
 
                 if (!continueRetry) {
@@ -104,7 +103,9 @@ public class RetryExecutor<T> {
             throw toBasicExpectedExceptions(exception);
         }
 
-        IllegalStateException illegalStateException = new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
+        IllegalStateException illegalStateException = new IllegalStateException(
+                "Retry failed after " + attempts + " attempts with invalid result"
+        );
         throw new ExecutionException(illegalStateException.getMessage(), illegalStateException);
     }
 
@@ -115,7 +116,6 @@ public class RetryExecutor<T> {
         }
 
         Exception first = exceptions.getFirst();
-
         for (int i = 1; i < exceptions.size(); i++) {
             Throwable nested = exceptions.get(i);
             if (nested instanceof ExecutionException && nested.getCause() != null) {
@@ -141,9 +141,7 @@ public class RetryExecutor<T> {
         try {
             future = EXECUTOR_SERVICE.submit(callableCancelable);
         } catch (Throwable throwable) {
-            ExecutionException failure = throwable instanceof ExecutionException
-                    ? (ExecutionException) throwable
-                    : new ExecutionException(throwable.getMessage(), throwable);
+            ExecutionException failure = new ExecutionException(throwable.getMessage(), throwable);
             callableCancelable.cancel();
             awaitUninterruptibly(countDownLatch, failure);
             throw failure;

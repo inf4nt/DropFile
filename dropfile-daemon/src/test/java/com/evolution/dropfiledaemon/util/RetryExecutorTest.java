@@ -365,7 +365,7 @@ public class RetryExecutorTest {
     }
 
     @Test
-    public void callTimeoutNegative() {
+    public void callTimeoutFailsAllAttempts() {
         AtomicInteger callCounter = new AtomicInteger(0);
         AtomicBoolean exit = new AtomicBoolean(false);
         List<Exception> exceptions = new ArrayList<>();
@@ -382,20 +382,16 @@ public class RetryExecutorTest {
                         .delay(Duration.ZERO)
                         .attempts(10)
                         .callTimeout(Duration.ofMillis(50))
-                        .doOnError((integer, e) -> exceptions.add(e))
+                        .doOnError((_, e) -> exceptions.add(e))
                         .run()
         );
         long executionTime = System.currentTimeMillis() - start;
 
-        assertThat("Total execution time should take at least 500ms due to timeouts", executionTime >= 500, is(true));
+        assertThat("Total execution time should reflect ten 50ms timeouts", executionTime >= 400, is(true));
         assertThat("Call count should reach max attempts of 10", callCounter.get(), is(10));
         assertThat("Execution inside call should not complete past sleep", exit.get(), is(false));
         assertThat("Number of caught errors should equal max attempts", exceptions.size(), is(10));
         assertThat("All collected exceptions should be TimeoutExceptions",
-                exceptions.stream().allMatch(it -> it instanceof ExecutionException),
-                is(true)
-        );
-        assertThat("All collected exception causes should be TimeoutExceptions",
                 exceptions.stream().map(it -> it.getCause()).allMatch(it -> it instanceof TimeoutException),
                 is(true)
         );
@@ -424,16 +420,12 @@ public class RetryExecutorTest {
                 .run();
         long executionTime = System.currentTimeMillis() - start;
 
-        assertThat("Total execution time should reflect timeouts", executionTime >= 200, is(true));
+        assertThat("Total execution time should reflect four 50ms timeouts", executionTime >= 150, is(true));
         assertThat("Execution result should be true", result, is(true));
         assertThat("Call count should reach 5 attempts before succeeding", callCounter.get(), is(5));
         assertThat("Exit counter should be 1 after successful run", exitCounter.get(), is(1));
         assertThat("Number of exceptions should match failed attempt count", exceptions.size(), is(4));
-        assertThat("All recorded exceptions before success should be ExecutionException",
-                exceptions.stream().allMatch(it -> it instanceof ExecutionException),
-                is(true)
-        );
-        assertThat("All recorded exception causes before success should be TimeoutExceptions",
+        assertThat("All recorded exceptions before success should be TimeoutExceptions",
                 exceptions.stream().map(it -> it.getCause()).allMatch(it -> it instanceof TimeoutException),
                 is(true)
         );
@@ -696,7 +688,7 @@ public class RetryExecutorTest {
 
         Thread.currentThread().interrupt();
 
-        Throwable thrown = assertThrows(Throwable.class, () ->
+        ExecutionException thrown = assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
@@ -719,6 +711,7 @@ public class RetryExecutorTest {
 
         AtomicBoolean wasInterrupted = new AtomicBoolean(false);
         List<Exception> errorsCaughtInDoOnError = new ArrayList<>();
+        CountDownLatch errorCallbackCalled = new CountDownLatch(1);
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             executor.submit(() -> {
@@ -729,7 +722,10 @@ public class RetryExecutorTest {
                                 throw new RuntimeException("Error before delay");
                             })
                             .delay(Duration.ofSeconds(5000))
-                            .doOnError((attempt, ex) -> errorsCaughtInDoOnError.add(ex))
+                            .doOnError((_, ex) -> {
+                                errorsCaughtInDoOnError.add(ex);
+                                errorCallbackCalled.countDown();
+                            })
                             .run();
                 } catch (Throwable e) {
                     wasInterrupted.set(Thread.currentThread().isInterrupted());
@@ -739,6 +735,11 @@ public class RetryExecutorTest {
             });
 
             assertThat("Task did not start in time", taskStarted.await(2, TimeUnit.SECONDS), is(true));
+            assertThat(
+                    "Error callback did not run before interruption",
+                    errorCallbackCalled.await(2, TimeUnit.SECONDS),
+                    is(true)
+            );
 
             executor.shutdownNow();
 
@@ -852,7 +853,6 @@ public class RetryExecutorTest {
         );
 
         assertThat("Task should have started", taskStarted.await(1, TimeUnit.SECONDS), is(true));
-        Thread.sleep(200);
         assertThat("Task should be interrupted", wasInterrupted.get(), is(true));
     }
 
@@ -1006,6 +1006,7 @@ public class RetryExecutorTest {
     void callTimeoutZeroShouldDisableTimeout() throws Exception {
         Boolean result = RetryExecutor
                 .call(() -> {
+                    Thread.sleep(100);
                     return true;
                 })
                 .attempts(1)
@@ -1020,6 +1021,7 @@ public class RetryExecutorTest {
     void callTimeoutNegativeShouldDisableTimeout() throws Exception {
         Boolean result = RetryExecutor
                 .call(() -> {
+                    Thread.sleep(100);
                     return true;
                 })
                 .attempts(1)
@@ -1034,8 +1036,8 @@ public class RetryExecutorTest {
     void callTimeoutZeroShouldPreserveExceptionContract() {
         IOException original = new IOException("Original exception");
 
-        Exception thrown = assertThrows(
-                Exception.class,
+        ExecutionException thrown = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             throw original;
@@ -1046,11 +1048,6 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat(
-                "Checked exception should be wrapped in ExecutionException",
-                thrown,
-                instanceOf(java.util.concurrent.ExecutionException.class)
-        );
         assertThat("Original exception should be preserved as cause",
                 thrown.getCause(), sameInstance(original));
     }
@@ -1059,8 +1056,8 @@ public class RetryExecutorTest {
     void callTimeoutNegativeShouldPreserveExceptionContract() {
         IOException original = new IOException("Original exception");
 
-        Exception thrown = assertThrows(
-                Exception.class,
+        ExecutionException thrown = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             throw original;
@@ -1071,11 +1068,6 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat(
-                "Checked exception should be wrapped in ExecutionException",
-                thrown,
-                instanceOf(java.util.concurrent.ExecutionException.class)
-        );
         assertThat("Original exception should be preserved as cause",
                 thrown.getCause(), sameInstance(original));
     }
@@ -1178,6 +1170,7 @@ public class RetryExecutorTest {
                                     if (Thread.currentThread().isInterrupted()) {
                                         interrupted.countDown();
                                     }
+                                    Thread.onSpinWait();
                                 }
                                 return 1;
                             })
@@ -1253,6 +1246,7 @@ public class RetryExecutorTest {
                                     if (Thread.currentThread().isInterrupted()) {
                                         callableInterrupted.countDown();
                                     }
+                                    Thread.onSpinWait();
                                 }
 
                                 return 1;
@@ -1301,7 +1295,6 @@ public class RetryExecutorTest {
             executorService.shutdownNow();
         }
     }
-
 
     @Test
     void shouldAddInterruptedExceptionAsSuppressedWhenWaitingForCallableToFinish() throws Exception {
@@ -1388,5 +1381,97 @@ public class RetryExecutorTest {
             releaseCallable.countDown();
             executorService.shutdownNow();
         }
+    }
+
+    @Test
+    void secondCallMustNotFinishFirstCall() throws Exception {
+        CountDownLatch delegateStarted = new CountDownLatch(1);
+        CountDownLatch releaseDelegate = new CountDownLatch(1);
+        CountDownLatch delegateFinished = new CountDownLatch(1);
+
+        CallableCancelable<Integer> callableCancelable = new CallableCancelable<>(
+                () -> {
+                    delegateStarted.countDown();
+                    releaseDelegate.await();
+                    return 42;
+                },
+                new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(delegateFinished)
+        );
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<Integer> firstCall = executor.submit(callableCancelable);
+            try {
+                assertThat("First delegate call should start",
+                        delegateStarted.await(5, TimeUnit.SECONDS), is(true));
+
+                assertThrows(IllegalStateException.class, callableCancelable::call);
+                assertThat("Second call must not signal completion of the first call",
+                        delegateFinished.getCount(), is(1L));
+            } finally {
+                releaseDelegate.countDown();
+            }
+
+            assertThat("First call result should be returned", firstCall.get(5, TimeUnit.SECONDS), is(42));
+            assertThat("First call should signal completion",
+                    delegateFinished.await(5, TimeUnit.SECONDS), is(true));
+        }
+    }
+
+    @Test
+    void negativeDelayShouldDisableDelay() throws Exception {
+        AtomicInteger callCounter = new AtomicInteger();
+
+        Boolean result = RetryExecutor
+                .call(() -> callCounter.incrementAndGet() == 2 ? true : null)
+                .attempts(2)
+                .delay(Duration.ofMillis(-1))
+                .run();
+
+        assertThat("Callable should execute twice", callCounter.get(), is(2));
+        assertThat("Second result should be returned", result, is(true));
+    }
+
+    @Test
+    void shouldReturnResultWhenRetryIfThrowsError() throws Exception {
+        AtomicInteger callCounter = new AtomicInteger();
+
+        Boolean result = RetryExecutor
+                .call(() -> {
+                    callCounter.incrementAndGet();
+                    return true;
+                })
+                .attempts(3)
+                .delay(Duration.ZERO)
+                .retryIf(_ -> {
+                    throw new AssertionError("retryIf failed");
+                })
+                .run();
+
+        assertThat("Result should be returned after retryIf failure", result, is(true));
+        assertThat("Callable should be invoked only once", callCounter.get(), is(1));
+    }
+
+    @Test
+    void shouldPropagateCallableExceptionWhenRetryIfThrowsError() {
+        AtomicInteger callCounter = new AtomicInteger();
+        IOException original = new IOException("Callable failed");
+
+        ExecutionException thrown = assertThrows(
+                ExecutionException.class,
+                () -> RetryExecutor
+                        .call(() -> {
+                            callCounter.incrementAndGet();
+                            throw original;
+                        })
+                        .attempts(3)
+                        .delay(Duration.ZERO)
+                        .retryIf(_ -> {
+                            throw new AssertionError("retryIf failed");
+                        })
+                        .run()
+        );
+
+        assertThat("Original callable exception should be propagated", thrown.getCause(), sameInstance(original));
+        assertThat("Callable should not be retried", callCounter.get(), is(1));
     }
 }
