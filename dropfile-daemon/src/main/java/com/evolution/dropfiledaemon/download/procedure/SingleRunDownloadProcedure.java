@@ -184,7 +184,7 @@ public class SingleRunDownloadProcedure {
         }
     }
 
-    private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest, boolean compressible) throws ExecutionException, TimeoutException {
+    private void handleSingleChunk(FileChannel writeToFileChannel, ChunkManifest chunkManifest, boolean compressible) throws ExecutionException {
         RetryExecutor
                 .call(() -> {
                     validateInterrupted();

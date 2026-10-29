@@ -21,7 +21,11 @@ public class CallableCancelable<V> implements Callable<V> {
         try {
             CallableCancelableState exchange = state.compareAndExchange(CallableCancelableState.PENDING, CallableCancelableState.RUNNING);
             if (exchange == CallableCancelableState.PENDING) {
-                return delegate.call();
+                V call = delegate.call();
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
+                return call;
             }
             if (exchange == CallableCancelableState.RUNNING) {
                 throw new IllegalStateException("Already running");

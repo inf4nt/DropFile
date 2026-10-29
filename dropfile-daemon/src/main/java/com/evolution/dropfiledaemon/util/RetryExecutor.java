@@ -23,6 +23,7 @@ public class RetryExecutor<T> {
 
     private final BiConsumer<Integer, Exception> doOnError;
 
+    // TODO get rid of it. No one uses it
     private final BiConsumer<Integer, T> doOnSuccessful;
 
     private final Predicate<RetryIfContainer<T>> retryIf;
@@ -33,7 +34,7 @@ public class RetryExecutor<T> {
 
     private final Duration callTimeout;
 
-    public T run() throws ExecutionException, TimeoutException {
+    public T run() throws ExecutionException {
         List<Exception> exceptions = new ArrayList<>();
         int currentAttempt = 1;
         while (currentAttempt <= attempts) {
@@ -58,12 +59,15 @@ public class RetryExecutor<T> {
                     return call;
                 }
             } catch (Exception e) {
+                if (ThrowableUtils.checkThrowable(e, Error.class)) {
+                    throw toBasicExpectedExceptions(e);
+                }
                 if (ThrowableUtils.checkThrowable(e, InterruptedException.class)) {
                     Thread.currentThread().interrupt();
-                    rethrowToBasicExpectedExceptions(e);
+                    throw toBasicExpectedExceptions(e);
                 }
                 if (ThrowableUtils.checkThrowable(e, ClosedChannelException.class)) {
-                    rethrowToBasicExpectedExceptions(e);
+                    throw toBasicExpectedExceptions(e);
                 }
 
                 boolean continueRetry = false;
@@ -73,7 +77,7 @@ public class RetryExecutor<T> {
                 }
 
                 if (!continueRetry) {
-                    rethrowToBasicExpectedExceptions(e);
+                    throw toBasicExpectedExceptions(e);
                 }
 
                 exceptions.add(e);
@@ -90,19 +94,18 @@ public class RetryExecutor<T> {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw ThrowableUtils.mapExceptionTo(
-                            e,
-                            it -> new IllegalStateException("Sleep retry was interrupted", it)
-                    );
+                    throw toBasicExpectedExceptions(e);
                 }
             }
         }
 
         Exception exception = buildException(exceptions);
         if (exception != null) {
-            rethrowToBasicExpectedExceptions(exception);
+            throw toBasicExpectedExceptions(exception);
         }
-        throw new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
+
+        IllegalStateException illegalStateException = new IllegalStateException("Retry failed after " + attempts + " attempts with invalid result");
+        throw new ExecutionException(illegalStateException.getMessage(), illegalStateException);
     }
 
     @Nullable
@@ -114,47 +117,62 @@ public class RetryExecutor<T> {
         Exception first = exceptions.getFirst();
 
         for (int i = 1; i < exceptions.size(); i++) {
-            Exception nested = exceptions.get(i);
-            if (first != nested) {
+            Throwable nested = exceptions.get(i);
+            if (nested instanceof ExecutionException && nested.getCause() != null) {
+                nested = nested.getCause();
+            }
+            if (first != nested && first.getCause() != nested) {
                 first.addSuppressed(nested);
             }
         }
         return first;
     }
 
-    private T callWithTimeoutIfPresent() throws Exception {
-        if (callTimeout == null || !callTimeout.isPositive()) {
-            return callable.call();
-        }
-
+    private T callWithTimeoutIfPresent() throws ExecutionException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         CallableCancelable<T> callableCancelable = new CallableCancelable<>(
                 callable,
-                new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(countDownLatch)
+                new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
+                        countDownLatch
+                )
         );
-        Future<T> future = EXECUTOR_SERVICE.submit(callableCancelable);
+
+        Future<T> future;
+        try {
+            future = EXECUTOR_SERVICE.submit(callableCancelable);
+        } catch (Throwable throwable) {
+            ExecutionException failure = throwable instanceof ExecutionException
+                    ? (ExecutionException) throwable
+                    : new ExecutionException(throwable.getMessage(), throwable);
+            callableCancelable.cancel();
+            awaitUninterruptibly(countDownLatch, failure);
+            throw failure;
+        }
 
         try {
+            if (callTimeout == null || !callTimeout.isPositive()) {
+                return future.get();
+            }
             return future.get(callTimeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (ExecutionException e) {
-            if (e.getCause() instanceof Error error) {
-                throw error;
-            }
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
+            ExecutionException failure = new ExecutionException(throwable.getMessage(), throwable);
             future.cancel(true);
             callableCancelable.cancel();
-            awaitUninterruptibly(countDownLatch, e);
-            throw e;
+
+            awaitUninterruptibly(countDownLatch, failure);
+
+            if (throwable instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            throw failure;
         }
     }
 
-    private void awaitUninterruptibly(
-            CountDownLatch latch,
-            Throwable primaryException
-    ) {
+    private void awaitUninterruptibly(CountDownLatch latch, Throwable primaryException) {
         boolean interrupted = false;
-
         try {
             while (true) {
                 try {
@@ -172,42 +190,11 @@ public class RetryExecutor<T> {
         }
     }
 
-    private void rethrowToBasicExpectedExceptions(Exception exception) throws ExecutionException, TimeoutException {
-        if (exception instanceof RuntimeException runtimeException) {
-            throw runtimeException;
-        }
-        if (exception instanceof TimeoutException timeoutException) {
-            throw timeoutException;
-        }
-        if (exception instanceof InterruptedException interruptedException) {
-            throw ThrowableUtils.mapExceptionTo(
-                    interruptedException,
-                    it -> new IllegalStateException("Call was interrupted", it)
-            );
-        }
+    private ExecutionException toBasicExpectedExceptions(Exception exception) {
         if (exception instanceof ExecutionException executionException) {
-            Throwable cause = executionException.getCause();
-            if (cause instanceof Error error) {
-                throw error;
-            }
-            if (cause instanceof RuntimeException runtimeException) {
-                throw runtimeException;
-            }
-            if (cause instanceof TimeoutException timeoutException) {
-                throw timeoutException;
-            }
-            if (cause instanceof InterruptedException interruptedException) {
-                throw ThrowableUtils.mapExceptionTo(
-                        interruptedException,
-                        it -> new IllegalStateException("Call was interrupted", it)
-                );
-            }
-            throw executionException;
+            return executionException;
         }
-        throw ThrowableUtils.mapExceptionTo(
-                exception,
-                it -> new ExecutionException(it.getMessage(), it)
-        );
+        return new ExecutionException(exception.getMessage(), exception);
     }
 
     public static <T> RetryExecutorBuilder<T> call(Callable<T> callable) {
@@ -266,7 +253,7 @@ public class RetryExecutor<T> {
             return this;
         }
 
-        public T run() throws ExecutionException, TimeoutException {
+        public T run() throws ExecutionException {
             RetryExecutor<T> retry = new RetryExecutor<>(
                     callable,
                     doOnError,

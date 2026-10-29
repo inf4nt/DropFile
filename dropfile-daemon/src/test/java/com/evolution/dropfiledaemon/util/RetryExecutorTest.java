@@ -69,8 +69,8 @@ public class RetryExecutorTest {
         AtomicReference<List<Integer>> attemptsRetryIf = new AtomicReference<>(new ArrayList<>());
         AtomicReference<List<Exception>> exceptionRetryIf = new AtomicReference<>(new ArrayList<>());
 
-        RuntimeException e = assertThrows(
-                RuntimeException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             int i = called.incrementAndGet();
@@ -111,7 +111,7 @@ public class RetryExecutorTest {
 
         assertThat(
                 "Exception messages should match attempt numbers",
-                exceptionRetryIf.get().stream().map(Throwable::getMessage).toList(),
+                exceptionRetryIf.get().stream().map(it -> it.getCause()).map(Throwable::getMessage).toList(),
                 hasItems("test message 1", "test message 2", "test message 3")
         );
     }
@@ -120,15 +120,15 @@ public class RetryExecutorTest {
     public void failsIfResultIsNull() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        IllegalStateException e = assertThrows(
-                IllegalStateException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
                             return null;
                         })
                         .attempts(1)
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .run()
         );
 
@@ -140,18 +140,19 @@ public class RetryExecutorTest {
     public void failsIfExceptionIsThrown() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        RuntimeException e = assertThrows(
-                RuntimeException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
                             throw new RuntimeException();
                         })
                         .attempts(1)
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .run()
         );
 
+        assertThat(e.getCause(), isA(RuntimeException.class));
         assertThat("Suppressed exceptions list should be empty for single attempt", e.getSuppressed().length, is(0));
         assertThat("Task should have been called once", called.get(), is(true));
     }
@@ -160,8 +161,8 @@ public class RetryExecutorTest {
     public void throwsDuringCall() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             called.set(true);
@@ -172,8 +173,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Exception class should be RuntimeException", exception.getClass(), is(RuntimeException.class));
-        assertThat("Exception message should match the thrown message", exception.getMessage(), is("test message"));
+        assertThat("Exception message should match the thrown message", exception.getCause().getMessage(), is("test message"));
         assertThat("Task should have been called once", called.get(), is(true));
     }
 
@@ -321,7 +321,7 @@ public class RetryExecutorTest {
         assertThat("Recorded attempt numbers in doOnError should be 1, 2, 3", attemptReference.get(), hasItems(1, 2, 3));
 
         @SuppressWarnings("unchecked")
-        List<Class<?>> list = (List) exceptionReference.get().stream().map(Object::getClass).toList();
+        List<Class<?>> list = (List) exceptionReference.get().stream().map(it -> it.getCause()).map(Object::getClass).toList();
         assertThat(
                 "Caught exception types should match thrown types",
                 list,
@@ -330,7 +330,7 @@ public class RetryExecutorTest {
 
         assertThat(
                 "Caught exception messages should match thrown messages",
-                exceptionReference.get().stream().map(Throwable::getMessage).toList(),
+                exceptionReference.get().stream().map(it -> it.getCause()).map(Throwable::getMessage).toList(),
                 hasItems("test message 1", "test message 2", "test message 3")
         );
     }
@@ -339,8 +339,8 @@ public class RetryExecutorTest {
     public void exceptionIfRetryReturnFalse() {
         AtomicInteger counter = new AtomicInteger(0);
 
-        IllegalArgumentException e = assertThrows(
-                IllegalArgumentException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             counter.incrementAndGet();
@@ -350,16 +350,17 @@ public class RetryExecutorTest {
                             return null;
                         })
                         .retryIf(it -> {
-                            if (it.exception() instanceof IllegalArgumentException) {
+                            if (it.exception() != null
+                                    && it.exception().getCause() instanceof IllegalArgumentException) {
                                 return false;
                             }
                             return it.exception() != null || it.result() == null;
                         })
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .run()
         );
 
-        assertThat("Thrown exception should be IllegalArgumentException", e.getClass(), is(IllegalArgumentException.class));
+        assertThat("Thrown exception should be IllegalArgumentException", e.getCause().getClass(), is(IllegalArgumentException.class));
         assertThat("Task execution count should be 2", counter.get(), is(2));
     }
 
@@ -370,7 +371,7 @@ public class RetryExecutorTest {
         List<Exception> exceptions = new ArrayList<>();
 
         long start = System.currentTimeMillis();
-        assertThrows(TimeoutException.class, () ->
+        assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
@@ -378,7 +379,7 @@ public class RetryExecutorTest {
                             exit.set(true);
                             return true;
                         })
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .attempts(10)
                         .callTimeout(Duration.ofMillis(50))
                         .doOnError((integer, e) -> exceptions.add(e))
@@ -391,7 +392,11 @@ public class RetryExecutorTest {
         assertThat("Execution inside call should not complete past sleep", exit.get(), is(false));
         assertThat("Number of caught errors should equal max attempts", exceptions.size(), is(10));
         assertThat("All collected exceptions should be TimeoutExceptions",
-                exceptions.stream().allMatch(it -> it instanceof TimeoutException),
+                exceptions.stream().allMatch(it -> it instanceof ExecutionException),
+                is(true)
+        );
+        assertThat("All collected exception causes should be TimeoutExceptions",
+                exceptions.stream().map(it -> it.getCause()).allMatch(it -> it instanceof TimeoutException),
                 is(true)
         );
     }
@@ -413,9 +418,9 @@ public class RetryExecutorTest {
                     return true;
                 })
                 .attempts(10)
-                .delay(Duration.ofMillis(0))
+                .delay(Duration.ZERO)
                 .callTimeout(Duration.ofMillis(50))
-                .doOnError((integer, e) -> exceptions.add(e))
+                .doOnError((_, e) -> exceptions.add(e))
                 .run();
         long executionTime = System.currentTimeMillis() - start;
 
@@ -424,8 +429,12 @@ public class RetryExecutorTest {
         assertThat("Call count should reach 5 attempts before succeeding", callCounter.get(), is(5));
         assertThat("Exit counter should be 1 after successful run", exitCounter.get(), is(1));
         assertThat("Number of exceptions should match failed attempt count", exceptions.size(), is(4));
-        assertThat("All recorded exceptions before success should be TimeoutExceptions",
-                exceptions.stream().allMatch(it -> it instanceof TimeoutException),
+        assertThat("All recorded exceptions before success should be ExecutionException",
+                exceptions.stream().allMatch(it -> it instanceof ExecutionException),
+                is(true)
+        );
+        assertThat("All recorded exception causes before success should be TimeoutExceptions",
+                exceptions.stream().map(it -> it.getCause()).allMatch(it -> it instanceof TimeoutException),
                 is(true)
         );
     }
@@ -436,7 +445,7 @@ public class RetryExecutorTest {
 
         AtomicReference<InterruptedException> interruptedExceptionAtomicReference = new AtomicReference<>();
 
-        IllegalStateException illegalStateException = assertThrows(IllegalStateException.class, () ->
+        ExecutionException executionException = assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
@@ -454,9 +463,9 @@ public class RetryExecutorTest {
         );
 
         assertThat(Thread.currentThread().isInterrupted(), is(true));
-        assertThat("Root cause should be InterruptedException", illegalStateException.getCause(), isA(InterruptedException.class));
+        assertThat("Root cause should be InterruptedException", executionException.getCause(), isA(InterruptedException.class));
         assertThat("Root cause should be same instance of InterruptedException",
-                illegalStateException.getCause(),
+                executionException.getCause(),
                 sameInstance(interruptedExceptionAtomicReference.get())
         );
         assertThat("Call counter should be 6 when InterruptedException stops retries", callCounter.get(), is(6));
@@ -466,7 +475,7 @@ public class RetryExecutorTest {
     public void doNotRetryInterruptedFlag() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        IllegalStateException illegalStateException = assertThrows(IllegalStateException.class, () ->
+        ExecutionException executionException = assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
@@ -476,14 +485,40 @@ public class RetryExecutorTest {
                             Thread.currentThread().interrupt();
                             return 1;
                         })
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .attempts(10)
                         .retryIf(_ -> true)
                         .run()
         );
 
         assertThat(Thread.currentThread().isInterrupted(), is(true));
-        assertThat("Root cause should be InterruptedException", illegalStateException.getCause(), isA(InterruptedException.class));
+        assertThat("Root cause should be InterruptedException", executionException.getCause(), isA(InterruptedException.class));
+        assertThat("Call counter should be 6 when interrupted status stops retries", callCounter.get(), is(6));
+    }
+
+    @Test
+    public void doNotRetryInterruptedFlagWithCallTimeout() {
+        AtomicInteger callCounter = new AtomicInteger(0);
+
+        ExecutionException executionException = assertThrows(ExecutionException.class, () ->
+                RetryExecutor
+                        .call(() -> {
+                            if (callCounter.get() <= 5) {
+                                callCounter.incrementAndGet();
+                                return 1;
+                            }
+                            Thread.currentThread().interrupt();
+                            return 1;
+                        })
+                        .delay(Duration.ofMillis(1))
+                        .callTimeout(Duration.ofSeconds(100))
+                        .attempts(10)
+                        .retryIf(_ -> true)
+                        .run()
+        );
+
+        assertThat(Thread.currentThread().isInterrupted(), is(true));
+        assertThat("Root cause should be InterruptedException", executionException.getCause(), isA(InterruptedException.class));
         assertThat("Call counter should be 6 when interrupted status stops retries", callCounter.get(), is(6));
     }
 
@@ -491,8 +526,8 @@ public class RetryExecutorTest {
     public void doNotRetryCauseInterruptedException() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        UnsupportedOperationException e = assertThrows(
-                UnsupportedOperationException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
@@ -507,7 +542,8 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Root cause should be InterruptedException", e.getCause(), isA(InterruptedException.class));
+        assertThat("Root cause should be InterruptedException", e.getCause(), isA(UnsupportedOperationException.class));
+        assertThat("Root cause should be InterruptedException", e.getCause().getCause(), isA(InterruptedException.class));
         assertThat("Call counter should be 6 when cause InterruptedException stops retries", callCounter.get(), is(6));
     }
 
@@ -540,8 +576,8 @@ public class RetryExecutorTest {
     public void doNotRetryCauseClosedChannelException() {
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        UnsupportedOperationException e = assertThrows(
-                UnsupportedOperationException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             if (callCounter.get() <= 5) {
@@ -550,13 +586,14 @@ public class RetryExecutorTest {
                             }
                             throw new UnsupportedOperationException(new ClosedChannelException());
                         })
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .attempts(10)
-                        .retryIf(it -> true)
+                        .retryIf(_ -> true)
                         .run()
         );
 
-        assertThat("Root cause should be ClosedChannelException", e.getCause(), isA(ClosedChannelException.class));
+        assertThat(e.getCause(), isA(UnsupportedOperationException.class));
+        assertThat("Root cause should be ClosedChannelException", e.getCause().getCause(), isA(ClosedChannelException.class));
         assertThat("Call counter should be 6 when cause ClosedChannelException stops retries", callCounter.get(), is(6));
     }
 
@@ -717,7 +754,7 @@ public class RetryExecutorTest {
         AtomicBoolean loopExited = new AtomicBoolean(false);
         CountDownLatch taskStarted = new CountDownLatch(1);
 
-        assertThrows(TimeoutException.class, () ->
+        ExecutionException executionException = assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -732,9 +769,9 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Task should have started", taskStarted.await(1, TimeUnit.SECONDS), is(true));
+        assertThat(executionException.getCause(), isA(TimeoutException.class));
 
-        Thread.sleep(200);
+        assertThat("Task should have started", taskStarted.await(1, TimeUnit.SECONDS), is(true));
 
         assertThat(
                 "Task should exit the while-loop when interrupted by timeout",
@@ -747,13 +784,13 @@ public class RetryExecutorTest {
     void shouldNotSleepAfterLastFailedAttempt() {
         long start = System.currentTimeMillis();
 
-        assertThrows(RuntimeException.class, () ->
+        assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             throw new RuntimeException("Instant failure");
                         })
                         .attempts(1)
-                        .delay(Duration.ofMillis(2000))
+                        .delay(Duration.ofSeconds(100))
                         .run()
         );
 
@@ -772,7 +809,7 @@ public class RetryExecutorTest {
         AtomicBoolean wasInterrupted = new AtomicBoolean(false);
         AtomicBoolean completedPastTimeout = new AtomicBoolean(false);
 
-        assertThrows(TimeoutException.class, () ->
+        assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -790,8 +827,6 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        Thread.sleep(500);
-
         assertThat("Background task should be interrupted on timeout", wasInterrupted.get(), is(true));
         assertThat("Background task should not finish work after timeout", completedPastTimeout.get(), is(false));
     }
@@ -801,7 +836,7 @@ public class RetryExecutorTest {
         CountDownLatch taskStarted = new CountDownLatch(1);
         AtomicBoolean wasInterrupted = new AtomicBoolean(false);
 
-        assertThrows(TimeoutException.class, () ->
+        assertThrows(ExecutionException.class, () ->
                 RetryExecutor
                         .call(() -> {
                             taskStarted.countDown();
@@ -826,20 +861,20 @@ public class RetryExecutorTest {
         RuntimeException singletonException = new RuntimeException("I am a singleton");
         AtomicInteger callCounter = new AtomicInteger(0);
 
-        RuntimeException e = assertThrows(
-                RuntimeException.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
                             throw singletonException;
                         })
                         .attempts(3)
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .run()
         );
 
         assertThat("Task should be called 3 times", callCounter.get(), is(3));
-        assertThat("Should be the exact singleton instance", e, sameInstance(singletonException));
+        assertThat("Should be the exact singleton instance", e.getCause(), sameInstance(singletonException));
         assertThat("Should not contain self-suppressed exceptions", e.getSuppressed().length, is(0));
     }
 
@@ -856,7 +891,7 @@ public class RetryExecutorTest {
                         })
                         .attempts(3)
                         .delay(Duration.ofMillis(0))
-                        .doOnError((attempt, ex) -> {
+                        .doOnError((_, _) -> {
                             throw new RuntimeException("Error in callback");
                         })
                         .run()
@@ -864,7 +899,7 @@ public class RetryExecutorTest {
 
         assertThat(e.getCause(), isA(IOException.class));
         assertThat("Task should be called 3 times despite callback errors", callCounter.get(), is(3));
-        assertThat("The exception thrown should be the original one", e.getMessage(), is("Original error"));
+        assertThat("The exception thrown should be the original one", e.getCause().getMessage(), is("Original error"));
         assertThat("Should contain suppressed exceptions for attempts 2 and 3", e.getSuppressed().length, is(2));
     }
 
@@ -890,8 +925,8 @@ public class RetryExecutorTest {
     void mixedExceptionsShouldBeAggregatedCorrectly() {
         AtomicInteger counter = new AtomicInteger(0);
 
-        Exception e = assertThrows(
-                Exception.class,
+        ExecutionException e = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             int current = counter.incrementAndGet();
@@ -908,7 +943,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat(e, instanceOf(TimeoutException.class));
+        assertThat(e.getCause(), instanceOf(TimeoutException.class));
         assertThat(e.getSuppressed().length, is(2));
         assertThat(e.getSuppressed()[0], instanceOf(IOException.class));
         assertThat(e.getSuppressed()[1], instanceOf(IllegalStateException.class));
@@ -920,21 +955,22 @@ public class RetryExecutorTest {
         AtomicInteger doOnErrorCounter = new AtomicInteger(0);
         Error original = new Error("fatal");
 
-        Error thrown = assertThrows(
-                Error.class,
+        ExecutionException executionException = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
                             throw original;
                         })
                         .attempts(5)
-                        .delay(Duration.ofMillis(0))
+                        .delay(Duration.ZERO)
                         .retryIf(it -> true)
-                        .doOnError((attempt, ex) -> doOnErrorCounter.incrementAndGet())
+                        .doOnError((_, _) -> doOnErrorCounter.incrementAndGet())
                         .run()
         );
 
-        assertThat(thrown, sameInstance(original));
+        assertThat(executionException.getCause(), sameInstance(original));
+        assertThat(executionException.getSuppressed().length, is(0));
         assertThat(callCounter.get(), is(1));
         assertThat(doOnErrorCounter.get(), is(0));
     }
@@ -945,22 +981,23 @@ public class RetryExecutorTest {
         AtomicInteger doOnErrorCounter = new AtomicInteger(0);
         Error original = new Error("fatal with timeout path");
 
-        Error thrown = assertThrows(
-                Error.class,
+        ExecutionException executionException = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
                             throw original;
                         })
                         .attempts(5)
-                        .delay(Duration.ofMillis(0))
-                        .callTimeout(Duration.ofSeconds(5))
+                        .delay(Duration.ZERO)
+                        .callTimeout(Duration.ofSeconds(100))
                         .retryIf(it -> true)
-                        .doOnError((attempt, ex) -> doOnErrorCounter.incrementAndGet())
+                        .doOnError((_, _) -> doOnErrorCounter.incrementAndGet())
                         .run()
         );
 
-        assertThat(thrown, sameInstance(original));
+        assertThat(executionException.getCause(), sameInstance(original));
+        assertThat(executionException.getSuppressed().length, is(0));
         assertThat(callCounter.get(), is(1));
         assertThat(doOnErrorCounter.get(), is(0));
     }
@@ -987,7 +1024,6 @@ public class RetryExecutorTest {
                 })
                 .attempts(1)
                 .delay(Duration.ZERO)
-                // нету тестя для .delay(Duration.ofMillis(-1))
                 .callTimeout(Duration.ofMillis(-1))
                 .run();
 
@@ -1069,8 +1105,8 @@ public class RetryExecutorTest {
         AtomicInteger callCounter = new AtomicInteger(0);
         RuntimeException original = new IllegalArgumentException("Callable failed");
 
-        RuntimeException thrown = assertThrows(
-                RuntimeException.class,
+        ExecutionException thrown = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             callCounter.incrementAndGet();
@@ -1084,8 +1120,7 @@ public class RetryExecutorTest {
                         .run()
         );
 
-        assertThat("Original callable exception should be propagated",
-                thrown, sameInstance(original));
+        assertThat("Original callable exception should be propagated", thrown.getCause(), sameInstance(original));
         assertThat("Callable should not be retried", callCounter.get(), is(1));
     }
 
@@ -1093,25 +1128,25 @@ public class RetryExecutorTest {
     void shouldPropagateTimeoutExceptionFromCallable() {
         TimeoutException original = new TimeoutException("Callable timed out");
 
-        TimeoutException thrown = assertThrows(
-                TimeoutException.class,
+        ExecutionException thrown = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             throw original;
                         })
                         .attempts(1)
-                        .callTimeout(Duration.ZERO)
+                        .callTimeout(Duration.ofSeconds(100))
                         .run()
         );
 
-        assertThat("Original timeout exception should be propagated",
-                thrown, sameInstance(original));
+        assertThat("Original timeout exception should be propagated", thrown.getCause(), sameInstance(original));
+        assertThat(thrown.getSuppressed().length, is(0));
     }
 
     @Test
     void shouldThrowTimeoutExceptionWhenCallTimeoutExpires() {
-        TimeoutException thrown = assertThrows(
-                TimeoutException.class,
+        ExecutionException executionException = assertThrows(
+                ExecutionException.class,
                 () -> RetryExecutor
                         .call(() -> {
                             Thread.sleep(120_000);
@@ -1123,7 +1158,7 @@ public class RetryExecutorTest {
         );
 
         assertThat("TimeoutException should be propagated",
-                thrown, instanceOf(TimeoutException.class));
+                executionException.getCause(), instanceOf(TimeoutException.class));
     }
 
     @Test
@@ -1175,12 +1210,18 @@ public class RetryExecutorTest {
 
             ExecutionException exception = assertThrows(
                     ExecutionException.class,
-                    () -> result.get(1, TimeUnit.SECONDS)
+                    () -> result.get(2, TimeUnit.SECONDS)
+            );
+
+            assertThat(
+                    "Future covers ExecutionException into ExecutionException",
+                    exception.getCause(),
+                    instanceOf(ExecutionException.class)
             );
 
             assertThat(
                     "Original TimeoutException should be propagated",
-                    exception.getCause(),
+                    exception.getCause().getCause(),
                     instanceOf(TimeoutException.class)
             );
         } finally {
@@ -1221,8 +1262,11 @@ public class RetryExecutorTest {
                             .callTimeout(Duration.ofMillis(100))
                             .run();
                     throw new AssertionError("Expected TimeoutException");
-                } catch (TimeoutException e) {
-                    return currentThread.isInterrupted();
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof TimeoutException) {
+                        return currentThread.isInterrupted();
+                    }
+                    throw new AssertionError("Expected TimeoutException");
                 }
             });
 
@@ -1317,23 +1361,27 @@ public class RetryExecutorTest {
                     () -> result.get(1, TimeUnit.SECONDS)
             );
 
-            Throwable cause = thrown.getCause();
+            assertThat(
+                    "Future covers ExecutionException into ExecutionException",
+                    thrown.getCause(),
+                    instanceOf(ExecutionException.class)
+            );
 
             assertThat(
                     "Original TimeoutException should be propagated",
-                    cause,
+                    thrown.getCause().getCause(),
                     instanceOf(TimeoutException.class)
             );
 
             assertThat(
                     "InterruptedException should be added as suppressed",
-                    cause.getSuppressed().length,
+                    thrown.getCause().getSuppressed().length,
                     is(1)
             );
 
             assertThat(
                     "Suppressed exception should be InterruptedException",
-                    cause.getSuppressed()[0],
+                    thrown.getCause().getSuppressed()[0],
                     instanceOf(InterruptedException.class)
             );
         } finally {

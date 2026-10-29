@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -92,7 +93,7 @@ public class ApiConnectionsShareFacade {
                     .attempts(1)
                     .callTimeout(timeout)
                     .run();
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
             throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
