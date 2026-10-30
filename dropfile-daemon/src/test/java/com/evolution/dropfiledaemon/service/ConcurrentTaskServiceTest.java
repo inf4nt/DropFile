@@ -4,12 +4,15 @@ import com.evolution.dropfile.common.function.VoidCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -481,6 +484,272 @@ public class ConcurrentTaskServiceTest {
             callerThread.join(2_000);
         }
     }
+
+    @Test
+    void invokeAny_EmptyCollection_ReturnsImmediately() throws ExecutionException {
+        underTest.invokeAny(List.of(), Duration.ofSeconds(1));
+    }
+
+    @Test
+    void invokeAny_FailureDoesNotCancelOtherTasks_SuccessCancelsAndWaitsForThem() throws Exception {
+        CountDownLatch allTasksStarted = new CountDownLatch(3);
+        CountDownLatch failureThrown = new CountDownLatch(1);
+        CountDownLatch allowWinnerToSucceed = new CountDownLatch(1);
+        CountDownLatch neverReleaseStubbornTask = new CountDownLatch(1);
+        CountDownLatch stubbornTaskInterrupted = new CountDownLatch(1);
+        CountDownLatch stubbornTaskFinished = new CountDownLatch(1);
+        CountDownLatch callerFinished = new CountDownLatch(1);
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+        AtomicBoolean winnerSucceeded = new AtomicBoolean();
+
+        VoidCallable failingTask = () -> {
+            allTasksStarted.countDown();
+            failureThrown.countDown();
+            throw new IOException("Expected task failure");
+        };
+
+        VoidCallable stubbornTask = () -> {
+            allTasksStarted.countDown();
+            try {
+                while (neverReleaseStubbornTask.getCount() > 0) {
+                    try {
+                        neverReleaseStubbornTask.await(25, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException ignored) {
+                        stubbornTaskInterrupted.countDown();
+                    }
+                }
+            } finally {
+                stubbornTaskFinished.countDown();
+            }
+        };
+
+        VoidCallable successfulTask = () -> {
+            allTasksStarted.countDown();
+            if (!allowWinnerToSucceed.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Successful task was not released");
+            }
+            winnerSucceeded.set(true);
+        };
+
+        Thread callerThread = startInvokeAny(
+                List.of(failingTask, stubbornTask, successfulTask),
+                Duration.ofSeconds(5),
+                thrown,
+                null,
+                callerFinished
+        );
+
+        try {
+            assertThat("All tasks should start", allTasksStarted.await(3, TimeUnit.SECONDS), is(true));
+            assertThat("Failing task should fail", failureThrown.await(1, TimeUnit.SECONDS), is(true));
+
+            assertThat(
+                    "A task failure alone must not interrupt other tasks",
+                    stubbornTaskInterrupted.await(150, TimeUnit.MILLISECONDS),
+                    is(false)
+            );
+
+            allowWinnerToSucceed.countDown();
+
+            assertThat(
+                    "Successful completion should interrupt the remaining task",
+                    stubbornTaskInterrupted.await(2, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(
+                    "Caller must wait until the interrupted task actually finishes",
+                    callerFinished.await(150, TimeUnit.MILLISECONDS),
+                    is(false)
+            );
+            assertThat(stubbornTaskFinished.getCount(), is(1L));
+
+            neverReleaseStubbornTask.countDown();
+
+            assertThat("Caller should finish after the stubborn task", callerFinished.await(3, TimeUnit.SECONDS), is(true));
+            assertThat("A successful task should make invokeAny return normally", thrown.get(), nullValue());
+            assertThat(winnerSucceeded.get(), is(true));
+            assertThat(stubbornTaskFinished.getCount(), is(0L));
+        } finally {
+            allowWinnerToSucceed.countDown();
+            neverReleaseStubbornTask.countDown();
+            callerThread.join(2_000);
+        }
+    }
+
+    @Test
+    void invokeAny_AllTasksFail_ThrowsExecutionException() {
+        AtomicInteger executed = new AtomicInteger();
+
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
+                () -> underTest.invokeAny(
+                        List.of(
+                                () -> {
+                                    executed.incrementAndGet();
+                                    throw new IOException("First failure");
+                                },
+                                () -> {
+                                    executed.incrementAndGet();
+                                    throw new IllegalStateException("Second failure");
+                                },
+                                () -> {
+                                    executed.incrementAndGet();
+                                    throw new IllegalArgumentException("Third failure");
+                                }
+                        ),
+                        Duration.ofSeconds(5)
+                )
+        );
+
+        assertThat("Every task should be attempted when all tasks fail", executed.get(), is(3));
+        assertThat("ExecutionException should preserve a task failure", exception.getCause(), notNullValue());
+    }
+
+    @Test
+    void invokeAny_Timeout_InterruptsAllTasksAndWaitsForTheirCompletion() throws Exception {
+        int taskCount = 2;
+
+        CountDownLatch tasksStarted = new CountDownLatch(taskCount);
+        CountDownLatch tasksInterrupted = new CountDownLatch(taskCount);
+        CountDownLatch releaseTasks = new CountDownLatch(1);
+        CountDownLatch tasksFinished = new CountDownLatch(taskCount);
+        CountDownLatch callerFinished = new CountDownLatch(1);
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+
+        List<VoidCallable> tasks = List.of(
+                interruptIgnoringTask(tasksStarted, tasksInterrupted, releaseTasks, tasksFinished),
+                interruptIgnoringTask(tasksStarted, tasksInterrupted, releaseTasks, tasksFinished)
+        );
+
+        Thread callerThread = startInvokeAny(
+                tasks,
+                Duration.ofSeconds(1),
+                thrown,
+                null,
+                callerFinished
+        );
+
+        try {
+            assertThat("All tasks should start", tasksStarted.await(3, TimeUnit.SECONDS), is(true));
+            assertThat("Timeout should interrupt every running task", tasksInterrupted.await(4, TimeUnit.SECONDS), is(true));
+
+            assertThat(
+                    "Caller must not return while interrupted tasks are still running",
+                    callerFinished.await(150, TimeUnit.MILLISECONDS),
+                    is(false)
+            );
+            assertThat(tasksFinished.getCount(), is((long) taskCount));
+
+            releaseTasks.countDown();
+
+            assertThat("Caller should return after all tasks finish", callerFinished.await(3, TimeUnit.SECONDS), is(true));
+            assertThat(thrown.get(), instanceOf(ExecutionException.class));
+            assertThat(thrown.get().getCause(), instanceOf(TimeoutException.class));
+            assertThat(tasksFinished.getCount(), is(0L));
+        } finally {
+            releaseTasks.countDown();
+            callerThread.join(2_000);
+        }
+    }
+
+    @Test
+    void invokeAny_CallerInterruptedWhileWaiting_CancelsTasksWaitsAndRestoresInterruptStatus() throws Exception {
+        int taskCount = 2;
+
+        CountDownLatch tasksStarted = new CountDownLatch(taskCount);
+        CountDownLatch tasksInterrupted = new CountDownLatch(taskCount);
+        CountDownLatch releaseTasks = new CountDownLatch(1);
+        CountDownLatch tasksFinished = new CountDownLatch(taskCount);
+        CountDownLatch callerFinished = new CountDownLatch(1);
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+        AtomicBoolean interruptRestored = new AtomicBoolean();
+
+        List<VoidCallable> tasks = List.of(
+                interruptIgnoringTask(tasksStarted, tasksInterrupted, releaseTasks, tasksFinished),
+                interruptIgnoringTask(tasksStarted, tasksInterrupted, releaseTasks, tasksFinished)
+        );
+
+        Thread callerThread = startInvokeAny(
+                tasks,
+                Duration.ofSeconds(30),
+                thrown,
+                interruptRestored,
+                callerFinished
+        );
+
+        try {
+            assertThat("All tasks should start", tasksStarted.await(3, TimeUnit.SECONDS), is(true));
+
+            callerThread.interrupt();
+
+            assertThat("Caller interruption should interrupt all running tasks", tasksInterrupted.await(3, TimeUnit.SECONDS), is(true));
+            assertThat(
+                    "Caller must continue waiting while interrupted tasks are still running",
+                    callerFinished.await(150, TimeUnit.MILLISECONDS),
+                    is(false)
+            );
+            assertThat(tasksFinished.getCount(), is((long) taskCount));
+
+            releaseTasks.countDown();
+
+            assertThat("Caller should finish after all tasks exit", callerFinished.await(3, TimeUnit.SECONDS), is(true));
+            assertThat(thrown.get(), instanceOf(ExecutionException.class));
+            assertThat(thrown.get().getCause(), instanceOf(InterruptedException.class));
+            assertThat("Interrupt status should be restored after waiting", interruptRestored.get(), is(true));
+            assertThat(tasksFinished.getCount(), is(0L));
+        } finally {
+            releaseTasks.countDown();
+            callerThread.join(2_000);
+        }
+    }
+
+    private VoidCallable interruptIgnoringTask(
+            CountDownLatch tasksStarted,
+            CountDownLatch tasksInterrupted,
+            CountDownLatch releaseTasks,
+            CountDownLatch tasksFinished
+    ) {
+        return () -> {
+            tasksStarted.countDown();
+            try {
+                while (releaseTasks.getCount() > 0) {
+                    try {
+                        releaseTasks.await();
+                    } catch (InterruptedException ignored) {
+                        tasksInterrupted.countDown();
+                    }
+                }
+            } finally {
+                tasksFinished.countDown();
+            }
+        };
+    }
+
+    private Thread startInvokeAny(
+            List<VoidCallable> tasks,
+            Duration timeout,
+            AtomicReference<Throwable> thrown,
+            AtomicBoolean interruptRestored,
+            CountDownLatch callerFinished
+    ) {
+        return Thread.ofVirtual().start(() -> {
+            try {
+                underTest.invokeAny(tasks, timeout);
+            } catch (Throwable throwable) {
+                thrown.set(throwable);
+                if (interruptRestored != null) {
+                    interruptRestored.set(Thread.currentThread().isInterrupted());
+                }
+            } finally {
+                callerFinished.countDown();
+            }
+        });
+    }
+
 
     private Thread startExecution(
             Collection<VoidCallable> tasks,

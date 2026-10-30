@@ -130,7 +130,7 @@ public class ConcurrentTaskService {
         }
     }
 
-    public void invokeAny(List<VoidCallable> callables, Duration timeout) throws ExecutionException, TimeoutException {
+    public void invokeAny(List<VoidCallable> callables, Duration timeout) throws ExecutionException {
         Objects.requireNonNull(timeout, "timeout must not be null");
         if (!timeout.isPositive()) {
             throw new IllegalArgumentException("timeout must be positive");
@@ -140,14 +140,53 @@ public class ConcurrentTaskService {
             return;
         }
 
-        List<Callable<Void>> callablesVoidList = callables.stream().map(it -> it.toCallable()).toList();
+        CountDownLatch countDownLatch = new CountDownLatch(callables.size());
 
-        // TODO and await
+        List<CallableCancelable<Void>> callableCancelableList = callables.stream()
+                .map(it -> it.toCallable())
+                .map(it -> new CallableCancelable<>(
+                        it,
+                        new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
+                                countDownLatch
+                        )
+                ))
+                .toList();
+
+        ExecutionException executionException = null;
+
         try {
-            executorService.invokeAny(callablesVoidList, timeout.toNanos(), TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Call was interrupted", e);
+            executorService.invokeAny(callableCancelableList, timeout.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (ExecutionException e) {
+            executionException = e;
+        } catch (Throwable throwable) {
+            executionException = new ExecutionException(throwable.getMessage(), throwable);
+        } finally {
+            callableCancelableList.forEach(CallableCancelable::cancel);
+        }
+
+        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(countDownLatch);
+
+        if (!interruptedExceptions.isEmpty()) {
+            if (executionException == null) {
+                InterruptedException first = interruptedExceptions.getFirst();
+                executionException = new ExecutionException(first.getMessage(), first);
+
+                for (int i = 1; i < interruptedExceptions.size(); i++) {
+                    executionException.addSuppressed(interruptedExceptions.get(i));
+                }
+            } else {
+                for (InterruptedException interruptedException : interruptedExceptions) {
+                    executionException.addSuppressed(interruptedException);
+                }
+            }
+        }
+
+        if (executionException != null) {
+            if (ThrowableUtils.checkThrowable(executionException, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+
+            throw executionException;
         }
     }
 }
