@@ -167,7 +167,7 @@ public class SingleRunDownloadProcedure {
         );
     }
 
-    private void chunksHandler() throws Exception {
+    private void chunksHandler() throws IOException, ExecutionException {
         boolean compressible = FileCompressionPolicyHelper.isCompressible(request.filename());
 
         try (FileChannel fileChannel = FileChannel.open(request.temporaryFilePath(),

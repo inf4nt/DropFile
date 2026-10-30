@@ -1,5 +1,6 @@
 package com.evolution.dropfiledaemon.service;
 
+import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.function.VoidCallable;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.CallableCancelable;
@@ -15,7 +16,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class ConcurrentTaskService {
@@ -60,64 +60,73 @@ public class ConcurrentTaskService {
         CompletionService<Void> completionService = new ExecutorCompletionService<>(downloadProcedureExecutorService);
 
         List<Future<Void>> futures = new ArrayList<>(callables.size());
-        AtomicReference<Throwable> throwableAtomicReference = new AtomicReference<>();
+        ExecutionException executionException = null;
 
         for (CallableCancelable<Void> callable : callableCancelableList) {
             Future<Void> future;
             try {
                 future = completionService.submit(callable);
             } catch (RuntimeException e) {
-                throwableAtomicReference.compareAndSet(null, e);
+                executionException = new ExecutionException(e.getMessage(), e);
                 break;
             }
             futures.add(future);
         }
 
-        if (throwableAtomicReference.get() == null) {
+        if (executionException == null) {
             for (int i = 0; i < futures.size(); i++) {
                 try {
                     completionService.take().get();
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throwableAtomicReference.compareAndSet(null, e);
+                    executionException = new ExecutionException(e.getMessage(), e);
+                    break;
+                } catch (ExecutionException e) {
+                    executionException = e;
                     break;
                 } catch (CancellationException _) {
 
-                } catch (ExecutionException e) {
-                    throwableAtomicReference.compareAndSet(null, e);
-                    break;
                 }
             }
         }
 
-        try {
-            Throwable throwable = throwableAtomicReference.get();
-            if (throwable != null) {
-                futures.forEach(it -> it.cancel(true));
-                callableCancelableList.forEach(it -> it.cancel());
+        if (executionException != null) {
+            futures.forEach(it -> it.cancel(true));
+            callableCancelableList.forEach(it -> it.cancel());
+        }
 
-                if (throwable instanceof ExecutionException executionException) {
-                    Throwable cause = executionException.getCause();
-                    if (cause instanceof Error error) {
-                        throwableAtomicReference.set(error);
-                        throw error;
-                    }
-                    if (cause instanceof RuntimeException runtimeException) {
-                        throwableAtomicReference.set(runtimeException);
-                        throw runtimeException;
-                    }
-                    throw executionException;
-                }
-                if (throwable instanceof RuntimeException runtimeException) {
-                    throwableAtomicReference.set(runtimeException);
-                    throw runtimeException;
-                }
-                ExecutionException executionException = new ExecutionException(throwable.getMessage(), throwable);
-                throwableAtomicReference.set(executionException);
-                throw executionException;
+        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(countDownLatch);
+
+        if (executionException != null) {
+            for (InterruptedException interruptedException : interruptedExceptions) {
+                executionException.addSuppressed(interruptedException);
             }
-        } finally {
-            awaitUninterruptibly(countDownLatch, throwableAtomicReference.get());
+            if (ThrowableUtils.checkThrowable(executionException, InterruptedException.class)) {
+                Thread.currentThread().interrupt();
+            }
+            throw executionException;
+        }
+
+        if (!interruptedExceptions.isEmpty()) {
+            InterruptedException first = interruptedExceptions.getFirst();
+            executionException = new ExecutionException(first.getMessage(), first);
+            for (int i = 1; i < interruptedExceptions.size(); i++) {
+                executionException.addSuppressed(interruptedExceptions.get(i));
+            }
+            Thread.currentThread().interrupt();
+            throw executionException;
+        }
+    }
+
+    private List<InterruptedException> awaitUninterruptibly(CountDownLatch latch) {
+        List<InterruptedException> exceptions = new ArrayList<>();
+
+        while (true) {
+            try {
+                latch.await();
+                return exceptions;
+            } catch (InterruptedException e) {
+                exceptions.add(e);
+            }
         }
     }
 
@@ -139,29 +148,6 @@ public class ConcurrentTaskService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Call was interrupted", e);
-        }
-    }
-
-    private static void awaitUninterruptibly(
-            CountDownLatch latch,
-            Throwable primaryThrowable
-    ) {
-        boolean interrupted = false;
-
-        try {
-            while (true) {
-                try {
-                    latch.await();
-                    return;
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                    primaryThrowable.addSuppressed(e);
-                }
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
         }
     }
 }

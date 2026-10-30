@@ -135,12 +135,13 @@ public class ConcurrentTaskServiceTest {
             });
         }
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
                 () -> underTest.executeFailFastDownloadProcedure(tasks)
         );
 
-        assertThat(exception.getMessage(), is("Boom!"));
+        assertThat(exception.getCause(), isA(RuntimeException.class));
+        assertThat(exception.getCause().getMessage(), is("Boom!"));
 
         assertThat(
                 "All other running tasks should be interrupted",
@@ -213,8 +214,9 @@ public class ConcurrentTaskServiceTest {
                     is(true)
             );
 
-            assertThat(thrown.get(), instanceOf(RuntimeException.class));
-            assertThat(thrown.get().getMessage(), is("Boom!"));
+            assertThat(thrown.get(), instanceOf(ExecutionException.class));
+            assertThat(thrown.get().getCause(), instanceOf(RuntimeException.class));
+            assertThat(thrown.get().getCause().getMessage(), is("Boom!"));
 
             assertThat(stubbornTaskFinished.getCount(), is(0L));
         } finally {
@@ -268,14 +270,216 @@ public class ConcurrentTaskServiceTest {
     void executeFailFast_OutOfMemoryError_PropagatesError() {
         OutOfMemoryError original = new OutOfMemoryError("Simulated OOM");
 
-        OutOfMemoryError thrown = assertThrows(
-                OutOfMemoryError.class,
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
                 () -> underTest.executeFailFastDownloadProcedure(List.of(() -> {
                     throw original;
                 }))
         );
 
-        assertThat(thrown, sameInstance(original));
+        assertThat(exception.getCause(), sameInstance(original));
+    }
+
+    @Test
+    void executeFailFast_Failure_CancelsQueuedTasks() throws Exception {
+        int threadCount = 100;
+        int taskCount = 130;
+
+        CountDownLatch firstBatchStarted = new CountDownLatch(threadCount);
+        CountDownLatch interruptedRunningTasks = new CountDownLatch(threadCount - 1);
+        CountDownLatch neverReleased = new CountDownLatch(1);
+        CountDownLatch callerFinished = new CountDownLatch(1);
+
+        AtomicInteger queuedTasksStarted = new AtomicInteger();
+        AtomicInteger queuedTasksInterrupted = new AtomicInteger();
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+
+        List<VoidCallable> tasks = new ArrayList<>();
+
+        tasks.add(() -> {
+            firstBatchStarted.countDown();
+
+            firstBatchStarted.await();
+
+            throw new RuntimeException("Boom!");
+        });
+
+        for (int i = 1; i < threadCount; i++) {
+            tasks.add(() -> {
+                firstBatchStarted.countDown();
+
+                try {
+                    neverReleased.await();
+                } catch (InterruptedException e) {
+                    interruptedRunningTasks.countDown();
+                    throw e;
+                }
+            });
+        }
+
+        for (int i = threadCount; i < taskCount; i++) {
+            tasks.add(() -> {
+                queuedTasksStarted.incrementAndGet();
+
+                try {
+                    neverReleased.await();
+                } catch (InterruptedException e) {
+                    queuedTasksInterrupted.incrementAndGet();
+                    throw e;
+                }
+            });
+        }
+
+        Thread callerThread = startExecution(
+                tasks,
+                thrown,
+                null,
+                callerFinished
+        );
+
+        try {
+            assertThat(
+                    "All worker threads should become occupied",
+                    firstBatchStarted.await(5, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(
+                    "Caller should finish after cancelling all tasks",
+                    callerFinished.await(5, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(thrown.get(), instanceOf(ExecutionException.class));
+            assertThat(thrown.get().getCause(), instanceOf(RuntimeException.class));
+            assertThat(thrown.get().getCause().getMessage(), is("Boom!"));
+
+            assertThat(
+                    "All other running tasks should receive interruption",
+                    interruptedRunningTasks.getCount(),
+                    is(0L)
+            );
+
+            assertThat(
+                    "Every queued task that started should receive interruption",
+                    queuedTasksInterrupted.get(),
+                    is(queuedTasksStarted.get())
+            );
+
+            assertThat(
+                    "No more than the queued task count should start",
+                    queuedTasksStarted.get(),
+                    lessThanOrEqualTo(taskCount - threadCount)
+            );
+        } finally {
+            neverReleased.countDown();
+            callerThread.join(2_000);
+        }
+    }
+
+    @Test
+    void executeFailFast_Failure_CallerInterruptedDuringUninterruptibleWait() throws Exception {
+        CountDownLatch stubbornTaskStarted = new CountDownLatch(1);
+        CountDownLatch stubbornTaskInterrupted = new CountDownLatch(1);
+        CountDownLatch releaseStubbornTask = new CountDownLatch(1);
+        CountDownLatch stubbornTaskFinished = new CountDownLatch(1);
+        CountDownLatch callerFinished = new CountDownLatch(1);
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+        AtomicBoolean interruptRestored = new AtomicBoolean();
+
+        VoidCallable stubbornTask = () -> {
+            stubbornTaskStarted.countDown();
+
+            try {
+                while (releaseStubbornTask.getCount() > 0) {
+                    try {
+                        releaseStubbornTask.await(50, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException ignored) {
+                        stubbornTaskInterrupted.countDown();
+                    }
+                }
+            } finally {
+                stubbornTaskFinished.countDown();
+            }
+        };
+
+        VoidCallable failingTask = () -> {
+            stubbornTaskStarted.await();
+
+            throw new RuntimeException("Boom!");
+        };
+
+        Thread callerThread = startExecution(
+                List.of(stubbornTask, failingTask),
+                thrown,
+                interruptRestored,
+                callerFinished
+        );
+
+        try {
+            assertThat(
+                    "Stubborn task should start",
+                    stubbornTaskStarted.await(2, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(
+                    "Stubborn task should receive cancellation",
+                    stubbornTaskInterrupted.await(2, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            callerThread.interrupt();
+
+            assertThat(
+                    "Caller must continue waiting after interruption",
+                    callerFinished.await(100, TimeUnit.MILLISECONDS),
+                    is(false)
+            );
+
+            assertThat(
+                    "Stubborn task must not finish before explicit release",
+                    stubbornTaskFinished.getCount(),
+                    is(1L)
+            );
+
+            releaseStubbornTask.countDown();
+
+            assertThat(
+                    "Caller should finish after stubborn task exits",
+                    callerFinished.await(2, TimeUnit.SECONDS),
+                    is(true)
+            );
+
+            assertThat(thrown.get(), instanceOf(ExecutionException.class));
+            assertThat(thrown.get().getCause(), instanceOf(RuntimeException.class));
+            assertThat(thrown.get().getCause().getMessage(), is("Boom!"));
+
+            assertThat(
+                    "InterruptedException should be added as suppressed",
+                    thrown.get().getSuppressed().length,
+                    is(1)
+            );
+
+            assertThat(
+                    "Suppressed exception should be InterruptedException",
+                    thrown.get().getSuppressed()[0],
+                    instanceOf(InterruptedException.class)
+            );
+
+            assertThat(
+                    "Caller interrupt status should be restored",
+                    interruptRestored.get(),
+                    is(true)
+            );
+
+            assertThat(stubbornTaskFinished.getCount(), is(0L));
+        } finally {
+            releaseStubbornTask.countDown();
+            callerThread.join(2_000);
+        }
     }
 
     private Thread startExecution(
