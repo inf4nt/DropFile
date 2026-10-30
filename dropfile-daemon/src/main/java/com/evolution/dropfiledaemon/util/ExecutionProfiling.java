@@ -13,7 +13,7 @@ public class ExecutionProfiling {
     public static void run(String operation, VoidCallable voidCallable) {
         run(
                 operation,
-                () -> voidCallable.toCallable()
+                voidCallable.toCallable()
         );
     }
 
