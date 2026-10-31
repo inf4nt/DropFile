@@ -106,19 +106,6 @@ public class ConcurrentTaskService {
         }
     }
 
-    public List<InterruptedException> awaitUninterruptibly(InterruptibleVoidCallable interruptibleVoidCallable) {
-        List<InterruptedException> exceptions = new ArrayList<>();
-
-        while (true) {
-            try {
-                interruptibleVoidCallable.call();
-                return exceptions;
-            } catch (InterruptedException e) {
-                exceptions.add(e);
-            }
-        }
-    }
-
     public void invokeAny(List<VoidCallable> callables, Duration timeout) throws ExecutionException {
         Objects.requireNonNull(timeout, "timeout must not be null");
         if (!timeout.isPositive()) {
@@ -161,6 +148,19 @@ public class ConcurrentTaskService {
                 Thread.currentThread().interrupt();
             }
             throw resultException;
+        }
+    }
+
+    public List<InterruptedException> awaitUninterruptibly(InterruptibleVoidCallable interruptibleVoidCallable) {
+        List<InterruptedException> exceptions = new ArrayList<>();
+
+        while (true) {
+            try {
+                interruptibleVoidCallable.call();
+                return exceptions;
+            } catch (InterruptedException e) {
+                exceptions.add(e);
+            }
         }
     }
 
