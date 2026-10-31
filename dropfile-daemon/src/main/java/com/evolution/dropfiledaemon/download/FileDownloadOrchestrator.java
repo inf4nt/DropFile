@@ -29,10 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -307,7 +304,8 @@ public class FileDownloadOrchestrator {
             return;
         }
 
-        operations.values().forEach(it -> CommonUtils.executeSafety(() -> it.stop()));
+        operations.values().forEach(it -> it.stop());
+        operations.values().forEach(it -> it.awaitTermination());
 
         fileDownloadStore.save(
                 () -> {

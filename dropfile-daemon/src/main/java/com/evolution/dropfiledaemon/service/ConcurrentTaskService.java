@@ -1,9 +1,11 @@
 package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfile.common.ThrowableUtils;
+import com.evolution.dropfile.common.function.InterruptibleVoidCallable;
 import com.evolution.dropfile.common.function.VoidCallable;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.util.CallableCancelable;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
@@ -94,35 +96,22 @@ public class ConcurrentTaskService {
             callableCancelableList.forEach(it -> it.cancel());
         }
 
-        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(countDownLatch);
-
-        if (executionException != null) {
-            for (InterruptedException interruptedException : interruptedExceptions) {
-                executionException.addSuppressed(interruptedException);
-            }
+        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(() -> countDownLatch.await());
+        ExecutionException result = buildExecutionException(executionException, interruptedExceptions);
+        if (result != null) {
             if (ThrowableUtils.checkThrowable(executionException, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-            throw executionException;
-        }
-
-        if (!interruptedExceptions.isEmpty()) {
-            InterruptedException first = interruptedExceptions.getFirst();
-            executionException = new ExecutionException(first.getMessage(), first);
-            for (int i = 1; i < interruptedExceptions.size(); i++) {
-                executionException.addSuppressed(interruptedExceptions.get(i));
-            }
-            Thread.currentThread().interrupt();
-            throw executionException;
+            throw result;
         }
     }
 
-    private List<InterruptedException> awaitUninterruptibly(CountDownLatch latch) {
+    public List<InterruptedException> awaitUninterruptibly(InterruptibleVoidCallable interruptibleVoidCallable) {
         List<InterruptedException> exceptions = new ArrayList<>();
 
         while (true) {
             try {
-                latch.await();
+                interruptibleVoidCallable.call();
                 return exceptions;
             } catch (InterruptedException e) {
                 exceptions.add(e);
@@ -164,29 +153,34 @@ public class ConcurrentTaskService {
             callableCancelableList.forEach(CallableCancelable::cancel);
         }
 
-        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(countDownLatch);
+        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(() -> countDownLatch.await());
 
-        if (!interruptedExceptions.isEmpty()) {
-            if (executionException == null) {
-                InterruptedException first = interruptedExceptions.getFirst();
-                executionException = new ExecutionException(first.getMessage(), first);
-
-                for (int i = 1; i < interruptedExceptions.size(); i++) {
-                    executionException.addSuppressed(interruptedExceptions.get(i));
-                }
-            } else {
-                for (InterruptedException interruptedException : interruptedExceptions) {
-                    executionException.addSuppressed(interruptedException);
-                }
-            }
-        }
-
-        if (executionException != null) {
+        ExecutionException resultException = buildExecutionException(executionException, interruptedExceptions);
+        if (resultException != null) {
             if (ThrowableUtils.checkThrowable(executionException, InterruptedException.class)) {
                 Thread.currentThread().interrupt();
             }
-
-            throw executionException;
+            throw resultException;
         }
+    }
+
+    @Nullable
+    private ExecutionException buildExecutionException(@Nullable ExecutionException executionException, List<? extends Throwable> suppressed) {
+        ExecutionException result = executionException;
+        List<Throwable> suppressedList = new ArrayList<>();
+        if (result == null) {
+            if (CollectionUtils.isEmpty(suppressed)) {
+                return null;
+            }
+            Throwable first = suppressed.getFirst();
+            suppressedList.addAll(suppressed.subList(1, suppressed.size()));
+            result = new ExecutionException(first.getMessage(), first);
+        } else {
+            suppressedList.addAll(suppressed);
+        }
+        for (Throwable suppressedThrowable : suppressedList) {
+            result.addSuppressed(suppressedThrowable);
+        }
+        return result;
     }
 }

@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,8 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class SingleRunDownloadProcedure {
 
-    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(10);
-
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
@@ -40,6 +37,10 @@ public class SingleRunDownloadProcedure {
     private final AtomicBoolean running = new AtomicBoolean();
 
     private final AtomicBoolean stopped = new AtomicBoolean();
+
+    private final AtomicBoolean terminationInitiated = new AtomicBoolean(false);
+
+    private final CountDownLatch terminationLatch = new CountDownLatch(1);
 
     private final ConcurrentTaskService concurrentTaskService;
 
@@ -60,34 +61,38 @@ public class SingleRunDownloadProcedure {
     public void stop() {
         if (stopped.compareAndSet(false, true)) {
             executorService.shutdownNow();
+        }
+    }
+
+    public void awaitTermination() {
+        if (!stopped.get()) {
+            throw new IllegalStateException("Operation not allowed: status is not STOPPED");
+        }
+
+        if (terminationInitiated.compareAndSet(false, true)) {
             try {
-                // TODO get rid of SHUTDOWN_TIMEOUT
-                if (!executorService.awaitTermination(SHUTDOWN_TIMEOUT.toNanos(), TimeUnit.NANOSECONDS)) {
-                    log.info(
-                            "Download procedure was not terminated within {} ms. Operation: {}",
-                            SHUTDOWN_TIMEOUT.toMillis(),
-                            request.operationId()
-                    );
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Download procedure termination was interrupted", e);
+                concurrentTaskService.awaitUninterruptibly(
+                        () -> executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)
+                );
+            } finally {
+                terminationLatch.countDown();
             }
+        } else {
+            concurrentTaskService.awaitUninterruptibly(() -> terminationLatch.await());
         }
     }
 
     public void run(Runnable beforeProcedureCallback,
                     Runnable successCallback) throws ExecutionException {
+        if (stopped.get()) {
+            throw new IllegalStateException(
+                    "Download procedure was forcibly stopped: " + request.operationId()
+            );
+        }
 
         if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException(
                     "Download procedure is running: " + request.operationId()
-            );
-        }
-
-        if (stopped.get()) {
-            throw new IllegalStateException(
-                    "Download procedure was forcibly stopped: " + request.operationId()
             );
         }
 
