@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 @Component
 public class FileDownloadOrchestrator {
 
-    private final ExecutorService fileDownloadingExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService orchestratorExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Map<String, SingleRunDownloadProcedure> downloadProcedures = new ConcurrentHashMap<>();
 
@@ -119,7 +119,7 @@ public class FileDownloadOrchestrator {
         String fileHash = request.fileManifest().hash();
 
         try {
-            fileDownloadingExecutorService.execute(() -> {
+            orchestratorExecutorService.execute(() -> {
                 if (closed.get()) {
                     return;
                 }
@@ -421,7 +421,7 @@ public class FileDownloadOrchestrator {
         );
 
         log.info("Shutdown main executor service");
-        fileDownloadingExecutorService.shutdown();
+        orchestratorExecutorService.shutdown();
         log.info("Shutdown main executor service completed");
 
         log.info("Stop All download procedures");
@@ -429,7 +429,7 @@ public class FileDownloadOrchestrator {
         log.info("Stop All download procedures completed");
 
         log.info("AwaitTermination main executor service");
-        boolean finishedCleanly = fileDownloadingExecutorService.awaitTermination(
+        boolean finishedCleanly = orchestratorExecutorService.awaitTermination(
                 10,
                 TimeUnit.SECONDS
         );
@@ -440,7 +440,7 @@ public class FileDownloadOrchestrator {
 
         if (!finishedCleanly) {
             log.info("ShutdownNow main executor service");
-            fileDownloadingExecutorService.shutdownNow();
+            orchestratorExecutorService.shutdownNow();
             log.info("ShutdownNow main executor service completed");
         }
 
