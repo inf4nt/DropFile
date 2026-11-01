@@ -120,9 +120,11 @@ public class FileDownloadOrchestrator {
 
         try {
             fileDownloadingExecutorService.execute(() -> {
-                try {
-                    checkIfClosed();
+                if (closed.get()) {
+                    return;
+                }
 
+                try {
                     downloadProcedure.start(
                             () -> fileDownloadStore.save(
                                     operationId,
@@ -179,13 +181,10 @@ public class FileDownloadOrchestrator {
                     CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
                 }
             });
-        } catch (Exception e) {
-            log.error(
-                    "Error during starting download process operationId {} {}",
-                    operationId,
-                    e.getMessage(),
-                    e
-            );
+        } catch (RejectedExecutionException e) {
+            log.error("Error during starting download process operationId {} {}", operationId, e.getMessage(), e);
+
+            downloadProcedure.stop();
 
             downloadProcedures.remove(operationId);
             CommonUtils.executeSafety(() -> Files.deleteIfExists(temporaryFilePath));
