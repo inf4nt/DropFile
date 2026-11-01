@@ -110,7 +110,7 @@ public class SingleRunDownloadProcedure {
                     successCallback.run();
                 });
             } catch (RejectedExecutionException e) {
-                throw new IllegalStateException(
+                throw new RejectedExecutionException(
                         "Download procedure could be started: %s".formatted(request.operationId()), e
                 );
             }
