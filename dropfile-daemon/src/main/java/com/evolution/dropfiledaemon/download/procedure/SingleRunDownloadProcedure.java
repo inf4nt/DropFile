@@ -38,7 +38,7 @@ public class SingleRunDownloadProcedure {
 
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private final AtomicBoolean terminationInitiated = new AtomicBoolean(false);
+    private final AtomicBoolean terminationInitiated = new AtomicBoolean();
 
     private final CountDownLatch terminationLatch = new CountDownLatch(1);
 
