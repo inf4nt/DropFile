@@ -123,7 +123,7 @@ public class FileDownloadOrchestrator {
                 try {
                     checkIfClosed();
 
-                    downloadProcedure.run(
+                    downloadProcedure.start(
                             () -> fileDownloadStore.save(
                                     operationId,
                                     () -> {

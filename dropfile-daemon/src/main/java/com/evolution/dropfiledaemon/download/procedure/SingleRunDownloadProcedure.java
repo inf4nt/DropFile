@@ -34,7 +34,7 @@ public class SingleRunDownloadProcedure {
 
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
 
-    private final AtomicBoolean running = new AtomicBoolean();
+    private final AtomicBoolean startInitiated = new AtomicBoolean();
 
     private final AtomicBoolean stopped = new AtomicBoolean();
 
@@ -59,14 +59,18 @@ public class SingleRunDownloadProcedure {
     }
 
     public void stop() {
-        if (stopped.compareAndSet(false, true)) {
-            executorService.shutdownNow();
+        synchronized (this) {
+            if (stopped.compareAndSet(false, true)) {
+                executorService.shutdownNow();
+            }
         }
     }
 
     public void awaitTermination() {
-        if (!stopped.get()) {
-            throw new IllegalStateException("Operation not allowed: status is not STOPPED");
+        synchronized (this) {
+            if (!stopped.get()) {
+                throw new IllegalStateException("Operation not allowed: status is not STOPPED");
+            }
         }
 
         if (terminationInitiated.compareAndSet(false, true)) {
@@ -82,26 +86,34 @@ public class SingleRunDownloadProcedure {
         }
     }
 
-    public void run(Runnable beforeProcedureCallback,
-                    Runnable successCallback) throws ExecutionException {
+    public void start(Runnable beforeProcedureCallback,
+                      Runnable successCallback) throws ExecutionException {
         if (stopped.get()) {
             throw new IllegalStateException(
-                    "Download procedure was forcibly stopped: " + request.operationId()
+                    "Download procedure was forcibly stopped: %s".formatted(request.operationId())
             );
         }
 
-        if (!running.compareAndSet(false, true)) {
+        if (!startInitiated.compareAndSet(false, true)) {
             throw new IllegalStateException(
-                    "Download procedure is running: " + request.operationId()
+                    "Download procedure is one-shot and has already been started: %s".formatted(request.operationId())
             );
         }
 
         try (ExecutorService service = executorService) {
-            Future<?> future = service.submit(() -> {
-                beforeProcedureCallback.run();
-                runProcedure();
-                successCallback.run();
-            });
+            Future<?> future;
+
+            try {
+                future = service.submit(() -> {
+                    beforeProcedureCallback.run();
+                    runProcedure();
+                    successCallback.run();
+                });
+            } catch (RejectedExecutionException e) {
+                throw new IllegalStateException(
+                        "Download procedure could be started: %s".formatted(request.operationId()), e
+                );
+            }
 
             try {
                 future.get();
