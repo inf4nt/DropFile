@@ -2,7 +2,6 @@ package com.evolution.dropfile.common;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 
 public class ThrowableUtils {
 
@@ -17,15 +16,7 @@ public class ThrowableUtils {
             throw ioException;
         }
 
-        return mapExceptionTo(throwable, it -> new IOException(it.getMessage(), it));
-    }
-
-    public static <T extends Throwable, R extends Throwable> R mapExceptionTo(T original, Function<T, R> mapFunction) {
-        R newOne = mapFunction.apply(original);
-        for (Throwable throwable : original.getSuppressed()) {
-            newOne.addSuppressed(throwable);
-        }
-        return newOne;
+        return new IOException(throwable.getMessage(), throwable);
     }
 
     public static RuntimeException rethrowRuntimeException(Throwable throwable) {
@@ -35,7 +26,7 @@ public class ThrowableUtils {
         if (throwable instanceof RuntimeException runtimeException) {
             throw runtimeException;
         }
-        return mapExceptionTo(throwable, it -> new RuntimeException(it.getMessage(), it));
+        throw new RuntimeException(throwable.getMessage(), throwable);
     }
 
     @SafeVarargs
