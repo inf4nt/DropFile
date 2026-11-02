@@ -136,7 +136,7 @@ public class HttpTunnelClient implements TunnelClient {
             }
 
             HttpRequest httpRequest = httpTunnelRequestContext.httpRequest();
-            String message = "Tunnel call failed. Fingerprint %s command %s'. Reason '%s'. Method %s uri %s timeout %s".formatted(
+            String message = "Tunnel call failed. Fingerprint %s command %s. Reason %s. Method %s uri %s timeout %s".formatted(
                     request.getFingerprint(),
                     request.getCommand(),
                     throwable.getMessage(),
