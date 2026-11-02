@@ -23,24 +23,19 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @RequiredArgsConstructor
 public class SingleRunDownloadProcedure {
-
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final ThroughputMeter throughputMeter = new ThroughputMeter();
 
     private final AtomicBoolean startInitiated = new AtomicBoolean();
 
     private final AtomicBoolean stopped = new AtomicBoolean();
-
-    private final AtomicBoolean terminationInitiated = new AtomicBoolean();
-
-    private final CountDownLatch terminationLatch = new CountDownLatch(1);
 
     private final ConcurrentTaskService concurrentTaskService;
 
@@ -49,6 +44,8 @@ public class SingleRunDownloadProcedure {
     private final FileHelper fileHelper;
 
     private final DownloadProcedureRequest request;
+
+    volatile private Thread executionThread;
 
     public DownloadProcedureRequest getRequest() {
         return request;
@@ -61,66 +58,81 @@ public class SingleRunDownloadProcedure {
     public void stop() {
         synchronized (this) {
             if (stopped.compareAndSet(false, true)) {
-                executorService.shutdownNow();
+                if (executionThread != null) {
+                    executionThread.interrupt();
+                }
             }
         }
     }
 
     public void awaitTermination() {
+        Thread thread;
+
         synchronized (this) {
-            if (!stopped.get()) {
-                throw new IllegalStateException("Operation not allowed: status is not STOPPED");
+            thread = executionThread;
+
+            if (thread == null) {
+                if (!stopped.get()) {
+                    throw new IllegalStateException(
+                            "Procedure was not started or stopped"
+                    );
+                }
+                return;
             }
         }
 
-        if (terminationInitiated.compareAndSet(false, true)) {
-            try {
-                concurrentTaskService.awaitUninterruptibly(
-                        () -> executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)
-                );
-            } finally {
-                terminationLatch.countDown();
-            }
-        } else {
-            concurrentTaskService.awaitUninterruptibly(() -> terminationLatch.await());
-        }
+        concurrentTaskService.awaitUninterruptibly(thread::join);
     }
 
     public void start(Runnable beforeProcedureCallback,
                       Runnable successCallback) throws ExecutionException {
-        if (stopped.get()) {
-            throw new IllegalStateException(
-                    "Download procedure was forcibly stopped: %s".formatted(request.operationId())
-            );
-        }
-
-        if (!startInitiated.compareAndSet(false, true)) {
-            throw new IllegalStateException(
-                    "Download procedure is one-shot and has already been started: %s".formatted(request.operationId())
-            );
-        }
-
-        try (ExecutorService service = executorService) {
-            Future<?> future;
-
-            try {
-                future = service.submit(() -> {
-                    beforeProcedureCallback.run();
-                    runProcedure();
-                    successCallback.run();
-                });
-            } catch (RejectedExecutionException e) {
-                throw new RejectedExecutionException(
-                        "Download procedure could be started: %s".formatted(request.operationId()), e
+        AtomicReference<Throwable> executionThrowable = new AtomicReference<>();
+        synchronized (this) {
+            if (stopped.get()) {
+                throw new IllegalStateException(
+                        "Download procedure was forcibly stopped: %s"
+                                .formatted(request.operationId())
                 );
             }
 
-            try {
-                future.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Execution was interrupted", e);
+            if (!startInitiated.compareAndSet(false, true)) {
+                throw new IllegalStateException(
+                        "Download procedure is one-shot and has already been started: %s"
+                                .formatted(request.operationId())
+                );
             }
+
+            executionThread = Thread.ofVirtual()
+                    .name("download-procedure-" + request.operationId())
+                    .unstarted(() -> {
+                        try {
+                            beforeProcedureCallback.run();
+                            runProcedure();
+                            successCallback.run();
+                        } catch (Throwable throwable) {
+                            executionThrowable.set(throwable);
+                        }
+                    });
+
+            executionThread.start();
+        }
+
+        try {
+            executionThread.join();
+        } catch (InterruptedException e) {
+            stop();
+            awaitTermination();
+
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Execution was interrupted", e);
+        }
+
+        Throwable throwable = executionThrowable.get();
+        if (throwable != null) {
+            if (throwable instanceof ExecutionException e) {
+                throw e;
+            }
+            throw new ExecutionException(throwable.getMessage(), throwable);
         }
     }
 
