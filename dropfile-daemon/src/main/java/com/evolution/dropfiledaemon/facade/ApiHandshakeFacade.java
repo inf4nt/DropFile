@@ -22,7 +22,7 @@ import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
-import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
+import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

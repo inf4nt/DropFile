@@ -13,7 +13,7 @@ import com.evolution.dropfile.store.share.ShareFileStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.service.ApiShareFileHelper;
 import com.evolution.dropfiledaemon.service.SafePathResolverHelper;
-import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.concurent.RetryExecutor;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

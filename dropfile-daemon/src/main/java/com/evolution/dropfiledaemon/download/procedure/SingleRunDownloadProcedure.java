@@ -7,10 +7,10 @@ import com.evolution.dropfile.common.io.ThroughputMeter;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.procedure.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
-import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
+import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
-import com.evolution.dropfiledaemon.util.RetryExecutor;
+import com.evolution.dropfiledaemon.concurent.RetryExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

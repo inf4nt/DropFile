@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.download.procedure;
 
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
-import com.evolution.dropfiledaemon.service.ConcurrentTaskService;
+import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
