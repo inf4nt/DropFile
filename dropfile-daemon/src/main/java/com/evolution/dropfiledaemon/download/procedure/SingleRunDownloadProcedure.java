@@ -11,6 +11,7 @@ import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
 import com.evolution.dropfiledaemon.concurent.RetryExecutor;
+import com.evolution.dropfiledaemon.util.FileCompressionPolicyHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

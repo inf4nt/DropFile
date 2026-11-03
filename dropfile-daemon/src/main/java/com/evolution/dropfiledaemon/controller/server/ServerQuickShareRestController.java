@@ -4,6 +4,7 @@ import com.evolution.dropfile.store.quickshare.QuickShare;
 import com.evolution.dropfile.store.quickshare.QuickShareStore;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.service.StreamingArchiveService;
+import com.evolution.dropfiledaemon.util.FileCompressionPolicyHelper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,11 @@ public class ServerQuickShareRestController {
             if (quickShare.directory()) {
                 return getCompressedInsecureDirectory(quickShare, response);
             }
-            return getCompressedInsecureFile(quickShare, response);
+            Path resourcePath = Paths.get(quickShare.resourceRealPath());
+            String filenameContentDisposition = resourcePath.getFileName().toString();
+            if (FileCompressionPolicyHelper.isCompressible(filenameContentDisposition)) {
+                return getCompressedInsecureFile(quickShare, response);
+            }
         }
 
         if (quickShare.directory()) {

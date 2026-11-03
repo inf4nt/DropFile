@@ -1,4 +1,4 @@
-package com.evolution.dropfiledaemon.download.procedure;
+package com.evolution.dropfiledaemon.util;
 
 
 import org.springframework.util.StringUtils;
