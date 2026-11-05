@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -23,15 +24,40 @@ class SafePathResolverTest {
 
     private SafePathResolverHelper underTest;
 
-    private DirectoryProvider directoryProvider;
+    private DirectoryProvider daemonConfigDirectoryProvider;
+
+    private DirectoryProvider daemonSecretsDirectoryProvider;
+
+    private DirectoryProvider daemonInstallationSeedDirectoryProvider;
+
+    private Path configDir;
+
+    private Path secretsDir;
+
+    private Path installationSeedDir;
 
     @TempDir
     private Path tempDir;
 
     @BeforeEach
-    public void before() {
-        directoryProvider = mock(DirectoryProvider.class);
-        underTest = new SafePathResolverHelper(directoryProvider);
+    public void before() throws IOException {
+        daemonConfigDirectoryProvider = mock(DirectoryProvider.class);
+        daemonSecretsDirectoryProvider = mock(DirectoryProvider.class);
+        daemonInstallationSeedDirectoryProvider = mock(DirectoryProvider.class);
+
+        configDir = Files.createDirectory(tempDir.resolve("default-daemon-config"));
+        secretsDir = Files.createDirectory(tempDir.resolve("daemon-secrets"));
+        installationSeedDir = Files.createDirectory(tempDir.resolve("installation-seed"));
+
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonSecretsDirectoryProvider.getDirectoryPath()).thenReturn(secretsDir);
+        when(daemonInstallationSeedDirectoryProvider.getDirectoryPath()).thenReturn(installationSeedDir);
+
+        underTest = new SafePathResolverHelper(
+                daemonConfigDirectoryProvider,
+                daemonSecretsDirectoryProvider,
+                daemonInstallationSeedDirectoryProvider
+        );
     }
 
     @ParameterizedTest
@@ -116,7 +142,7 @@ class SafePathResolverTest {
     @Test
     void validateSensitiveDaemonPath_ShouldThrowSecurityException_WhenPathIsExactConfigDirectory() throws Exception {
         Path configDir = Files.createDirectory(tempDir.resolve("daemon-config"));
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertThrows(
                 SecurityException.class,
@@ -130,7 +156,7 @@ class SafePathResolverTest {
         Path subfolder = Files.createDirectory(configDir.resolve("subfolder"));
         Path nestedPath = Files.createFile(subfolder.resolve("settings.json"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertThrows(
                 SecurityException.class,
@@ -146,11 +172,22 @@ class SafePathResolverTest {
         Path keysDir = Files.createDirectory(configDir.resolve("keys"));
         Path privateKey = Files.createFile(keysDir.resolve("private.key"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertTrue(underTest.isSensitiveDaemonPath(configDir));
         assertTrue(underTest.isSensitiveDaemonPath(appYml));
         assertTrue(underTest.isSensitiveDaemonPath(privateKey));
+    }
+
+    @Test
+    void isSensitiveDaemonPath_ShouldReturnTrue_WhenPathIsInsideSecretsOrInstallationSeedDirectory() throws Exception {
+        Path secretFile = Files.createFile(secretsDir.resolve("daemon.bin"));
+        Path installationSeedFile = Files.createFile(installationSeedDir.resolve("installation.json"));
+
+        assertTrue(underTest.isSensitiveDaemonPath(secretsDir));
+        assertTrue(underTest.isSensitiveDaemonPath(secretFile));
+        assertTrue(underTest.isSensitiveDaemonPath(installationSeedDir));
+        assertTrue(underTest.isSensitiveDaemonPath(installationSeedFile));
     }
 
     @Test
@@ -163,7 +200,7 @@ class SafePathResolverTest {
         Path confPublicDir = Files.createDirectory(tempDir.resolve("conf-public"));
         Path fileTxt = Files.createFile(confPublicDir.resolve("file.txt"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertFalse(underTest.isSensitiveDaemonPath(imagePng));
         assertFalse(underTest.isSensitiveDaemonPath(fileTxt));
@@ -175,7 +212,7 @@ class SafePathResolverTest {
         Path secretFile = Files.createFile(configDir.resolve("secret.key"));
         Path otherDir = Files.createDirectory(tempDir.resolve("other-dir"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         Path traversalPath = otherDir.resolve("..").resolve("daemon-config").resolve("secret.key");
 
@@ -190,7 +227,7 @@ class SafePathResolverTest {
         Path parentDir = Files.createDirectory(tempDir.resolve("parent-dir"));
         Path configDir = Files.createDirectory(parentDir.resolve("daemon-config"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertThrows(
                 SecurityException.class,
@@ -204,7 +241,7 @@ class SafePathResolverTest {
         Path userDownloads = Files.createDirectory(tempDir.resolve("user-downloads"));
         Path safeFile = Files.createFile(userDownloads.resolve("document.pdf"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(safeFile));
     }
@@ -215,7 +252,7 @@ class SafePathResolverTest {
         Path siblingDir = Files.createDirectory(tempDir.resolve("daemon-config-public"));
         Path siblingFile = Files.createFile(siblingDir.resolve("file.txt"));
 
-        when(directoryProvider.getDirectoryPath()).thenReturn(configDir);
+        when(daemonConfigDirectoryProvider.getDirectoryPath()).thenReturn(configDir);
 
         assertDoesNotThrow(() -> underTest.validateSensitiveDaemonPath(siblingFile));
     }

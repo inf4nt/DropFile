@@ -21,6 +21,10 @@ public class SafePathResolverHelper {
 
     private final DirectoryProvider daemonConfigDirectoryProvider;
 
+    private final DirectoryProvider daemonSecretsDirectoryProvider;
+
+    private final DirectoryProvider daemonInstallationSeedDirectoryProvider;
+
     public String sanitizeFilename(String rawFilename) {
         if (!StringUtils.hasText(rawFilename)) {
             throw new IllegalArgumentException("Unable to sanitize. Argument rawFilename is empty");
@@ -83,10 +87,14 @@ public class SafePathResolverHelper {
 
     private List<Path> getCanonicalSensitiveRoots() {
         Path configDir = daemonConfigDirectoryProvider.getDirectoryPath();
+        Path secretsDir = daemonSecretsDirectoryProvider.getDirectoryPath();
+        Path installationSeedDir = daemonInstallationSeedDirectoryProvider.getDirectoryPath();
 
         Path realConfigDir = toRealPath(configDir);
+        Path realSecretsDir = toRealPath(secretsDir);
+        Path realInstallationSeedDir = toRealPath(installationSeedDir);
 
-        return List.of(realConfigDir);
+        return List.of(realConfigDir, realSecretsDir, realInstallationSeedDir);
     }
 
     private Path toRealPath(Path path) {
