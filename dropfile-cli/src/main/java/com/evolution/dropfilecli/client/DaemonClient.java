@@ -58,6 +58,10 @@ public class DaemonClient {
         return sendPost("/api/handshake/reconnect/alias", new ApiHandshakeReconnectAliasRequestDTO(alias));
     }
 
+    public HttpResponse<byte[]> handshakeReconnectAuto() throws IOException {
+        return sendPost("/api/handshake/reconnect/auto");
+    }
+
     public HttpResponse<byte[]> handshakeReconnectAliasCurrent() throws IOException {
         return sendPost("/api/handshake/reconnect/alias/current");
     }

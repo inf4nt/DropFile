@@ -10,6 +10,7 @@ import picocli.CommandLine;
         aliases = {"r"},
         description = "Reconnect commands",
         subcommands = {
+                AutoReconnectConnectionCommand.class,
                 AliasReconnectConnectionCommand.class,
                 FingerprintReconnectConnectionCommand.class,
                 AddressReconnectConnectionCommand.class

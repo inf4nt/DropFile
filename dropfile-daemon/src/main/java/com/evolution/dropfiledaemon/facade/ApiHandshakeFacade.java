@@ -8,11 +8,9 @@ import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAddressRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeReconnectAliasRequestDTO;
-import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
-import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
+import com.evolution.dropfile.common.dto.*;
 import com.evolution.dropfile.common.function.VoidCallable;
+import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
@@ -22,7 +20,6 @@ import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
-import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -347,6 +344,36 @@ public class ApiHandshakeFacade {
             );
         }
         handshakeReconnectAlias(new ApiHandshakeReconnectAliasRequestDTO(alias));
+    }
+
+    public ApiHandshakeReconnectAutoResponseDTO handshakeReconnectAuto() {
+        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutCurrent = handshakeTrustedOutStore.getRequiredLastUpdated();
+        String fingerprint = trustedOutCurrent.getKey();
+        Exception exception;
+        try {
+            handshakeReconnectFingerprint(fingerprint);
+            return new ApiHandshakeReconnectAutoResponseDTO(
+                    fingerprint,
+                    trustedOutCurrent.getValue().addressURI(),
+                    trustedOutCurrent.getValue().alias()
+            );
+        } catch (Exception e) {
+            exception = e;
+        }
+        String alias = trustedOutCurrent.getValue().alias();
+        if (StringUtils.hasText(alias)) {
+            try {
+                handshakeReconnectAlias(new ApiHandshakeReconnectAliasRequestDTO(alias));
+                return new ApiHandshakeReconnectAutoResponseDTO(
+                        fingerprint,
+                        trustedOutCurrent.getValue().addressURI(),
+                        trustedOutCurrent.getValue().alias()
+                );
+            } catch (Exception e) {
+                exception.addSuppressed(e);
+            }
+        }
+        throw new IllegalStateException(exception.getMessage(), exception);
     }
 
     public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) {

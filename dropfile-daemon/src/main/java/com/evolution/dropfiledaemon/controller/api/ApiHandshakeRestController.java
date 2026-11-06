@@ -38,6 +38,11 @@ public class ApiHandshakeRestController {
         apiHandshakeFacade.handshakeReconnectFingerprint(criteriaEnvelope);
     }
 
+    @PostMapping("/reconnect/auto")
+    public ApiHandshakeReconnectAutoResponseDTO handshakeReconnectAuto() {
+        return apiHandshakeFacade.handshakeReconnectAuto();
+    }
+
     @PostMapping("/reconnect/alias")
     public void handshakeReconnectAlias(@RequestBody ApiHandshakeReconnectAliasRequestDTO requestDTO) {
         apiHandshakeFacade.handshakeReconnectAlias(requestDTO);
