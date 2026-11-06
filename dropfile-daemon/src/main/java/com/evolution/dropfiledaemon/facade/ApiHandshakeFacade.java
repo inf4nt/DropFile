@@ -407,6 +407,7 @@ public class ApiHandshakeFacade {
                     HandshakeTrustedOutStore.TrustedOut trustedOut = entry.getValue();
                     return mapToHandshakeApiTrustOutResponseDTO(remoteFingerprint, trustedOut);
                 })
+                .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                 .toList();
     }
 

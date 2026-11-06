@@ -303,24 +303,27 @@ public class HandshakeFacade {
     }
 
     private List<HandshakeApiTrustInResponseDTO> mapToHandshakeApiTrustInResponseDTOList(Map<String, HandshakeTrustedInStore.TrustedIn> trusts) {
-        return trusts.entrySet().stream().map(entry -> {
-            String remoteFingerprint = entry.getKey();
-            HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
-            HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(remoteFingerprint)
-                    .map(it -> it.getValue())
-                    .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
-                    .orElse(null);
+        return trusts.entrySet().stream()
+                .map(entry -> {
+                    String remoteFingerprint = entry.getKey();
+                    HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
+                    HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(remoteFingerprint)
+                            .map(it -> it.getValue())
+                            .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
+                            .orElse(null);
 
-            // TODO add updated by user/system
-            return new HandshakeApiTrustInResponseDTO(
-                    remoteFingerprint,
-                    CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
-                    CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
-                    sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.publicDH()),
-                    sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.remotePublicDH()),
-                    trustedIn.created(),
-                    trustedIn.updated()
-            );
-        }).toList();
+                    // TODO add updated by user/system
+                    return new HandshakeApiTrustInResponseDTO(
+                            remoteFingerprint,
+                            CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
+                            CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
+                            sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.publicDH()),
+                            sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.remotePublicDH()),
+                            trustedIn.created(),
+                            trustedIn.updated()
+                    );
+                })
+                .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
+                .toList();
     }
 }
