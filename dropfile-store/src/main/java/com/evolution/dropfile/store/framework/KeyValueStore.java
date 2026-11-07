@@ -44,6 +44,18 @@ public interface KeyValueStore<V> {
         return save(() -> Map.of(key, value), ValidatePolicy.STRICT).values().stream().findAny().orElseThrow();
     }
 
+    default V insert(String key, Callable<V> callable) {
+        return save(
+                () -> {
+                    if (get(key).isPresent()) {
+                        throw new IllegalStateException("Key already exists. Unable to process insert operation");
+                    }
+                    return Map.of(key, callable.call());
+                },
+                ValidatePolicy.STRICT
+        ).values().stream().findAny().orElseThrow();
+    }
+
     default V update(String key, Function<V, V> updateFunction) {
         return save(
                 () -> {
