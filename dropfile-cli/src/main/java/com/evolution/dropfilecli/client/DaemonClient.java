@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -37,13 +36,18 @@ public class DaemonClient {
 
     private final ObjectMapper objectMapper;
 
-    public HttpResponse<byte[]> handshake(URI address, String secretAccessKey, String alias, boolean force) throws IOException {
-        String aliasArgument = StringUtils.hasText(alias) ? alias : null;
-        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address.toString(), secretAccessKey, aliasArgument, force));
+    public HttpResponse<byte[]> handshake(String address,
+                                          String secret) throws IOException {
+        return sendPost("/api/handshake", new ApiHandshakeRequestDTO(address, secret));
     }
 
-    public HttpResponse<byte[]> handshakeReconnectAddress(URI address) throws IOException {
-        return sendPost("/api/handshake/reconnect/address", new ApiHandshakeReconnectAddressRequestDTO(address.toString()));
+    public HttpResponse<byte[]> handshakeExtend(String address,
+                                                CriteriaEnvelope fingerprint) throws IOException {
+        return sendPost("/api/handshake/extend", new ApiHandshakeExtendRequestDTO(address, fingerprint));
+    }
+
+    public HttpResponse<byte[]> handshakeExtendCurrent(String address) throws IOException {
+        return sendPost("/api/handshake/extend/current", new ApiHandshakeExtendCurrentRequestDTO(address));
     }
 
     public HttpResponse<byte[]> handshakeReconnectCurrent() throws IOException {
@@ -52,18 +56,6 @@ public class DaemonClient {
 
     public HttpResponse<byte[]> handshakeReconnectFingerprint(CriteriaEnvelope criteriaEnvelope) throws IOException {
         return sendPost("/api/handshake/reconnect/fingerprint", criteriaEnvelope);
-    }
-
-    public HttpResponse<byte[]> handshakeReconnectAlias(String alias) throws IOException {
-        return sendPost("/api/handshake/reconnect/alias", new ApiHandshakeReconnectAliasRequestDTO(alias));
-    }
-
-    public HttpResponse<byte[]> handshakeReconnectAuto() throws IOException {
-        return sendPost("/api/handshake/reconnect/auto");
-    }
-
-    public HttpResponse<byte[]> handshakeReconnectAliasCurrent() throws IOException {
-        return sendPost("/api/handshake/reconnect/alias/current");
     }
 
     public HttpResponse<byte[]> handshakeDisconnect(CriteriaEnvelope fingerprintCriteriaEnvelope) throws IOException {

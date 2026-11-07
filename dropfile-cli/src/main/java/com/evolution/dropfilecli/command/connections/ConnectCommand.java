@@ -1,6 +1,6 @@
 package com.evolution.dropfilecli.command.connections;
 
-import com.evolution.dropfile.common.CommonUtils;
+import com.evolution.dropfile.common.CriteriaEnvelope;
 import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -14,10 +14,11 @@ import java.net.http.HttpResponse;
         aliases = {"c"},
         description = "Perform connection to the given address",
         customSynopsis = {
-                "dropf connections connect <address> <access-key> [options]",
-                "dropf connections connect 192.168.1.3:28282 top_secret",
-                "dropf connections connect https://drorpfile.test top_secret",
-                "dropf connections connect https://drorpfile.test top_secret my_phone"
+                "dropf connections connect <address> --secret <access-key>",
+                "dropf connections connect <address> --fingerprint <fingerprint>",
+                "dropf connections connect 192.168.1.3:28282 --secret top_secret",
+                "dropf connections connect https://drorpfile.test --secret top_secret",
+                "dropf connections connect https://drorpfile.test --fingerprint abcdefg"
         },
         parameterListHeading = "%nRequired parameters:%n",
         optionListHeading = "%nOptional parameters:%n"
@@ -27,17 +28,26 @@ public class ConnectCommand extends AbstractCommandHttpHandler<Void> {
     @CommandLine.Parameters(index = "0", description = "<host>:<port>")
     private String address;
 
-    @CommandLine.Parameters(index = "1", description = "Access secret key")
-    private String accessSecretKey;
+    @CommandLine.ArgGroup
+    private Arguments arguments;
 
-    @CommandLine.Parameters(index = "2", description = "Alias", defaultValue = "")
-    private String alias;
+    private static class Arguments {
+        @CommandLine.Option(names = {"--fingerprint", "-f"}, description = "Treat credential as a fingerprint and add address to existing handshake")
+        private String fingerprint;
 
-    @CommandLine.Option(names = {"--force"}, defaultValue = "false")
-    private boolean force;
+        @CommandLine.Option(names = {"--secret", "-s"}, description = "Treat credential as a secret key")
+        private String secret;
+    }
 
     @Override
     public HttpResponse<byte[]> execute() throws Exception {
-        return daemonClient.handshake(CommonUtils.toURI(address), accessSecretKey, alias, force);
+        if (arguments != null && StringUtils.hasText(arguments.fingerprint)) {
+            return daemonClient.handshakeExtend(address, new CriteriaEnvelope(arguments.fingerprint));
+        }
+        if (arguments != null && StringUtils.hasText(arguments.secret)) {
+            return daemonClient.handshake(address, arguments.secret);
+        }
+
+        return daemonClient.handshakeExtendCurrent(address);
     }
 }

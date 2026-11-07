@@ -101,7 +101,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
                 if (isSessionHasToBeRefreshed(fingerprint)) {
                     log.info("Refreshing session for fingerprint {} (proactive refresh)", fingerprint);
-                    apiHandshakeFacade.systemHandshakeReconnect(fingerprint);
+                    apiHandshakeFacade.handshakeReconnectFingerprint(fingerprint);
                 } else {
                     log.debug("Session for fingerprint {} was already refreshed by another thread", fingerprint);
                 }

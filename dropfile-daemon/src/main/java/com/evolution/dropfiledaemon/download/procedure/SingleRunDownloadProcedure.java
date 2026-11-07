@@ -4,13 +4,13 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.function.VoidCallable;
 import com.evolution.dropfile.common.io.FileHelper;
 import com.evolution.dropfile.common.io.ThroughputMeter;
+import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
+import com.evolution.dropfiledaemon.concurent.RetryExecutor;
 import com.evolution.dropfiledaemon.download.FileDownloadOrchestrator;
 import com.evolution.dropfiledaemon.download.procedure.manifest.ChunkManifest;
 import com.evolution.dropfiledaemon.download.procedure.manifest.FileManifest;
-import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClientGateway;
 import com.evolution.dropfiledaemon.util.ExecutionProfiling;
-import com.evolution.dropfiledaemon.concurent.RetryExecutor;
 import com.evolution.dropfiledaemon.util.FileCompressionPolicyHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -228,9 +228,9 @@ public class SingleRunDownloadProcedure {
                     return 1;
                 })
                 .doOnError((attempt, exception) -> {
-                    log.error("Retry 'share-download-chunk-stream'. Operation: {} fingerprint {} fileId: {} filename: {} attempt: {} size {} position {} exception: {}",
+                    log.error("Retry 'share-download-chunk-stream' Operation: {} fingerprint: {} fileId: {} filename: {} attempt: {} size: {} position: {} exception: {}",
                             request.operationId(), request.fingerprint(), request.fileId(), request.filename(), attempt,
-                            chunkManifest.size(), chunkManifest.position(), exception.getMessage(), exception
+                            chunkManifest.size(), chunkManifest.position(), exception.getMessage()
                     );
                 })
                 .run();

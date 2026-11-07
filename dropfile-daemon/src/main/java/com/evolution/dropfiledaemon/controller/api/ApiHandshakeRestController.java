@@ -23,9 +23,14 @@ public class ApiHandshakeRestController {
         apiHandshakeFacade.handshake(requestDTO);
     }
 
-    @PostMapping("/reconnect/address")
-    public void handshakeReconnectAddress(@RequestBody ApiHandshakeReconnectAddressRequestDTO requestDTO) {
-        apiHandshakeFacade.handshakeReconnectAddress(requestDTO);
+    @PostMapping("/extend")
+    public void handshakeExtend(@RequestBody ApiHandshakeExtendRequestDTO requestDTO) {
+        apiHandshakeFacade.handshakeExtend(requestDTO);
+    }
+
+    @PostMapping("/extend/current")
+    public void handshakeExtendCurrent(@RequestBody ApiHandshakeExtendCurrentRequestDTO requestDTO) {
+        apiHandshakeFacade.handshakeExtendCurrent(requestDTO);
     }
 
     @PostMapping("/reconnect/current")
@@ -36,21 +41,6 @@ public class ApiHandshakeRestController {
     @PostMapping("/reconnect/fingerprint")
     public void handshakeReconnectFingerprint(@RequestBody CriteriaEnvelope criteriaEnvelope) {
         apiHandshakeFacade.handshakeReconnectFingerprint(criteriaEnvelope);
-    }
-
-    @PostMapping("/reconnect/auto")
-    public ApiHandshakeReconnectAutoResponseDTO handshakeReconnectAuto() {
-        return apiHandshakeFacade.handshakeReconnectAuto();
-    }
-
-    @PostMapping("/reconnect/alias")
-    public void handshakeReconnectAlias(@RequestBody ApiHandshakeReconnectAliasRequestDTO requestDTO) {
-        apiHandshakeFacade.handshakeReconnectAlias(requestDTO);
-    }
-
-    @PostMapping("/reconnect/alias/current")
-    public void handshakeReconnectAliasCurrent() {
-        apiHandshakeFacade.handshakeReconnectAliasCurrent();
     }
 
     @GetMapping("/trust/in")

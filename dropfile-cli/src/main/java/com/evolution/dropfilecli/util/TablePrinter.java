@@ -32,8 +32,7 @@ public class TablePrinter {
                 put("RemotePublicDH", "RemotePublicDH".length());
                 put("path", 25);
                 put("file", 25);
-                put("alias", 10);
-                put("AddressURI", 18);
+                put("address", 18);
                 put("hash", 13);
                 put("size", 14);
                 put("operation", "operation".length());

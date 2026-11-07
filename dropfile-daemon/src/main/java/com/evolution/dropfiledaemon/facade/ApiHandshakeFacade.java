@@ -8,15 +8,15 @@ import com.evolution.dropfile.common.crypto.CryptoECDH;
 import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.common.crypto.SecureEnvelope;
-import com.evolution.dropfile.common.dto.*;
-import com.evolution.dropfile.common.function.VoidCallable;
-import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
+import com.evolution.dropfile.common.dto.ApiHandshakeExtendCurrentRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeExtendRequestDTO;
+import com.evolution.dropfile.common.dto.ApiHandshakeRequestDTO;
+import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
-import com.evolution.dropfiledaemon.handshake.store.api.AliasValidator;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
@@ -24,27 +24,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
 @Component
 public class ApiHandshakeFacade {
-
-    private static final Duration RECONNECT_BY_ALIAS_TIMEOUT = Duration.ofSeconds(30);
 
     private final HandshakeClient handshakeClient;
 
@@ -60,30 +56,22 @@ public class ApiHandshakeFacade {
 
     private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
-    private final ConcurrentTaskService concurrentTaskService;
+    public void handshakeExtendCurrent(ApiHandshakeExtendCurrentRequestDTO requestDTO) {
+        URI addressURI = CommonUtils.toURI(requestDTO.address());
+        String fingerprint = handshakeTrustedOutStore.getRequiredLastUpdated().getKey();
+        handshakeExtend(fingerprint, addressURI);
+    }
+
+    public void handshakeExtend(ApiHandshakeExtendRequestDTO requestDTO) {
+        URI addressURI = CommonUtils.toURI(requestDTO.address());
+        String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(requestDTO.fingerprint())
+                .getKey();
+        handshakeExtend(fingerprint, addressURI);
+    }
 
     public void handshake(ApiHandshakeRequestDTO requestDTO) {
-        if (StringUtils.hasText(requestDTO.alias())) {
-            AliasValidator.validateOrThrow(requestDTO.alias());
-        }
-
         try {
             URI addressURI = CommonUtils.toURI(requestDTO.address());
-            Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> existingAddressURI = handshakeTrustedOutStore
-                    .getByAddressURI(addressURI)
-                    .orElse(null);
-            if (existingAddressURI != null) {
-                String existingFingerprint = existingAddressURI.getKey();
-
-                if (!requestDTO.force()) {
-                    throw new IllegalStateException(("Unable to process handshake request." +
-                            " Duplicate address URI %s (fingerprint: %s)." +
-                            " Try to perform disconnect or use --force option")
-                            .formatted(addressURI, existingFingerprint));
-                }
-
-                disconnectByFingerprint(existingFingerprint);
-            }
 
             KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
             KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
@@ -99,7 +87,7 @@ public class ApiHandshakeFacade {
             );
             byte[] requestPayloadByteArray = objectMapper.writeValueAsBytes(requestPayload);
 
-            String rawSecret = requestDTO.secretAccessKey();
+            String rawSecret = requestDTO.secret();
             String accessSecretKeyId = accessKeyService.getId(rawSecret);
 
             SecretKey secretHandshakeClientKey = cryptoTunnel.deriveSecretKey(
@@ -193,11 +181,10 @@ public class ApiHandshakeFacade {
                         handshakeRequestId
                 ));
 
-                handshakeTrustedOutStore.save(remoteFingerprint, () -> {
+                handshakeTrustedOutStore.insert(remoteFingerprint, () -> {
                     Instant now = Instant.now();
                     return new HandshakeTrustedOutStore.TrustedOut(
-                            addressURI,
-                            StringUtils.hasText(requestDTO.alias()) ? requestDTO.alias() : null,
+                            List.of(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now)),
                             new HandshakeTrustedOutStore.HandshakeKeys(
                                     rsaKeyPair.getPublic().getEncoded(),
                                     rsaKeyPair.getPrivate().getEncoded(),
@@ -214,13 +201,11 @@ public class ApiHandshakeFacade {
         }
     }
 
-    private void handshakeReconnectFingerprint(String fingerprint) {
+    private void handshakeExtend(String fingerprint, URI addressURI) {
         try {
             HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
 
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                URI addressURI = trustedOut.addressURI();
-
                 KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
                 UUID sessionRequestId = UUID.randomUUID();
@@ -303,24 +288,45 @@ public class ApiHandshakeFacade {
                         sessionRequestId
                 ));
 
-                handshakeTrustedOutStore.update(remoteFingerprint, value -> value
-                        .withHandshakeId(sessionRequestId)
-                        .withUpdated(Instant.now())
-                );
+                handshakeTrustedOutStore.update(remoteFingerprint, value -> {
+                    Instant now = Instant.now();
+
+                    List<HandshakeTrustedOutStore.AddressEnvelope> addressEnvelopes = new ArrayList<>(value.addressEnvelopes());
+                    addressEnvelopes.removeIf(it -> it.address().equals(addressURI));
+                    addressEnvelopes.add(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now));
+
+                    return value.withHandshakeId(sessionRequestId)
+                            .withAddressEnvelopes(List.copyOf(addressEnvelopes))
+                            .withUpdated(now);
+                });
             });
         } catch (Exception e) {
             throw ThrowableUtils.rethrowRuntimeException(e);
         }
     }
 
-    public void handshakeReconnectAddress(ApiHandshakeReconnectAddressRequestDTO requestDTO) {
-        String fingerprint = handshakeTrustedOutStore
-                .getRequiredByAddressURI(CommonUtils.toURI(requestDTO.address())).getKey();
-        handshakeReconnectFingerprint(fingerprint);
-    }
+    public void handshakeReconnectFingerprint(String fingerprint) {
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(fingerprint).getValue();
+        List<HandshakeTrustedOutStore.AddressEnvelope> addressEnvelopes = trustedOut.addressEnvelopes();
 
-    public void systemHandshakeReconnect(String fingerprint) {
-        handshakeReconnectFingerprint(fingerprint);
+        Exception exception = null;
+        for (HandshakeTrustedOutStore.AddressEnvelope addressEnvelope : addressEnvelopes) {
+            try {
+                URI address = addressEnvelope.address();
+                handshakeExtend(fingerprint, address);
+                return;
+            } catch (Exception e) {
+                if (exception == null) {
+                    exception = e;
+                } else {
+                    exception.addSuppressed(e);
+                }
+            }
+        }
+
+        if (exception != null) {
+            throw ThrowableUtils.rethrowRuntimeException(exception);
+        }
     }
 
     public void handshakeReconnectCurrent() {
@@ -332,69 +338,6 @@ public class ApiHandshakeFacade {
         String fingerprint = handshakeTrustedOutStore.getRequiredByCriteriaKey(criteriaEnvelope)
                 .getKey();
         handshakeReconnectFingerprint(fingerprint);
-    }
-
-    public void handshakeReconnectAliasCurrent() {
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trusted = handshakeTrustedOutStore.getRequiredLastUpdated();
-        String alias = trusted.getValue().alias();
-        if (!StringUtils.hasText(alias)) {
-            String fingerprint = trusted.getKey();
-            throw new IllegalStateException("Unable to reconnect. The latest connection fingerprint '%s' has an empty alias"
-                    .formatted(fingerprint)
-            );
-        }
-        handshakeReconnectAlias(new ApiHandshakeReconnectAliasRequestDTO(alias));
-    }
-
-    public ApiHandshakeReconnectAutoResponseDTO handshakeReconnectAuto() {
-        Map.Entry<String, HandshakeTrustedOutStore.TrustedOut> trustedOutCurrent = handshakeTrustedOutStore.getRequiredLastUpdated();
-        String fingerprint = trustedOutCurrent.getKey();
-        Exception exception;
-        try {
-            handshakeReconnectFingerprint(fingerprint);
-            return new ApiHandshakeReconnectAutoResponseDTO(
-                    fingerprint,
-                    trustedOutCurrent.getValue().addressURI(),
-                    trustedOutCurrent.getValue().alias()
-            );
-        } catch (Exception e) {
-            exception = e;
-        }
-        String alias = trustedOutCurrent.getValue().alias();
-        if (StringUtils.hasText(alias)) {
-            try {
-                handshakeReconnectAlias(new ApiHandshakeReconnectAliasRequestDTO(alias));
-                return new ApiHandshakeReconnectAutoResponseDTO(
-                        fingerprint,
-                        trustedOutCurrent.getValue().addressURI(),
-                        trustedOutCurrent.getValue().alias()
-                );
-            } catch (Exception e) {
-                exception.addSuppressed(e);
-            }
-        }
-        throw new IllegalStateException(exception.getMessage(), exception);
-    }
-
-    public void handshakeReconnectAlias(ApiHandshakeReconnectAliasRequestDTO requestDTO) {
-        String alias = requestDTO.alias();
-        AliasValidator.validateOrThrow(alias);
-        Map<String, HandshakeTrustedOutStore.TrustedOut> listOfHandshakes = handshakeTrustedOutStore
-                .getRequiredByAlias(alias);
-        List<VoidCallable> tasks = listOfHandshakes.keySet()
-                .stream()
-                .map(fingerprint -> (VoidCallable) () -> {
-                    handshakeReconnectFingerprint(fingerprint);
-                })
-                .toList();
-        try {
-            concurrentTaskService.invokeAny(tasks, RECONNECT_BY_ALIAS_TIMEOUT);
-        } catch (ExecutionException exception) {
-            String addresses = listOfHandshakes.values().stream()
-                    .map(it -> it.addressURI().toString())
-                    .collect(Collectors.joining(", "));
-            throw new IllegalStateException("Reconnect by alias '%s' to [%s] failed".formatted(alias, addresses), exception);
-        }
     }
 
     public void disconnect(CriteriaEnvelope fingerprintCriteria) throws ExecutionException {
@@ -434,7 +377,6 @@ public class ApiHandshakeFacade {
                     HandshakeTrustedOutStore.TrustedOut trustedOut = entry.getValue();
                     return mapToHandshakeApiTrustOutResponseDTO(remoteFingerprint, trustedOut);
                 })
-                .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                 .toList();
     }
 
@@ -452,8 +394,13 @@ public class ApiHandshakeFacade {
                 CommonUtils.encodeBase64(trustedOut.handshake().remoteRSA()),
                 sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.publicDH()),
                 sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.remotePublicDH()),
-                trustedOut.addressURI().toString(),
-                trustedOut.alias(),
+                trustedOut.addressEnvelopes()
+                        .stream()
+                        .map(addressEnvelope -> new HandshakeApiTrustOutResponseDTO.AddressEnvelope(
+                                addressEnvelope.address(),
+                                addressEnvelope.lastSeen()
+                        ))
+                        .toList(),
                 trustedOut.created(),
                 trustedOut.updated()
         );

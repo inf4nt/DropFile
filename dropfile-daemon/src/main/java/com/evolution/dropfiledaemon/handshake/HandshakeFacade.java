@@ -323,7 +323,6 @@ public class HandshakeFacade {
                             trustedIn.updated()
                     );
                 })
-                .sorted((o1, o2) -> o2.updated().compareTo(o1.updated()))
                 .toList();
     }
 }

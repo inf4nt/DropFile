@@ -36,10 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Primary
 @Slf4j
@@ -86,9 +83,11 @@ public class HttpTunnelClient implements TunnelClient {
                 long timeout = httpRequest.timeout().map(Duration::toMillis).orElse(0L);
                 String message = "HTTP connect timed out during call %s %s timeout %s millis"
                         .formatted(httpRequest.method(), httpRequest.uri(), timeout);
-                throw new HttpConnectTimeoutException(message);
+                throw new TunnelClientProtocolException(message);
+//                throw new HttpConnectTimeoutException(message);
             } catch (ConnectException e) {
-                throw new ConnectException("Target address is unreachable");
+                throw new TunnelClientProtocolException("Target address is unreachable");
+//                throw new ConnectException("Target address is unreachable");
             }
 
             try {
@@ -264,6 +263,7 @@ public class HttpTunnelClient implements TunnelClient {
             String remoteFingerprint = request.getFingerprint();
             HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore.getRequired(remoteFingerprint)
                     .getValue();
+
             TunnelSessionKeys sessionKeys = getSessionKeys(remoteFingerprint, trustedOut);
 
             UUID requestId = UUID.randomUUID();
@@ -276,10 +276,11 @@ public class HttpTunnelClient implements TunnelClient {
                     secureEnvelope.nonce()
             );
 
+            URI addressURI = getAddressByTrustedOut(trustedOut);
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(
                             CommonUtils.joinPaths(
-                                    trustedOut.addressURI().toString(),
+                                    addressURI.toString(),
                                     ServerTunnelRestController.TUNNEL_ENDPOINT
                             )
                     ))
@@ -299,6 +300,14 @@ public class HttpTunnelClient implements TunnelClient {
         } catch (Exception e) {
             throw new RuntimeException("Failed to build tunnel request. Fingerprint %s command %s".formatted(request.getFingerprint(), request.getCommand()), e);
         }
+    }
+
+    private URI getAddressByTrustedOut(HandshakeTrustedOutStore.TrustedOut trustedOut) {
+        return trustedOut.addressEnvelopes()
+                .stream()
+                .max(Comparator.comparing(HandshakeTrustedOutStore.AddressEnvelope::lastSeen))
+                .map(it -> it.address())
+                .orElseThrow();
     }
 
     private record TunnelSessionKeys(SecretKey clientKey, SecretKey serverKey) {

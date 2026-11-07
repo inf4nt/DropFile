@@ -113,7 +113,7 @@ public class ApiConnectionsAccessFacade {
                     String hostAddress = address.inetAddress().getHostAddress();
                     int serverPort = applicationProperties.serverPort;
                     URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
-                    return "dropf connections connect %s %s".formatted(daemonRootURI, accessKey);
+                    return "dropf connections connect %s --secret %s".formatted(daemonRootURI, accessKey);
                 })
                 .toList();
     }

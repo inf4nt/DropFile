@@ -11,11 +11,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
 
 @Component
@@ -102,51 +100,6 @@ public class ConcurrentTaskService {
                 Thread.currentThread().interrupt();
             }
             throw result;
-        }
-    }
-
-    public void invokeAny(List<VoidCallable> callables, Duration timeout) throws ExecutionException {
-        Objects.requireNonNull(timeout, "timeout must not be null");
-        if (!timeout.isPositive()) {
-            throw new IllegalArgumentException("timeout must be positive");
-        }
-
-        if (CollectionUtils.isEmpty(callables)) {
-            return;
-        }
-
-        CountDownLatch countDownLatch = new CountDownLatch(callables.size());
-
-        List<CallableCancelable<Void>> callableCancelableList = callables.stream()
-                .map(it -> it.toCallable())
-                .map(it -> new CallableCancelable<>(
-                        it,
-                        new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
-                                countDownLatch
-                        )
-                ))
-                .toList();
-
-        ExecutionException executionException = null;
-
-        try {
-            executorService.invokeAny(callableCancelableList, timeout.toNanos(), TimeUnit.NANOSECONDS);
-        } catch (ExecutionException e) {
-            executionException = e;
-        } catch (Throwable throwable) {
-            executionException = new ExecutionException(throwable.getMessage(), throwable);
-        } finally {
-            callableCancelableList.forEach(CallableCancelable::cancel);
-        }
-
-        List<InterruptedException> interruptedExceptions = awaitUninterruptibly(() -> countDownLatch.await());
-
-        ExecutionException resultException = buildExecutionException(executionException, interruptedExceptions);
-        if (resultException != null) {
-            if (ThrowableUtils.checkThrowable(executionException, InterruptedException.class)) {
-                Thread.currentThread().interrupt();
-            }
-            throw resultException;
         }
     }
 

@@ -1,21 +1,34 @@
 package com.evolution.dropfilecli.command.connections.reconnect;
 
-import com.evolution.dropfilecli.command.AbstractCommandHandler;
+import com.evolution.dropfile.common.CriteriaEnvelope;
+import com.evolution.dropfilecli.command.AbstractCommandHttpHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import picocli.CommandLine;
+
+import java.net.http.HttpResponse;
 
 @Component
 @CommandLine.Command(
         name = "reconnect",
-        aliases = {"r"},
-        description = "Reconnect commands",
-        subcommands = {
-                AutoReconnectConnectionCommand.class,
-                AliasReconnectConnectionCommand.class,
-                FingerprintReconnectConnectionCommand.class,
-                AddressReconnectConnectionCommand.class
-        }
+        description = "Reconnect to the current fingerprint connection or a specified fingerprint",
+        customSynopsis = {
+                "dropf connections reconnect",
+                "dropf connections reconnect <fingerprint>"
+        },
+        parameterListHeading = "%nRequired parameters:%n",
+        optionListHeading = "%nOptional parameters:%n"
 )
-public class ReconnectConnectionCommand extends AbstractCommandHandler {
+public class ReconnectConnectionCommand extends AbstractCommandHttpHandler<Void> {
 
+    @CommandLine.Parameters(index = "0", description = "Reconnect via fingerprint", defaultValue = "")
+    private String fingerprint;
+
+    @Override
+    public HttpResponse<byte[]> execute() throws Exception {
+        if (StringUtils.hasText(fingerprint)) {
+            return daemonClient.handshakeReconnectFingerprint(new CriteriaEnvelope(fingerprint));
+        }
+        return daemonClient.handshakeReconnectCurrent();
+    }
 }

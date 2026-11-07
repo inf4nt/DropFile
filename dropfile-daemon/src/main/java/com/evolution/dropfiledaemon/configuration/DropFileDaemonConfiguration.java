@@ -16,6 +16,7 @@ import com.evolution.dropfile.store.quickshare.RuntimeQuickShareStore;
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfile.store.secret.DaemonSecretStoreCacheable;
+import com.evolution.dropfile.store.secret.DefaultDaemonSecretStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStore;
 import com.evolution.dropfile.store.seed.InstallationSeedBootstrapStoreCacheable;
 import com.evolution.dropfile.store.share.ShareFile;
@@ -239,14 +240,31 @@ public class DropFileDaemonConfiguration {
                 objectMapper,
                 DaemonSecret.class
         );
-        return new DaemonSecretStoreCacheable(
-                new CacheableFileKeyValueStore<>(
+        return new DefaultDaemonSecretStore(
+                new FileKeyValueStore<>(
                         daemonSecretFileProvider,
                         fileOperations,
                         serdeOperations
                 )
         );
     }
+
+//    @Bean
+//    public DaemonSecretStore daemonSecretStore(FileProvider daemonSecretFileProvider,
+//                                               CryptoFileOperations fileOperations,
+//                                               ObjectMapper objectMapper) {
+//        SerdeOperations<DaemonSecret> serdeOperations = new JsonSerdeOperations<>(
+//                objectMapper,
+//                DaemonSecret.class
+//        );
+//        return new DaemonSecretStoreCacheable(
+//                new CacheableFileKeyValueStore<>(
+//                        daemonSecretFileProvider,
+//                        fileOperations,
+//                        serdeOperations
+//                )
+//        );
+//    }
 
     @Bean
     public InstallationSeedBootstrapStore installationSeedBootstrapStore(FileProvider installationSeedFileProvider,
