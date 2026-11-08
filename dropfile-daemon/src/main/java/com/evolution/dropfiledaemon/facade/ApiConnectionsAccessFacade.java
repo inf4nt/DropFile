@@ -80,7 +80,7 @@ public class ApiConnectionsAccessFacade {
     }
 
     private ApiConnectionsAccessInfoResponseDTO toAccessKeyInfoResponseDTO(String id, AccessKey accessKey) {
-        List<String> connectionsConnectCommands = getConnectionsConnectCommands(accessKey.key());
+        Set<String> connectionsConnectCommands = getConnectionsConnectCommands(accessKey.key());
         return new ApiConnectionsAccessInfoResponseDTO(
                 id,
                 accessKey.key(),
@@ -91,8 +91,8 @@ public class ApiConnectionsAccessFacade {
         );
     }
 
-    private List<String> getConnectionsConnectCommands(String accessKey) {
-        List<String> commands = new ArrayList<>();
+    private Set<String> getConnectionsConnectCommands(String accessKey) {
+        Set<String> commands = new LinkedHashSet<>();
         if (StringUtils.hasText(applicationProperties.daemonExternalHost)) {
             String connectionCommand = getConnectionCommand(applicationProperties.daemonExternalHost, accessKey);
             commands.add(connectionCommand);
