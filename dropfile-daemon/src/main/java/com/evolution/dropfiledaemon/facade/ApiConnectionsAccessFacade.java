@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -91,6 +92,12 @@ public class ApiConnectionsAccessFacade {
     }
 
     private List<String> getConnectionsConnectCommands(String accessKey) {
+        List<String> commands = new ArrayList<>();
+        if (StringUtils.hasText(applicationProperties.daemonExternalHost)) {
+            String connectionCommand = getConnectionCommand(applicationProperties.daemonExternalHost, accessKey);
+            commands.add(connectionCommand);
+        }
+
         InetLocalAddressService.ConnectionAddress connectionAddress;
         try {
             connectionAddress = inetLocalAddressService.getConnectionAddress();
@@ -98,9 +105,13 @@ public class ApiConnectionsAccessFacade {
             throw new UncheckedIOException(e.getMessage(), e);
         }
         if (!CollectionUtils.isEmpty(connectionAddress.wireless())) {
-            return buildConnectionsConnectCommand(connectionAddress.wireless(), accessKey);
+            List<String> wirelessCommands = buildConnectionsConnectCommand(connectionAddress.wireless(), accessKey);
+            commands.addAll(wirelessCommands);
+        } else {
+            List<String> ethernetCommands = buildConnectionsConnectCommand(connectionAddress.ethernet(), accessKey);
+            commands.addAll(ethernetCommands);
         }
-        return buildConnectionsConnectCommand(connectionAddress.ethernet(), accessKey);
+        return commands;
     }
 
     private List<String> buildConnectionsConnectCommand(Collection<InetLocalAddressService.BestLocalAddress> addresses, String accessKey) {
@@ -113,8 +124,12 @@ public class ApiConnectionsAccessFacade {
                     String hostAddress = address.inetAddress().getHostAddress();
                     int serverPort = applicationProperties.serverPort;
                     URI daemonRootURI = CommonUtils.toURI(hostAddress, serverPort);
-                    return "dropf connections connect %s --secret %s".formatted(daemonRootURI, accessKey);
+                    return getConnectionCommand(daemonRootURI.toString(), accessKey);
                 })
                 .toList();
+    }
+
+    private String getConnectionCommand(String daemonAddress, String accessKey) {
+        return "dropf connections connect %s --secret %s".formatted(daemonAddress, accessKey);
     }
 }
