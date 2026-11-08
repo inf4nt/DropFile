@@ -32,6 +32,18 @@ FROM build_shared AS build_dropfile_daemon
 COPY /dropfile-daemon/src dropfile-daemon/src
 RUN mvn -pl dropfile-daemon install
 
+FROM node:22-bookworm-slim AS build_electron
+WORKDIR /electron
+COPY /electron-desktop/package.json ./
+RUN npm install --no-audit --no-fund
+COPY /electron-desktop/main.js ./
+COPY /electron-desktop/preload.js ./
+COPY /electron-desktop/renderer.js ./
+COPY /electron-desktop/index.html ./
+COPY /electron-desktop/styles.css ./
+COPY /electron-desktop/prepare-win-electron.js ./
+RUN npm run build:win
+
 FROM busybox:1.38.0 AS archive_build
 
 RUN mkdir -p dropfile/bin \
@@ -39,7 +51,8 @@ RUN mkdir -p dropfile/bin \
     && mkdir -p dropfile/runtime \
     && mkdir -p dropfile/conf \
     && mkdir -p dropfile/downloads \
-    && mkdir -p dropfile/jars
+    && mkdir -p dropfile/jars \
+    && mkdir -p dropfile/desktop
 
 COPY /release/windows /dropfile/bin
 COPY /dropfile-daemon/src/main/resources/application.properties /dropfile/conf/dropfile-daemon.application.properties
@@ -48,6 +61,7 @@ COPY /dropfile-cli/src/main/resources/application.properties /dropfile/conf/drop
 COPY --from=runtime_container /runtime /dropfile/runtime
 COPY --from=build_dropfile_cli /dropfile-cli/target/*.jar /dropfile/jars/cli/dropfile-cli.jar
 COPY --from=build_dropfile_daemon /dropfile-daemon/target/*.jar /dropfile/jars/daemon/dropfile-daemon.jar
+COPY --from=build_electron /electron/dist/win-unpacked/ /dropfile/desktop/
 
 RUN tar -czf dropfile.tar.gz dropfile
 

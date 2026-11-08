@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none';"
+  >
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DropFile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">D</span> DropFile</div>
+    <div class="nav-label">LOCAL</div>
+    <div class="nav-item active"><span class="nav-icon">◈</span> Daemon</div>
+  </aside>
+
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">LOCAL INSTANCE</div>
+        <h1>Daemon</h1>
+      </div>
+      <button id="refresh" type="button" aria-label="Обновить статус">Обновить</button>
+    </header>
+
+    <section class="status-card" aria-live="polite">
+      <div id="status-indicator" class="status-indicator checking"></div>
+      <div class="status-copy">
+        <div id="status-title" class="status-title">Проверка daemon...</div>
+        <div id="status-message" class="status-message">127.0.0.1:18181</div>
+      </div>
+      <div class="endpoint">127.0.0.1:18181</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow">RUNTIME</div>
+          <h2>Информация о системе</h2>
+        </div>
+        <span id="last-checked" class="last-checked">Ожидание данных</span>
+      </div>
+      <div id="system-info" class="info-grid">
+        <div class="empty-state">Данные появятся после подключения к daemon.</div>
+      </div>
+    </section>
+
+    <details class="panel configuration">
+      <summary>
+        <span>
+          <span class="eyebrow">SETTINGS</span>
+          <span class="summary-title">Конфигурация daemon</span>
+        </span>
+        <span class="chevron">⌄</span>
+      </summary>
+      <div id="configuration-info" class="info-grid">
+        <div class="empty-state">Нет данных.</div>
+      </div>
+    </details>
+
+    <footer>DropFile Desktop · прототип</footer>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>

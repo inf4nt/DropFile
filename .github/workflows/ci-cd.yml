@@ -52,7 +52,7 @@ jobs:
             Build based on master:
             - Linux x64 (includes JRE)
             - macOS x64 (includes JRE)
-            - Windows x64 (includes JRE)
+            - Windows x64 (includes JRE and Electron Desktop prototype)
             - Portable (NO JRE)
           prerelease: true
           files: dist/dropfile-*.tar.gz

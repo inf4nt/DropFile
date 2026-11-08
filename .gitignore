@@ -7,6 +7,8 @@ logs
 downloads
 conf
 release/dropfile-*.tar.gz
+electron-desktop/node_modules/
+electron-desktop/dist/
 
 ### STS ###
 .apt_generated

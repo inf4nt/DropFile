@@ -1,0 +1,36 @@
+{
+  "name": "dropfile-electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DropFile desktop status client",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "node prepare-win-electron.js && electron-builder --win --x64 --dir"
+  },
+  "devDependencies": {
+    "@electron/get": "2.0.3",
+    "electron": "37.2.6",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "com.evolution.dropfile.desktop",
+    "productName": "DropFile-electron",
+    "asar": true,
+    "electronDist": "electron-dist",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "styles.css",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false
+    }
+  }
+}
