@@ -6,7 +6,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.net.URI;
 import java.net.http.HttpResponse;
+import java.time.Instant;
 import java.util.List;
 
 @Component
@@ -29,5 +31,36 @@ public class TrustedOutCommand extends AbstractCommandHttpHandler<List<Handshake
     protected TypeReference<List<HandshakeApiTrustOutResponseDTO>> getTypeReference() {
         return new TypeReference<List<HandshakeApiTrustOutResponseDTO>>() {
         };
+    }
+
+    @Override
+    protected void printTable(List<HandshakeApiTrustOutResponseDTO> handshakeApiTrustOutResponseDTOList) {
+        List<TrustOutRow> rows = handshakeApiTrustOutResponseDTOList.stream()
+                .flatMap(dto -> dto.addressEnvelopes().stream()
+                        .map(addressEnvelope -> new TrustOutRow(
+                                dto.remoteFingerprint(),
+                                dto.publicRSA(),
+                                dto.remotePublicRSA(),
+                                dto.publicDH(),
+                                dto.remotePublicDH(),
+                                addressEnvelope.address(),
+                                addressEnvelope.lastSeen(),
+                                dto.created(),
+                                dto.updated()
+                        ))
+                )
+                .toList();
+        super.doPrintTable(rows);
+    }
+
+    private record TrustOutRow(String remoteFingerprint,
+                               String publicRSA,
+                               String remotePublicRSA,
+                               String publicDH,
+                               String remotePublicDH,
+                               URI address,
+                               Instant lastSeen,
+                               Instant created,
+                               Instant updated) {
     }
 }

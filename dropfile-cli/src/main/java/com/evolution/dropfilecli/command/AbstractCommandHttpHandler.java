@@ -138,7 +138,11 @@ public abstract class AbstractCommandHttpHandler<TR> extends AbstractCommandHand
         System.out.println(json);
     }
 
-    protected void printTable(Object object) {
+    protected void printTable(TR object) {
+        doPrintTable(object);
+    }
+
+    protected void doPrintTable(Object object) {
         if (!(object instanceof Iterable<?> iterable)) {
             throw new IllegalArgumentException("Is not an array. Print table supports only arrays");
         }
