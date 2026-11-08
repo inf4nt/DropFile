@@ -182,7 +182,6 @@ public class SingleRunDownloadProcedure {
         FileManifest manifest = request.fileManifest();
         long totalDownloaded = throughputMeter.getTotalThroughput();
         long speedBytesPerSec = throughputMeter.getSpeedBytesPerSec();
-        String percent = CommonUtils.percent(totalDownloaded, manifest.size());
 
         return new FileDownloadOrchestrator.DownloadProgress(
                 request.operationId(),
@@ -192,8 +191,7 @@ public class SingleRunDownloadProcedure {
                 manifest.hash(),
                 manifest.size(),
                 totalDownloaded,
-                speedBytesPerSec,
-                percent
+                speedBytesPerSec
         );
     }
 

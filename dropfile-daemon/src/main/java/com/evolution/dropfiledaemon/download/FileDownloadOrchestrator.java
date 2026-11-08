@@ -464,8 +464,7 @@ public class FileDownloadOrchestrator {
             String hash,
             long total,
             long downloaded,
-            long speedBytesPerSec,
-            String percentage
+            long speedBytesPerSec
     ) {
     }
 
