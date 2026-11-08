@@ -48,7 +48,7 @@ public interface KeyValueStore<V> {
         return save(
                 () -> {
                     if (get(key).isPresent()) {
-                        throw new IllegalStateException("Key already exists. Unable to process insert operation");
+                        throw new IllegalStateException("Key already exists %s. Unable to process insert operation".formatted(key));
                     }
                     return Map.of(key, callable.call());
                 },
