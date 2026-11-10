@@ -11,9 +11,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 @Component
@@ -101,6 +103,73 @@ public class ConcurrentTaskService {
             }
             throw result;
         }
+    }
+
+    public <V> V invokeAny(Collection<Callable<V>> callables, Duration timeout) throws ExecutionException {
+        Objects.requireNonNull(timeout, "timeout must not be null");
+
+        if (!timeout.isPositive()) {
+            throw new IllegalArgumentException("timeout must be positive");
+        }
+
+        if (CollectionUtils.isEmpty(callables)) {
+            throw new IllegalArgumentException();
+        }
+
+        CountDownLatch countDownLatch = new CountDownLatch(callables.size());
+
+        List<CallableCancelable<V>> callableCancelableList = callables.stream()
+                .map(it -> new CallableCancelable<>(
+                        it,
+                        new CallableCancelable.SingleActionCountDownLatchCallableCancelableMiddleware(
+                                countDownLatch
+                        )
+                ))
+                .toList();
+
+        V result = null;
+        ExecutionException executionException = null;
+        boolean interrupted = false;
+        List<InterruptedException> interruptedExceptions;
+
+        try {
+            result = executorService.invokeAny(
+                    callableCancelableList,
+                    timeout.toNanos(),
+                    TimeUnit.NANOSECONDS
+            );
+        } catch (ExecutionException e) {
+            executionException = e;
+        } catch (Throwable t) {
+            interrupted = t instanceof InterruptedException;
+            executionException = new ExecutionException(t.getMessage(), t);
+        } finally {
+            callableCancelableList.forEach(it -> it.cancel());
+            interruptedExceptions = awaitUninterruptibly(() -> countDownLatch.await());
+        }
+
+        if (!interruptedExceptions.isEmpty()) {
+            interrupted = true;
+
+            if (executionException == null) {
+                executionException = new ExecutionException(
+                        "Operation was interrupted while waiting for tasks to finish",
+                        interruptedExceptions.getFirst()
+                );
+            } else {
+                executionException.addSuppressed(interruptedExceptions.getFirst());
+            }
+        }
+
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
+
+        if (executionException != null) {
+            throw executionException;
+        }
+
+        return result;
     }
 
     public List<InterruptedException> awaitUninterruptibly(InterruptibleVoidCallable interruptibleVoidCallable) {
