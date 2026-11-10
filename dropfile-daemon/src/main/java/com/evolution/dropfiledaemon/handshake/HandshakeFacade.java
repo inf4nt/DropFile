@@ -11,6 +11,7 @@ import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
@@ -283,6 +284,39 @@ public class HandshakeFacade {
 
             return sessionResponse;
         });
+    }
+
+    public HandshakeReadinessDTO.ReadinessResponse handshakeReadiness(HandshakeReadinessDTO.ReadinessRequest requestDTO)
+            throws GeneralSecurityException, IOException {
+        String fingerprint = requestDTO.fingerprint();
+        HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore
+                .getRequired(fingerprint)
+                .getValue();
+
+        HandshakeReadinessDTO.ReadinessRequestPayload requestPayload = objectMapper.readValue(
+                requestDTO.payload(),
+                HandshakeReadinessDTO.ReadinessRequestPayload.class
+        );
+        CryptoRSA.verify(
+                requestDTO.payload(),
+                requestDTO.signature(),
+                CryptoRSA.getPublicKey(trustedIn.handshake().remoteRSA())
+        );
+        replyAttackGuard.readinessRequest(fingerprint, requestPayload);
+
+        HandshakeReadinessDTO.ReadinessResponsePayload responsePayload =
+                new HandshakeReadinessDTO.ReadinessResponsePayload(requestPayload.requestId());
+        byte[] responsePayloadBytes = objectMapper.writeValueAsBytes(responsePayload);
+        byte[] signature = CryptoRSA.sign(
+                responsePayloadBytes,
+                CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA())
+        );
+
+        return new HandshakeReadinessDTO.ReadinessResponse(
+                CommonUtils.getFingerprint(trustedIn.handshake().publicRSA()),
+                responsePayloadBytes,
+                signature
+        );
     }
 
     public void revoke(CriteriaEnvelope fingerprintCriteria) throws ExecutionException {

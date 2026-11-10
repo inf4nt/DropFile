@@ -19,7 +19,7 @@ public class LockableOperation implements Purgeable {
 
     private static final long LOCK_TIMEOUT_SECONDS = 30;
 
-    private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock globalLock = new ReentrantReadWriteLock(true);
 
     private final Map<String, Lock> keyLocks = new ConcurrentHashMap<>();
 
@@ -39,7 +39,7 @@ public class LockableOperation implements Purgeable {
     public <R> R executeWithKeyLock(String key, Callable<R> callable) throws ExecutionException {
         acquireLock(globalLock.readLock(), "global read lock");
         try {
-            Lock keyLock = keyLocks.computeIfAbsent(key, _ -> new ReentrantLock());
+            Lock keyLock = keyLocks.computeIfAbsent(key, _ -> new ReentrantLock(true));
 
             acquireLock(keyLock, "key lock [" + key + "]");
             try {

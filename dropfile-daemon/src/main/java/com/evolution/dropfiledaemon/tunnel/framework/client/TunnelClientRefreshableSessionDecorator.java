@@ -9,7 +9,6 @@ import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelClient;
 import com.evolution.dropfiledaemon.tunnel.framework.exception.TunnelClientProtocolException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@RequiredArgsConstructor
 @Component
 public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Purgeable {
 
@@ -29,8 +27,6 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
     private static final Duration SESSION_TTL = Duration.ofHours(1);
 
     private final Map<String, SuspectedSessionEnvelope> suspectSessions = new ConcurrentHashMap<>();
-
-    private final LockableOperation lockableOperationHandshakeTrustedOutStore;
 
     private final TunnelClient tunnelClient;
 
@@ -40,9 +36,26 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
 
     private final HandshakeSessionOutStore handshakeSessionOutStore;
 
+    private final LockableOperation lockableOperationSessionRefresh;
+
+    public TunnelClientRefreshableSessionDecorator(TunnelClient tunnelClient,
+                                                   ApiHandshakeFacade apiHandshakeFacade,
+                                                   HandshakeTrustedOutStore handshakeTrustedOutStore,
+                                                   HandshakeSessionOutStore handshakeSessionOutStore) {
+        this.tunnelClient = tunnelClient;
+        this.apiHandshakeFacade = apiHandshakeFacade;
+        this.handshakeTrustedOutStore = handshakeTrustedOutStore;
+        this.handshakeSessionOutStore = handshakeSessionOutStore;
+        this.lockableOperationSessionRefresh = new LockableOperation(
+                fingerprint -> this.handshakeTrustedOutStore.get(fingerprint).isEmpty()
+        );
+    }
+
+
     @Override
     public void purge() {
         suspectSessions.keySet().removeIf(fingerprint -> handshakeTrustedOutStore.get(fingerprint).isEmpty());
+        lockableOperationSessionRefresh.purge();
     }
 
     @Override
@@ -98,10 +111,17 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
 
     private void refreshSession(String fingerprint) throws IOException {
         try {
-            lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(fingerprint, () -> {
-                if (isSessionHasToBeRefreshed(fingerprint)) {
+            lockableOperationSessionRefresh.executeWithKeyLock(fingerprint, () -> {
+                HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                        .getRequired(fingerprint).getValue();
+                if (isSessionHasToBeRefreshed(fingerprint, trustedOut)) {
                     log.info("Refreshing session for fingerprint {} (proactive refresh)", fingerprint);
-                    apiHandshakeFacade.handshakeReconnectFingerprint(fingerprint);
+                    HandshakeTrustedOutStore.AddressEnvelope availableHandshakeAddressEnvelope = apiHandshakeFacade.getAvailableHandshakeAddressEnvelope(fingerprint);
+                    if (trustedOut.updated().equals(handshakeTrustedOutStore.getRequired(fingerprint).getValue().updated())) {
+                        apiHandshakeFacade.handshakeExtend(fingerprint, availableHandshakeAddressEnvelope.address());
+                    } else {
+                        log.debug("Session for fingerprint {} was already refreshed by another thread", fingerprint);
+                    }
                 } else {
                     log.debug("Session for fingerprint {} was already refreshed by another thread", fingerprint);
                 }
@@ -112,10 +132,7 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
         }
     }
 
-    private boolean isSessionHasToBeRefreshed(String fingerprint) {
-        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
-                .getRequired(fingerprint).getValue();
-
+    private boolean isSessionHasToBeRefreshed(String fingerprint, HandshakeTrustedOutStore.TrustedOut trustedOut) {
         Instant sessionLastUpdated = trustedOut.updated();
 
         if (Instant.now().isAfter(sessionLastUpdated.plus(SESSION_TTL))) {
@@ -142,6 +159,12 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
         }
 
         return true;
+    }
+
+    private boolean isSessionHasToBeRefreshed(String fingerprint) {
+        HandshakeTrustedOutStore.TrustedOut trustedOut = handshakeTrustedOutStore
+                .getRequired(fingerprint).getValue();
+        return isSessionHasToBeRefreshed(fingerprint, trustedOut);
     }
 
     private void clearResolvedSuspect(String fingerprint) {

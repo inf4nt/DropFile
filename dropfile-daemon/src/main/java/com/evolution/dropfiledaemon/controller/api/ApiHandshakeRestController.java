@@ -24,22 +24,22 @@ public class ApiHandshakeRestController {
     }
 
     @PostMapping("/extend")
-    public void handshakeExtend(@RequestBody ApiHandshakeExtendRequestDTO requestDTO) {
+    public void handshakeExtend(@RequestBody ApiHandshakeExtendRequestDTO requestDTO) throws Exception {
         apiHandshakeFacade.handshakeExtend(requestDTO);
     }
 
     @PostMapping("/extend/current")
-    public void handshakeExtendCurrent(@RequestBody ApiHandshakeExtendCurrentRequestDTO requestDTO) {
+    public void handshakeExtendCurrent(@RequestBody ApiHandshakeExtendCurrentRequestDTO requestDTO) throws Exception {
         apiHandshakeFacade.handshakeExtendCurrent(requestDTO);
     }
 
     @PostMapping("/reconnect/current")
-    public void handshakeReconnectCurrent() {
+    public void handshakeReconnectCurrent() throws Exception {
         apiHandshakeFacade.handshakeReconnectCurrent();
     }
 
     @PostMapping("/reconnect/fingerprint")
-    public void handshakeReconnectFingerprint(@RequestBody CriteriaEnvelope criteriaEnvelope) {
+    public void handshakeReconnectFingerprint(@RequestBody CriteriaEnvelope criteriaEnvelope) throws Exception {
         apiHandshakeFacade.handshakeReconnectFingerprint(criteriaEnvelope);
     }
 

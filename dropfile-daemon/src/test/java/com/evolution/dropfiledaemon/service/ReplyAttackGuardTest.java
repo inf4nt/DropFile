@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -285,6 +286,30 @@ public class ReplyAttackGuardTest {
 
         assertDoesNotThrow(() -> guard.sessionRequest(payload1));
         assertDoesNotThrow(() -> guard.sessionRequest(payload2));
+    }
+
+    @Test
+    void shouldDetectHandshakeReadinessRequestReplayForSameFingerprintAndRequestId() {
+        advanceClockPastBootstrap();
+        long timestamp = testClock.millis();
+        String fingerprint = "fingerprint";
+        var payload = new HandshakeReadinessDTO.ReadinessRequestPayload(UUID.randomUUID(), timestamp);
+
+        guard.readinessRequest(fingerprint, payload);
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.readinessRequest(fingerprint, payload)
+        );
+    }
+
+    @Test
+    void shouldAllowHandshakeReadinessRequestWithSameRequestIdForDifferentFingerprints() {
+        advanceClockPastBootstrap();
+        var payload = new HandshakeReadinessDTO.ReadinessRequestPayload(UUID.randomUUID(), testClock.millis());
+
+        assertDoesNotThrow(() -> guard.readinessRequest("fingerprint-1", payload));
+        assertDoesNotThrow(() -> guard.readinessRequest("fingerprint-2", payload));
     }
 
     @Test

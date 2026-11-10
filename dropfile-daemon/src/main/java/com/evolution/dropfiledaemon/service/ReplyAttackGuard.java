@@ -4,6 +4,7 @@ import com.evolution.dropfile.common.CommonUtils;
 import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,17 @@ public class ReplyAttackGuard implements Purgeable {
 
         String key = getSessionRequestKey(payload);
         checkAndRegisterKey(key, "Session request");
+    }
+
+    public void readinessRequest(String fingerprint, HandshakeReadinessDTO.ReadinessRequestPayload payload) {
+        validatePayloadTime("Handshake readiness request", payload.timestamp(), clock.instant());
+
+        if (payload.requestId() == null) {
+            throw new IllegalArgumentException("Handshake readiness request ID must not be null");
+        }
+
+        String key = "h.ready:" + fingerprint + ":" + payload.requestId();
+        checkAndRegisterKey(key, "Handshake readiness request");
     }
 
     public void handshakeRequest(HandshakeRequestDTO.Payload payload) {

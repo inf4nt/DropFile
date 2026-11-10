@@ -1,6 +1,7 @@
 package com.evolution.dropfiledaemon.controller.server;
 
 import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
@@ -23,6 +24,8 @@ public class ServerHandshakeRestController {
 
     public static final String HANDSHAKE_SESSION_ENDPOINT = "/s/h/s";
 
+    public static final String HANDSHAKE_READINESS_ENDPOINT = "/s/h/r";
+
     private final HandshakeFacade handshakeFacade;
 
     private final ObjectMapper objectMapper;
@@ -41,6 +44,15 @@ public class ServerHandshakeRestController {
         return new WebAsyncTask<>(() -> {
             HandshakeSessionDTO.Session requestDTO = deserialize(httpServletRequest, HandshakeSessionDTO.Session.class);
             return handshakeFacade.handshakeSession(requestDTO);
+        });
+    }
+
+    @PostMapping(ServerHandshakeRestController.HANDSHAKE_READINESS_ENDPOINT)
+    public WebAsyncTask<HandshakeReadinessDTO.ReadinessResponse> readinessHandshake(HttpServletRequest httpServletRequest) {
+        return new WebAsyncTask<>(() -> {
+            HandshakeReadinessDTO.ReadinessRequest requestDTO =
+                    deserialize(httpServletRequest, HandshakeReadinessDTO.ReadinessRequest.class);
+            return handshakeFacade.handshakeReadiness(requestDTO);
         });
     }
 
