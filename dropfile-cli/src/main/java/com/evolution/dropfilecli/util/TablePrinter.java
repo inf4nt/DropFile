@@ -33,6 +33,7 @@ public class TablePrinter {
                 put("path", 25);
                 put("file", 25);
                 put("address", 18);
+                put("alias", 12);
                 put("hash", 13);
                 put("size", 14);
                 put("operation", "operation".length());
