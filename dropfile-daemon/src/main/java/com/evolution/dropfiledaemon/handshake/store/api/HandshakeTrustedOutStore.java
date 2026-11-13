@@ -39,25 +39,4 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
                 .max(Comparator.comparing(o -> o.getValue().updated()))
                 .orElseThrow(() -> new NoSuchElementException("No trusted out last updated found. The trusted out store is empty"));
     }
-
-    @Override
-    default void validate(String key, TrustedOut value) {
-
-
-//        if (StringUtils.hasText(value.alias())) {
-//            AliasValidator.validateOrThrow(value.alias());
-//        }
-
-        // TODO fix me
-//        Map.Entry<String, TrustedOut> duplicateAddressURI = getAll().entrySet().stream()
-//                .filter(entry -> !entry.getKey().equals(key))
-//                .filter(entry -> entry.getValue().addressURI().equals(value.addressURI()))
-//                .findAny()
-//                .orElse(null);
-//        if (duplicateAddressURI != null) {
-//            throw new IllegalArgumentException(
-//                    String.format("Duplicate addressURI %s Fingerprint: %s", value.addressURI(), duplicateAddressURI.getKey())
-//            );
-//        }
-    }
 }
