@@ -28,7 +28,6 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
                          byte[] remoteRSA) {
     }
 
-    @With
     record AddressEnvelope(URI address,
                            Instant lastSeen) {
     }
