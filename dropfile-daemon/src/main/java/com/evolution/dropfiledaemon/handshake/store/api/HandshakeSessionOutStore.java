@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public interface HandshakeSessionOutStore extends KeyValueStore<HandshakeSessionOutStore.SessionOut> {
 
+    // TODO remove publicDH and remotePublicDH from the store, they are not needed to be stored
     record SessionOut(byte[] publicDH,
                       byte[] remotePublicDH,
                       byte[] sessionClientKey,
