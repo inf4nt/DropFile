@@ -2,7 +2,7 @@ package com.evolution.dropfiledaemon.service;
 
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -252,7 +252,7 @@ public class ReplyAttackGuardTest {
         UUID requestId = UUID.randomUUID();
         byte[] dhKey = "same_dh_key".getBytes();
 
-        var payload = new HandshakeSessionDTO.SessionRequestPayload(requestId, "salt".getBytes(), dhKey, timestamp);
+        var payload = new HandshakeSessionRequestDTO.Payload(requestId, "salt".getBytes(), dhKey, timestamp);
 
         guard.sessionRequest(payload);
 
@@ -268,8 +268,8 @@ public class ReplyAttackGuardTest {
         long timestamp = testClock.millis();
         byte[] dhKey = "same_dh_key".getBytes();
 
-        var payload1 = new HandshakeSessionDTO.SessionRequestPayload(UUID.randomUUID(), "salt1".getBytes(), dhKey, timestamp);
-        var payload2 = new HandshakeSessionDTO.SessionRequestPayload(UUID.randomUUID(), "salt2".getBytes(), dhKey, timestamp);
+        var payload1 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt1".getBytes(), dhKey, timestamp);
+        var payload2 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt2".getBytes(), dhKey, timestamp);
 
         assertDoesNotThrow(() -> guard.sessionRequest(payload1));
         assertDoesNotThrow(() -> guard.sessionRequest(payload2));
@@ -281,8 +281,8 @@ public class ReplyAttackGuardTest {
         long timestamp = testClock.millis();
         UUID sameRequestId = UUID.randomUUID();
 
-        var payload1 = new HandshakeSessionDTO.SessionRequestPayload(sameRequestId, "salt1".getBytes(), "dh1".getBytes(), timestamp);
-        var payload2 = new HandshakeSessionDTO.SessionRequestPayload(sameRequestId, "salt2".getBytes(), "dh2".getBytes(), timestamp);
+        var payload1 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt1".getBytes(), "dh1".getBytes(), timestamp);
+        var payload2 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt2".getBytes(), "dh2".getBytes(), timestamp);
 
         assertDoesNotThrow(() -> guard.sessionRequest(payload1));
         assertDoesNotThrow(() -> guard.sessionRequest(payload2));

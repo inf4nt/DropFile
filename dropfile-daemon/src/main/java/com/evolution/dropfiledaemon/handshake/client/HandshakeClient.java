@@ -8,7 +8,8 @@ import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestControl
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -50,15 +51,15 @@ public class HandshakeClient {
         );
     }
 
-    public HandshakeSessionDTO.Session handshakeSession(URI addressURI,
-                                                        HandshakeSessionDTO.Session session) throws IOException {
+    public HandshakeSessionResponseDTO handshakeSession(URI addressURI,
+                                                        HandshakeSessionRequestDTO session) throws IOException {
         return post(
                 URI.create(CommonUtils.joinPaths(
                         addressURI.toString(),
                         ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT
                 )),
                 session,
-                HandshakeSessionDTO.Session.class
+                HandshakeSessionResponseDTO.class
         );
     }
 

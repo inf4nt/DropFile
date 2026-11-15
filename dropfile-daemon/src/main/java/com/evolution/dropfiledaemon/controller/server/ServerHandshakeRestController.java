@@ -4,7 +4,8 @@ import com.evolution.dropfiledaemon.handshake.HandshakeFacade;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +41,9 @@ public class ServerHandshakeRestController {
 
 
     @PostMapping(ServerHandshakeRestController.HANDSHAKE_SESSION_ENDPOINT)
-    public WebAsyncTask<HandshakeSessionDTO.Session> sessionHandshake(HttpServletRequest httpServletRequest) {
+    public WebAsyncTask<HandshakeSessionResponseDTO> sessionHandshake(HttpServletRequest httpServletRequest) {
         return new WebAsyncTask<>(() -> {
-            HandshakeSessionDTO.Session requestDTO = deserialize(httpServletRequest, HandshakeSessionDTO.Session.class);
+            HandshakeSessionRequestDTO requestDTO = deserialize(httpServletRequest, HandshakeSessionRequestDTO.class);
             return handshakeFacade.handshakeSession(requestDTO);
         });
     }

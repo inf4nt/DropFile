@@ -14,7 +14,8 @@ import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionResponseDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
@@ -191,15 +192,15 @@ public class HandshakeFacade {
         });
     }
 
-    public HandshakeSessionDTO.Session handshakeSession(HandshakeSessionDTO.Session sessionDTO)
+    public HandshakeSessionResponseDTO handshakeSession(HandshakeSessionRequestDTO sessionDTO)
             throws GeneralSecurityException, ExecutionException, IOException {
         String fingerprint = sessionDTO.fingerprint();
 
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore.getRequired(fingerprint).getValue();
 
         byte[] sessionPayloadDTOBytes = sessionDTO.payload();
-        HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = objectMapper.readValue(
-                sessionPayloadDTOBytes, HandshakeSessionDTO.SessionRequestPayload.class
+        HandshakeSessionRequestDTO.Payload sessionPayloadRequest = objectMapper.readValue(
+                sessionPayloadDTOBytes, HandshakeSessionRequestDTO.Payload.class
         );
 
         CryptoRSA.verify(
@@ -216,7 +217,7 @@ public class HandshakeFacade {
             KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
             byte[] serverSalt = CommonUtils.nonce16();
 
-            HandshakeSessionDTO.SessionResponsePayload sessionPayloadResponse = new HandshakeSessionDTO.SessionResponsePayload(
+            HandshakeSessionResponseDTO.Payload sessionPayloadResponse = new HandshakeSessionResponseDTO.Payload(
                     sessionPayloadRequest.requestId(),
                     serverSalt,
                     dhKeyPair.getPublic().getEncoded()
@@ -244,7 +245,7 @@ public class HandshakeFacade {
                     salt
             );
 
-            HandshakeSessionDTO.Session sessionResponse = new HandshakeSessionDTO.Session(
+            HandshakeSessionResponseDTO sessionResponse = new HandshakeSessionResponseDTO(
                     CommonUtils.getFingerprint(currentTrustedIn.handshake().publicRSA()),
                     sessionPayloadResponseBytes,
                     signature

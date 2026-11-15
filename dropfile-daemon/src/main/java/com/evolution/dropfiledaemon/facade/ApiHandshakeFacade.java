@@ -18,7 +18,8 @@ import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionResponseDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionOutStore;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedOutStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
@@ -214,7 +215,7 @@ public class ApiHandshakeFacade {
             UUID sessionRequestId = UUID.randomUUID();
             byte[] clientSalt = CommonUtils.nonce16();
 
-            HandshakeSessionDTO.SessionRequestPayload sessionPayloadRequest = new HandshakeSessionDTO.SessionRequestPayload(
+            HandshakeSessionRequestDTO.Payload sessionPayloadRequest = new HandshakeSessionRequestDTO.Payload(
                     sessionRequestId,
                     clientSalt,
                     dhKeyPair.getPublic().getEncoded(),
@@ -226,16 +227,16 @@ public class ApiHandshakeFacade {
                     CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA())
             );
 
-            HandshakeSessionDTO.Session sessionRequest = new HandshakeSessionDTO.Session(
+            HandshakeSessionRequestDTO sessionRequest = new HandshakeSessionRequestDTO(
                     CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()),
                     sessionPayloadRequestBytes,
                     signature
             );
-            HandshakeSessionDTO.Session sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
+            HandshakeSessionResponseDTO sessionResponse = handshakeClient.handshakeSession(addressURI, sessionRequest);
 
-            HandshakeSessionDTO.SessionResponsePayload sessionResponsePayload = objectMapper.readValue(
+            HandshakeSessionResponseDTO.Payload sessionResponsePayload = objectMapper.readValue(
                     sessionResponse.payload(),
-                    HandshakeSessionDTO.SessionResponsePayload.class
+                    HandshakeSessionResponseDTO.Payload.class
             );
 
             String remoteFingerprint = sessionResponse.fingerprint();

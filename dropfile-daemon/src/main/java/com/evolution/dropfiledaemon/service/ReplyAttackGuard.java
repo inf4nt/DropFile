@@ -5,7 +5,7 @@ import com.evolution.dropfile.common.Purgeable;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
 import com.evolution.dropfiledaemon.tunnel.framework.TunnelRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +55,7 @@ public class ReplyAttackGuard implements Purgeable {
         this.replayProtectionReadyAt = this.clock.instant().plus(this.maxFutureDrift);
     }
 
-    public void sessionRequest(HandshakeSessionDTO.SessionRequestPayload payload) {
+    public void sessionRequest(HandshakeSessionRequestDTO.Payload payload) {
         validatePayloadTime("Session request", payload.timestamp(), clock.instant());
 
         String key = getSessionRequestKey(payload);
@@ -112,7 +112,7 @@ public class ReplyAttackGuard implements Purgeable {
         );
     }
 
-    private String getSessionRequestKey(HandshakeSessionDTO.SessionRequestPayload payload) {
+    private String getSessionRequestKey(HandshakeSessionRequestDTO.Payload payload) {
         return "s.req:" + payload.requestId() + ":" + CommonUtils.getFingerprint(payload.publicKeyDH());
     }
 
