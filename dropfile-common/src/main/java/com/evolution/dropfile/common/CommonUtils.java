@@ -129,6 +129,7 @@ public class CommonUtils {
             throw new RuntimeException(e);
         }
         for (byte[] datum : data) {
+            Objects.requireNonNull(datum, "Data for fingerprint must not be null");
             md.update(datum);
         }
         byte[] hash = md.digest();
