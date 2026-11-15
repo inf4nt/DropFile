@@ -11,10 +11,17 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReplyAttackGuardTest {
 
@@ -164,7 +171,6 @@ public class ReplyAttackGuardTest {
     @Test
     void shouldRejectMessageCreatedBeforeRestartEvenAfterBootstrapEnds() {
         advanceClockPastBootstrap();
-        testClock.plus(TTL);
 
         long oldTimestamp = START_TIME.plus(MAX_FUTURE_DRIFT).minusMillis(1).toEpochMilli();
 
@@ -250,9 +256,9 @@ public class ReplyAttackGuardTest {
         advanceClockPastBootstrap();
         long timestamp = testClock.millis();
         UUID requestId = UUID.randomUUID();
-        byte[] dhKey = "same_dh_key".getBytes();
+        byte[] dhKey = "same_dh_key".getBytes(StandardCharsets.UTF_8);
 
-        var payload = new HandshakeSessionRequestDTO.Payload(requestId, "salt".getBytes(), dhKey, timestamp);
+        var payload = new HandshakeSessionRequestDTO.Payload(requestId, "salt".getBytes(StandardCharsets.UTF_8), dhKey, timestamp);
 
         guard.sessionRequest(payload);
 
@@ -266,10 +272,10 @@ public class ReplyAttackGuardTest {
     void shouldAllowSessionRequestsWithDifferentRequestIds() {
         advanceClockPastBootstrap();
         long timestamp = testClock.millis();
-        byte[] dhKey = "same_dh_key".getBytes();
+        byte[] dhKey = "same_dh_key".getBytes(StandardCharsets.UTF_8);
 
-        var payload1 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt1".getBytes(), dhKey, timestamp);
-        var payload2 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt2".getBytes(), dhKey, timestamp);
+        var payload1 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt1".getBytes(StandardCharsets.UTF_8), dhKey, timestamp);
+        var payload2 = new HandshakeSessionRequestDTO.Payload(UUID.randomUUID(), "salt2".getBytes(StandardCharsets.UTF_8), dhKey, timestamp);
 
         assertDoesNotThrow(() -> guard.sessionRequest(payload1));
         assertDoesNotThrow(() -> guard.sessionRequest(payload2));
@@ -281,8 +287,8 @@ public class ReplyAttackGuardTest {
         long timestamp = testClock.millis();
         UUID sameRequestId = UUID.randomUUID();
 
-        var payload1 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt1".getBytes(), "dh1".getBytes(), timestamp);
-        var payload2 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt2".getBytes(), "dh2".getBytes(), timestamp);
+        var payload1 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt1".getBytes(StandardCharsets.UTF_8), "dh1".getBytes(StandardCharsets.UTF_8), timestamp);
+        var payload2 = new HandshakeSessionRequestDTO.Payload(sameRequestId, "salt2".getBytes(StandardCharsets.UTF_8), "dh2".getBytes(StandardCharsets.UTF_8), timestamp);
 
         assertDoesNotThrow(() -> guard.sessionRequest(payload1));
         assertDoesNotThrow(() -> guard.sessionRequest(payload2));
@@ -317,10 +323,10 @@ public class ReplyAttackGuardTest {
         advanceClockPastBootstrap();
         long timestamp = testClock.millis();
         UUID requestId = UUID.randomUUID();
-        byte[] rsa = "rsa_key".getBytes();
-        byte[] dh = "dh_key".getBytes();
+        byte[] rsa = "rsa_key".getBytes(StandardCharsets.UTF_8);
+        byte[] dh = "dh_key".getBytes(StandardCharsets.UTF_8);
 
-        var payload = new HandshakeRequestDTO.Payload(requestId, "salt".getBytes(), rsa, dh, timestamp);
+        var payload = new HandshakeRequestDTO.Payload(requestId, "salt".getBytes(StandardCharsets.UTF_8), rsa, dh, timestamp);
 
         guard.handshakeRequest(payload);
 
@@ -334,31 +340,386 @@ public class ReplyAttackGuardTest {
     void shouldAllowHandshakeRequestIfRequestIdDiffers() {
         advanceClockPastBootstrap();
         long timestamp = testClock.millis();
-        byte[] rsa = "rsa_key".getBytes();
-        byte[] dh = "dh_key".getBytes();
+        byte[] rsa = "rsa_key".getBytes(StandardCharsets.UTF_8);
+        byte[] dh = "dh_key".getBytes(StandardCharsets.UTF_8);
 
-        var payload1 = new HandshakeRequestDTO.Payload(UUID.randomUUID(), "salt1".getBytes(), rsa, dh, timestamp);
-        var payload2 = new HandshakeRequestDTO.Payload(UUID.randomUUID(), "salt2".getBytes(), rsa, dh, timestamp);
+        var payload1 = new HandshakeRequestDTO.Payload(UUID.randomUUID(), "salt1".getBytes(StandardCharsets.UTF_8), rsa, dh, timestamp);
+        var payload2 = new HandshakeRequestDTO.Payload(UUID.randomUUID(), "salt2".getBytes(StandardCharsets.UTF_8), rsa, dh, timestamp);
 
         assertDoesNotThrow(() -> guard.handshakeRequest(payload1));
         assertDoesNotThrow(() -> guard.handshakeRequest(payload2));
     }
 
     @Test
-    void shouldAllowHandshakeRequestWithSameRequestIdButDifferentKeys() {
+    void shouldAllowHandshakeRequestsWithSameRequestIdButDifferentRsaKeys() {
         advanceClockPastBootstrap();
         long timestamp = testClock.millis();
         UUID sameRequestId = UUID.randomUUID();
+        byte[] sameDh = "same-dh".getBytes(StandardCharsets.UTF_8);
 
-        var payload1 = new HandshakeRequestDTO.Payload(sameRequestId, "salt1".getBytes(), "rsa1".getBytes(), "dh1".getBytes(), timestamp);
-        var payload2 = new HandshakeRequestDTO.Payload(sameRequestId, "salt2".getBytes(), "rsa2".getBytes(), "dh2".getBytes(), timestamp);
+        var payload1 = new HandshakeRequestDTO.Payload(
+                sameRequestId, "salt1".getBytes(StandardCharsets.UTF_8), "rsa1".getBytes(StandardCharsets.UTF_8), sameDh, timestamp
+        );
+        var payload2 = new HandshakeRequestDTO.Payload(
+                sameRequestId, "salt2".getBytes(StandardCharsets.UTF_8), "rsa2".getBytes(StandardCharsets.UTF_8), sameDh, timestamp
+        );
 
         assertDoesNotThrow(() -> guard.handshakeRequest(payload1));
         assertDoesNotThrow(() -> guard.handshakeRequest(payload2));
     }
 
+    @Test
+    void shouldAllowHandshakeRequestsWithSameRequestIdButDifferentDhKeys() {
+        advanceClockPastBootstrap();
+        long timestamp = testClock.millis();
+        UUID sameRequestId = UUID.randomUUID();
+        byte[] sameRsa = "same-rsa".getBytes(StandardCharsets.UTF_8);
+
+        var payload1 = new HandshakeRequestDTO.Payload(
+                sameRequestId, "salt1".getBytes(StandardCharsets.UTF_8), sameRsa, "dh1".getBytes(StandardCharsets.UTF_8), timestamp
+        );
+        var payload2 = new HandshakeRequestDTO.Payload(
+                sameRequestId, "salt2".getBytes(StandardCharsets.UTF_8), sameRsa, "dh2".getBytes(StandardCharsets.UTF_8), timestamp
+        );
+
+        assertDoesNotThrow(() -> guard.handshakeRequest(payload1));
+        assertDoesNotThrow(() -> guard.handshakeRequest(payload2));
+    }
+
+    @Test
+    void shouldPurgeOnlyExpiredKeys() {
+        advanceClockPastBootstrap();
+
+        UUID oldRequestId = UUID.randomUUID();
+        guard.tunnelDispatcherRequest(
+                "fp",
+                createTunnelPayload(oldRequestId, testClock.millis())
+        );
+
+        testClock.plusSeconds(10);
+
+        UUID recentRequestId = UUID.randomUUID();
+        guard.tunnelDispatcherRequest(
+                "fp",
+                createTunnelPayload(recentRequestId, testClock.millis())
+        );
+
+        testClock.plus(TTL)
+                .plus(MAX_FUTURE_DRIFT)
+                .plus(ReplyAttackGuard.PURGE_SAFETY_MARGIN);
+
+        guard.purge();
+
+        assertDoesNotThrow(
+                () -> guard.tunnelDispatcherRequest(
+                        "fp",
+                        createTunnelPayload(oldRequestId, testClock.millis())
+                )
+        );
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.tunnelDispatcherRequest(
+                        "fp",
+                        createTunnelPayload(recentRequestId, testClock.millis())
+                )
+        );
+    }
+
+    @Test
+    void shouldNotPurgeKeyAtExactRetentionPeriodBoundary() {
+        advanceClockPastBootstrap();
+
+        UUID requestId = UUID.randomUUID();
+
+        guard.tunnelDispatcherRequest(
+                "fp",
+                createTunnelPayload(requestId, testClock.millis())
+        );
+
+        Duration retention = TTL
+                .plus(MAX_FUTURE_DRIFT)
+                .plus(ReplyAttackGuard.PURGE_SAFETY_MARGIN);
+
+        testClock.plus(retention);
+        guard.purge();
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.tunnelDispatcherRequest(
+                        "fp",
+                        createTunnelPayload(requestId, testClock.millis())
+                )
+        );
+
+        testClock.plus(Duration.ofMillis(1));
+        guard.purge();
+
+        assertDoesNotThrow(
+                () -> guard.tunnelDispatcherRequest(
+                        "fp",
+                        createTunnelPayload(requestId, testClock.millis())
+                )
+        );
+    }
+
+    @Test
+    void shouldDetectSessionRequestReplayWhenSaltChanges() {
+        advanceClockPastBootstrap();
+
+        UUID requestId = UUID.randomUUID();
+        byte[] dh = "same_dh_key".getBytes(StandardCharsets.UTF_8);
+
+        var payload1 = new HandshakeSessionRequestDTO.Payload(
+                requestId, "salt-1".getBytes(StandardCharsets.UTF_8), dh, testClock.millis()
+        );
+
+        var payload2 = new HandshakeSessionRequestDTO.Payload(
+                requestId, "salt-2".getBytes(StandardCharsets.UTF_8), dh, testClock.millis()
+        );
+
+        guard.sessionRequest(payload1);
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.sessionRequest(payload2)
+        );
+    }
+
+    @Test
+    void shouldDetectHandshakeRequestReplayWhenSaltChanges() {
+        advanceClockPastBootstrap();
+
+        UUID requestId = UUID.randomUUID();
+        byte[] rsa = "rsa".getBytes(StandardCharsets.UTF_8);
+        byte[] dh = "dh".getBytes(StandardCharsets.UTF_8);
+
+        var payload1 = new HandshakeRequestDTO.Payload(
+                requestId, "salt-1".getBytes(StandardCharsets.UTF_8), rsa, dh, testClock.millis()
+        );
+
+        var payload2 = new HandshakeRequestDTO.Payload(
+                requestId, "salt-2".getBytes(StandardCharsets.UTF_8), rsa, dh, testClock.millis()
+        );
+
+        guard.handshakeRequest(payload1);
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(payload2)
+        );
+    }
+
+    @Test
+    void shouldAcceptOnlyOneConcurrentRequestWithSameKey() throws Exception {
+        advanceClockPastBootstrap();
+
+        int threads = 8;
+        UUID requestId = UUID.randomUUID();
+
+        var payload = createHandshakePayload(
+                requestId,
+                "rsa".getBytes(StandardCharsets.UTF_8),
+                "dh".getBytes(StandardCharsets.UTF_8),
+                testClock.millis()
+        );
+
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        CountDownLatch ready = new CountDownLatch(threads);
+        CountDownLatch start = new CountDownLatch(1);
+
+        try {
+            List<Future<Boolean>> futures = new ArrayList<>();
+
+            for (int i = 0; i < threads; i++) {
+                futures.add(executor.submit(() -> {
+                    ready.countDown();
+                    start.await();
+
+                    try {
+                        guard.handshakeRequest(payload);
+                        return true;
+                    } catch (SecurityException e) {
+                        return false;
+                    }
+                }));
+            }
+
+            assertTrue(ready.await(5, TimeUnit.SECONDS));
+            start.countDown();
+
+            long accepted = 0;
+
+            for (Future<Boolean> future : futures) {
+                if (future.get(5, TimeUnit.SECONDS)) {
+                    accepted++;
+                }
+            }
+
+            assertEquals(1, accepted);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void shouldNotRegisterHandshakeRequestWhenRejectedDuringWarmup() {
+        testClock.plus(MAX_FUTURE_DRIFT).minusMillis(1);
+
+        UUID requestId = UUID.randomUUID();
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        requestId,
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        testClock.millis()
+                ))
+        );
+
+        testClock.plus(Duration.ofMillis(1));
+
+        assertDoesNotThrow(
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        requestId,
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        testClock.millis()
+                ))
+        );
+    }
+
+    @Test
+    void shouldRejectHandshakeRequestCreatedBeforeBootstrapThreshold() {
+        advanceClockPastBootstrap();
+
+        long timestampBeforeThreshold = START_TIME
+                .plus(MAX_FUTURE_DRIFT)
+                .minusMillis(1)
+                .toEpochMilli();
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        UUID.randomUUID(),
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        timestampBeforeThreshold
+                ))
+        );
+    }
+
+    @Test
+    void shouldAcceptValidHandshakeRequest() {
+        advanceClockPastBootstrap();
+
+        assertDoesNotThrow(() -> guard.handshakeRequest(createHandshakePayload(
+                UUID.randomUUID(),
+                "rsa".getBytes(StandardCharsets.UTF_8),
+                "dh".getBytes(StandardCharsets.UTF_8),
+                testClock.millis()
+        )));
+    }
+
+    @Test
+    void shouldRejectHandshakeRequestWithZeroTimestamp() {
+        advanceClockPastBootstrap();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        UUID.randomUUID(),
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        0
+                ))
+        );
+    }
+
+    @Test
+    void shouldRejectHandshakeRequestWithExpiredTimestamp() {
+        testClock.plus(MAX_FUTURE_DRIFT).plus(TTL).plus(Duration.ofMillis(1));
+        long expiredTimestamp = START_TIME.plus(MAX_FUTURE_DRIFT).toEpochMilli();
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        UUID.randomUUID(),
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        expiredTimestamp
+                ))
+        );
+    }
+
+    @Test
+    void shouldRejectHandshakeRequestWithTimestampTooFarInFuture() {
+        advanceClockPastBootstrap();
+        long tooFarFutureTimestamp = testClock.instant().plus(MAX_FUTURE_DRIFT).plusMillis(1).toEpochMilli();
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(
+                        UUID.randomUUID(),
+                        "rsa".getBytes(StandardCharsets.UTF_8),
+                        "dh".getBytes(StandardCharsets.UTF_8),
+                        tooFarFutureTimestamp
+                ))
+        );
+    }
+
+    @Test
+    void shouldRejectHandshakeRequestReplayUntilPurgeRunsEvenIfTtlExpired() {
+        advanceClockPastBootstrap();
+        UUID requestId = UUID.randomUUID();
+        byte[] rsa = "rsa".getBytes(StandardCharsets.UTF_8);
+        byte[] dh = "dh".getBytes(StandardCharsets.UTF_8);
+
+        guard.handshakeRequest(createHandshakePayload(requestId, rsa, dh, testClock.millis()));
+        testClock.plus(TTL).plusSeconds(2);
+
+        assertThrows(
+                SecurityException.class,
+                () -> guard.handshakeRequest(createHandshakePayload(requestId, rsa, dh, testClock.millis()))
+        );
+    }
+
+    @Test
+    void shouldPurgeExpiredHandshakeRequestKeys() {
+        advanceClockPastBootstrap();
+        UUID requestId = UUID.randomUUID();
+        byte[] rsa = "rsa".getBytes(StandardCharsets.UTF_8);
+        byte[] dh = "dh".getBytes(StandardCharsets.UTF_8);
+
+        guard.handshakeRequest(createHandshakePayload(requestId, rsa, dh, testClock.millis()));
+
+        testClock.plus(TTL)
+                .plus(MAX_FUTURE_DRIFT)
+                .plusSeconds(1)
+                .plus(ReplyAttackGuard.PURGE_SAFETY_MARGIN);
+        guard.purge();
+
+        assertDoesNotThrow(() -> guard.handshakeRequest(
+                createHandshakePayload(requestId, rsa, dh, testClock.millis())
+        ));
+    }
+
     private void advanceClockPastBootstrap() {
         testClock.plus(MAX_FUTURE_DRIFT).plusSeconds(1);
+    }
+
+    private HandshakeRequestDTO.Payload createHandshakePayload(UUID requestId,
+                                                               byte[] publicKeyRSA,
+                                                               byte[] publicKeyDH,
+                                                               long timestamp) {
+        return new HandshakeRequestDTO.Payload(
+                requestId,
+                "salt".getBytes(StandardCharsets.UTF_8),
+                publicKeyRSA,
+                publicKeyDH,
+                timestamp
+        );
     }
 
     private TunnelRequestDTO.Payload createTunnelPayload(UUID requestId, long timestamp) {

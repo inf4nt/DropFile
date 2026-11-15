@@ -47,12 +47,20 @@ public class ReplyAttackGuard implements Purgeable {
     }
 
     public ReplyAttackGuard(Duration ttl, Duration maxFutureDrift, Clock clock) {
-        this.ttl = Objects.requireNonNull(ttl);
-        this.maxFutureDrift = Objects.requireNonNull(maxFutureDrift);
-        this.clock = Objects.requireNonNull(clock);
+        this.ttl = Objects.requireNonNull(ttl, "ttl must not be null");
+        this.maxFutureDrift = Objects.requireNonNull(maxFutureDrift, "maxFutureDrift must not be null");
+        this.clock = Objects.requireNonNull(clock, "clock must not be null");
 
-        this.retentionPeriod = this.ttl.plus(this.maxFutureDrift).plus(PURGE_SAFETY_MARGIN);
-        this.replayProtectionReadyAt = this.clock.instant().plus(this.maxFutureDrift);
+        if (ttl.isNegative() || ttl.isZero()) {
+            throw new IllegalArgumentException("TTL must be positive");
+        }
+
+        if (maxFutureDrift.isNegative()) {
+            throw new IllegalArgumentException("Max future drift must not be negative");
+        }
+
+        this.retentionPeriod = ttl.plus(maxFutureDrift).plus(PURGE_SAFETY_MARGIN);
+        this.replayProtectionReadyAt = clock.instant().plus(maxFutureDrift);
     }
 
     public void sessionRequest(HandshakeSessionRequestDTO.Payload payload) {
@@ -65,11 +73,7 @@ public class ReplyAttackGuard implements Purgeable {
     public void readinessRequest(String fingerprint, HandshakeReadinessRequestDTO.Payload payload) {
         validatePayloadTime("Handshake readiness request", payload.timestamp(), clock.instant());
 
-        if (payload.requestId() == null) {
-            throw new IllegalArgumentException("Handshake readiness request ID must not be null");
-        }
-
-        String key = "h.ready:" + fingerprint + ":" + payload.requestId();
+        String key = getHandshakeReadinessRequestKey(fingerprint, payload.requestId());
         checkAndRegisterKey(key, "Handshake readiness request");
     }
 
@@ -101,19 +105,23 @@ public class ReplyAttackGuard implements Purgeable {
         }
     }
 
+    private String getHandshakeReadinessRequestKey(String fingerprint, UUID requestId) {
+        return "h.ready:" + Objects.requireNonNull(fingerprint) + ":" + Objects.requireNonNull(requestId);
+    }
+
     private String getTunnelDispatcherRequestKey(String fingerprint, UUID requestId) {
-        return "t.req:" + fingerprint + ":" + requestId;
+        return "t.req:" + Objects.requireNonNull(fingerprint) + ":" + Objects.requireNonNull(requestId);
     }
 
     private String getHandshakeRequestKey(HandshakeRequestDTO.Payload payload) {
-        return "h.req:" + payload.requestId() + ":" + CommonUtils.getFingerprint(
-                payload.publicKeyRSA(),
-                payload.publicKeyDH()
+        return "h.req:" + Objects.requireNonNull(payload.requestId()) + ":" + CommonUtils.getFingerprint(
+                Objects.requireNonNull(payload.publicKeyRSA()),
+                Objects.requireNonNull(payload.publicKeyDH())
         );
     }
 
     private String getSessionRequestKey(HandshakeSessionRequestDTO.Payload payload) {
-        return "s.req:" + payload.requestId() + ":" + CommonUtils.getFingerprint(payload.publicKeyDH());
+        return "s.req:" + Objects.requireNonNull(payload.requestId()) + ":" + CommonUtils.getFingerprint(payload.publicKeyDH());
     }
 
     public void validatePayloadTime(String operation, long timestamp, Instant now) {
