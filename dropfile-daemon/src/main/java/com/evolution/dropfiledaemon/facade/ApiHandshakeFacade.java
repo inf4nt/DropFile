@@ -34,7 +34,10 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -177,8 +180,6 @@ public class ApiHandshakeFacade {
                 // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
                 // Do not invert this order without an atomic dual-write or compensating rollback.
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                        dhKeyPair.getPublic().getEncoded(),
-                        responsePayload.publicKeyDH(),
                         secretTunnelClientKey.getEncoded(),
                         secretTunnelServerKey.getEncoded(),
                         handshakeRequestId
@@ -283,8 +284,6 @@ public class ApiHandshakeFacade {
             // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
-                    dhKeyPair.getPublic().getEncoded(),
-                    sessionResponsePayload.publicKeyDH(),
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
                     sessionRequestId
@@ -409,18 +408,18 @@ public class ApiHandshakeFacade {
 
     private HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String remoteFingerprint,
                                                                                  HandshakeTrustedOutStore.TrustedOut trustedOut) {
-        HandshakeSessionOutStore.SessionOut sessionOut = handshakeSessionOutStore
+        UUID handshakeId = handshakeSessionOutStore
                 .get(remoteFingerprint)
                 .map(it -> it.getValue())
                 .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
+                .map(it -> it.handshakeId())
                 .orElse(null);
 
         return new HandshakeApiTrustOutResponseDTO(
                 remoteFingerprint,
                 CommonUtils.encodeBase64(trustedOut.handshake().publicRSA()),
                 CommonUtils.encodeBase64(trustedOut.handshake().remoteRSA()),
-                sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.publicDH()),
-                sessionOut == null ? null : CommonUtils.encodeBase64(sessionOut.remotePublicDH()),
+                handshakeId,
                 trustedOut.addressEnvelopes()
                         .stream()
                         .map(addressEnvelope -> new HandshakeApiTrustOutResponseDTO.AddressEnvelope(

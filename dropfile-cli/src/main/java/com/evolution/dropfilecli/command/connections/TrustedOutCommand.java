@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @CommandLine.Command(
@@ -41,8 +42,7 @@ public class TrustedOutCommand extends AbstractCommandHttpHandler<List<Handshake
                                 dto.remoteFingerprint(),
                                 dto.publicRSA(),
                                 dto.remotePublicRSA(),
-                                dto.publicDH(),
-                                dto.remotePublicDH(),
+                                dto.handshakeId(),
                                 addressEnvelope.address(),
                                 addressEnvelope.lastSeen(),
                                 dto.created(),
@@ -56,8 +56,7 @@ public class TrustedOutCommand extends AbstractCommandHttpHandler<List<Handshake
     private record TrustOutRow(String remoteFingerprint,
                                String publicRSA,
                                String remotePublicRSA,
-                               String publicDH,
-                               String remotePublicDH,
+                               UUID handshakeId,
                                URI address,
                                Instant lastSeen,
                                Instant created,

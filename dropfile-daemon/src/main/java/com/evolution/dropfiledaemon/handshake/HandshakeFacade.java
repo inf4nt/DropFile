@@ -164,8 +164,6 @@ public class HandshakeFacade {
             // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
-                    dhKeyPair.getPublic().getEncoded(),
-                    publicKeyDH,
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
                     requestId
@@ -267,8 +265,6 @@ public class HandshakeFacade {
             // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
-                    dhKeyPair.getPublic().getEncoded(),
-                    sessionPayloadRequest.publicKeyDH(),
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
                     requestId
@@ -341,18 +337,17 @@ public class HandshakeFacade {
                 .map(entry -> {
                     String remoteFingerprint = entry.getKey();
                     HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
-                    HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(remoteFingerprint)
+                    UUID handshakeId = handshakeSessionInStore.get(remoteFingerprint)
                             .map(it -> it.getValue())
                             .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
+                            .map(it -> it.handshakeId())
                             .orElse(null);
 
-                    // TODO add updated by user/system
                     return new HandshakeApiTrustInResponseDTO(
                             remoteFingerprint,
                             CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
                             CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
-                            sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.publicDH()),
-                            sessionIn == null ? null : CommonUtils.encodeBase64(sessionIn.remotePublicDH()),
+                            handshakeId,
                             trustedIn.created(),
                             trustedIn.updated()
                     );

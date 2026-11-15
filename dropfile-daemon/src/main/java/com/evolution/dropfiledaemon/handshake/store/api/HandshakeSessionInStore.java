@@ -6,9 +6,7 @@ import java.util.UUID;
 
 public interface HandshakeSessionInStore extends KeyValueStore<HandshakeSessionInStore.SessionIn> {
 
-    record SessionIn(byte[] publicDH,
-                     byte[] remotePublicDH,
-                     byte[] clientKey,
+    record SessionIn(byte[] clientKey,
                      byte[] serverKey,
                      UUID handshakeId) {
 
