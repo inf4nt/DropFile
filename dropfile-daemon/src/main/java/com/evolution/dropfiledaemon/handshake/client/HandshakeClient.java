@@ -5,7 +5,8 @@ import com.evolution.dropfile.common.ThrowableUtils;
 import com.evolution.dropfile.common.io.WatchdogInputStream;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
 import com.evolution.dropfiledaemon.controller.server.ServerHandshakeRestController;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
@@ -63,15 +64,15 @@ public class HandshakeClient {
         );
     }
 
-    public HandshakeReadinessDTO.ReadinessResponse handshakeReadiness(URI addressURI,
-                                                                      HandshakeReadinessDTO.ReadinessRequest request) throws IOException {
+    public HandshakeReadinessResponseDTO handshakeReadiness(URI addressURI,
+                                                            HandshakeReadinessRequestDTO request) throws IOException {
         return post(
                 URI.create(CommonUtils.joinPaths(
                         addressURI.toString(),
                         ServerHandshakeRestController.HANDSHAKE_READINESS_ENDPOINT
                 )),
                 request,
-                HandshakeReadinessDTO.ReadinessResponse.class
+                HandshakeReadinessResponseDTO.class
         );
     }
 

@@ -11,7 +11,8 @@ import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
@@ -283,16 +284,16 @@ public class HandshakeFacade {
         });
     }
 
-    public HandshakeReadinessDTO.ReadinessResponse handshakeReadiness(HandshakeReadinessDTO.ReadinessRequest requestDTO)
+    public HandshakeReadinessResponseDTO handshakeReadiness(HandshakeReadinessRequestDTO requestDTO)
             throws GeneralSecurityException, IOException {
         String fingerprint = requestDTO.fingerprint();
         HandshakeTrustedInStore.TrustedIn trustedIn = handshakeTrustedInStore
                 .getRequired(fingerprint)
                 .getValue();
 
-        HandshakeReadinessDTO.ReadinessRequestPayload requestPayload = objectMapper.readValue(
+        HandshakeReadinessRequestDTO.Payload requestPayload = objectMapper.readValue(
                 requestDTO.payload(),
-                HandshakeReadinessDTO.ReadinessRequestPayload.class
+                HandshakeReadinessRequestDTO.Payload.class
         );
         CryptoRSA.verify(
                 requestDTO.payload(),
@@ -301,15 +302,15 @@ public class HandshakeFacade {
         );
         replyAttackGuard.readinessRequest(fingerprint, requestPayload);
 
-        HandshakeReadinessDTO.ReadinessResponsePayload responsePayload =
-                new HandshakeReadinessDTO.ReadinessResponsePayload(requestPayload.requestId());
+        HandshakeReadinessResponseDTO.Payload responsePayload =
+                new HandshakeReadinessResponseDTO.Payload(requestPayload.requestId());
         byte[] responsePayloadBytes = objectMapper.writeValueAsBytes(responsePayload);
         byte[] signature = CryptoRSA.sign(
                 responsePayloadBytes,
                 CryptoRSA.getPrivateKey(trustedIn.handshake().privateRSA())
         );
 
-        return new HandshakeReadinessDTO.ReadinessResponse(
+        return new HandshakeReadinessResponseDTO(
                 CommonUtils.getFingerprint(trustedIn.handshake().publicRSA()),
                 responsePayloadBytes,
                 signature

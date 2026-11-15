@@ -15,7 +15,8 @@ import com.evolution.dropfile.common.dto.HandshakeApiTrustOutResponseDTO;
 import com.evolution.dropfiledaemon.concurent.ConcurrentTaskService;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.client.HandshakeClient;
-import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessRequestDTO;
+import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeResponseDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeSessionRequestDTO;
@@ -363,17 +364,17 @@ public class ApiHandshakeFacade {
                 .map(addressEnvelope -> (Callable<HandshakeTrustedOutStore.AddressEnvelope>) () -> {
                     UUID requestId = UUID.randomUUID();
                     long timestamp = Instant.now().toEpochMilli();
-                    HandshakeReadinessDTO.ReadinessRequestPayload readinessRequestPayload = new HandshakeReadinessDTO.ReadinessRequestPayload(
+                    HandshakeReadinessRequestDTO.Payload readinessRequestPayload = new HandshakeReadinessRequestDTO.Payload(
                             requestId, timestamp);
                     byte[] payload = objectMapper.writeValueAsBytes(readinessRequestPayload);
                     byte[] signature = CryptoRSA.sign(
                             payload,
                             CryptoRSA.getPrivateKey(trustedOut.handshake().privateRSA())
                     );
-                    HandshakeReadinessDTO.ReadinessRequest readinessRequest = new HandshakeReadinessDTO.ReadinessRequest(
+                    HandshakeReadinessRequestDTO readinessRequest = new HandshakeReadinessRequestDTO(
                             CommonUtils.getFingerprint(trustedOut.handshake().publicRSA()), payload, signature);
 
-                    HandshakeReadinessDTO.ReadinessResponse readinessResponse = handshakeClient.handshakeReadiness(addressEnvelope.address(), readinessRequest);
+                    HandshakeReadinessResponseDTO readinessResponse = handshakeClient.handshakeReadiness(addressEnvelope.address(), readinessRequest);
 
                     matchFingerprint(readinessResponse.fingerprint(), CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA()));
                     CryptoRSA.verify(
@@ -381,8 +382,8 @@ public class ApiHandshakeFacade {
                             readinessResponse.signature(),
                             CryptoRSA.getPublicKey(trustedOut.handshake().remoteRSA())
                     );
-                    HandshakeReadinessDTO.ReadinessResponsePayload readinessResponsePayload = objectMapper.readValue(readinessResponse.payload(),
-                            HandshakeReadinessDTO.ReadinessResponsePayload.class);
+                    HandshakeReadinessResponseDTO.Payload readinessResponsePayload = objectMapper.readValue(readinessResponse.payload(),
+                            HandshakeReadinessResponseDTO.Payload.class);
 
                     if (!requestId.equals(readinessResponsePayload.requestId())) {
                         throw new SecurityException("ReadinessResponse requestId mismatch! Expected %s Actual %s"
