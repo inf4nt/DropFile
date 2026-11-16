@@ -114,7 +114,7 @@ public class ApiConnectionsAccessFacade {
         return commands;
     }
 
-    private List<String> buildConnectionsConnectCommand(Collection<InetLocalAddressService.BestLocalAddress> addresses, String accessKey) {
+    private List<String> buildConnectionsConnectCommand(Collection<InetLocalAddressService.AddressEnvelope> addresses, String accessKey) {
         if (ObjectUtils.isEmpty(addresses)) {
             return Collections.emptyList();
         }

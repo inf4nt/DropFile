@@ -178,7 +178,7 @@ public class ApiQuickShareFacade {
         return StringUtils.hasText(link) ? link : null;
     }
 
-    private List<String> buildLinks(Collection<InetLocalAddressService.BestLocalAddress> addresses, String linkId) {
+    private List<String> buildLinks(Collection<InetLocalAddressService.AddressEnvelope> addresses, String linkId) {
         if (ObjectUtils.isEmpty(addresses)) {
             return Collections.emptyList();
         }

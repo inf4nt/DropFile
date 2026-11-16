@@ -18,8 +18,8 @@ public class InetLocalAddressService {
         Enumeration<NetworkInterface> interfaces =
                 NetworkInterface.getNetworkInterfaces();
 
-        List<BestLocalAddress> wifi = new ArrayList<>();
-        List<BestLocalAddress> ethernet = new ArrayList<>();
+        List<AddressEnvelope> wifi = new ArrayList<>();
+        List<AddressEnvelope> ethernet = new ArrayList<>();
 
         while (interfaces.hasMoreElements()) {
             NetworkInterface iface = interfaces.nextElement();
@@ -30,8 +30,6 @@ public class InetLocalAddressService {
 
             String name = iface.getName().toLowerCase();
             String display = iface.getDisplayName().toLowerCase();
-
-            String ifaceNameDisplay = name + ":" + display;
 
             Enumeration<InetAddress> addresses = iface.getInetAddresses();
 
@@ -48,14 +46,14 @@ public class InetLocalAddressService {
 
                 String wifiMatch = getWifi(name, display);
                 if (wifiMatch != null) {
-                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ifaceNameDisplay, addr);
-                    wifi.add(bestLocalAddress);
+                    AddressEnvelope addressEnvelope = new AddressEnvelope(name, display, addr);
+                    wifi.add(addressEnvelope);
                 }
 
                 String ethernetMatch = getEthernet(name, display);
                 if (ethernetMatch != null) {
-                    BestLocalAddress bestLocalAddress = new BestLocalAddress(ifaceNameDisplay, addr);
-                    ethernet.add(bestLocalAddress);
+                    AddressEnvelope addressEnvelope = new AddressEnvelope(name, display, addr);
+                    ethernet.add(addressEnvelope);
                 }
             }
         }
@@ -101,10 +99,10 @@ public class InetLocalAddressService {
         return null;
     }
 
-    public record BestLocalAddress(String ifaceNameDisplay, InetAddress inetAddress) {
+    public record AddressEnvelope(String name, String display, InetAddress inetAddress) {
     }
 
-    public record ConnectionAddress(Collection<BestLocalAddress> wireless, Collection<BestLocalAddress> ethernet) {
+    public record ConnectionAddress(Collection<AddressEnvelope> wireless, Collection<AddressEnvelope> ethernet) {
     }
 
 }

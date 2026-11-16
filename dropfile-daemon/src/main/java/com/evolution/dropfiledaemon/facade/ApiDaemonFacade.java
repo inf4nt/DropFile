@@ -4,12 +4,14 @@ import com.evolution.dropfile.common.SystemInfoProvider;
 import com.evolution.dropfile.common.dto.DaemonInfoResponseDTO;
 import com.evolution.dropfiledaemon.DropFileDaemonApplication;
 import com.evolution.dropfiledaemon.configuration.DaemonApplicationProperties;
+import com.evolution.dropfiledaemon.service.InetLocalAddressService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -26,13 +28,22 @@ public class ApiDaemonFacade {
 
     private final ObjectMapper objectMapper;
 
+    private final InetLocalAddressService inetLocalAddressService;
+
     public DaemonInfoResponseDTO info() throws IOException {
-        String json = objectMapper.writeValueAsString(daemonApplicationProperties);
-        Map<String, String> daemonProperties = objectMapper.readValue(json, new TypeReference<>() {
-        });
+        Map<String, String> daemonProperties = objectMapper.readValue(
+                objectMapper.writeValueAsString(daemonApplicationProperties), new TypeReference<>() {
+                });
+
+        Map<String, List<Map<String, String>>> interfaces = objectMapper.readValue(
+                objectMapper.writeValueAsString(inetLocalAddressService.getConnectionAddress()),
+                new TypeReference<>() {
+                });
+
         return new DaemonInfoResponseDTO(
                 systemInfoProvider.getSystemInfo(),
-                daemonProperties
+                daemonProperties,
+                interfaces
         );
     }
 
