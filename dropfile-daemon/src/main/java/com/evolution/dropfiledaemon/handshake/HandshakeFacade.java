@@ -182,9 +182,9 @@ public class HandshakeFacade {
                                         rsaKeyPair.getPrivate().getEncoded(),
                                         publicKeyRSA
                                 ),
+                                sessionId,
                                 now,
-                                now,
-                                sessionId
+                                now
                         );
                     }
             );

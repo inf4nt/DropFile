@@ -198,9 +198,9 @@ public class ApiHandshakeFacade {
                                     rsaKeyPair.getPrivate().getEncoded(),
                                     responsePayload.publicKeyRSA()
                             ),
+                            sessionId,
                             now,
-                            now,
-                            sessionId
+                            now
                     );
                 });
             });

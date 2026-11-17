@@ -12,15 +12,15 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
     @With
     record TrustedOut(List<AddressEnvelope> addressEnvelopes,
                       HandshakeKeys handshake,
+                      UUID sessionId,
                       Instant created,
-                      Instant updated,
-                      UUID sessionId) {
+                      Instant updated) {
         public TrustedOut {
             Objects.requireNonNull(addressEnvelopes);
             Objects.requireNonNull(handshake);
+            Objects.requireNonNull(sessionId);
             Objects.requireNonNull(created);
             Objects.requireNonNull(updated);
-            Objects.requireNonNull(sessionId);
             addressEnvelopes.forEach(Objects::requireNonNull);
         }
         @Override

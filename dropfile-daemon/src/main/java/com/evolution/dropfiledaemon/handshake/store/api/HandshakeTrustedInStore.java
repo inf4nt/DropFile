@@ -11,15 +11,15 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
 
     @With
     record TrustedIn(HandshakeKeys handshake,
+                     UUID sessionId,
                      Instant created,
-                     Instant updated,
-                     UUID sessionId) {
+                     Instant updated) {
 
         public TrustedIn {
             Objects.requireNonNull(handshake);
+            Objects.requireNonNull(sessionId);
             Objects.requireNonNull(created);
             Objects.requireNonNull(updated);
-            Objects.requireNonNull(sessionId);
         }
     }
 
