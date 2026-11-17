@@ -1,5 +1,7 @@
 package com.evolution.dropfiledaemon.tunnel.framework;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -15,7 +17,7 @@ public record TunnelRequestDTO(String fingerprint,
 
     public record Payload(UUID requestId,
                           String command,
-                          byte[] payload,
+                          @Nullable byte[] payload,
                           Configuration configuration,
                           long timestamp) {
 
