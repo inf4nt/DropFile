@@ -84,10 +84,10 @@ public class ApiHandshakeFacade {
             KeyPair rsaKeyPair = CryptoRSA.generateKeyPair();
             KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
-            UUID handshakeRequestId = UUID.randomUUID();
+            UUID requestId = UUID.randomUUID();
             byte[] clientSalt = CommonUtils.nonce16();
             HandshakeRequestDTO.Payload requestPayload = new HandshakeRequestDTO.Payload(
-                    handshakeRequestId,
+                    requestId,
                     clientSalt,
                     rsaKeyPair.getPublic().getEncoded(),
                     dhKeyPair.getPublic().getEncoded(),
@@ -144,9 +144,9 @@ public class ApiHandshakeFacade {
                     handshakeResponseDTO.signature(),
                     CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
             );
-            if (!handshakeRequestId.equals(responsePayload.requestId())) {
-                throw new SecurityException("Handshake response sessionId mismatch! Expected %s, got %s"
-                        .formatted(handshakeRequestId, responsePayload.requestId()));
+            if (!requestId.equals(responsePayload.requestId())) {
+                throw new SecurityException("Handshake response id mismatch! Expected %s, got %s"
+                        .formatted(requestId, responsePayload.requestId()));
             }
 
             byte[] sessionRawKey = CryptoECDH.getSecretKey(
@@ -169,6 +169,8 @@ public class ApiHandshakeFacade {
             String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
 
+                UUID sessionId = UUID.randomUUID();
+
                 // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
                 //
                 // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
@@ -184,7 +186,7 @@ public class ApiHandshakeFacade {
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                         secretTunnelClientKey.getEncoded(),
                         secretTunnelServerKey.getEncoded(),
-                        handshakeRequestId
+                        sessionId
                 ));
 
                 handshakeTrustedOutStore.insert(remoteFingerprint, () -> {
@@ -198,7 +200,7 @@ public class ApiHandshakeFacade {
                             ),
                             now,
                             now,
-                            handshakeRequestId
+                            sessionId
                     );
                 });
             });

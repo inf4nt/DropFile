@@ -103,10 +103,9 @@ public class HandshakeFacade {
         KeyPair dhKeyPair = CryptoECDH.generateKeyPair();
 
         byte[] serverSalt = CommonUtils.nonce16();
-        UUID requestId = requestPayload.requestId();
 
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
-                requestId,
+                requestPayload.requestId(),
                 serverSalt,
                 rsaKeyPair.getPublic().getEncoded(),
                 dhKeyPair.getPublic().getEncoded()
@@ -153,6 +152,8 @@ public class HandshakeFacade {
                     salt
             );
 
+            UUID sessionId = UUID.randomUUID();
+
             // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
             //
             // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
@@ -168,7 +169,7 @@ public class HandshakeFacade {
             handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     secretTunnelClientKey.getEncoded(),
                     secretTunnelServerKey.getEncoded(),
-                    requestId
+                    sessionId
             ));
 
             handshakeTrustedInStore.save(
@@ -183,7 +184,7 @@ public class HandshakeFacade {
                                 ),
                                 now,
                                 now,
-                                requestId
+                                sessionId
                         );
                     }
             );

@@ -10,9 +10,9 @@ import com.evolution.dropfile.store.access.AccessKeyStore;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeRequestDTO;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore;
-import com.evolution.dropfiledaemon.handshake.store.api.HandshakeSessionInStore.SessionIn;
 import com.evolution.dropfiledaemon.handshake.store.api.HandshakeTrustedInStore;
 import com.evolution.dropfiledaemon.service.AccessKeyService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -197,9 +197,17 @@ class ServerHandshakeFailureIntegrationTest {
         );
 
         HttpResponse<byte[]> firstResponse = post(firstRequest.request());
+        assertThat("first handshake must succeed", firstResponse.statusCode(), is(200));
+
+        JsonNode trustedBeforeReplay = objectMapper.valueToTree(handshakeTrustedInStore
+                .getRequired(firstRequest.clientFingerprint())
+                .getValue());
+        JsonNode sessionBeforeReplay = objectMapper.valueToTree(handshakeSessionInStore
+                .getRequired(firstRequest.clientFingerprint())
+                .getValue());
+
         HttpResponse<byte[]> replayResponse = post(replayRequest.request());
 
-        assertThat("first handshake must succeed", firstResponse.statusCode(), is(200));
         assertThat("replayed handshake must be rejected", replayResponse.statusCode(), is(404));
 
         // Both keys are consumed: the first by the successful handshake,
@@ -208,16 +216,15 @@ class ServerHandshakeFailureIntegrationTest {
         assertThat(accessKeyStore.get(secondAccessKeyId).isEmpty(), is(true));
 
         // The rejected replay must not replace the state created by the first handshake.
-        HandshakeTrustedInStore.TrustedIn trusted = handshakeTrustedInStore
+        JsonNode trustedAfterReplay = objectMapper.valueToTree(handshakeTrustedInStore
                 .getRequired(firstRequest.clientFingerprint())
-                .getValue();
-
-        SessionIn session = handshakeSessionInStore
+                .getValue());
+        JsonNode sessionAfterReplay = objectMapper.valueToTree(handshakeSessionInStore
                 .getRequired(firstRequest.clientFingerprint())
-                .getValue();
+                .getValue());
 
-        assertThat(trusted.sessionId(), is(payload.requestId()));
-        assertThat(session.sessionId(), is(payload.requestId()));
+        assertThat("trusted-in state must remain unchanged after replay", trustedAfterReplay, is(trustedBeforeReplay));
+        assertThat("session-in state must remain unchanged after replay", sessionAfterReplay, is(sessionBeforeReplay));
     }
 
     private PreparedRequest createRequest(

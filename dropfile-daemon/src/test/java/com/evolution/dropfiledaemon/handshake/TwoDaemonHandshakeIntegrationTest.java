@@ -219,11 +219,6 @@ class TwoDaemonHandshakeIntegrationTest {
                 is(true)
         );
 
-        assertThat(
-                trustedOut.sessionId(),
-                is(trustedIn.sessionId())
-        );
-
         // Assert: both sides derived matching session keys.
         HandshakeSessionOutStore.SessionOut sessionOut =
                 sessionOutStore.getRequired(daemonBFingerprint).getValue();
@@ -245,11 +240,6 @@ class TwoDaemonHandshakeIntegrationTest {
                         sessionIn.serverKey()
                 ),
                 is(true)
-        );
-
-        assertThat(
-                sessionOut.sessionId(),
-                is(sessionIn.sessionId())
         );
 
         assertThat(
