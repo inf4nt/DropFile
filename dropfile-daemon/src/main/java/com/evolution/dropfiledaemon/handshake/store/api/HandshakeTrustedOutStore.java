@@ -15,6 +15,15 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
                       Instant created,
                       Instant updated,
                       UUID sessionId) {
+        public TrustedOut(List<AddressEnvelope> addressEnvelopes, HandshakeKeys handshake, Instant created, Instant updated, UUID sessionId) {
+            this.addressEnvelopes = Objects.requireNonNull(addressEnvelopes);
+            this.handshake = Objects.requireNonNull(handshake);
+            this.created = Objects.requireNonNull(created);
+            this.updated = Objects.requireNonNull(updated);
+            this.sessionId = Objects.requireNonNull(sessionId);
+            this.addressEnvelopes.forEach(Objects::requireNonNull);
+        }
+
         @Override
         public List<AddressEnvelope> addressEnvelopes() {
             return addressEnvelopes.stream()
@@ -26,10 +35,19 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
     record HandshakeKeys(byte[] publicRSA,
                          byte[] privateRSA,
                          byte[] remoteRSA) {
+        public HandshakeKeys(byte[] publicRSA, byte[] privateRSA, byte[] remoteRSA) {
+            this.publicRSA = Objects.requireNonNull(publicRSA);
+            this.privateRSA = Objects.requireNonNull(privateRSA);
+            this.remoteRSA = Objects.requireNonNull(remoteRSA);
+        }
     }
 
     record AddressEnvelope(URI address,
                            Instant lastSeen) {
+        public AddressEnvelope(URI address, Instant lastSeen) {
+            this.address = Objects.requireNonNull(address);
+            this.lastSeen = Objects.requireNonNull(lastSeen);
+        }
     }
 
     default Map.Entry<String, TrustedOut> getRequiredLastUpdated() {
