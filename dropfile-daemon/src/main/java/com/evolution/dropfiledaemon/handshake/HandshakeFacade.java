@@ -183,7 +183,6 @@ public class HandshakeFacade {
                                 ),
                                 now,
                                 now,
-                                now,
                                 requestId
                         );
                     }
@@ -275,7 +274,6 @@ public class HandshakeFacade {
             handshakeTrustedInStore.update(fingerprint, value -> {
                 Instant now = Instant.now();
                 return value
-                        .withSessionUpdated(now)
                         .withUpdated(now)
                         .withHandshakeId(requestId);
             });

@@ -11,7 +11,6 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
     @With
     record TrustedIn(HandshakeKeys handshake,
                      Instant created,
-                     Instant sessionUpdated,
                      Instant updated,
                      UUID handshakeId) {
 

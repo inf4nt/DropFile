@@ -153,7 +153,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private void validateSession(Map.Entry<String, HandshakeTrustedInStore.TrustedIn> trustedInEntry) {
         String fingerprint = trustedInEntry.getKey();
         HandshakeTrustedInStore.TrustedIn trustedIn = trustedInEntry.getValue();
-        if (Instant.now().isAfter(trustedIn.sessionUpdated().plus(SESSION_TTL))) {
+        if (Instant.now().isAfter(trustedIn.updated().plus(SESSION_TTL))) {
             throw new SecurityException("Session has expired for fingerprint: " + fingerprint);
         }
     }
