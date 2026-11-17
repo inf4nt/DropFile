@@ -93,7 +93,7 @@ public class ServerTunnelRestController {
         String command = context.requestPayload().command();
         UUID requestId = context.requestPayload().requestId();
         long timestamp = context.requestPayload().timestamp();
-        return "fingerprint '%s' command '%s' handshakeId '%s' timestamp '%s' instant '%s'".formatted(
+        return "fingerprint '%s' command '%s' sessionId '%s' timestamp '%s' instant '%s'".formatted(
                 context.fingerprint(),
                 command,
                 requestId,

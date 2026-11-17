@@ -220,8 +220,8 @@ class TwoDaemonHandshakeIntegrationTest {
         );
 
         assertThat(
-                trustedOut.handshakeId(),
-                is(trustedIn.handshakeId())
+                trustedOut.sessionId(),
+                is(trustedIn.sessionId())
         );
 
         // Assert: both sides derived matching session keys.
@@ -248,18 +248,18 @@ class TwoDaemonHandshakeIntegrationTest {
         );
 
         assertThat(
-                sessionOut.handshakeId(),
-                is(sessionIn.handshakeId())
+                sessionOut.sessionId(),
+                is(sessionIn.sessionId())
         );
 
         assertThat(
-                sessionOut.handshakeId(),
-                is(trustedOut.handshakeId())
+                sessionOut.sessionId(),
+                is(trustedOut.sessionId())
         );
 
         assertThat(
-                sessionIn.handshakeId(),
-                is(trustedIn.handshakeId())
+                sessionIn.sessionId(),
+                is(trustedIn.sessionId())
         );
     }
 

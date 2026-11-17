@@ -12,7 +12,7 @@ public interface HandshakeTrustedInStore extends KeyValueStore<HandshakeTrustedI
     record TrustedIn(HandshakeKeys handshake,
                      Instant created,
                      Instant updated,
-                     UUID handshakeId) {
+                     UUID sessionId) {
 
     }
 

@@ -170,7 +170,7 @@ class ServerHandshakeRestControllerIntegrationTest {
                 ),
                 is(true)
         );
-        assertThat(trustedIn.handshakeId(), is(requestId));
+        assertThat(trustedIn.sessionId(), is(requestId));
 
         byte[] sessionRawKey = CryptoECDH.getSecretKey(
                 clientDhKeyPair.getPrivate(),
@@ -195,7 +195,7 @@ class ServerHandshakeRestControllerIntegrationTest {
 
         assertThat(Arrays.equals(expectedClientTunnelKey, session.clientKey()), is(true));
         assertThat(Arrays.equals(expectedServerTunnelKey, session.serverKey()), is(true));
-        assertThat(session.handshakeId(), is(requestId));
+        assertThat(session.sessionId(), is(requestId));
     }
 
     @Test
@@ -274,13 +274,13 @@ class ServerHandshakeRestControllerIntegrationTest {
 
         assertThat(Arrays.equals(expectedClientKey, session.clientKey()), is(true));
         assertThat(Arrays.equals(expectedServerKey, session.serverKey()), is(true));
-        assertThat(session.handshakeId(), is(requestId));
+        assertThat(session.sessionId(), is(requestId));
 
         HandshakeTrustedInStore.TrustedIn trusted = handshakeTrustedInStore
                 .getRequired(handshake.clientFingerprint())
                 .getValue();
 
-        assertThat(trusted.handshakeId(), is(requestId));
+        assertThat(trusted.sessionId(), is(requestId));
     }
 
     @Test
@@ -421,8 +421,8 @@ class ServerHandshakeRestControllerIntegrationTest {
                 .getRequired(clientFingerprint)
                 .getValue();
 
-        assertThat(trusted.handshakeId(), is(requestId));
-        assertThat(session.handshakeId(), is(requestId));
+        assertThat(trusted.sessionId(), is(requestId));
+        assertThat(session.sessionId(), is(requestId));
 
         return new EstablishedHandshake(
                 clientRsaKeyPair,

@@ -234,11 +234,11 @@ public class HttpTunnelClient implements TunnelClient {
                 .map(Map.Entry::getValue)
                 .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
 
-        if (!sessionOut.handshakeId().equals(trustedOut.handshakeId())) {
-            throw new IllegalStateException("Session %s handshake id mismatch: expected %s, got %s".formatted(
+        if (!sessionOut.sessionId().equals(trustedOut.sessionId())) {
+            throw new IllegalStateException("Session %s session id mismatch: expected %s, got %s".formatted(
                     fingerprint,
-                    trustedOut.handshakeId(),
-                    sessionOut.handshakeId()
+                    trustedOut.sessionId(),
+                    sessionOut.sessionId()
             ));
         }
 

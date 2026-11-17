@@ -153,17 +153,17 @@ public class HandshakeFacade {
                     salt
             );
 
-            // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+            // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
             //
-            // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+            // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
             // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
-            // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+            // as "current" (newest updated) while session keys/sessionId would not match TrustedOut.
             // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
             // look like the latest connection.
             //
             // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
-            // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
-            // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+            // (or a sessionId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+            // on a consistent peer; mismatch is detected via sessionId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(remoteFingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     secretTunnelClientKey.getEncoded(),
@@ -253,17 +253,17 @@ public class HandshakeFacade {
 
             UUID requestId = sessionPayloadRequest.requestId();
 
-            // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+            // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
             //
-            // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+            // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
             // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
-            // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+            // as "current" (newest updated) while session keys/sessionId would not match TrustedOut.
             // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
             // look like the latest connection.
             //
             // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
-            // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
-            // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+            // (or a sessionId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+            // on a consistent peer; mismatch is detected via sessionId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionInStore.save(fingerprint, () -> new HandshakeSessionInStore.SessionIn(
                     secretTunnelClientKey.getEncoded(),
@@ -275,7 +275,7 @@ public class HandshakeFacade {
                 Instant now = Instant.now();
                 return value
                         .withUpdated(now)
-                        .withHandshakeId(requestId);
+                        .withSessionId(requestId);
             });
 
             return sessionResponse;
@@ -337,17 +337,17 @@ public class HandshakeFacade {
                 .map(entry -> {
                     String remoteFingerprint = entry.getKey();
                     HandshakeTrustedInStore.TrustedIn trustedIn = entry.getValue();
-                    UUID handshakeId = handshakeSessionInStore.get(remoteFingerprint)
+                    UUID sessionId = handshakeSessionInStore.get(remoteFingerprint)
                             .map(it -> it.getValue())
-                            .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
-                            .map(it -> it.handshakeId())
+                            .filter(it -> it.sessionId().equals(trustedIn.sessionId()))
+                            .map(it -> it.sessionId())
                             .orElse(null);
 
                     return new HandshakeApiTrustInResponseDTO(
                             remoteFingerprint,
                             CommonUtils.encodeBase64(trustedIn.handshake().publicRSA()),
                             CommonUtils.encodeBase64(trustedIn.handshake().remoteRSA()),
-                            handshakeId,
+                            sessionId,
                             trustedIn.created(),
                             trustedIn.updated()
                     );

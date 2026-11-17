@@ -14,7 +14,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
                       HandshakeKeys handshake,
                       Instant created,
                       Instant updated,
-                      UUID handshakeId) {
+                      UUID sessionId) {
         @Override
         public List<AddressEnvelope> addressEnvelopes() {
             return addressEnvelopes.stream()

@@ -10,7 +10,7 @@ import java.util.UUID;
 public record HandshakeApiTrustOutResponseDTO(String remoteFingerprint,
                                               String publicRSA,
                                               String remotePublicRSA,
-                                              @Nullable UUID handshakeId,
+                                              @Nullable UUID sessionId,
                                               List<AddressEnvelope> addressEnvelopes,
                                               Instant created,
                                               Instant updated) {

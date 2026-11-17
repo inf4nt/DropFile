@@ -28,7 +28,7 @@ public class TablePrinter {
                 put("remoteFingerprint", "remoteFingerprint".length());
                 put("publicRSA", "publicRSA".length());
                 put("remotePublicRSA", "remotePublicRSA".length());
-                put("handshakeId", "handshakeId".length());
+                put("sessionId", "sessionId".length());
                 put("path", 25);
                 put("file", 25);
                 put("address", 18);

@@ -216,8 +216,8 @@ class ServerHandshakeFailureIntegrationTest {
                 .getRequired(firstRequest.clientFingerprint())
                 .getValue();
 
-        assertThat(trusted.handshakeId(), is(payload.requestId()));
-        assertThat(session.handshakeId(), is(payload.requestId()));
+        assertThat(trusted.sessionId(), is(payload.requestId()));
+        assertThat(session.sessionId(), is(payload.requestId()));
     }
 
     private PreparedRequest createRequest(

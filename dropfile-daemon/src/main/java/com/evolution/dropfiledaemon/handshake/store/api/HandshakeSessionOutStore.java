@@ -8,6 +8,6 @@ public interface HandshakeSessionOutStore extends KeyValueStore<HandshakeSession
 
     record SessionOut(byte[] sessionClientKey,
                       byte[] sessionServerKey,
-                      UUID handshakeId) {
+                      UUID sessionId) {
     }
 }

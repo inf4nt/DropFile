@@ -145,7 +145,7 @@ public class ApiHandshakeFacade {
                     CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
             );
             if (!handshakeRequestId.equals(responsePayload.requestId())) {
-                throw new SecurityException("Handshake response handshakeId mismatch! Expected %s, got %s"
+                throw new SecurityException("Handshake response sessionId mismatch! Expected %s, got %s"
                         .formatted(handshakeRequestId, responsePayload.requestId()));
             }
 
@@ -169,17 +169,17 @@ public class ApiHandshakeFacade {
             String remoteFingerprint = CommonUtils.getFingerprint(responsePayload.publicKeyRSA());
             lockableOperationHandshakeTrustedOutStore.executeWithKeyLock(remoteFingerprint, () -> {
 
-                // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+                // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
                 //
-                // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+                // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
                 // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
-                // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+                // as "current" (newest updated) while session keys/sessionId would not match TrustedOut.
                 // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
                 // look like the latest connection.
                 //
                 // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
-                // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
-                // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+                // (or a sessionId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+                // on a consistent peer; mismatch is detected via sessionId and triggers reconnect.
                 // Do not invert this order without an atomic dual-write or compensating rollback.
                 handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                         secretTunnelClientKey.getEncoded(),
@@ -249,7 +249,7 @@ public class ApiHandshakeFacade {
             );
 
             if (!sessionRequestId.equals(sessionResponsePayload.requestId())) {
-                throw new SecurityException("Session response handshakeId mismatch! Expected %s, got %s"
+                throw new SecurityException("Session response sessionId mismatch! Expected %s, got %s"
                         .formatted(sessionRequestId, sessionResponsePayload.requestId()));
             }
 
@@ -273,17 +273,17 @@ public class ApiHandshakeFacade {
 
             CommonUtils.validateInterrupted();
 
-            // Order matters: persist session first, then advance TrustedOut (handshakeId + updated).
+            // Order matters: persist session first, then advance TrustedOut (sessionId + updated).
             //
-            // These two stores are not updated atomically. If we bumped TrustedOut.updated/handshakeId
+            // These two stores are not updated atomically. If we bumped TrustedOut.updated/sessionId
             // first and then failed to save SessionOut, getRequiredLastUpdated() would pick this peer
-            // as "current" (newest updated) while session keys/handshakeId would not match TrustedOut.
+            // as "current" (newest updated) while session keys/sessionId would not match TrustedOut.
             // isSessionOrInvalidExpired() would treat that as invalid, but the damaged peer would still
             // look like the latest connection.
             //
             // Session → TrustedOut is safer: a failure after session save leaves an orphan SessionOut
-            // (or a handshakeId mismatch). TrustedOut.updated is not advanced, so last-updated stays
-            // on a consistent peer; mismatch is detected via handshakeId and triggers reconnect.
+            // (or a sessionId mismatch). TrustedOut.updated is not advanced, so last-updated stays
+            // on a consistent peer; mismatch is detected via sessionId and triggers reconnect.
             // Do not invert this order without an atomic dual-write or compensating rollback.
             handshakeSessionOutStore.save(remoteFingerprint, () -> new HandshakeSessionOutStore.SessionOut(
                     secretTunnelClientKey.getEncoded(),
@@ -298,7 +298,7 @@ public class ApiHandshakeFacade {
                 addressEnvelopes.removeIf(it -> it.address().equals(addressURI));
                 addressEnvelopes.add(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now));
 
-                return value.withHandshakeId(sessionRequestId)
+                return value.withSessionId(sessionRequestId)
                         .withAddressEnvelopes(List.copyOf(addressEnvelopes))
                         .withUpdated(now);
             });
@@ -410,18 +410,18 @@ public class ApiHandshakeFacade {
 
     private HandshakeApiTrustOutResponseDTO mapToHandshakeApiTrustOutResponseDTO(String remoteFingerprint,
                                                                                  HandshakeTrustedOutStore.TrustedOut trustedOut) {
-        UUID handshakeId = handshakeSessionOutStore
+        UUID sessionId = handshakeSessionOutStore
                 .get(remoteFingerprint)
                 .map(it -> it.getValue())
-                .filter(it -> it.handshakeId().equals(trustedOut.handshakeId()))
-                .map(it -> it.handshakeId())
+                .filter(it -> it.sessionId().equals(trustedOut.sessionId()))
+                .map(it -> it.sessionId())
                 .orElse(null);
 
         return new HandshakeApiTrustOutResponseDTO(
                 remoteFingerprint,
                 CommonUtils.encodeBase64(trustedOut.handshake().publicRSA()),
                 CommonUtils.encodeBase64(trustedOut.handshake().remoteRSA()),
-                handshakeId,
+                sessionId,
                 trustedOut.addressEnvelopes()
                         .stream()
                         .map(addressEnvelope -> new HandshakeApiTrustOutResponseDTO.AddressEnvelope(

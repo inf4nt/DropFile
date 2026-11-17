@@ -8,7 +8,7 @@ import java.util.UUID;
 public record HandshakeApiTrustInResponseDTO(String remoteFingerprint,
                                              String publicRSA,
                                              String remotePublicRSA,
-                                             @Nullable UUID handshakeId,
+                                             @Nullable UUID sessionId,
                                              Instant created,
                                              Instant updated) {
 }

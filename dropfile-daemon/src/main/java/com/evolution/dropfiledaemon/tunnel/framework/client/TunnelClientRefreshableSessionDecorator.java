@@ -139,12 +139,12 @@ public class TunnelClientRefreshableSessionDecorator implements TunnelClient, Pu
             return true;
         }
 
-        boolean bothHaveSameHandshakeId = handshakeSessionOutStore
+        boolean bothHaveSameSessionId = handshakeSessionOutStore
                 .get(fingerprint)
                 .stream()
-                .anyMatch(it -> trustedOut.handshakeId().equals(it.getValue().handshakeId()));
+                .anyMatch(it -> trustedOut.sessionId().equals(it.getValue().sessionId()));
 
-        if (!bothHaveSameHandshakeId) {
+        if (!bothHaveSameSessionId) {
             return true;
         }
 

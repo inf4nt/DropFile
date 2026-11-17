@@ -161,7 +161,7 @@ public class DefaultTunnelDispatcher implements TunnelDispatcher {
     private TunnelSessionKeys getSessionKeys(String fingerprint, HandshakeTrustedInStore.TrustedIn trustedIn) {
         HandshakeSessionInStore.SessionIn sessionIn = handshakeSessionInStore.get(fingerprint)
                 .map(Map.Entry::getValue)
-                .filter(it -> it.handshakeId().equals(trustedIn.handshakeId()))
+                .filter(it -> it.sessionId().equals(trustedIn.sessionId()))
                 .orElseThrow(() -> new NoSuchElementException("No session found " + fingerprint));
 
         SecretKey clientKey = cryptoTunnel.secretKey(sessionIn.clientKey());
