@@ -84,10 +84,8 @@ public class HttpTunnelClient implements TunnelClient {
                 String message = "HTTP connect timed out during call %s %s timeout %s millis"
                         .formatted(httpRequest.method(), httpRequest.uri(), timeout);
                 throw new TunnelClientProtocolException(message);
-//                throw new HttpConnectTimeoutException(message);
             } catch (ConnectException e) {
                 throw new TunnelClientProtocolException("Target address is unreachable");
-//                throw new ConnectException("Target address is unreachable");
             }
 
             try {
