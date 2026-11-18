@@ -2,5 +2,5 @@ package com.evolution.dropfile.store.framework.single;
 
 public interface SingleValueStoreInitializationProcedure {
 
-    void init();
+    void init() throws Exception;
 }

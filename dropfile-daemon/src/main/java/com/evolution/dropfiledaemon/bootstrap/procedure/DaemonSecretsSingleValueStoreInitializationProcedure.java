@@ -5,7 +5,6 @@ import com.evolution.dropfile.store.framework.single.SingleValueStoreInitializat
 import com.evolution.dropfile.store.secret.DaemonSecret;
 import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +20,8 @@ public class DaemonSecretsSingleValueStoreInitializationProcedure
 
     private final DaemonSecretStore store;
 
-    // TODO fix it @SneakyThrows
-    @SneakyThrows
     @Override
-    public void init() {
+    public void init() throws Exception {
         Optional<DaemonSecret> daemonSecretOptional = store.get();
         if (daemonSecretOptional.isEmpty()) {
             log.info("No daemon secret found. Initializing");

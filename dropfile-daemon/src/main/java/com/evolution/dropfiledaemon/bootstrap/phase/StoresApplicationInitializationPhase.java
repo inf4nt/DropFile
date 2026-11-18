@@ -18,7 +18,11 @@ public class StoresApplicationInitializationPhase implements ApplicationInitiali
 
     @Override
     public void execute() throws Exception {
-        keyValueStoreInitializationProcedures.forEach(it -> it.init());
-        singleValueStoreInitializationProcedures.forEach(it -> it.init());
+        for (KeyValueStoreInitializationProcedure procedure : keyValueStoreInitializationProcedures) {
+            procedure.init();
+        }
+        for (SingleValueStoreInitializationProcedure procedure : singleValueStoreInitializationProcedures) {
+            procedure.init();
+        }
     }
 }

@@ -18,6 +18,8 @@ public class BootStrapStoreApplicationInitializationPhase
 
     @Override
     public void execute() throws Exception {
-        procedures.forEach(it -> it.init());
+        for (BootstrapStoreInitializationProcedure procedure : procedures) {
+            procedure.init();
+        }
     }
 }
