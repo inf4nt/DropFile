@@ -10,8 +10,8 @@ import java.util.*;
 public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrustedOutStore.TrustedOut> {
 
     @With
-    record TrustedOut(List<AddressEnvelope> addressEnvelopes,
-                      HandshakeKeys handshake,
+    record TrustedOut(HandshakeKeys handshake,
+                      List<AddressEnvelope> addressEnvelopes,
                       UUID sessionId,
                       Instant created,
                       Instant updated) {
@@ -23,6 +23,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
             Objects.requireNonNull(updated);
             addressEnvelopes.forEach(Objects::requireNonNull);
         }
+
         @Override
         public List<AddressEnvelope> addressEnvelopes() {
             return addressEnvelopes.stream()

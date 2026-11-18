@@ -192,12 +192,12 @@ public class ApiHandshakeFacade {
                 handshakeTrustedOutStore.insert(remoteFingerprint, () -> {
                     Instant now = Instant.now();
                     return new HandshakeTrustedOutStore.TrustedOut(
-                            List.of(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now)),
                             new HandshakeTrustedOutStore.HandshakeKeys(
                                     rsaKeyPair.getPublic().getEncoded(),
                                     rsaKeyPair.getPrivate().getEncoded(),
                                     responsePayload.publicKeyRSA()
                             ),
+                            List.of(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now)),
                             sessionId,
                             now,
                             now
