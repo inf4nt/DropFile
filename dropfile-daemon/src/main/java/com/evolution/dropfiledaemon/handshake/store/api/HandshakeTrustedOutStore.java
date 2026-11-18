@@ -11,6 +11,7 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
 
     @With
     record TrustedOut(HandshakeKeys handshake,
+                      NodeKeys remoteNodeKeys,
                       List<AddressEnvelope> addressEnvelopes,
                       UUID sessionId,
                       Instant created,
@@ -29,6 +30,12 @@ public interface HandshakeTrustedOutStore extends KeyValueStore<HandshakeTrusted
             return addressEnvelopes.stream()
                     .sorted((o1, o2) -> o2.lastSeen.compareTo(o1.lastSeen))
                     .toList();
+        }
+    }
+
+    record NodeKeys(byte[] publicKey) {
+        public NodeKeys {
+            Objects.requireNonNull(publicKey);
         }
     }
 

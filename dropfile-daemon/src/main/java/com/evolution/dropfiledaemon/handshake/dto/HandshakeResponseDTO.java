@@ -14,15 +14,31 @@ public record HandshakeResponseDTO(byte[] payload,
     }
 
     public record Payload(UUID requestId,
+                          NodeKeys nodeKeys,
                           byte[] serverSalt,
                           byte[] publicKeyRSA,
                           byte[] publicKeyDH) {
 
         public Payload {
             Objects.requireNonNull(requestId, "requestId must not be null");
+            Objects.requireNonNull(nodeKeys, "nodeKeys must not be null");
             Objects.requireNonNull(serverSalt, "serverSalt must not be null");
             Objects.requireNonNull(publicKeyRSA, "publicKeyRSA must not be null");
             Objects.requireNonNull(publicKeyDH, "publicKeyDH must not be null");
+        }
+    }
+
+    public record NodeKeys(byte[] nodeKeysPayload,
+                           byte[] signature) {
+        public NodeKeys {
+            Objects.requireNonNull(nodeKeysPayload, "nodeKeysPayload must not be null");
+            Objects.requireNonNull(signature, "signature must not be null");
+        }
+    }
+
+    public record NodeKeysPayload(byte[] publicKey) {
+        public NodeKeysPayload {
+            Objects.requireNonNull(publicKey, "publicKey must not be null");
         }
     }
 }

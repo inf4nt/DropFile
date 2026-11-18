@@ -7,6 +7,8 @@ import com.evolution.dropfile.common.crypto.CryptoRSA;
 import com.evolution.dropfile.common.crypto.CryptoTunnel;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.secret.DaemonSecret;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessResponseDTO;
@@ -73,6 +75,9 @@ class ServerHandshakeRestControllerIntegrationTest {
 
     @Autowired
     private HandshakeTrustedInStore handshakeTrustedInStore;
+
+    @Autowired
+    private DaemonSecretStore daemonSecretStore;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -199,6 +204,9 @@ class ServerHandshakeRestControllerIntegrationTest {
     @Test
     void handshakeSessionEndpointCompletesSessionHandshakeSuccessfully() throws Exception {
         EstablishedHandshake handshake = establishHandshake();
+        DaemonSecret daemonSecretBefore = daemonSecretStore.get().orElseThrow();
+        byte[] nodePublicKeyBefore = daemonSecretBefore.publicKey().clone();
+        byte[] nodePrivateKeyBefore = daemonSecretBefore.privateKey().clone();
 
         KeyPair clientDhKeyPair = CryptoECDH.generateKeyPair();
         UUID requestId = UUID.randomUUID();
@@ -277,6 +285,18 @@ class ServerHandshakeRestControllerIntegrationTest {
                 .getValue();
 
         assertThat(session.sessionId(), is(trusted.sessionId()));
+
+        DaemonSecret daemonSecretAfter = daemonSecretStore.get().orElseThrow();
+        assertThat(
+                "node public key must remain unchanged after session handshake",
+                Arrays.equals(nodePublicKeyBefore, daemonSecretAfter.publicKey()),
+                is(true)
+        );
+        assertThat(
+                "node private key must remain unchanged after session handshake",
+                Arrays.equals(nodePrivateKeyBefore, daemonSecretAfter.privateKey()),
+                is(true)
+        );
     }
 
     @Test

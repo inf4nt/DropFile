@@ -138,6 +138,71 @@ class TwoDaemonHandshakeIntegrationTest {
         );
     }
 
+    @Test
+    void sessionExtensionDoesNotChangeRemoteNodeKeys() throws Exception {
+        ApiHandshakeFacade clientFacade =
+                daemonA.getBean(ApiHandshakeFacade.class);
+
+        AccessKeyService accessKeyService =
+                daemonB.getBean(AccessKeyService.class);
+
+        AccessKeyStore accessKeyStore =
+                daemonB.getBean(AccessKeyStore.class);
+
+        String daemonBAddress = getBaseAddress(daemonB);
+        AccessKeyService.KeyEnvelope accessKey =
+                createAccessKey(accessKeyService, accessKeyStore);
+
+        clientFacade.handshake(
+                new ApiHandshakeRequestDTO(daemonBAddress, accessKey.key())
+        );
+
+        HandshakeTrustedOutStore trustedOutStore =
+                daemonA.getBean(HandshakeTrustedOutStore.class);
+        HandshakeTrustedOutStore.TrustedOut initialTrustedOut =
+                trustedOutStore.getRequiredLastUpdated().getValue();
+        String daemonBFingerprint = CommonUtils.getFingerprint(
+                initialTrustedOut.handshake().remoteRSA()
+        );
+        HandshakeTrustedOutStore.TrustedOut trustedOutBefore =
+                trustedOutStore.getRequired(daemonBFingerprint).getValue();
+        DaemonSecret daemonSecretBefore = daemonB.getBean(DaemonSecretStore.class)
+                .get()
+                .orElseThrow();
+        byte[] remoteNodePublicKeyBefore = trustedOutBefore.remoteNodeKeys().publicKey().clone();
+        byte[] daemonPublicKeyBefore = daemonSecretBefore.publicKey().clone();
+        byte[] daemonPrivateKeyBefore = daemonSecretBefore.privateKey().clone();
+
+        assertThat(
+                Arrays.equals(remoteNodePublicKeyBefore, daemonPublicKeyBefore),
+                is(true)
+        );
+
+        clientFacade.handshakeExtend(daemonBFingerprint, URI.create(daemonBAddress));
+
+        HandshakeTrustedOutStore.TrustedOut trustedOutAfter =
+                trustedOutStore.getRequired(daemonBFingerprint).getValue();
+        DaemonSecret daemonSecretAfter = daemonB.getBean(DaemonSecretStore.class)
+                .get()
+                .orElseThrow();
+
+        assertThat(
+                "remote node public key must remain unchanged after session extension",
+                Arrays.equals(remoteNodePublicKeyBefore, trustedOutAfter.remoteNodeKeys().publicKey()),
+                is(true)
+        );
+        assertThat(
+                "daemon node public key must remain unchanged after session extension",
+                Arrays.equals(daemonPublicKeyBefore, daemonSecretAfter.publicKey()),
+                is(true)
+        );
+        assertThat(
+                "daemon node private key must remain unchanged after session extension",
+                Arrays.equals(daemonPrivateKeyBefore, daemonSecretAfter.privateKey()),
+                is(true)
+        );
+    }
+
     private AccessKeyService.KeyEnvelope createAccessKey(
             AccessKeyService accessKeyService,
             AccessKeyStore accessKeyStore

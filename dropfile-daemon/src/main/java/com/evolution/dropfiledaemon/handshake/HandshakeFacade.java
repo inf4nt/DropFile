@@ -10,6 +10,7 @@ import com.evolution.dropfile.common.crypto.SecureEnvelope;
 import com.evolution.dropfile.common.dto.HandshakeApiTrustInResponseDTO;
 import com.evolution.dropfile.store.access.AccessKey;
 import com.evolution.dropfile.store.access.AccessKeyStore;
+import com.evolution.dropfile.store.secret.DaemonSecretStore;
 import com.evolution.dropfiledaemon.crypto.CryptoConstants;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessRequestDTO;
 import com.evolution.dropfiledaemon.handshake.dto.HandshakeReadinessResponseDTO;
@@ -45,6 +46,8 @@ public class HandshakeFacade {
     private final CryptoTunnel cryptoTunnel;
 
     private final ObjectMapper objectMapper;
+
+    private final DaemonSecretStore daemonSecretStore;
 
     private final AccessKeyService accessKeyService;
 
@@ -104,8 +107,20 @@ public class HandshakeFacade {
 
         byte[] serverSalt = CommonUtils.nonce16();
 
+        HandshakeResponseDTO.NodeKeysPayload nodeKeysPayload = new HandshakeResponseDTO.NodeKeysPayload(
+                daemonSecretStore.getRequired().publicKey()
+        );
+        byte[] nodeKeysPayloadBytes = objectMapper.writeValueAsBytes(nodeKeysPayload);
+        HandshakeResponseDTO.NodeKeys nodeKeys = new HandshakeResponseDTO.NodeKeys(
+                nodeKeysPayloadBytes,
+                CryptoRSA.sign(nodeKeysPayloadBytes, CryptoRSA.getPrivateKey(
+                        daemonSecretStore.getRequired().privateKey()
+                ))
+        );
+
         HandshakeResponseDTO.Payload responsePayload = new HandshakeResponseDTO.Payload(
                 requestPayload.requestId(),
+                nodeKeys,
                 serverSalt,
                 rsaKeyPair.getPublic().getEncoded(),
                 dhKeyPair.getPublic().getEncoded()

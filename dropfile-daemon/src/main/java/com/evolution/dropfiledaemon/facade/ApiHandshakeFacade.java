@@ -144,6 +144,18 @@ public class ApiHandshakeFacade {
                     handshakeResponseDTO.signature(),
                     CryptoRSA.getPublicKey(responsePayload.publicKeyRSA())
             );
+
+            HandshakeResponseDTO.NodeKeys nodeKeys = responsePayload.nodeKeys();
+            HandshakeResponseDTO.NodeKeysPayload nodeKeysPayload = objectMapper.readValue(
+                    nodeKeys.nodeKeysPayload(),
+                    HandshakeResponseDTO.NodeKeysPayload.class
+            );
+            CryptoRSA.verify(
+                    nodeKeys.nodeKeysPayload(),
+                    nodeKeys.signature(),
+                    CryptoRSA.getPublicKey(nodeKeysPayload.publicKey())
+            );
+
             if (!requestId.equals(responsePayload.requestId())) {
                 throw new SecurityException("Handshake response id mismatch! Expected %s, got %s"
                         .formatted(requestId, responsePayload.requestId()));
@@ -196,6 +208,9 @@ public class ApiHandshakeFacade {
                                     rsaKeyPair.getPublic().getEncoded(),
                                     rsaKeyPair.getPrivate().getEncoded(),
                                     responsePayload.publicKeyRSA()
+                            ),
+                            new HandshakeTrustedOutStore.NodeKeys(
+                                    nodeKeysPayload.publicKey()
                             ),
                             List.of(new HandshakeTrustedOutStore.AddressEnvelope(addressURI, now)),
                             sessionId,
