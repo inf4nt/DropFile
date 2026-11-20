@@ -36,6 +36,14 @@ public interface KeyValueStore<V> {
         ).values().stream().findAny().orElseThrow();
     }
 
+    default V save(String key, Function<Optional<V>, V> function) {
+        return save(() -> {
+            Optional<V> current = get(key).map(it -> it.getValue());
+            V next = function.apply(current);
+            return Map.of(key, next);
+        }).values().stream().findFirst().orElseThrow();
+    }
+
     default V save(String key, Callable<V> callable) {
         return save(() -> Map.of(key, callable.call()), ValidatePolicy.STRICT).values().stream().findAny().orElseThrow();
     }
